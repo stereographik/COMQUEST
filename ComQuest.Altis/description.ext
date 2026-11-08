@@ -86,6 +86,7 @@ class CfgFunctions
             class objName {};
             class say {};
             class storyClient {};
+            class storyUi {};
             class enemyCount {};
             class clearWaypoints {};
             class aliveCount {};

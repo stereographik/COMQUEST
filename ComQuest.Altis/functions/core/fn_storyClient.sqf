@@ -1,8 +1,8 @@
 /*
     CQ_fnc_storyClient  (client, from CQ_fnc_say through remoteExec)
     [_speaker, _text] call CQ_fnc_storyClient;
-      CROSSROAD  notification card + Side chat from the BLUFOR HQ (callsign Crossroad)
-      MAGPIE     subtitle at the bottom of the screen + chat line
+      CROSSROAD  wide panel top right (CQ_fnc_storyUi) + Side chat from the BLUFOR HQ
+      MAGPIE     typewriter panel bottom centre (CQ_fnc_storyUi) + chat line
       INTERCEPT  red text in the middle of the screen + chat line
     Every line also goes to the "Radio log" page of the map so it can be read again.
 */
@@ -12,12 +12,12 @@ if (!hasInterface) exitWith {};
 playSound "CQ_radioIn";
 switch (_who) do {
     case "CROSSROAD": {
-        ["CQ_Story", ["CROSSROAD", _txt]] call BIS_fnc_showNotification;
+        ["CROSSROAD", _txt] call CQ_fnc_storyUi;
         [west, "HQ"] sideChat _txt;
         if ((toUpper _txt) find "FLASH" == 0) then { playSound "CQ_alarm" };
     };
     case "MAGPIE": {
-        ["MAGPIE", _txt] spawn BIS_fnc_showSubtitle;
+        ["MAGPIE", _txt] call CQ_fnc_storyUi;
         systemChat format ["MAGPIE: %1", _txt];
     };
     default {
