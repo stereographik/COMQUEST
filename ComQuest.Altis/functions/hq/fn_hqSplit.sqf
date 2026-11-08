@@ -68,7 +68,7 @@ if (_reason != "") exitWith {
 
 // --- pick the colonists: fresh reinforcements first, then patrols; defenders stay
 private _target = ceil (_total * CQ_colonistShare) min (_total - CQ_minDefenders);
-private _cands = _inf select { (_x getVariable ["CQ_role", ""]) in ["reinf", "patrol"] };
+private _cands = _inf select { (_x getVariable ["CQ_role", ""]) in ["reinf", "patrol"] && { ([_x] call CQ_fnc_infAmmo) >= CQ_minAmmoToAdvance } };
 _cands = [_cands, [], { [1, 0] select ((_x getVariable ["CQ_role", ""]) == "reinf") }, "ASCEND"] call BIS_fnc_sortBy;
 private _col = [];
 private _n = 0;
@@ -93,9 +93,13 @@ private _cmdG = createGroup [east, true];
 private _bld = _hq get "building";
 private _from = if (isNull _bld) then { _c } else { getPosATL _bld };
 _cmdG createUnit ["O_officer_F", _from getPos [6, random 360], [], 0, "NONE"];
+[units _cmdG] call CQ_fnc_unitPrep;
 
 private _child = [_site, _id] call CQ_fnc_hqNew;
-["Enemy HQ splitting", format ["HQ #%1: %2 soldiers leave to found HQ #%3 near grid %4 (%5 m), %6 stay",
-    _id, _n, _child get "id", mapGridPosition _site, round (_site distance2D _c), _total - _n]] call CQ_fnc_announce;
+private _carry = floor (((_hq get "stock") * CQ_childCarryShare) min CQ_childCarryMax);
+_hq set ["stock", (_hq get "stock") - _carry];
+_child set ["stockInit", _carry];
+["Enemy HQ splitting", format ["HQ #%1: %2 soldiers leave with %7 ammo to found HQ #%3 near grid %4 (%5 m), %6 stay",
+    _id, _n, _child get "id", mapGridPosition _site, round (_site distance2D _c), _total - _n, _carry]] call CQ_fnc_announce;
 
 [_child, _col, _colVehs, _cmdG] spawn CQ_fnc_colonise;

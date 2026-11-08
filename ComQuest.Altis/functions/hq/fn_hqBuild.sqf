@@ -90,7 +90,8 @@ private _radio = ["Land_TTowerBig_2_F", 0, 26, 0, true] call _place;
 _depot addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
     if (isNil "_hq") exitWith {};
-    ["Supply depot destroyed", format ["HQ #%1 lost its ammo stock", _hq get "id"]] call CQ_fnc_announce;
+    ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
+    _hq set ["stock", 0];
 }];
 _radio addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
@@ -101,7 +102,8 @@ _depot setVariable ["CQ_hqId", _id];
 _radio setVariable ["CQ_hqId", _id];
 _hq set ["depot", _depot];
 _hq set ["radio", _radio];
-[3, "supply depot and radio tower"] call _stage;
+_hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
+[3, format ["supply depot (%1 ammo) and radio tower", round (_hq get "stock")]] call _stage;
 
 // Stage 4 - helipad with the QRF helicopter parked on it + 3 AA pits
 sleep CQ_hqBuildStageTime;
@@ -113,9 +115,9 @@ if (!isNull _pad) then {
     private _hg = [_heli] call CQ_fnc_crewVehicle;
     _hg setBehaviour "SAFE";
     _heli engineOn false;
-    _hq set ["heli", _heli];
-    _hq set ["heliGrp", _hg];
-    _hq set ["heliState", "parked"];
+    [_heli] call CQ_fnc_airLoadout;
+    [_heli, 1] call CQ_fnc_vehAmmoInit;
+    [_heli, _hg, "armed", _id, _pad, [], true] call CQ_fnc_airRegister;
     (_hq get "support") pushBack _hg;
 };
 
@@ -127,6 +129,7 @@ private _aaGroup = createGroup [east, true];
         { ["Land_BagFence_Round_F", _ox + 2.6 * sin _x, _oy + 2.6 * cos _x, _x + 180] call _place } forEach [0, 120, 240];
         createVehicleCrew _aa;
         (crew _aa) joinSilent _aaGroup;
+        [_aa, 1] call CQ_fnc_vehAmmoInit;
     };
 } forEach [[-20, 22], [20, 22], [0, -26]];
 _aaGroup setBehaviour "AWARE";

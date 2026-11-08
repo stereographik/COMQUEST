@@ -4,15 +4,17 @@
 
     Root insertion, phase by phase (each phase is announced on screen):
       1 Inbound       2 Taru slinging a Zamak + an Ifrit, 2 Taru with 3 squads + commander,
-                      optional Kajman escort, coming from the side opposite the player base
+                      escorted by 2 Orcas + 1 Kajman, coming from the side opposite the player base
       2 Drop/landing  lifters release their cargo over clear LZs (parachute fallback),
                       troop helis land on clear LZs and unload (teleport fallback)
-      3 Leaving       every heli flies back out and is deleted
+      3 Fleet         3 s after its drop every heli flies to park near the main HQ (or this
+                      site) and waits for orders; when the fleet is full it leaves instead
       4 Securing      hands over to CQ_fnc_hqTick (secure 1 km, install, hold, reinforce, split)
 */
 params ["_site"];
 
 private _hq = [_site, -1] call CQ_fnc_hqNew;
+_hq set ["stockInit", CQ_rootStartStock];
 private _id = _hq get "id";
 private _hqDir = _hq get "dir";
 
@@ -104,11 +106,13 @@ private _troops = [];
 
     for "_i" from 1 to _nSquads do {
         private _g = [_p, east, _squadCfg] call BIS_fnc_spawnGroup;
+        [units _g] call CQ_fnc_unitPrep;
         { if !(_x moveInAny _heli) then { deleteVehicle _x; _lost = _lost + 1 } } forEach units _g;
         _squads pushBack _g;
     };
     if (_withCmd) then {
         { _cmdGroup createUnit [_x, _p, [], 0, "NONE"] } forEach ["O_officer_F", "O_Soldier_F", "O_Soldier_F", "O_Soldier_F", "O_Soldier_F"];
+        [units _cmdGroup] call CQ_fnc_unitPrep;
         { if !(_x moveInAny _heli) then { deleteVehicle _x; _lost = _lost + 1 } } forEach units _cmdGroup;
     };
     ["HQ #%1: troop Taru airborne, %2 cargo seats, %3 soldiers aboard, %4 did not fit",
@@ -126,15 +130,8 @@ private _troops = [];
     [90, 85, 315, 1, true]
 ];
 
-// ---------------------------------------------------------------- escort
-private _escort = [];
-if (CQ_insertionEscort) then {
-    ([ "O_Heli_Attack_02_dynamicLoadout_F", [0, 160] call _slot, _heading, false] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
-    private _wp = _hg addWaypoint [_site, 0];
-    _wp setWaypointType "LOITER";
-    _wp setWaypointLoiterRadius 400;
-    _escort = [_heli, _hg];
-};
+// ---------------------------------------------------------------- escort: 2 Orcas + 1 Kajman
+private _escorts = [_start, _heading, _site] call CQ_fnc_spawnEscorts;
 
 ["HQ #%1: insertion airborne, enemy AI on map: %2", [_id, call CQ_fnc_enemyCount]] call CQ_fnc_log;
 
@@ -144,6 +141,18 @@ private _deleteHeli = {
     { deleteVehicle _x } forEach crew _heli;
     deleteVehicle _heli;
     deleteGroup _grp;
+};
+private _toFleet = {
+    params ["_e", "_kind"];
+    private _heli = _e get "heli";
+    if ([_heli, _e get "grp", _kind, -1, objNull, _site] call CQ_fnc_airRegister) then {
+        _e set ["state", "fleet"];
+    } else {
+        _heli flyInHeight 100;
+        _heli doMove _exit;
+        _e set ["state", "leaving"];
+        _e set ["t", time];
+    };
 };
 private _dropped = [];
 private _t0 = time;
@@ -200,11 +209,12 @@ while { true } do {
                     ["Enemy vehicle dropped", format ["HQ #%1: %2 released at grid %3", _id, _e get "label", mapGridPosition _heli]] call CQ_fnc_announce;
 
                     _heli limitSpeed 500;   // lift the limit again
-                    _heli flyInHeight 100;
-                    _heli doMove _exit;
-                    _e set ["state", "leaving"];
+                    _e set ["state", "postDrop"];
                     _e set ["t", time];
                 };
+            };
+            case "postDrop": {
+                if (time - (_e get "t") >= 3) then { [_e, "transport"] call _toFleet };
             };
             case "leaving": {
                 if (!alive _heli || { _heli distance2D _site > CQ_insertionSpawnDistance * 0.8 } || { time - (_e get "t") > 240 }) then {
@@ -252,12 +262,9 @@ while { true } do {
                 };
             };
             case "unloaded": {
-                if (time - (_e get "t") > 5) then {
-                    _heli flyInHeight 100;
-                    _heli doMove _exit;
+                if (time - (_e get "t") >= 3) then {
                     deleteVehicle (_e get "pad");
-                    _e set ["state", "leaving"];
-                    _e set ["t", time];
+                    [_e, "transport"] call _toFleet;
                 };
             };
             case "leaving": {
@@ -269,25 +276,27 @@ while { true } do {
         };
     } forEach _troops;
 
-    private _pending = (_lifts + _troops) findIf { (_x get "state") in ["fly", "near", "landing"] };
+    private _pending = (_lifts + _troops) findIf { (_x get "state") in ["fly", "near", "landing", "postDrop", "unloaded", "leaving"] };
     if (_pending == -1) exitWith {};
     if (time - _t0 > 900) exitWith { ["HQ #%1: insertion timed out after 15 min", [_id]] call CQ_fnc_log };
 };
 
-// Escort goes home once the drop is over
-if (_escort isNotEqualTo []) then {
-    _escort params ["_heli", "_hg"];
+// Escorts join the fleet once the drop is over (or leave when it is full)
+{
+    _x params ["_heli", "_hg"];
     if (alive _heli) then {
-        [_hg] call CQ_fnc_clearWaypoints;
-        _heli doMove _exit;
-        [_heli, _hg, _site, _deleteHeli] spawn {
-            params ["_heli", "_hg", "_site", "_del"];
-            private _t = time;
-            waitUntil { sleep 5; !alive _heli || { _heli distance2D _site > CQ_insertionSpawnDistance * 0.8 } || { time - _t > 300 } };
-            [_heli, _hg] call _del;
+        if !([_heli, _hg, "armed", -1, objNull, _site] call CQ_fnc_airRegister) then {
+            [_hg] call CQ_fnc_clearWaypoints;
+            _heli doMove _exit;
+            [_heli, _hg, _site, _deleteHeli] spawn {
+                params ["_heli", "_hg", "_site", "_del"];
+                private _t = time;
+                waitUntil { sleep 5; !alive _heli || { _heli distance2D _site > CQ_insertionSpawnDistance * 0.8 } || { time - _t > 300 } };
+                [_heli, _hg] call _del;
+            };
         };
     };
-};
+} forEach _escorts;
 
 // ---------------------------------------------------------------- securing
 private _infantry = _squads select { ({ alive _x } count units _x) > 0 };
@@ -299,7 +308,7 @@ if (_infantry isEqualTo [] && { ({ alive _x } count units _cmdGroup) == 0 }) exi
 
 // Crews for the dropped vehicles
 private _vehicles = _dropped select { alive _x };
-{ [_x] call CQ_fnc_crewVehicle } forEach _vehicles;
+{ [_x] call CQ_fnc_crewVehicle; [_x, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit } forEach _vehicles;
 
 _hq set ["infantry", _infantry];
 _hq set ["cmdGroup", _cmdGroup];

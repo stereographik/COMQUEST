@@ -68,6 +68,7 @@ class CfgFunctions
             class enemyCount {};
             class clearWaypoints {};
             class aliveCount {};
+            class debugMap {};
         };
 
         class hq
@@ -83,9 +84,36 @@ class CfgFunctions
             class hqGarrison {};
             class hqContact {};
             class callReinf {};
-            class hqHeliTick {};
             class hqSplit {};
             class hqTick {};
+        };
+
+        class logistics
+        {
+            file = "functions\logistics";
+            class unitPrep {};
+            class infAmmo {};
+            class rearmUnit {};
+            class vehAmmoInit {};
+            class vehAmmoLevel {};
+            class rearmVeh {};
+            class nearestStockHq {};
+            class hqLinks {};
+            class hqRearmPass {};
+            class logiTick {};
+            class truckRun {};
+            class ammoFlight {};
+        };
+
+        class air
+        {
+            file = "functions\air";
+            class airLoadout {};
+            class airParkSpot {};
+            class hqAirPad {};
+            class spawnEscorts {};
+            class airRegister {};
+            class airTick {};
         };
 
         class spawn

@@ -2,11 +2,12 @@
     CQ_fnc_callReinf  (server)
     [_hq, _contactPos] call CQ_fnc_callReinf;
     The HQ that spotted players calls for help:
-      - its own QRF helicopter takes off to hunt (search & destroy) around the contact
+      - the closest armed helicopters with ammo take off to hunt (search & destroy)
       - every HQ linked to it by radio (both radios standing, within CQ_commsRange) sends a
         share of its available troops, bigger the closer it is to the contact (CQ_qrfShares)
       - no radio: only the spotting HQ's own forces respond
-    Each HQ keeps at least CQ_minDefenders infantry at home.
+    Each HQ keeps at least CQ_minDefenders infantry at home. Groups (and helis) short of ammo
+    (under CQ_minAmmoToAdvance) never go forward.
 */
 params ["_src", "_pos"];
 
@@ -18,21 +19,32 @@ private _srcRadio = alive (_src get "radio") || { !(_src get "buildDone") };   /
 
 private _report = [];
 
-// --- QRF helicopter of the spotting HQ
-private _heli = _src get "heli";
-if ((_src get "heliState") == "parked" && { alive _heli } && { alive driver _heli }) then {
-    private _hg = _src get "heliGrp";
+// --- Armed helicopters: the CQ_airQrfMax closest with ammo, parked within CQ_airQrfRange.
+//     The spotting HQ's own Orca always answers; others need the radio link.
+private _air = CQ_air select {
+    private _v = _x get "veh";
+    (_x get "kind") == "armed" && { (_x get "state") in ["parked", "toPark"] } && { alive _v }
+    && { ([_v] call CQ_fnc_vehAmmoLevel) >= CQ_minAmmoToAdvance - 0.1 }
+    && { _v distance2D _pos < CQ_airQrfRange }
+    && { _srcRadio || { (_x get "homeId") == _srcId } }
+};
+_air = [_air, [], { (_x get "veh") distance2D _pos }, "ASCEND"] call BIS_fnc_sortBy;
+{
+    if (_forEachIndex >= CQ_airQrfMax) exitWith {};
+    private _v = _x get "veh";
+    private _hg = _x get "grp";
     [_hg] call CQ_fnc_clearWaypoints;
-    _heli engineOn true;
-    _heli flyInHeight 60;
+    _v engineOn true;
+    _v flyInHeight 60;
     _hg setBehaviour "COMBAT";
     _hg setCombatMode "RED";
     private _wp = _hg addWaypoint [_pos, 100];
     _wp setWaypointType "SAD";
-    _src set ["heliState", "hunting"];
-    _src set ["heliUntil", time + CQ_heliHuntTime];
-    _report pushBack format ["HQ #%1 helicopter", _srcId];
-};
+    _x set ["state", "hunting"];
+    _x set ["until", time + CQ_heliHuntTime];
+    _x set ["landing", false];
+    _report pushBack format ["%1 (%2 m)", getText (configOf _v >> "displayName"), round (_v distance2D _pos)];
+} forEach _air;
 
 // --- Ground QRF from every responding HQ
 {
@@ -56,7 +68,7 @@ if ((_src get "heliState") == "parked" && { alive _heli } && { alive driver _hel
     if (_want <= 0) then { continue };
 
     // Available: patrols, fresh reinforcements and perimeter squads, never the defend squad
-    private _cands = _inf select { (_x getVariable ["CQ_role", ""]) in ["patrol", "reinf", "secure"] };
+    private _cands = _inf select { (_x getVariable ["CQ_role", ""]) in ["patrol", "reinf", "secure"] && { ([_x] call CQ_fnc_infAmmo) >= CQ_minAmmoToAdvance } };
     private _sent = 0;
     private _nGroups = 0;
     {

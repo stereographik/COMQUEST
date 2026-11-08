@@ -38,11 +38,13 @@ private _hq = createHashMapFromArray [
     ["nextWaveT", 0],
     ["waveResult", []],
     ["lastContactT", -1e6],
-    // QRF helicopter
-    ["heli", objNull],
-    ["heliGrp", grpNull],
-    ["heliState", "none"],
-    ["heliUntil", 0]
+    // ammo depot
+    ["stock", 0],
+    ["stockInit", 0],            // ammo points the depot starts with (root: insertion cargo, child: carried)
+    ["cap", CQ_depotCap],
+    ["truckInbound", false],
+    ["lowWarned", false],
+    ["rearmPad", objNull]
 ];
 
 CQ_hqs set [_id, _hq];

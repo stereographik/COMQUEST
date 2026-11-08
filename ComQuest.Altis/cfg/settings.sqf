@@ -32,7 +32,6 @@ CQ_rootInterval = 3600;                  // seconds between root insertions
 CQ_firstRootDelay = 120;                 // seconds after mission start
 CQ_insertionSpawnDistance = 8000;        // helis appear this far from the site
 CQ_insertionFlyHeight = 80;
-CQ_insertionEscort = true;               // Mi-48 Kajman escort
 
 // --- HQ sites and construction ---------------------------------------------
 CQ_siteRadius = 40;                      // flat, empty circle needed (the composition reaches ~31 m)
@@ -85,16 +84,55 @@ CQ_commsRange = 3000;                    // two HQs are linked when both radios 
 CQ_qrfShares = [[1000, 0.5], [2000, 0.3], [3000, 0.15]];   // [distance to contact, share of available troops]
 CQ_qrfTime = 600;                        // a QRF hunts 10 min, then returns to patrol its HQ
 CQ_hqHeliClass = "O_Heli_Light_02_dynamicLoadout_F";       // PO-30 Orca parked behind each HQ
-CQ_heliHuntTime = 360;
+CQ_heliHuntTime = 360;                   // an armed heli hunts 6 min, then returns
+
+// --- Ammo: what each shooter carries ------------------------------------------
+CQ_infMags = 8;                          // rifle magazines carried (+1 loaded), ~10 max
+CQ_infBelts = 3;                         // MG belts
+CQ_infRockets = 1;                       // spare launcher rockets
+CQ_vehSpawnAmmo = 0.5;                   // ground vehicles arrive half loaded
+CQ_vehRearmTo = 0.8;
+CQ_lowAmmo = 0.35;                       // infantry under this: go rearm at the nearest stocked HQ
+CQ_vehLowAmmo = 0.25;
+CQ_airLowAmmo = 0.15;
+CQ_minAmmoToAdvance = 0.5;               // under this a group never joins a QRF or a colonisation
+// Ammo points (AP) cost: rifle mag 1, MG belt 3, rocket 5; vehicles: cost of a full reload
+CQ_costMag = 1; CQ_costBelt = 3; CQ_costRocket = 5;
+CQ_vehFullCost = createHashMapFromArray [["static", 40], ["air", 120], ["armour", 150], ["light", 60]];
+
+// --- Depots and supply chain --------------------------------------------------
+CQ_depotCap = 400;                       // ammo points an HQ depot can hold
+CQ_hubCap = 1500;                        // main HQ (oldest standing HQ) depot
+CQ_rootStartStock = 300;                 // brought by a root insertion
+CQ_childCarryShare = 0.3;                // colonists take this share of the parent's stock...
+CQ_childCarryMax = 150;                  // ...capped
+CQ_rearmRadius = 60;                     // units this close to a depot get rearmed
+CQ_rearmMinStock = 20;                   // an HQ with less is not a rearm destination
+CQ_logiTickSeconds = 15;
+CQ_requestShare = 0.4;                   // an HQ under 40% of its cap requests a truck
+CQ_truckClass = "B_Truck_01_ammo_F";     // HEMTT ammo, spawned at the main HQ
+CQ_truckLoad = 200;
+CQ_trucksMax = 3;
+CQ_hubReserve = 150;                     // the main HQ never ships its last 150 AP
+CQ_ammoFlightInterval = 1200;            // an ammo flight to the main HQ every 20 min
+CQ_ammoFlightLoad = 600;
+CQ_ammoFlightClass = "O_Heli_Transport_04_ammo_F";   // Taru with ammo pod
+
+// --- Air fleet --------------------------------------------------------------
+CQ_escortClasses = ["O_Heli_Light_02_dynamicLoadout_F", "O_Heli_Light_02_dynamicLoadout_F", "O_Heli_Attack_02_dynamicLoadout_F"];
+CQ_fleetMax = 8;                         // aircraft parked at the main HQ waiting for orders
+CQ_airQrfMax = 2;                        // armed helis sent on one contact
+CQ_airQrfRange = 4000;
+CQ_airRearmTime = 60;
 
 // --- DEBUG overrides (set CQ_debug = false above for the real campaign) -----
 if (CQ_debug) then {
     CQ_debugFirstAtRunway = true;        // 1st root lands at the runway end (marker "cq_debug_site" overrides)
     CQ_firstRootDelay = 30;
     CQ_insertionSpawnDistance = 3500;
-    CQ_insertionEscort = false;          // no gunship shooting the base while you watch
     CQ_hqBuildStageTime = 45;
     CQ_waveInterval = 300;
+    CQ_ammoFlightInterval = 300;
 } else {
     CQ_debugFirstAtRunway = false;
 };

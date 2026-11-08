@@ -5,5 +5,6 @@ params ["_player", "_didJIP"];
 
 waitUntil { !isNull player };
 call CQ_fnc_playerSetup;
+call CQ_fnc_debugMap;
 
 ["Welcome to ComQuest (%1)", [roleDescription player]] call CQ_fnc_log;

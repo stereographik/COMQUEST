@@ -7,7 +7,7 @@
       WaitingReinf  convoy on its way (CQ_fnc_waveSend)            -> arrived: CQ_fnc_hqSplit
       Holding       defends until the next wave (CQ_waveInterval)  -> requests a wave
     In every state: contact -> CQ_fnc_callReinf (heli + QRF), QRF groups return after
-    CQ_qrfTime, QRF helicopter flight (CQ_fnc_hqHeliTick).
+    CQ_qrfTime. Helicopters: CQ_fnc_airTick. Ammo: CQ_fnc_logiTick.
     Destroyed: commander dead AND depot destroyed. Failed: wiped out before being built.
 */
 private _now = time;
@@ -53,9 +53,6 @@ private _now = time;
             ["HQ #%1: a QRF squad returns to patrol", [_id]] call CQ_fnc_log;
         };
     } forEach ((_hq get "infantry") select { !isNull _x });
-
-    // ---- QRF helicopter
-    [_hq] call CQ_fnc_hqHeliTick;
 
     // ---- lifecycle
     switch (_state) do {

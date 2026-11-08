@@ -43,6 +43,7 @@ private _vehs = [];
     _v setVariable ["CQ_pool", _pool];
     private _cg = [_v] call CQ_fnc_crewVehicle;
     _cg setBehaviour "AWARE";
+    [_v, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit;
     _vehs pushBack _v;
 } forEach CQ_wavePools;
 
@@ -51,6 +52,7 @@ private _inf = [];
 private _lost = 0;
 for "_i" from 1 to CQ_waveSquads do {
     private _g = [_spawn getPos [30, _dir + 90], east, _squadCfg] call BIS_fnc_spawnGroup;
+    [units _g] call CQ_fnc_unitPrep;
     {
         private _u = _x;
         private _in = false;
