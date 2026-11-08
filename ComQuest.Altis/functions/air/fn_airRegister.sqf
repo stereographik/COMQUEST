@@ -26,7 +26,7 @@ CQ_air pushBack _e;
 
 if (!_parked) then {
     [_grp] call CQ_fnc_clearWaypoints;
-    _heli flyInHeight 60;
+    _heli flyInHeight ([60, 110] select (_kind == "armed"));   // separate bands on the way to park
     _heli doMove (getPosATL _pad);
 };
 ["Air: %1 %2 registered (home %3), fleet size %4", [_kind, typeOf _heli, ["main HQ", format ["HQ #%1", _homeId]] select (_homeId > -1), count CQ_air]] call CQ_fnc_log;

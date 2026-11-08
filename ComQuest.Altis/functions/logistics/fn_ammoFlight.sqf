@@ -12,7 +12,7 @@ private _dest = _hub get "pos";
 private _start = _dest getPos [CQ_insertionSpawnDistance, (_dest getDir CQ_basePos) + 180];
 private _heading = _start getDir _dest;
 
-([CQ_ammoFlightClass, [_start select 0, _start select 1, 0], _heading] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
+([CQ_ammoFlightClass, [_start select 0, _start select 1, 0], _heading, true, CQ_heightTroops] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
 private _escorts = [_start, _heading, _dest] call CQ_fnc_spawnEscorts;
 private _pad = [_hub] call CQ_fnc_hqAirPad;
 _heli doMove (getPosATL _pad);

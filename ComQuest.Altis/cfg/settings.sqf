@@ -31,7 +31,12 @@ CQ_maxRoots = 6;                         // root insertions in a campaign (victo
 CQ_rootInterval = 3600;                  // seconds between root insertions
 CQ_firstRootDelay = 120;                 // seconds after mission start
 CQ_insertionSpawnDistance = 8000;        // helis appear this far from the site
-CQ_insertionFlyHeight = 80;
+CQ_insertionFlyHeight = 80;              // default; each role has its own band below
+// Altitude bands keep formations from colliding (careless transports never dodge)
+CQ_heightLifter = 70;                    // Taru with a vehicle under the sling
+CQ_heightTroops = 95;                    // troop / supply Taru
+CQ_heightEscort = 150;                   // Orcas and Kajman above everything
+CQ_formationGap = 150;                   // lateral metres between transports
 
 // --- HQ sites and construction ---------------------------------------------
 CQ_siteRadius = 40;                      // flat, empty circle needed (the composition reaches ~31 m)

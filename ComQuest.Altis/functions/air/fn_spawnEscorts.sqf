@@ -8,8 +8,10 @@ params ["_start", "_heading", "_target"];
 
 private _out = [];
 {
-    private _p = (_start getPos [-120 + 120 * _forEachIndex, _heading + 90]) getPos [150, _heading + 180];
-    ([_x, [_p select 0, _p select 1, 0], _heading, false] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
+    // Wide on the flanks and well behind, in their own altitude band, so they never cut
+    // through the transports when they speed up to their loiter point
+    private _p = (_start getPos [-350 + 350 * _forEachIndex, _heading + 90]) getPos [300, _heading + 180];
+    ([_x, [_p select 0, _p select 1, 0], _heading, false, CQ_heightEscort] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
     [_heli] call CQ_fnc_airLoadout;
     [_heli, 1] call CQ_fnc_vehAmmoInit;
     _hg setBehaviour "AWARE";

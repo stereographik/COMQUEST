@@ -61,7 +61,7 @@ private _lifts = [];
 {
     _x params ["_cargoClass", "_lat", "_lzDist", "_lzAng", "_label"];
     private _p = [_lat, 0] call _slot;
-    ([ "O_Heli_Transport_04_F", _p, _heading] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
+    ([ "O_Heli_Transport_04_F", _p, _heading, true, CQ_heightLifter] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
 
     private _cargo = objNull;
     private _mass = 0;
@@ -91,8 +91,8 @@ private _lifts = [];
         ["lz", _lz], ["label", _label], ["state", "fly"], ["t", time]
     ];
 } forEach [
-    ["O_Truck_02_transport_F", -90, 55, 120, "Zamak truck"],
-    ["O_MRAP_02_hmg_F",        -30, 55, 240, "Ifrit HMG"]
+    ["O_Truck_02_transport_F", -2 * CQ_formationGap, 55, 120, "Zamak truck"],
+    ["O_MRAP_02_hmg_F",        -CQ_formationGap,     55, 240, "Ifrit HMG"]
 ];
 
 // ---------------------------------------------------------------- troop helis
@@ -101,8 +101,8 @@ private _cmdGroup = createGroup [east, true];
 private _troops = [];
 {
     _x params ["_lat", "_lzDist", "_lzAng", "_nSquads", "_withCmd"];
-    private _p = [_lat, 60] call _slot;
-    ([ "O_Heli_Transport_04_covered_F", _p, _heading] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
+    private _p = [_lat, 120] call _slot;
+    ([ "O_Heli_Transport_04_covered_F", _p, _heading, true, CQ_heightTroops] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
     private _seats = _heli emptyPositions "cargo";
     private _lost = 0;
 
@@ -128,8 +128,8 @@ private _troops = [];
         ["heli", _heli], ["grp", _hg], ["lz", _lz], ["pad", _pad], ["state", "fly"], ["t", time]
     ];
 } forEach [
-    [30, 85, 45, 2, false],
-    [90, 85, 315, 1, true]
+    [CQ_formationGap,     85, 45, 2, false],
+    [2 * CQ_formationGap, 85, 315, 1, true]
 ];
 
 // ---------------------------------------------------------------- escort: 2 Orcas + 1 Kajman
