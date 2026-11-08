@@ -21,7 +21,9 @@ _men = _men select { alive _x };
 
 private _pickup = [_from, 50, 220] call CQ_fnc_airParkSpot;
 private _drop = [_to, 60, 220] call CQ_fnc_airParkSpot;
-{ [_x] call CQ_fnc_clearWaypoints; _x move (getPosATL _pickup) } forEach _groups;
+{ _x enableDynamicSimulation false; [_x] call CQ_fnc_clearWaypoints; _x move (getPosATL _pickup) } forEach _groups;
+_hg enableDynamicSimulation false;
+_v enableDynamicSimulation false;
 [_hg] call CQ_fnc_clearWaypoints;
 _v engineOn true;
 _v flyInHeight CQ_heightTroops;
@@ -47,9 +49,9 @@ if (!alive _v || { !alive driver _v } || { !isTouchingGround _v && { (getPosATL 
     call _cleanup;
 };
 
-// 2 board
+// 2 board (45 s to walk to the bird, then everyone left is seated: the pad is near their HQ)
 private _t1 = time;
-waitUntil { sleep 2; ({ alive _x && { _x distance _v > 50 } } count _men) == 0 || { time - _t1 > 90 } };
+waitUntil { sleep 2; ({ alive _x && { _x distance _v > 50 } } count _men) == 0 || { time - _t1 > 45 } };
 { if (alive _x && { vehicle _x == _x }) then { _x moveInCargo _v } } forEach _men;
 private _aboard = { alive _x && { vehicle _x == _v } } count _men;
 ["HQ #%1: airlift Taru took off with %2 colonists", [_childId, _aboard]] call CQ_fnc_log;

@@ -92,6 +92,9 @@ CQ_wavePools = [                         // one vehicle from each pool per wave
     ["armour", ["O_APC_Wheeled_02_rcws_v2_F", "I_APC_tracked_03_cannon_F", "I_LT_01_cannon_F"]],
     ["random", ["O_MRAP_02_hmg_F", "O_G_Offroad_01_armed_F"]]
 ];
+CQ_dynSimGarrison = false;               // true = HQ squads freeze when no player is near (saves CPU, but they stop patrolling)
+CQ_patrolRadius = [250, 700];            // patrol loop radius around an HQ: 1st patrol squad smallest, then wider
+CQ_vehPatrolRadius = 800;                // armed vehicles patrol this far around their HQ
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_minInfantryToExpand = 16;

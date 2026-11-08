@@ -38,7 +38,7 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
     }];
 };
 
-// Infantry: 1st squad defends, the others patrol (150, 250, 350... m)
+// Infantry: 1st squad defends, the others patrol loops getting wider (CQ_patrolRadius)
 {
     private _g = _x;
     [_g] call CQ_fnc_clearWaypoints;
@@ -47,9 +47,10 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
         [_g, _c] call BIS_fnc_taskDefend;
     } else {
         _g setVariable ["CQ_role", "patrol"];
-        [_g, _c, (50 + 100 * _forEachIndex) min 400] call BIS_fnc_taskPatrol;
+        CQ_patrolRadius params ["_r0", "_r1"];
+        [_g, _c, (_r0 + 150 * (_forEachIndex - 1)) min _r1] call BIS_fnc_taskPatrol;
     };
-    _g enableDynamicSimulation true;
+    _g enableDynamicSimulation CQ_dynSimGarrison;
 } forEach ((_hq get "infantry") select { ({ alive _x } count units _x) > 0 });
 
 // Vehicles: armed ones patrol 400 m, the truck parks by the depot
@@ -62,9 +63,9 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
             _vg move (_c getPos [35, (_hq get "dir") + 270]);
         } else {
             _vg setVariable ["CQ_role", "patrol"];
-            [_vg, _c, 400] call BIS_fnc_taskPatrol;
+            [_vg, _c, CQ_vehPatrolRadius] call BIS_fnc_taskPatrol;
         };
-        _vg enableDynamicSimulation true;
+        _vg enableDynamicSimulation CQ_dynSimGarrison;
     };
 } forEach (_hq get "vehicles");
 

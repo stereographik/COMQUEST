@@ -15,7 +15,7 @@ private _c = _hq get "pos";
 // Wave joins the HQ
 (_hq get "infantry") append _waveInf;
 (_hq get "vehicles") append _waveVehs;
-{ _x enableDynamicSimulation true } forEach _waveInf;
+{ _x enableDynamicSimulation CQ_dynSimGarrison } forEach _waveInf;
 
 _hq set ["state", "Holding"];
 _hq set ["stateT", time];
@@ -53,7 +53,7 @@ private _toPatrol = {
     {
         [_x] call CQ_fnc_clearWaypoints;
         _x setVariable ["CQ_role", "patrol"];
-        [_x, _c, 300] call BIS_fnc_taskPatrol;
+        [_x, _c, CQ_patrolRadius select 0] call BIS_fnc_taskPatrol;
     } forEach _groups;
 };
 {
