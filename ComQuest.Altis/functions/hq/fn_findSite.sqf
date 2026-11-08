@@ -22,7 +22,7 @@ for "_i" from 1 to _tries do {
         if (_p distance2D CQ_basePos < CQ_baseNoSpawnRadius) then { continue };
         if ((allPlayers findIf { _x distance2D _p < CQ_siteNoPlayerRadius }) > -1) then { continue };
         if (((values CQ_hqs) findIf {
-            (_x get "state") in ["Inbound", "Establishing", "Holding"] && { (_x get "pos") distance2D _p < CQ_siteMinHqSpacing }
+            (_x get "state") in CQ_activeStates && { (_x get "pos") distance2D _p < CQ_siteMinHqSpacing }
         }) > -1) then { continue };
         if ((_p nearRoads 300) isEqualTo []) then { continue };
     };

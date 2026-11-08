@@ -51,9 +51,41 @@ CQ_objRadius = createHashMapFromArray [
 CQ_siteMaxGradient = 0.15;
 CQ_siteNoPlayerRadius = 800;
 CQ_siteMinHqSpacing = 1500;
-CQ_hqBuildStageTime = 45;                // seconds per construction stage (4 stages)
+CQ_hqBuildStageTime = 120;               // seconds per construction stage (4 stages, 8 min)
 CQ_hqMarkerRadius = 400;                 // approximate circle shown to players
 CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted", "SatchelCharge_Remote_Ammo", "SatchelCharge_Remote_Ammo_Scripted"];
+
+// --- HQ lifecycle (realistic timings) ---------------------------------------
+// Securing -> Installing -> Hold -> WaitingReinf -> split (child HQ) -> Holding -> WaitingReinf ...
+CQ_activeStates = ["Inbound", "Securing", "Installing", "Hold", "Holding", "WaitingReinf"];
+CQ_maxHqs = 8;                           // HQs alive at once
+CQ_maxAI = 200;                          // enemy AI alive at once
+CQ_secureRadius = 1000;                  // squads post out to this perimeter before building
+CQ_secureTimeout = 900;                  // build starts anyway after 15 min
+CQ_holdTime = 60;                        // hold after installation, before calling reinforcements
+CQ_waveInterval = 600;                   // a new reinforcement wave every 10 min per HQ
+CQ_waveSpawnDist = [1000, 1500];         // convoy spawns on a road this far from the HQ
+CQ_waveNoPlayerRadius = 1000;
+CQ_waveSquads = 2;
+CQ_waveSize = 25;                        // AI budget reserved for one wave
+CQ_wavePools = [                         // one vehicle from each pool per wave
+    ["truck",  ["O_Truck_02_transport_F", "B_Truck_01_transport_F"]],
+    ["armour", ["O_APC_Wheeled_02_rcws_v2_F", "I_APC_tracked_03_cannon_F", "I_LT_01_cannon_F"]],
+    ["random", ["O_MRAP_02_hmg_F", "O_G_Offroad_01_armed_F"]]
+];
+CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
+CQ_minInfantryToExpand = 16;
+CQ_minDefenders = 8;                     // never send away the last 8 infantry of an HQ
+CQ_childDistance = [1600, 2400];         // child HQ ~2 km from its parent
+
+// --- Contact, comms and QRF ---------------------------------------------------
+CQ_contactRadius = 1500;                 // a group must spot players within this of its HQ
+CQ_contactCooldown = 240;                // one call per HQ every 4 min
+CQ_commsRange = 3000;                    // two HQs are linked when both radios stand within this
+CQ_qrfShares = [[1000, 0.5], [2000, 0.3], [3000, 0.15]];   // [distance to contact, share of available troops]
+CQ_qrfTime = 600;                        // a QRF hunts 10 min, then returns to patrol its HQ
+CQ_hqHeliClass = "O_Heli_Light_02_dynamicLoadout_F";       // PO-30 Orca parked behind each HQ
+CQ_heliHuntTime = 360;
 
 // --- DEBUG overrides (set CQ_debug = false above for the real campaign) -----
 if (CQ_debug) then {
@@ -61,7 +93,8 @@ if (CQ_debug) then {
     CQ_firstRootDelay = 30;
     CQ_insertionSpawnDistance = 3500;
     CQ_insertionEscort = false;          // no gunship shooting the base while you watch
-    CQ_hqBuildStageTime = 20;
+    CQ_hqBuildStageTime = 45;
+    CQ_waveInterval = 300;
 } else {
     CQ_debugFirstAtRunway = false;
 };

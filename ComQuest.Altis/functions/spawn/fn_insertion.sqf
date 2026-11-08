@@ -8,8 +8,7 @@
       2 Drop/landing  lifters release their cargo over clear LZs (parachute fallback),
                       troop helis land on clear LZs and unload (teleport fallback)
       3 Leaving       every heli flies back out and is deleted
-      4 Establishing  troops move in, CQ_fnc_hqBuild builds the HQ in 4 stages
-      5 Holding       CQ_fnc_hqGarrison sets the garrison, map markers appear
+      4 Securing      hands over to CQ_fnc_hqTick (secure 1 km, install, hold, reinforce, split)
 */
 params ["_site"];
 
@@ -279,7 +278,7 @@ while { true } do {
 if (_escort isNotEqualTo []) then {
     _escort params ["_heli", "_hg"];
     if (alive _heli) then {
-        while { (waypoints _hg) isNotEqualTo [] } do { deleteWaypoint ((waypoints _hg) select 0) };
+        [_hg] call CQ_fnc_clearWaypoints;
         _heli doMove _exit;
         [_heli, _hg, _site, _deleteHeli] spawn {
             params ["_heli", "_hg", "_site", "_del"];
@@ -290,28 +289,21 @@ if (_escort isNotEqualTo []) then {
     };
 };
 
-// ---------------------------------------------------------------- establishing
-private _infantry = (_squads + [_cmdGroup]) select { ({ alive _x } count units _x) > 0 };
-if (_infantry isEqualTo []) exitWith {
+// ---------------------------------------------------------------- securing
+private _infantry = _squads select { ({ alive _x } count units _x) > 0 };
+if (_infantry isEqualTo [] && { ({ alive _x } count units _cmdGroup) == 0 }) exitWith {
     _hq set ["state", "Failed"];
     { deleteMarker _x } forEach (_hq get "markers");
     ["Enemy insertion failed", format ["HQ #%1: no troops made it to the ground", _id]] call CQ_fnc_announce;
 };
 
-_hq set ["state", "Establishing"];
-["Enemy establishing HQ", format ["HQ #%1: troops moving in to build at grid %2", _id, mapGridPosition _site]] call CQ_fnc_announce;
-
-{ _x move (_site getPos [45, random 360]) } forEach (_squads select { (units _x) isNotEqualTo [] });
-if ((units _cmdGroup) isNotEqualTo []) then { _cmdGroup move (_site getPos [20, _hqDir + 180]) };
-
 // Crews for the dropped vehicles
 private _vehicles = _dropped select { alive _x };
-{ createVehicleCrew _x } forEach _vehicles;
+{ [_x] call CQ_fnc_crewVehicle } forEach _vehicles;
 
-[_hq] call CQ_fnc_hqBuild;
-[_hq, _squads, _cmdGroup, _vehicles] call CQ_fnc_hqGarrison;
-
-// ---------------------------------------------------------------- holding
-_hq set ["state", "Holding"];
-["Enemy HQ operational", format ["HQ #%1 is HOLDING near grid %2. Kill the commander and blow the depot (engineers). Enemy AI on map: %3",
-    _id, mapGridPosition _site, call CQ_fnc_enemyCount]] call CQ_fnc_announce;
+_hq set ["infantry", _infantry];
+_hq set ["cmdGroup", _cmdGroup];
+_hq set ["vehicles", _vehicles];
+_hq set ["state", "Securing"];
+_hq set ["stateT", time];
+// CQ_fnc_hqTick takes over from here: secure 1 km -> install -> hold -> reinforcements -> split

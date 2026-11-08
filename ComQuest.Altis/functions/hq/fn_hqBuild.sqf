@@ -1,10 +1,11 @@
 /*
-    CQ_fnc_hqBuild  (server, scheduled: it sleeps between stages)
-    [_hq] call CQ_fnc_hqBuild;
+    CQ_fnc_hqBuild  (server, spawned by CQ_fnc_hqTick when the perimeter is secured)
+    [_hq] spawn CQ_fnc_hqBuild;
     Builds the HQ composition in 4 stages, CQ_hqBuildStageTime seconds apart, announcing each.
     Offsets are [right, forward] metres in the HQ's own frame (rotated by its "dir").
       1 command building   2 sandbag ring (gaps front and back)
-      3 supply depot + radio tower   4 helipad + 3 AA pits
+      3 supply depot + radio tower   4 helipad + parked QRF helicopter + 3 AA pits
+    At the end the squads are recalled to garrison the HQ and "buildDone" is set.
 */
 params ["_hq"];
 
@@ -102,9 +103,22 @@ _hq set ["depot", _depot];
 _hq set ["radio", _radio];
 [3, "supply depot and radio tower"] call _stage;
 
-// Stage 4 - helipad + 3 AA pits (static Titan AA in a round sandbag ring)
+// Stage 4 - helipad with the QRF helicopter parked on it + 3 AA pits
 sleep CQ_hqBuildStageTime;
-["Land_HelipadSquare_F", 26, 0, 0, true] call _place;
+private _pad = ["Land_HelipadSquare_F", 26, 0, 0, true] call _place;
+_hq set ["pad", _pad];
+if (!isNull _pad) then {
+    private _heli = createVehicle [CQ_hqHeliClass, getPosATL _pad, [], 0, "CAN_COLLIDE"];
+    _heli setDir _d;
+    private _hg = [_heli] call CQ_fnc_crewVehicle;
+    _hg setBehaviour "SAFE";
+    _heli engineOn false;
+    _hq set ["heli", _heli];
+    _hq set ["heliGrp", _hg];
+    _hq set ["heliState", "parked"];
+    (_hq get "support") pushBack _hg;
+};
+
 private _aaGroup = createGroup [east, true];
 {
     _x params ["_ox", "_oy"];
@@ -117,5 +131,9 @@ private _aaGroup = createGroup [east, true];
 } forEach [[-20, 22], [20, 22], [0, -26]];
 _aaGroup setBehaviour "AWARE";
 _aaGroup setCombatMode "RED";
-(_hq get "groups") pushBack _aaGroup;
-[4, "helipad and 3 AA pits"] call _stage;
+(_hq get "support") pushBack _aaGroup;
+[4, "helipad with QRF helicopter, 3 AA pits"] call _stage;
+
+// Recall the perimeter squads and set the garrison
+[_hq] call CQ_fnc_hqGarrison;
+_hq set ["buildDone", true];
