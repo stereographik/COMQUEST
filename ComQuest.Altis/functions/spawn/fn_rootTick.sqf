@@ -10,14 +10,19 @@ if (serverTime < CQ_nextRootTime) exitWith {};
 private _site = if (CQ_rootsLaunched == 0 && CQ_debugFirstAtRunway) then {
     call CQ_fnc_debugRunwaySite
 } else {
+    // The very first HQ is a beachhead: straight west of the carrier, close to the shore
+    private _first = CQ_rootsLaunched == 0;
+    private _inland = [CQ_rootInland, CQ_firstRootInland] select _first;
     // A coast point near the carrier's, then inland (westward cone) from it
-    private _y = (CQ_coastPoint select 1) - CQ_rootCoastSpread + random (2 * CQ_rootCoastSpread);
+    private _y = if (_first) then { CQ_coastPoint select 1 } else { (CQ_coastPoint select 1) - CQ_rootCoastSpread + random (2 * CQ_rootCoastSpread) };
     private _coast = [];
     for "_x" from (worldSize - 200) to (worldSize * 0.5) step -100 do {
         if (getTerrainHeightASL [_x, _y] > 0) exitWith { _coast = [_x, _y, 0] };
     };
     if (_coast isEqualTo []) then { _coast = CQ_coastPoint };
-    [_coast, CQ_rootInland select 0, CQ_rootInland select 1, true, 40, _coast getDir CQ_basePos, 60] call CQ_fnc_findSite
+    private _s = [_coast, _inland select 0, _inland select 1, true, 40, _coast getDir CQ_basePos, [60, 75] select _first] call CQ_fnc_findSite;
+    if (_first && { _s isNotEqualTo [] }) then { ["Beachhead site %1 m from the shore (grid %2)", [round (_s distance2D _coast), mapGridPosition _s]] call CQ_fnc_log };
+    _s
 };
 
 if (_site isEqualTo []) exitWith {

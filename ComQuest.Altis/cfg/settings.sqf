@@ -33,6 +33,7 @@ CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform
 CQ_coastBand = [9000, 23000];            // latitudes (y) where the carrier can appear
 CQ_carrierOffshore = 3000;               // metres out from the coast (deeper water if needed)
 CQ_rootInland = [1500, 4000];            // root insertions land this far inland from a coast point
+CQ_firstRootInland = [300, 2000];        // the very first one is a beachhead: within 2 km of the shore, west of the carrier
 CQ_rootCoastSpread = 4000;               // ...picked up to this far north/south of the carrier's coast point
 CQ_childSpread = 70;                     // child HQs head toward the player base, +/- this many degrees
 CQ_waveSpread = 60;                      // waves arrive from the carrier side of the HQ, +/- degrees
