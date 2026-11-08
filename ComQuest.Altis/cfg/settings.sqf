@@ -11,7 +11,7 @@ CQ_debugCards = false;                   // debug phase messages as orange cards
 CQ_tickSeconds = 5;                      // one server tick every 5 s
 
 // --- Player base (Altis International Airport) -----------------------------
-CQ_basePos = [14734, 16730, 0];
+CQ_basePos = [14182, 16282, 0];         // base camp centre (where the squads were placed in Eden)
 CQ_baseRadius = 300;                     // base zone drawn on the map
 CQ_baseNoSpawnRadius = 2500;             // no enemy site closer than this (milestone 2)
 

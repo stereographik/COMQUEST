@@ -12,14 +12,14 @@ class EditorData
 	};
 	class Camera
 	{
-		pos[]={14734.0,80,16650.0};
-		dir[]={0,-0.7,0.7};
-		up[]={0,0.7,0.7};
-		aside[]={1,0,0};
+		pos[]={14403.301,183.2827,16196.203};
+		dir[]={-0.42517659,-0.81032926,0.40322623};
+		up[]={-0.58796561,0.58597487,0.55761105};
+		aside[]={0.68812895,-1.4901161e-08,0.72558856};
 	};
 };
 binarizationWanted=0;
-sourceName="ComQuest";
+sourceName="comquest";
 addons[]=
 {
 	"A3_Characters_F"
@@ -48,10 +48,10 @@ class Mission
 	class Intel
 	{
 		timeOfChanges=1800.0002;
-		startWeather=0.3;
+		startWeather=0.30000001;
 		startWind=0.1;
 		startWaves=0.1;
-		forecastWeather=0.3;
+		forecastWeather=0.30000001;
 		forecastWind=0.1;
 		forecastWaves=0.1;
 		forecastLightnings=0.1;
@@ -78,7 +78,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14722.00,17.90,16716.00};
+						position[]={14172.00,19.50,16290.00};
 					};
 					side="West";
 					flags=7;
@@ -96,7 +96,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14724.50,17.90,16716.00};
+						position[]={14174.50,19.50,16290.00};
 					};
 					side="West";
 					flags=5;
@@ -113,7 +113,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14727.00,17.90,16716.00};
+						position[]={14177.00,19.50,16290.00};
 					};
 					side="West";
 					flags=5;
@@ -130,7 +130,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14729.50,17.90,16716.00};
+						position[]={14179.50,19.50,16290.00};
 					};
 					side="West";
 					flags=5;
@@ -147,7 +147,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14732.00,17.90,16716.00};
+						position[]={14182.00,19.50,16290.00};
 					};
 					side="West";
 					flags=5;
@@ -164,7 +164,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14734.50,17.90,16716.00};
+						position[]={14184.50,19.50,16290.00};
 					};
 					side="West";
 					flags=5;
@@ -194,7 +194,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14722.00,17.90,16713.00};
+						position[]={14172.00,19.50,16287.00};
 					};
 					side="West";
 					flags=7;
@@ -211,7 +211,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14724.50,17.90,16713.00};
+						position[]={14174.50,19.50,16287.00};
 					};
 					side="West";
 					flags=5;
@@ -228,7 +228,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14727.00,17.90,16713.00};
+						position[]={14177.00,19.50,16287.00};
 					};
 					side="West";
 					flags=5;
@@ -245,7 +245,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14729.50,17.90,16713.00};
+						position[]={14179.50,19.50,16287.00};
 					};
 					side="West";
 					flags=5;
@@ -262,7 +262,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14732.00,17.90,16713.00};
+						position[]={14182.00,19.50,16287.00};
 					};
 					side="West";
 					flags=5;
@@ -279,7 +279,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14734.50,17.90,16713.00};
+						position[]={14184.50,19.50,16287.00};
 					};
 					side="West";
 					flags=5;
@@ -309,7 +309,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14722.00,17.90,16710.00};
+						position[]={14172.00,19.50,16284.00};
 					};
 					side="West";
 					flags=7;
@@ -326,7 +326,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14724.50,17.90,16710.00};
+						position[]={14174.50,19.50,16284.00};
 					};
 					side="West";
 					flags=5;
@@ -343,7 +343,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14727.00,17.90,16710.00};
+						position[]={14177.00,19.50,16284.00};
 					};
 					side="West";
 					flags=5;
@@ -360,7 +360,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14729.50,17.90,16710.00};
+						position[]={14179.50,19.50,16284.00};
 					};
 					side="West";
 					flags=5;
@@ -377,7 +377,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14732.00,17.90,16710.00};
+						position[]={14182.00,19.50,16284.00};
 					};
 					side="West";
 					flags=5;
@@ -394,7 +394,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14734.50,17.90,16710.00};
+						position[]={14184.50,19.50,16284.00};
 					};
 					side="West";
 					flags=5;
@@ -424,7 +424,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14722.00,17.90,16707.00};
+						position[]={14172.00,19.50,16281.00};
 					};
 					side="West";
 					flags=7;
@@ -441,7 +441,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14724.50,17.90,16707.00};
+						position[]={14174.50,19.50,16281.00};
 					};
 					side="West";
 					flags=5;
@@ -458,7 +458,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14727.00,17.90,16707.00};
+						position[]={14177.00,19.50,16281.00};
 					};
 					side="West";
 					flags=5;
@@ -475,7 +475,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14729.50,17.90,16707.00};
+						position[]={14179.50,19.50,16281.00};
 					};
 					side="West";
 					flags=5;
@@ -492,7 +492,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14732.00,17.90,16707.00};
+						position[]={14182.00,19.50,16281.00};
 					};
 					side="West";
 					flags=5;
@@ -509,7 +509,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14734.50,17.90,16707.00};
+						position[]={14184.50,19.50,16281.00};
 					};
 					side="West";
 					flags=5;
@@ -539,7 +539,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14722.00,17.90,16704.00};
+						position[]={14172.00,19.50,16278.00};
 					};
 					side="West";
 					flags=7;
@@ -556,7 +556,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14724.50,17.90,16704.00};
+						position[]={14174.50,19.50,16278.00};
 					};
 					side="West";
 					flags=5;
