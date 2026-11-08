@@ -247,6 +247,7 @@ while { true } do {
                         };
                     };
                     ["Enemy vehicle dropped", format ["HQ #%1: %2 paradropped at grid %3 (%4 m from its LZ)", _id, _e get "label", mapGridPosition _heli, round _d]] call CQ_fnc_announce;
+                    if (isNil "CQ_firstDropT") then { CQ_firstDropT = time };   // the support teams follow 40 s later
                     _heli limitSpeed 500;
                     _e set ["state", "postDrop"];
                     _e set ["t", time];

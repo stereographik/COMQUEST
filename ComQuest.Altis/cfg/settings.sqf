@@ -140,7 +140,8 @@ CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is f
 CQ_hmgTowerDist = 45;                    // ...and distance
 // Enemy support teams: one medic team, one engineer team, dropped again after destruction
 CQ_specialVehicle = "I_MRAP_03_hmg_F";   // Strider HMG
-CQ_specialRespawn = 300;                 // a wiped-out team is dropped again 5 min later
+CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Blackfish drop of the game
+CQ_specialRespawn = 900;                 // a wiped-out team is dropped again 15 min later
 CQ_specialRange = 6000;                  // how far a team drives for a job
 CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get treated
 // Radio direction finder (players with a radio): signal from enemy HQ radios

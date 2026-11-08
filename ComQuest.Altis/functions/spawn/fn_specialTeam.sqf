@@ -1,8 +1,9 @@
 /*
     CQ_fnc_specialTeam  (server, spawned)
     [_kind] spawn CQ_fnc_specialTeam;     _kind: "medic" or "engineer"
-    One support team for the whole enemy army, paradropped once the first HQ is built and
-    dropped again CQ_specialRespawn s after it is wiped out (vehicle destroyed or crew dead):
+    One support team for the whole enemy army, paradropped CQ_specialFirstDelay s after the
+    first Blackfish drop of the game, next to that first HQ, and dropped again
+    CQ_specialRespawn s (15 min) after it is wiped out (vehicle destroyed or crew dead):
       medic     white Strider HMG, white-clad medics: drives to wounded CSAT soldiers
                 (damage > CQ_medicHealAbove) and treats everyone within 40 m back to health
       engineer  Strider HMG, engineers in urban camo: drives to damaged CSAT vehicles and
@@ -14,11 +15,16 @@ private _medic = _kind == "medic";
 private _tag = format ["%1 team", ["Engineer", "Medic"] select _medic];
 
 while { true } do {
-    // --- wait for a built HQ to drop next to
-    waitUntil { sleep 10; ((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates && { _x get "buildDone" } }) > -1 };
+    // --- first drop: CQ_specialFirstDelay s after the first Blackfish drop; then any time
+    waitUntil { sleep 2; !isNil "CQ_firstDropT" && { time > CQ_firstDropT + CQ_specialFirstDelay } };
+    waitUntil { sleep 5; ((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates }) > -1 };
     private _home = CQ_hqs getOrDefault [CQ_hubId, createHashMap];
-    if (count _home == 0) then { _home = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { _x get "buildDone" } } select 0 };
-    private _lz = (_home get "pos") getPos [120 + random 80, random 360];
+    if (count _home == 0 || { !((_home get "state") in CQ_activeStates) }) then {
+        private _act = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
+        _home = ([_act, [], { _x get "born" }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+    };
+    private _lz = (_home get "pos") getPos [150 + random 100, random 360];
+    ["%1: paradrop near HQ #%2 (grid %3)", [_tag, _home get "id", mapGridPosition _lz]] call CQ_fnc_log;
 
     // --- paradrop the Strider, then crew it with the team
     missionNamespace setVariable [format ["CQ_team_%1", _kind], objNull];
