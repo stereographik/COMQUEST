@@ -12,6 +12,18 @@ private _id = _hq get "id";
 private _bld = _hq get "building";
 private _cmdGroup = _hq get "cmdGroup";
 
+// No commander on the ground (e.g. his Taru was shot down during the insertion): the HQ
+// is not left headless, a new officer takes charge with 2 guards. Only at installation:
+// a commander killed later by the players is never replaced.
+if (isNull (_hq get "commander") && { isNull _cmdGroup || { ({ alive _x } count units _cmdGroup) == 0 } }) then {
+    _cmdGroup = createGroup [east, true];
+    { _cmdGroup createUnit [_x, _c getPos [5, random 360], [], 0, "NONE"] } forEach ["O_officer_F", "O_Soldier_F", "O_Soldier_F"];
+    [units _cmdGroup] call CQ_fnc_unitPrep;
+    _cmdGroup enableDynamicSimulation false;
+    _hq set ["cmdGroup", _cmdGroup];
+    ["Enemy commander appointed", format ["HQ #%1: the commander was lost on the way, a new officer takes charge", _id]] call CQ_fnc_announce;
+};
+
 // Commander and guards inside the building
 if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
     private _spots = if (isNull _bld) then { [] } else { _bld buildingPos -1 };

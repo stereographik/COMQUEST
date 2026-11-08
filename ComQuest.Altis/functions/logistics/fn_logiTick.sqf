@@ -41,7 +41,15 @@ if (_hubId != CQ_hubId) then {
     private _send = {
         params ["_g", "_isVeh"];
         private _t = [getPosATL leader _g, CQ_rearmMinStock] call CQ_fnc_nearestStockHq;
-        if (count _t == 0) then { _t = _home };   // nothing stocked anywhere: wait at home for a truck
+        // Nothing stocked anywhere: keep patrolling with what is left (no point queuing at an empty depot)
+        if (count _t == 0) exitWith {
+            if !(_g getVariable ["CQ_dryWarned", false]) then {
+                _g setVariable ["CQ_dryWarned", true];
+                ["HQ #%1: %2 low on ammo but no depot has any, keeps patrolling", [_home get "id", groupId _g]] call CQ_fnc_log;
+            };
+        };
+        _g setVariable ["CQ_dryWarned", false];
+        _g setVariable ["CQ_rearmSince", time];
         [_g] call CQ_fnc_clearWaypoints;
         _g setVariable ["CQ_prevRole", _g getVariable ["CQ_role", "patrol"]];
         _g setVariable ["CQ_role", "rearm"];
@@ -73,7 +81,7 @@ if (_hubId != CQ_hubId) then {
             // far from home: the HQ drives its field truck out; otherwise the group walks back
             if !([_home, _g] call CQ_fnc_fieldResupplyTry) then { [_g, false] call _send };
         };
-        if (_role == "rearm" && { _r >= 0.8 }) then { [_g] call _back };
+        if (_role == "rearm" && { _r >= 0.8 || { time - (_g getVariable ["CQ_rearmSince", time]) > CQ_rearmWaitMax } }) then { [_g] call _back };
         if (_role == "waitSupply" && { !(_home get "fieldRun") }) then {
             _g setVariable ["CQ_role", _g getVariable ["CQ_prevRole", "patrol"]];   // truck gone: re-evaluated next pass
         };
@@ -87,7 +95,7 @@ if (_hubId != CQ_hubId) then {
         private _l = [_v] call CQ_fnc_vehAmmoLevel;
         if (CQ_debug) then { _v setVariable ["CQ_dbg", format ["HQ%1 %2 ammo %3%%", _home get "id", _role, round (100 * _l)], true] };
         if (_role in ["patrol", "qrf"] && { _l < CQ_vehLowAmmo }) then { [_g, true] call _send };
-        if (_role == "rearm" && { _l >= CQ_vehRearmTo - 0.1 }) then { [_g] call _back };
+        if (_role == "rearm" && { _l >= CQ_vehRearmTo - 0.1 || { time - (_g getVariable ["CQ_rearmSince", time]) > CQ_rearmWaitMax } }) then { [_g] call _back };
     } forEach (_home get "vehicles");
 } forEach _active;
 
@@ -124,7 +132,12 @@ if (_hubId > -1) then {
     } forEach _built;
 };
 
-// ---- 5 ammo flight to the main HQ
+// ---- 5 ammo flight to the main HQ (brought forward when the hub runs dry)
+if (_hubId > -1 && { !CQ_ammoFlightActive } && { (_hub get "stock") < CQ_hubLowShare * (_hub get "cap") }
+    && { CQ_nextAmmoFlight - time > CQ_hubLowFlightDelay }) then {
+    CQ_nextAmmoFlight = time + CQ_hubLowFlightDelay;
+    ["Main HQ #%1 low on ammo (%2): supply flight brought forward", [_hubId, round (_hub get "stock")]] call CQ_fnc_log;
+};
 if (_hubId > -1 && { !CQ_ammoFlightActive } && { CQ_nextAmmoFlight > 0 } && { time >= CQ_nextAmmoFlight }) then {
     CQ_nextAmmoFlight = time + CQ_ammoFlightInterval;
     CQ_ammoFlightActive = true;

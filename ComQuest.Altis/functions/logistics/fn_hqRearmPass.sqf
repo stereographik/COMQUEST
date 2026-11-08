@@ -14,11 +14,15 @@ private _dp = getPosATL (_hq get "depot");
     _stock = [_x, _stock, CQ_rearmUnitBelow] call CQ_fnc_rearmUnit;
 } forEach ((_dp nearEntities [["CAManBase"], CQ_rearmRadius]) select { alive _x && { side group _x == east } && { vehicle _x == _x } });
 
+// Vehicles and statics only draw on the stock above the infantry reserve
+private _spare = _stock - CQ_infReserve;
 {
-    if (_stock <= 0) exitWith {};
+    if (_spare <= 0) exitWith {};
     private _static = _x isKindOf "StaticWeapon";
     if (([_x] call CQ_fnc_vehAmmoLevel) < ([CQ_rearmVehBelow, CQ_rearmVehBelow + 0.1] select _static)) then {
-        _stock = [_x, _stock, [CQ_vehRearmTo, 1] select _static] call CQ_fnc_rearmVeh;
+        private _left = [_x, _spare, [CQ_vehRearmTo, 1] select _static] call CQ_fnc_rearmVeh;
+        _stock = _stock - (_spare - _left);
+        _spare = _left;
     };
 } forEach ((_dp nearEntities [["LandVehicle", "StaticWeapon"], CQ_rearmRadius + 30]) select { alive _x && { side group effectiveCommander _x == east } });
 

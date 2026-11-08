@@ -142,8 +142,9 @@ private _patrolSlots = (ceil (CQ_airPatrolShare * count _armedAll)) - ({ (_x get
             if (time > (_e get "until")) then {
                 private _t = CQ_hqs getOrDefault [_e get "target", createHashMap];
                 if (count _t > 0) then {
-                    if (_armed && { alive (_t get "depot") } && { (_t get "stock") > 0 }) then {
-                        _t set ["stock", [_v, _t get "stock", 1] call CQ_fnc_rearmVeh];
+                    if (_armed && { alive (_t get "depot") } && { (_t get "stock") > CQ_infReserve }) then {
+                        private _spare = (_t get "stock") - CQ_infReserve;   // infantry reserve stays in the depot
+                        _t set ["stock", CQ_infReserve + ([_v, _spare, 1] call CQ_fnc_rearmVeh)];
                     };
                     private _need = 1 - fuel _v;
                     if (_need > 0.02 && { alive (_t get "tanker") } && { (_t get "fuel") > 0 }) then {
