@@ -111,6 +111,8 @@ CQ_guerillaClasses = ["O_G_Soldier_F", "O_G_Soldier_F", "O_G_Soldier_AR_F", "O_G
     "O_G_Soldier_M_F", "O_G_medic_F", "O_G_Soldier_lite_F", "O_G_Soldier_A_F"];
 CQ_balanceInterval = 60;                 // every minute, infantry is evened out over the fully built HQs
 CQ_balanceMargin = 6;                    // only when an HQ is this many soldiers off the average
+CQ_balanceNewBonus = 8;                  // an HQ still securing / building counts this many soldiers short: helped first
+CQ_balanceMaxMoves = 3;                  // redeployments started at once after a reinforcement wave
 CQ_balanceContactQuiet = 120;            // no redeployment from an HQ in contact the last 2 min
 CQ_walkMaxDist = 1000;                   // closer than this, squads walk between HQs
 CQ_truckRecallRange = 2500;              // a roaming troop truck this close is called back to carry a redeployment

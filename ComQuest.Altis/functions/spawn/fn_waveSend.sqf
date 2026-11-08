@@ -112,3 +112,4 @@ if (_arrived) then {
 };
 
 _hq set ["waveResult", [_infAlive, _vehs select { alive _x }]];
+CQ_balanceForceT = time + 10;   // redispatch over the network once the wave has joined (CQ_fnc_hqBalance)
