@@ -27,7 +27,11 @@ CQ_baseVehicles = [
     ["B_Heli_Transport_01_F",     "ghosthawk",  2],   // UH-80 Ghost Hawk
     ["B_Heli_Transport_01_F",     "blackhawk",  1]    // the "blackhawk": a 3rd UH-80 Ghost Hawk
 ];
-CQ_baseVehPadding = 25;                  // metres between base vehicles (and from the arsenal crate)
+CQ_baseVehPadding = 25;                  // metres between base vehicles (fallback search)
+CQ_parkGrid = 25;                        // base parking grid: one vehicle per cell, cells 25 m apart
+CQ_parkClear = 10;                       // a cell needs no object / rock / building / tree within this
+CQ_parkMaxGradient = 0.1;                // ...and flat ground
+CQ_parkSearch = 450;                     // grid searched this far around the park point behind the camp
 CQ_vehRespawnDelay = 60;                 // seconds after destruction
 CQ_vehAbandonDelay = 900;                // seconds empty and still away from its spot before it respawns there (15 min)
 CQ_vehAbandonDistance = 30;              // ...away from its parking spot
