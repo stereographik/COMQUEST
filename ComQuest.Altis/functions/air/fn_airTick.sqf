@@ -33,6 +33,39 @@ private _landAt = {
     [_e get "veh", _pad, _e] call CQ_fnc_airLandStep
 };
 
+// ---- dispatch: armed helicopters spread evenly over the built HQs (their home = where
+// they park, rest, and start their patrols). One move per CQ_airBalanceInterval, from the
+// HQ with the most to the one with the fewest when the gap is 2 or more.
+if (time > CQ_airBalanceNext) then {
+    CQ_airBalanceNext = time + CQ_airBalanceInterval;
+    private _built = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { _x get "buildDone" } && { alive (_x get "radio") } };
+    if (count _built >= 2) then {
+        private _armed = CQ_air select { (_x get "kind") == "armed" && { alive (_x get "veh") } };
+        private _per = _built apply { private _id = _x get "id"; [_x, _armed select { (_x get "homeId") == _id }] };
+        _per = [_per, [], { count (_x select 1) }, "ASCEND"] call BIS_fnc_sortBy;
+        private _lo = _per select 0;
+        private _hi = _per select (count _per - 1);
+        if (count (_hi select 1) - count (_lo select 1) >= 2) then {
+            private _movable = (_hi select 1) select { (_x get "state") in ["parked", "toPark", "patrolling"] };
+            if (_movable isNotEqualTo []) then {
+                private _e = selectRandom _movable;
+                private _to = _lo select 0;
+                private _oldPad = _e get "pad";
+                if (((values CQ_hqs) findIf { (_x get "pad") isEqualTo _oldPad }) == -1) then { deleteVehicle _oldPad };   // never an HQ's own helipad
+                _e set ["homeId", _to get "id"];
+                _e set ["pad", [_to get "pos", 50, 220] call CQ_fnc_airParkSpot];
+                if ((_e get "state") in ["parked", "toPark"]) then {
+                    (_e get "veh") engineOn true;
+                    _e set ["state", "toPark"];
+                    _e set ["nearT", -1];
+                };
+                ["Air dispatch: %1 re-based from HQ #%2 to HQ #%3 (%4 vs %5 armed helicopters)",
+                    [typeOf (_e get "veh"), (_hi select 0) get "id", _to get "id", count (_hi select 1), count (_lo select 1)]] call CQ_fnc_log;
+            };
+        };
+    };
+};
+
 // Armed helis allowed on patrol at the same time (the rest stay parked as quick reaction)
 private _armedAll = CQ_air select { (_x get "kind") == "armed" };
 private _patrolSlots = (ceil (CQ_airPatrolShare * count _armedAll)) - ({ (_x get "state") == "patrolling" } count _armedAll);
@@ -85,25 +118,22 @@ private _patrolSlots = (ceil (CQ_airPatrolShare * count _armedAll)) - ({ (_x get
             if (_low) then { [_e] call _goRearm };
             if (!_low && { _armed } && { _patrolSlots > 0 } && { time > (_e getOrDefault ["restUntil", 0]) }
                 && { fuel _v >= CQ_airPatrolMinFuel } && { _lvl >= CQ_airLowAmmo + 0.15 }) then {
-                // Patrol its home HQ most of the time, sometimes a neighbouring one
+                // Patrol zone = the whole HQ network: home HQ first, then a few others at random
                 private _homeHq = CQ_hqs getOrDefault [_home, createHashMap];
-                private _near = (values CQ_hqs) select {
-                    (_x get "state") in CQ_activeStates && { (_x get "pos") distance2D _v < CQ_airPatrolNearHq }
-                };
-                private _hq = _homeHq;
-                if (_near isNotEqualTo [] && { count _homeHq == 0 || { random 1 < 0.4 } }) then { _hq = selectRandom _near };
-                if (count _hq > 0) then {
-                    [_e, _hq] call CQ_fnc_airPatrol;
+                private _others = ((values CQ_hqs) select { (_x get "state") in CQ_activeStates && { (_x get "id") != _home } }) call BIS_fnc_arrayShuffle;
+                private _route = ([_homeHq] select { count _x > 0 }) + (_others select [0, 1 + floor random CQ_airPatrolHqs]);
+                if (_route isNotEqualTo []) then {
+                    [_e, _route] call CQ_fnc_airPatrol;
                     _patrolSlots = _patrolSlots - 1;
                 };
             };
         };
         case "patrolling": {
-            private _t = CQ_hqs getOrDefault [_e get "target", createHashMap];
+            private _alive = (_e getOrDefault ["patrolHqs", []]) select { ((CQ_hqs getOrDefault [_x, createHashMap]) getOrDefault ["state", ""]) in CQ_activeStates };
             if (_low) then {
                 [_e] call _goRearm;
             } else {
-                if (time > (_e get "until") || { count _t == 0 } || { !((_t get "state") in CQ_activeStates) }) then {
+                if (time > (_e get "until") || { _alive isEqualTo [] }) then {
                     [_g] call CQ_fnc_clearWaypoints;
                     _g setSpeedMode "NORMAL";
                     _v flyInHeight CQ_heightEscort;

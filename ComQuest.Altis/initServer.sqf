@@ -39,6 +39,7 @@ CQ_balanceForceT = -1;
 ["balance", CQ_fnc_hqBalance] call CQ_fnc_directorAddTask;
 CQ_vehRoamNext = 0;
 CQ_watchNext = 0;
+CQ_airBalanceNext = 0;
 ["groupWatch", CQ_fnc_groupWatch] call CQ_fnc_directorAddTask;
 ["vehRoam", CQ_fnc_vehRoamTick] call CQ_fnc_directorAddTask;
 

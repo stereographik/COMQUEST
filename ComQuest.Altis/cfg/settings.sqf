@@ -197,7 +197,9 @@ CQ_airPatrolRadius = [600, 1400];        // patrol ring around the HQ
 CQ_airPatrolHeight = [70, 170];          // random altitude per sortie (spreads the helis out)
 CQ_airPatrolMinFuel = 0.5;               // under this it stays parked (or goes to refuel)
 CQ_airPatrolShare = 0.7;                 // at most this share of armed helis in the air on patrol (the rest = ready QRF)
-CQ_airPatrolNearHq = 3500;               // a patrol may wander to another HQ within this range of its home
+CQ_airPatrolHqs = 3;                     // a patrol sweeps its home HQ + 1..3 other HQs of the network
+CQ_airPatrolPerHq = 120;                 // +2 min of sortie per extra HQ on the route
+CQ_airBalanceInterval = 60;              // armed helicopters re-based to even them out over the built HQs
 CQ_airPatrolBaseGap = 2000;              // patrol points never closer than this to the player base
 CQ_airQrfMax = 2;                        // armed helis sent on one contact
 CQ_airQrfRange = 4000;
