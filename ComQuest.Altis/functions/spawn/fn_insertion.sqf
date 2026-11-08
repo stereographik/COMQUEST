@@ -176,16 +176,23 @@ while { true } do {
 
         switch (_state) do {
             case "fly": {
-                if (_heli distance2D (_e get "lz") < 150) then {
-                    _heli flyInHeight 22;
+                if (_heli distance2D (_e get "lz") < 200) then {
+                    _heli flyInHeight 35;   // load still well clear of the ground
                     _heli limitSpeed 40;
                     _e set ["state", "near"];
                     _e set ["t", time];
                 };
             };
             case "near": {
+                // Over the LZ the heli lowers the load until it touches down, then cuts the ropes.
+                // (Going low with ~15 m of rope + a vehicle below drags the Taru into the ground.)
                 private _d = _heli distance2D (_e get "lz");
-                if ((_d < 40 && { speed _heli < 30 }) || { _d < 15 } || { time - (_e get "t") > 90 }) then {
+                private _cargo = _e get "cargo";
+                if (_d < 50) then { _heli flyInHeight 14 };
+                private _loadDown = (_e get "slung") && { (getPosATL _cargo select 2) < 2.5 };
+                private _overLz = !(_e get "slung") && { _d < 40 } && { speed _heli < 30 };
+                private _tooLow = (getPosATL _heli select 2) < 12;
+                if (_loadDown || _overLz || _tooLow || { time - (_e get "t") > 120 }) then {
                     private _cargo = _e get "cargo";
                     if (_e get "slung") then {
                         _heli setSlingLoad objNull;
@@ -247,8 +254,11 @@ while { true } do {
                 };
             };
             case "landing": {
-                private _onGround = isTouchingGround _heli || { (getPosATL _heli select 2) < 2 };
+                private _alt = getPosATL _heli select 2;
+                private _onGround = isTouchingGround _heli || { _alt < 2 }
+                    || { _alt < 4 && { speed _heli < 5 } && { _heli distance2D (_e get "lz") < 80 } };   // low hover: jump out
                 private _stuck = time - (_e get "t") > 150;
+                if (!_onGround && { round (time - (_e get "t")) mod 30 == 0 }) then { _heli land "GET OUT" };   // re-issue the order
                 if (_onGround || _stuck) then {
                     {
                         unassignVehicle _x;

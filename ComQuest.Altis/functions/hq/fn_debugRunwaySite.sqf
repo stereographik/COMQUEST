@@ -14,7 +14,7 @@ private _ils = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsPosition"
 
 private _anchor = if (count _ils >= 2) then { [_ils select 0, _ils select 1, 0] } else { CQ_basePos getPos [900, 270] };
 
-private _site = [_anchor, 0, 150, false, 40] call CQ_fnc_findSite;
+private _site = [_anchor, 0, 350, false, 80] call CQ_fnc_findSite;
 if (_site isEqualTo []) then {
     ["Debug site: no flat empty spot near %1, using it anyway", [mapGridPosition _anchor]] call CQ_fnc_log;
     _site = _anchor;

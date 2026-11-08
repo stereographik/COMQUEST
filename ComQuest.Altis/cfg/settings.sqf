@@ -41,6 +41,8 @@ CQ_lzClearance = 14;                     // free radius for a Taru landing / veh
 CQ_blockerTypes = ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "HOUSE", "BUILDING", "WALL", "FENCE",
     "CHURCH", "CHAPEL", "FUELSTATION", "HOSPITAL", "LIGHTHOUSE", "POWER LINES", "POWERSOLAR", "POWERWIND",
     "TRANSMITTER", "WATERTOWER", "RUIN", "STACK", "TOURISM", "VIEW-TOWER", "BUNKER", "FORTRESS", "FOUNTAIN", "QUAY"];
+// A whole site ignores bushes (Altis is covered in them); each object and LZ still avoids them
+CQ_siteBlockerTypes = CQ_blockerTypes - ["BUSH"];
 // Footprint radius (m) of each composition object, used for spacing checks
 CQ_objRadius = createHashMapFromArray [
     ["Land_Cargo_HQ_V1_F", 8], ["Land_BagFence_Long_F", 1.6], ["Land_BagFence_Round_F", 1.5],
@@ -131,6 +133,7 @@ if (CQ_debug) then {
     CQ_firstRootDelay = 30;
     CQ_insertionSpawnDistance = 3500;
     CQ_hqBuildStageTime = 45;
+    CQ_baseNoSpawnRadius = 1200;         // the runway HQ is only ~900 m from the base
     CQ_waveInterval = 300;
     CQ_ammoFlightInterval = 300;
 } else {

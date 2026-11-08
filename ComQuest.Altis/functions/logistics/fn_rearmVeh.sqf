@@ -25,10 +25,12 @@ if (_cost > _stock) then {
 
 _v setVehicleAmmo _to;
 if (_v isKindOf "Air") then {
-    // pylons are not always covered by setVehicleAmmo
+    // pylons are not always covered by setVehicleAmmo; refill to the loadout's own maximum
+    private _max = _v getVariable ["CQ_pylonMax", []];
     {
         if (_x != "") then {
-            _v setAmmoOnPylon [_forEachIndex + 1, round (_to * getNumber (configFile >> "CfgMagazines" >> _x >> "count"))];
+            private _cap = _max param [_forEachIndex, getNumber (configFile >> "CfgMagazines" >> _x >> "count")];
+            _v setAmmoOnPylon [_forEachIndex + 1, round (_to * _cap)];
         };
     } forEach (getPylonMagazines _v);
 };

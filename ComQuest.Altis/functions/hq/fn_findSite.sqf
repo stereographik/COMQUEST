@@ -16,7 +16,7 @@ for "_i" from 1 to _tries do {
 
     if (surfaceIsWater _p) then { continue };
     if ((_p isFlatEmpty [15, -1, CQ_siteMaxGradient, CQ_siteRadius, 0, false, objNull]) isEqualTo []) then { continue };
-    if !([_p, CQ_siteRadius] call CQ_fnc_isClear) then { continue };   // rocks, trees, houses, placed objects
+    if !([_p, CQ_siteRadius, [], CQ_siteBlockerTypes] call CQ_fnc_isClear) then { continue };   // rocks, trees, houses, placed objects (not bushes)
 
     if (_strict) then {
         if (_p distance2D CQ_basePos < CQ_baseNoSpawnRadius) then { continue };

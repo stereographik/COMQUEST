@@ -34,15 +34,20 @@ if (_reason == "" && { !alive (_hq get "commander") }) then { _reason = "no comm
 private _site = [];
 if (_reason == "") then {
     // Best of a few candidates: far from other HQs, slight pull toward the player base
+    // Ring at ~2 km first; if nothing fits, the same search 1 km further out
     private _best = -1e9;
-    for "_k" from 1 to 6 do {
-        private _p = [_c, CQ_childDistance select 0, CQ_childDistance select 1, true, 25] call CQ_fnc_findSite;
-        if (_p isNotEqualTo []) then {
-            private _others = (_active apply { (_x get "pos") distance2D _p });
-            private _score = (selectMin _others) - 0.2 * (_p distance2D CQ_basePos);
-            if (_score > _best) then { _best = _score; _site = _p };
+    {
+        _x params ["_rMin", "_rMax"];
+        for "_k" from 1 to 8 do {
+            private _p = [_c, _rMin, _rMax, true, 40] call CQ_fnc_findSite;
+            if (_p isNotEqualTo []) then {
+                private _others = (_active apply { (_x get "pos") distance2D _p });
+                private _score = (selectMin _others) - 0.2 * (_p distance2D CQ_basePos);
+                if (_score > _best) then { _best = _score; _site = _p };
+            };
         };
-    };
+        if (_site isNotEqualTo []) exitWith {};
+    } forEach [CQ_childDistance, [(CQ_childDistance select 1), (CQ_childDistance select 1) + 1000]];
     if (_site isEqualTo []) then { _reason = "no valid site 2 km out" };
 };
 
