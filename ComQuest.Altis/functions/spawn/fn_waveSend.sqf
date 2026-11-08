@@ -15,7 +15,9 @@ private _squadCfg = configFile >> "CfgGroups" >> "East" >> "OPF_F" >> "Infantry"
 // --- spawn point on a road
 private _spawn = [];
 for "_i" from 1 to 30 do {
-    private _p = _c getPos [(CQ_waveSpawnDist select 0) + random ((CQ_waveSpawnDist select 1) - (CQ_waveSpawnDist select 0)), random 360];
+    private _from = if (isNil "CQ_carrierPos") then { random 360 } else { (_c getDir CQ_carrierPos) - CQ_waveSpread + random (2 * CQ_waveSpread) };
+    if (_i > 20) then { _from = random 360 };    // nothing on the carrier side: any road
+    private _p = _c getPos [(CQ_waveSpawnDist select 0) + random ((CQ_waveSpawnDist select 1) - (CQ_waveSpawnDist select 0)), _from];
     private _roads = _p nearRoads 200;
     if (_roads isEqualTo []) then { continue };
     private _rp = getPosATL (selectRandom _roads);

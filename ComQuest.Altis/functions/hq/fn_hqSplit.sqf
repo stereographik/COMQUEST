@@ -5,6 +5,7 @@
     reinforcements first) leaves with the truck and the random vehicle, plus a new officer,
     to found a child HQ ~2 km away (CQ_fnc_colonise). The armour and the rest stay.
     No split when caps or numbers forbid it: the wave simply reinforces the garrison.
+    Within CQ_assaultRange of the player base the colonists assault the base instead.
 */
 params ["_hq", ["_waveInf", []], ["_waveVehs", []]];
 
@@ -24,20 +25,24 @@ private _inf = (_hq get "infantry") select { ({ alive _x } count units _x) > 0 }
 private _total = [_inf] call CQ_fnc_aliveCount;
 
 // --- can it expand?
+// Close to the player base: no new HQ, the split becomes an assault on the base
+private _assault = (_c distance2D CQ_basePos) < CQ_assaultRange;
+
 private _reason = "";
 if (([_waveInf] call CQ_fnc_aliveCount) == 0) then { _reason = "the reinforcements never arrived" };
 private _active = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
-if (_reason == "" && { count _active >= CQ_maxHqs }) then { _reason = format ["HQ limit %1 reached", CQ_maxHqs] };
+if (_reason == "" && { !_assault } && { count _active >= CQ_maxHqs }) then { _reason = format ["HQ limit %1 reached", CQ_maxHqs] };
 if (_reason == "" && { _total < CQ_minInfantryToExpand }) then { _reason = format ["only %1 infantry", _total] };
 if (_reason == "" && { !alive (_hq get "commander") }) then { _reason = "no commander to order it" };
 
 private _site = [];
-if (_reason == "") then {
-    // Best of a few candidates: far from other HQs, slight pull toward the player base
-    // ~2 km ring; the search relaxes its tolerance until it finds a place (CQ_fnc_findSite)
-    _site = [_c, CQ_childDistance select 0, CQ_childDistance select 1, true, 40] call CQ_fnc_findSite;
+if (_reason == "" && { !_assault }) then {
+    // ~2 km toward the player base, wandering +/- CQ_childSpread degrees; the search relaxes
+    // its tolerance until it finds a place (CQ_fnc_findSite)
+    private _toBase = _c getDir CQ_basePos;
+    _site = [_c, CQ_childDistance select 0, CQ_childDistance select 1, true, 40, _toBase, CQ_childSpread] call CQ_fnc_findSite;
     if (_site isEqualTo []) then {
-        _site = [_c, CQ_childDistance select 1, (CQ_childDistance select 1) + 1000, true, 40] call CQ_fnc_findSite;
+        _site = [_c, CQ_childDistance select 0, (CQ_childDistance select 1) + 1000, true, 40] call CQ_fnc_findSite;
     };
     if (_site isEqualTo []) then { _reason = "only sea around" };
 };
@@ -80,6 +85,19 @@ if (_col isEqualTo []) exitWith {
 
 // Vehicles that go: the wave's truck and random vehicle
 private _colVehs = _waveVehs select { alive _x && { (_x getVariable ["CQ_pool", ""]) in ["truck", "random"] } };
+
+if (_assault) exitWith {
+    {
+        [_x] call CQ_fnc_clearWaypoints;
+        _x setVariable ["CQ_role", "assault"];
+        _x setBehaviour "AWARE";
+        _x setSpeedMode "FULL";
+        private _wp = _x addWaypoint [CQ_basePos, 150];
+        _wp setWaypointType "SAD";
+    } forEach (_col + (_colVehs apply { group effectiveCommander _x }) select { !isNull _x });
+    ["ENEMY ASSAULT ON YOUR BASE", format ["HQ #%1 (%2 m from your base) sends %3 soldiers and %4 vehicles against the airport",
+        _id, round (_c distance2D CQ_basePos), _n, count _colVehs]] call CQ_fnc_announce;
+};
 
 _hq set ["infantry", (_hq get "infantry") - _col];
 _hq set ["vehicles", (_hq get "vehicles") - _colVehs];

@@ -100,8 +100,8 @@ private _rows = [];
 } forEach CQ_hqs;
 _rows sort true;
 
-private _status = format ["Roots %1/%2 (next in %3 s)  |  main HQ %4  |  trucks %5  |  aircraft %6  |  enemy AI %7",
+private _status = format ["Roots %1/%2 (next in %3 s)  |  main HQ %4  |  trucks %5  |  aircraft %6  |  enemy AI %7  |  carrier %8",
     CQ_rootsLaunched, CQ_maxRoots, round ((CQ_nextRootTime - serverTime) max 0),
-    ["none", format ["#%1", CQ_hubId]] select (CQ_hubId > -1), CQ_trucksActive, count CQ_air, call CQ_fnc_enemyCount];
+    ["none", format ["#%1", CQ_hubId]] select (CQ_hubId > -1), CQ_trucksActive, count CQ_air, call CQ_fnc_enemyCount, if (isNil "CQ_carrierPos") then { "-" } else { mapGridPosition CQ_carrierPos }];
 
 [_rows, _msg, _status] remoteExec ["CQ_fnc_debugUiFill", _caller];

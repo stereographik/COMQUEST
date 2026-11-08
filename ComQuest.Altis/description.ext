@@ -127,6 +127,7 @@ class CfgFunctions
         {
             file = "functions\spawn";
             class spawnHeli {};
+            class carrierSetup {};
             class crewVehicle {};
             class insertion {};
             class hqRequestWave {};

@@ -26,6 +26,16 @@ CQ_vehRespawnDelay = 60;                 // seconds after destruction
 CQ_vehAbandonDelay = 600;                // seconds empty before it returns to base
 CQ_vehAbandonDistance = 300;             // only counts as abandoned this far from base
 
+// --- Enemy origin: a carrier off the east coast -------------------------------
+CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
+CQ_coastBand = [9000, 23000];            // latitudes (y) where the carrier can appear
+CQ_carrierOffshore = 3000;               // metres out from the coast (deeper water if needed)
+CQ_rootInland = [1500, 4000];            // root insertions land this far inland from a coast point
+CQ_rootCoastSpread = 4000;               // ...picked up to this far north/south of the carrier's coast point
+CQ_childSpread = 70;                     // child HQs head toward the player base, +/- this many degrees
+CQ_waveSpread = 60;                      // waves arrive from the carrier side of the HQ, +/- degrees
+CQ_assaultRange = 3500;                  // an HQ this close to the player base assaults it instead of colonising
+
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 6;                         // root insertions in a campaign (victory after the last one)
 CQ_rootInterval = 3600;                  // seconds between root insertions
@@ -155,7 +165,7 @@ CQ_airRearmTime = 60;
 
 // --- DEBUG overrides (set CQ_debug = false above for the real campaign) -----
 if (CQ_debug) then {
-    CQ_debugFirstAtRunway = true;        // 1st root lands at the runway end (marker "cq_debug_site" overrides)
+    CQ_debugFirstAtRunway = false;       // true: 1st root lands at the runway end (marker "cq_debug_site" overrides)
     CQ_firstRootDelay = 30;
     CQ_insertionSpawnDistance = 3500;
     CQ_hqBuildStageTime = 45;

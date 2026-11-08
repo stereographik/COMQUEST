@@ -1,6 +1,7 @@
 /*
     CQ_fnc_findSite  (server)
-    [_center, _rMin, _rMax, _strict, _tries] call CQ_fnc_findSite  ->  position ([] only if no land at all)
+    [_center, _rMin, _rMax, _strict, _tries, _dir, _spread] call CQ_fnc_findSite  ->  position ([] only if no land at all)
+    _dir / _spread (optional): only sample within _dir +/- _spread degrees (default: all around)
 
     Always finds a site: starts with the full requirements, then relaxes them one level at a
     time until a sample fits. The level used is left in CQ_lastSiteLevel (0 = perfect).
@@ -14,7 +15,8 @@
         5       best land sample seen (fewest blockers, flattest); trees and bushes get cleared
     Rocks and buildings are never accepted inside the clear radius before level 5.
 */
-params ["_center", ["_rMin", 0], ["_rMax", 500], ["_strict", true], ["_tries", 40]];
+params ["_center", ["_rMin", 0], ["_rMax", 500], ["_strict", true], ["_tries", 40], ["_dir", -1], ["_spread", 180]];
+private _angle = { if (_dir < 0) then { random 360 } else { _dir - _spread + random (2 * _spread) } };
 
 private _hard = ["ROCK", "ROCKS", "HOUSE", "BUILDING", "CHURCH", "CHAPEL", "FUELSTATION", "HOSPITAL",
     "LIGHTHOUSE", "POWER LINES", "TRANSMITTER", "WATERTOWER", "RUIN", "BUNKER", "FORTRESS", "QUAY"];
@@ -37,7 +39,7 @@ CQ_lastSiteLevel = -1;
     private _level = _forEachIndex;
 
     for "_i" from 1 to _tries do {
-        private _p = _center getPos [_rMin + random (_rMax - _rMin), random 360];
+        private _p = _center getPos [_rMin + random (_rMax - _rMin), call _angle];
         if (surfaceIsWater _p) then { continue };
 
         // Remember the least bad land sample for the last resort

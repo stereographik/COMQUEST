@@ -22,8 +22,9 @@ _hq set ["fuelInit", CQ_rootStartFuel];
 private _id = _hq get "id";
 private _hqDir = _hq get "dir";
 
-private _approach = _site getDir CQ_basePos;           // helis come from the far side
-private _start = _site getPos [CQ_insertionSpawnDistance, _approach + 180];
+// Helis take off from the carrier (fallback: from the side opposite the player base)
+private _start = if (!isNil "CQ_carrierPos") then { CQ_carrierPos getPos [400, CQ_carrierPos getDir _site] }
+    else { _site getPos [CQ_insertionSpawnDistance, (_site getDir CQ_basePos) + 180] };
 private _heading = _start getDir _site;
 private _exit = _start;
 
@@ -47,8 +48,8 @@ private _lzAt = {
     _lz
 };
 
-["Enemy insertion inbound", format ["HQ #%1: CSAT heavy helicopters %2 km out, heading for grid %3",
-    _id, round (CQ_insertionSpawnDistance / 100) / 10, mapGridPosition _site]] call CQ_fnc_announce;
+["Enemy insertion inbound", format ["HQ #%1: CSAT heavy helicopters leaving the carrier, %2 km out, heading for grid %3",
+    _id, round ((_start distance2D _site) / 100) / 10, mapGridPosition _site]] call CQ_fnc_announce;
 
 if (CQ_debug) then {
     private _m = createMarker [format ["cq_dbg_site_%1", _id], _site];
@@ -253,7 +254,7 @@ while { true } do {
                 if (time - (_e get "t") >= 3) then { [_e, "transport"] call _toFleet };
             };
             case "leaving": {
-                if (!alive _heli || { _heli distance2D _site > CQ_insertionSpawnDistance * 0.8 } || { time - (_e get "t") > 240 }) then {
+                if (!alive _heli || { _heli distance2D _exit < 600 } || { time - (_e get "t") > 240 }) then {
                     [_heli, _e get "grp"] call _deleteHeli;
                     _e set ["state", "gone"];
                 };
@@ -307,7 +308,7 @@ while { true } do {
                 };
             };
             case "leaving": {
-                if (!alive _heli || { _heli distance2D _site > CQ_insertionSpawnDistance * 0.8 } || { time - (_e get "t") > 240 }) then {
+                if (!alive _heli || { _heli distance2D _exit < 600 } || { time - (_e get "t") > 240 }) then {
                     [_heli, _e get "grp"] call _deleteHeli;
                     _e set ["state", "gone"];
                 };
@@ -332,7 +333,7 @@ while { true } do {
             [_heli, _hg, _site, _deleteHeli] spawn {
                 params ["_heli", "_hg", "_site", "_del"];
                 private _t = time;
-                waitUntil { sleep 5; !alive _heli || { _heli distance2D _site > CQ_insertionSpawnDistance * 0.8 } || { time - _t > 300 } };
+                waitUntil { sleep 5; !alive _heli || { _heli distance2D _exit < 600 } || { time - _t > 300 } };
                 [_heli, _hg] call _del;
             };
         };

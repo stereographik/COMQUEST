@@ -6,6 +6,7 @@
 enableDynamicSimulationSystem true;   // AI far from players stops simulating (used from milestone 2)
 
 call CQ_fnc_baseSetup;
+call CQ_fnc_carrierSetup;           // CSAT carrier off the east coast: every insertion starts there
 
 {
     _x params ["_class", "_marker", "_dir"];
