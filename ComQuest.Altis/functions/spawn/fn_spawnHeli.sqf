@@ -13,6 +13,7 @@ _heli setPosASL [_pos select 0, _pos select 1, (getTerrainHeightASL _pos max 0) 
 _heli setDir _dir;
 _heli setVelocityModelSpace [0, 40, 0];
 _heli flyInHeight _height;
+_heli setFuelConsumptionCoef CQ_fuelConsumption;
 
 if (_careless) then {
     _grp setBehaviourStrong "CARELESS";

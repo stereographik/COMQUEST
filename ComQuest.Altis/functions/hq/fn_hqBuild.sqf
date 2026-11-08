@@ -186,3 +186,4 @@ _aaGroup setCombatMode "RED";
 // Recall the perimeter squads and set the garrison
 [_hq] call CQ_fnc_hqGarrison;
 _hq set ["buildDone", true];
+[_hq] call CQ_fnc_hqGuerilla;

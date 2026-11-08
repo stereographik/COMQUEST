@@ -37,7 +37,7 @@ _to set ["incoming", (_to getOrDefault ["incoming", 0]) + _men];
 private _trucks = (_from get "vehicles") select {
     alive _x && { _x isKindOf "Truck_F" } && { canMove _x } && { alive driver _x }
     && { !(_x getVariable ["CQ_busy", false]) } && { getAmmoCargo _x <= 0 } && { getFuelCargo _x <= 0 }
-    && { (_x emptyPositions "cargo") >= 4 } && { _x distance2D _a < 400 }
+    && { (_x emptyPositions "cargo") >= 4 } && { _x distance2D _a < CQ_truckRecallRange }
 };
 private _taru = CQ_air select {
     (_x get "kind") == "transport" && { (_x get "state") == "parked" } && { alive (_x get "veh") } && { alive driver (_x get "veh") }
@@ -96,18 +96,29 @@ if (_dist < CQ_walkMaxDist) then {
         params ["_v", "_load", "_a", "_b", "_toId"];
         private _men = [];
         { _men append ((units _x) select { alive _x }) } forEach _load;
+        private _vg = group driver _v;
+        // A roaming truck is called back to the HQ first, the squads gather there
+        if (_v distance2D _a > 120) then {
+            _vg enableDynamicSimulation false;
+            [_vg] call CQ_fnc_clearWaypoints;
+            _vg setSpeedMode "FULL";
+            _vg move (_a getPos [25, random 360]);
+            { _x move (_a getPos [20, random 360]) } forEach _load;
+            private _tc = time;
+            waitUntil { sleep 3; !alive _v || { !canMove _v } || { _v distance2D _a < 120 } || { time - _tc > 240 } };
+        };
         { _x assignAsCargo _v; [_x] orderGetIn true } forEach _men;
         private _t0 = time;
-        waitUntil { sleep 2; !alive _v || { (_men findIf { alive _x && { vehicle _x == _x } }) == -1 } || { time - _t0 > 20 } };
+        waitUntil { sleep 2; !alive _v || { (_men findIf { alive _x && { vehicle _x == _x } }) == -1 } || { time - _t0 > 30 } };
         { if (alive _x && { vehicle _x == _x }) then {
-            if (alive _v && { _x distance _v < 300 } && { (_v emptyPositions "cargo") > 0 }) then { _x moveInCargo _v } else { unassignVehicle _x };
+            if (alive _v && { _x distance _v < 400 } && { (_v emptyPositions "cargo") > 0 }) then { _x moveInCargo _v } else { unassignVehicle _x };
         } } forEach _men;
         { if ((units _x) findIf { alive _x && { vehicle _x == _x } } > -1) then { (_x addWaypoint [_b getPos [60, random 360], 40]) setWaypointType "MOVE" } } forEach _load;
 
-        private _vg = group driver _v;
         _vg enableDynamicSimulation false;
         [_vg] call CQ_fnc_clearWaypoints;
         _vg setBehaviour "SAFE";
+        _vg setSpeedMode "NORMAL";
         (_vg addWaypoint [_b getPos [50, random 360], 30]) setWaypointType "MOVE";
         _t0 = time;
         waitUntil { sleep 3; !alive _v || { !alive driver _v } || { !canMove _v } || { _v distance2D _b < 150 } || { time - _t0 > 900 } };
@@ -125,6 +136,7 @@ if (_dist < CQ_walkMaxDist) then {
             { if (alive _x && { vehicle _x == _x }) then { (group _x) move (_b getPos [40, random 360]) } } forEach _men;
         };
         _v setVariable ["CQ_busy", false];
+        if (!isNull _vg) then { _vg setVariable ["CQ_roamT", -1] };   // roaming again (CQ_fnc_vehRoamTick)
     };
 } forEach _rideTruck;
 

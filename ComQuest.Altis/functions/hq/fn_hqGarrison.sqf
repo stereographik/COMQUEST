@@ -59,11 +59,7 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
     private _vg = group effectiveCommander _v;
     if (alive _v && { !isNull _vg }) then {
         [_vg] call CQ_fnc_clearWaypoints;
-        if (_v isKindOf "Truck_F") then {
-            _vg move (_c getPos [35, (_hq get "dir") + 270]);
-        } else {
-            [_vg, _v, _c] call CQ_fnc_vehRoam;
-        };
+        [_vg, _v, _c] call CQ_fnc_vehRoam;      // trucks too: CQ_fnc_moveGroups calls them back when needed
         _vg enableDynamicSimulation CQ_dynSimGarrison;
     };
 } forEach (_hq get "vehicles");

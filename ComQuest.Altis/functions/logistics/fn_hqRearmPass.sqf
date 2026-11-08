@@ -7,7 +7,6 @@
 params ["_hq"];
 
 private _stock = _hq get "stock";
-if (_stock <= 0) exitWith {};
 private _dp = getPosATL (_hq get "depot");
 
 {
@@ -24,3 +23,19 @@ private _dp = getPosATL (_hq get "depot");
 } forEach ((_dp nearEntities [["LandVehicle", "StaticWeapon"], CQ_rearmRadius + 30]) select { alive _x && { side group effectiveCommander _x == east } });
 
 _hq set ["stock", _stock max 0];
+
+// Ground vehicles next to the fuel tanker are refuelled from the HQ's fuel points
+private _tk = _hq get "tanker";
+if (alive _tk && { (_hq get "fuel") > 0 }) then {
+    private _f = _hq get "fuel";
+    {
+        if (_f <= 0) exitWith {};
+        private _need = 1 - fuel _x;
+        if (_need > 0.05) then {
+            private _add = _need min (_f / CQ_vehFuelFullCost);
+            _x setFuel ((fuel _x + _add) min 1);
+            _f = _f - _add * CQ_vehFuelFullCost;
+        };
+    } forEach ((_tk nearEntities [["LandVehicle"], 50]) select { alive _x && { _x != _tk } && { side group effectiveCommander _x == east } });
+    _hq set ["fuel", _f max 0];
+};

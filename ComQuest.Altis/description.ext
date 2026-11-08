@@ -93,6 +93,8 @@ class CfgFunctions
             class moveGroups {};
             class vehRoam {};
             class vehRoamTick {};
+            class roamSpotOk {};
+            class hqGuerilla {};
         };
 
         class logistics

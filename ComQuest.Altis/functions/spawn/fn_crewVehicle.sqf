@@ -20,4 +20,5 @@ if ((_veh emptyPositions "driver") > 0) then {
 } forEach (allTurrets [_veh, false]);
 
 _g addVehicle _veh;
+_veh setFuelConsumptionCoef CQ_fuelConsumption;
 _g

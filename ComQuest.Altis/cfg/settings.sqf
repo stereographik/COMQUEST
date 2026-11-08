@@ -96,10 +96,24 @@ CQ_dynSimGarrison = false;               // true = HQ squads freeze when no play
 CQ_patrolRadius = [250, 700];            // patrol loop radius around an HQ: 1st patrol squad smallest, then wider
 CQ_vehPatrolRadius = 1200;               // HQ vehicles (Ifrit, Marid, Mora, Nyx...) roam this far around their HQ
 CQ_vehRoamRefresh = 420;                 // new random roaming route every 7 min
+CQ_vehRoamNetRange = 4000;               // routes also visit other built HQs this close
+CQ_roamMinNormal = 0.93;                 // max slope off road (~21 deg)
+CQ_roamHillRise = 18;                    // a spot this many metres above its surroundings is a hill top: avoided
+CQ_vehLowFuel = 0.3;                     // ground vehicles under this drive to an HQ fuel tanker
+CQ_vehFuelFullCost = 40;                 // fuel points for a full tank of a ground vehicle
+CQ_fuelConsumption = 5;                  // every enemy vehicle and helicopter burns fuel this many times faster
+// Guerillas: armed locals the HQ raises when stage 4 is done (vanilla FIA on the CSAT side)
+CQ_guerillaSquads = 2;
+CQ_guerillaSize = [6, 8];
+CQ_guerillaVillageRange = 1500;          // they patrol the nearest village this close, else the HQ surroundings
+CQ_guerillaLeader = "O_G_Soldier_SL_F";
+CQ_guerillaClasses = ["O_G_Soldier_F", "O_G_Soldier_F", "O_G_Soldier_AR_F", "O_G_Soldier_LAT_F", "O_G_Soldier_GL_F",
+    "O_G_Soldier_M_F", "O_G_medic_F", "O_G_Soldier_lite_F", "O_G_Soldier_A_F"];
 CQ_balanceInterval = 60;                 // every minute, infantry is evened out over the fully built HQs
 CQ_balanceMargin = 6;                    // only when an HQ is this many soldiers off the average
 CQ_balanceContactQuiet = 120;            // no redeployment from an HQ in contact the last 2 min
 CQ_walkMaxDist = 1000;                   // closer than this, squads walk between HQs
+CQ_truckRecallRange = 2500;              // a roaming troop truck this close is called back to carry a redeployment
 CQ_heliPreferDist = 3000;                // farther than this, a helicopter is tried before a truck
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
