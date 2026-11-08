@@ -83,6 +83,11 @@ missionNamespace setVariable ["CQ_arsenalBox", _box, true];
 // --- supply crates row (inside the back wall, left of the gate): CQ_fnc_crateTick fills it
 CQ_crateSpots = [];
 for "_i" from 0 to CQ_crateCount - 1 do { CQ_crateSpots pushBack ([-27 + 2.6 * _i, -9] call _at) };
+private _cm = createMarker ["cq_crates", [-20.5, -9] call _at];
+_cm setMarkerType "mil_box";
+_cm setMarkerColor "ColorWEST";
+_cm setMarkerSize [0.6, 0.6];
+_cm setMarkerText "Caisses de ravitaillement";
 
 // --- supply corner (back), lights in the corners
 ["Land_Pallets_stack_F", -26, -15, 0, 1] call _put;
