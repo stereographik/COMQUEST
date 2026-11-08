@@ -60,19 +60,33 @@ private _engineerOnly = {
         if (_ammo in CQ_engineerCharges && { typeOf _who in CQ_engineerClasses }) then { _dmg } else { damage _o };
     }];
 };
+// Stage wait: CQ_hqBuildStageTime, or until the debug panel skips it
+private _wait = {
+    private _t = time + CQ_hqBuildStageTime;
+    waitUntil { sleep 1; time >= _t || { _hq get "skipStage" } };
+    _hq set ["skipStage", false];
+};
+
+// Relaxed site (tolerance 3+): the troops clear trees and bushes from the footprint first
+if ((_hq get "siteLevel") >= 3) then {
+    private _veg = nearestTerrainObjects [_c, ["TREE", "SMALL TREE", "BUSH"], CQ_siteRadius, false, true];
+    { _x hideObjectGlobal true } forEach _veg;
+    ["HQ #%1: site tolerance %2, cleared %3 trees and bushes", [_id, _hq get "siteLevel", count _veg]] call CQ_fnc_log;
+};
+
 private _stage = {
     params ["_n", "_what"];
     ["Enemy HQ construction", format ["HQ #%1, stage %2/4: %3 (grid %4)", _id, _n, _what, mapGridPosition _c]] call CQ_fnc_announce;
 };
 
 // Stage 1 - command building
-sleep CQ_hqBuildStageTime;
+call _wait;
 private _bld = ["Land_Cargo_HQ_V1_F", 0, 0, 0, true] call _place;
 _hq set ["building", _bld];
 [1, "command building"] call _stage;
 
 // Stage 2 - sandbag ring, radius 13 m, gaps at the front (0) and back (180)
-sleep CQ_hqBuildStageTime;
+call _wait;
 for "_a" from 15 to 345 step 15 do {
     if (_a != 180) then {
         ["Land_BagFence_Long_F", 13 * sin _a, 13 * cos _a, _a + 90] call _place;
@@ -81,7 +95,7 @@ for "_a" from 15 to 345 step 15 do {
 [2, "sandbag perimeter"] call _stage;
 
 // Stage 3 - supply depot + ammo boxes, radio tower
-sleep CQ_hqBuildStageTime;
+call _wait;
 private _depot = ["Land_Cargo_House_V1_F", -24, 0, 90, true] call _place;
 { ["Box_East_Ammo_F", _x, -6] call _place } forEach [-26, -24, -22];
 private _radio = ["Land_TTowerBig_2_F", 0, 26, 0, true] call _place;
@@ -90,8 +104,9 @@ private _radio = ["Land_TTowerBig_2_F", 0, 26, 0, true] call _place;
 _depot addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
     if (isNil "_hq") exitWith {};
-    ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
+    ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo and %3 fuel: no more resupply there", _hq get "id", round (_hq get "stock"), round (_hq get "fuel")]] call CQ_fnc_announce;
     _hq set ["stock", 0];
+    _hq set ["fuel", 0];
 }];
 _radio addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
@@ -103,10 +118,11 @@ _radio setVariable ["CQ_hqId", _id];
 _hq set ["depot", _depot];
 _hq set ["radio", _radio];
 _hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
-[3, format ["supply depot (%1 ammo) and radio tower", round (_hq get "stock")]] call _stage;
+_hq set ["fuel", (_hq get "fuelInit") min (_hq get "cap")];
+[3, format ["supply depot (%1 ammo, %2 fuel) and radio tower", round (_hq get "stock"), round (_hq get "fuel")]] call _stage;
 
 // Stage 4 - helipad with the QRF helicopter parked on it + 3 AA pits
-sleep CQ_hqBuildStageTime;
+call _wait;
 private _pad = ["Land_HelipadSquare_F", 26, 0, 0, true] call _place;
 _hq set ["pad", _pad];
 if (!isNull _pad) then {

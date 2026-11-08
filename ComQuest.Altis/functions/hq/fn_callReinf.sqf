@@ -25,6 +25,7 @@ private _air = CQ_air select {
     private _v = _x get "veh";
     (_x get "kind") == "armed" && { (_x get "state") in ["parked", "toPark"] } && { alive _v }
     && { ([_v] call CQ_fnc_vehAmmoLevel) >= CQ_minAmmoToAdvance - 0.1 }
+    && { fuel _v >= CQ_airMinFuelToHunt }
     && { _v distance2D _pos < CQ_airQrfRange }
     && { _srcRadio || { (_x get "homeId") == _srcId } }
 };

@@ -38,10 +38,17 @@ private _hq = createHashMapFromArray [
     ["nextWaveT", 0],
     ["waveResult", []],
     ["lastContactT", -1e6],
+    ["siteLevel", 0],            // tolerance level the site search needed (CQ_fnc_findSite)
+    // debug skips (debug panel)
+    ["skipStage", false],
+    ["waveSkip", false],
+    ["moveSkip", false],
     // ammo depot
     ["stock", 0],
     ["stockInit", 0],            // ammo points the depot starts with (root: insertion cargo, child: carried)
-    ["cap", CQ_depotCap],
+    ["cap", CQ_depotCap],        // same cap for ammo and fuel
+    ["fuel", 0],
+    ["fuelInit", 0],
     ["truckInbound", false],
     ["lowWarned", false],
     ["rearmPad", objNull]

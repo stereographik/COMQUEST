@@ -20,6 +20,21 @@ player addEventHandler ["SeatSwitchedMan", {
     [_unit, _veh] call CQ_fnc_pilotGuard;
 }];
 
+// Debug panel: scroll action (re-added on every respawn) + F3, bound once
+if (CQ_debug) then {
+    player addAction ["<t color='#FF8800'>ComQuest debug panel (F3)</t>", { [] spawn CQ_fnc_debugUi }, nil, 0.5, false, true, "", "true"];
+    if (isNil "CQ_debugKeyBound") then {
+        CQ_debugKeyBound = true;
+        [] spawn {
+            waitUntil { sleep 0.5; !isNull (findDisplay 46) };
+            (findDisplay 46) displayAddEventHandler ["KeyDown", {
+                params ["", "_key"];
+                if (_key == 61) then { [] spawn CQ_fnc_debugUi; true } else { false };   // 61 = F3
+            }];
+        };
+    };
+};
+
 // Once per client: arsenal action + save the loadout when the arsenal closes
 if (isNil "CQ_arsenalReady") then {
     CQ_arsenalReady = true;

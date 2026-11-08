@@ -76,6 +76,18 @@ private _t0 = time;
 private _arrived = false;
 while { true } do {
     sleep 2;
+    if (_hq get "waveSkip") exitWith {
+        _hq set ["waveSkip", false];
+        {
+            if (alive _x) then {
+                private _p = [_c getPos [70 + 15 * _forEachIndex, random 360], 6, 40] call CQ_fnc_clearPos;
+                if (_p isEqualTo []) then { _p = _c getPos [80 + 15 * _forEachIndex, random 360] };
+                _x setPosATL _p;
+            };
+        } forEach _vehs;
+        _arrived = true;
+        ["HQ #%1: DEBUG skip, wave convoy moved to the HQ", [_id]] call CQ_fnc_log;
+    };
     private _alive = _vehs select { alive _x && { canMove _x } };
     if (_alive findIf { _x distance2D _c < 200 } > -1) exitWith { _arrived = true };
     if (_alive isEqualTo []) exitWith {};

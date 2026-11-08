@@ -5,7 +5,7 @@
     drives to the target HQ's depot, unloads for 20 s, then drives back and returns what is
     left. Destroyed on the way = the load is lost. A prime target for players.
 */
-params ["_hub", "_target", "_load"];
+params ["_hub", "_target", "_load", ["_fuelLoad", 0]];
 
 private _tid = _target get "id";
 private _hid = _hub get "id";
@@ -21,7 +21,7 @@ _cg setBehaviour "SAFE";
 _cg setSpeedMode "NORMAL";
 [_truck, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit;
 
-["Enemy ammo truck dispatched", format ["A HEMTT leaves main HQ #%1 for HQ #%2 with %3 ammo", _hid, _tid, round _load]] call CQ_fnc_announce;
+["Enemy supply truck dispatched", format ["A HEMTT leaves main HQ #%1 for HQ #%2 with %3 ammo and %4 fuel", _hid, _tid, round _load, round _fuelLoad]] call CQ_fnc_announce;
 
 private _phase = "out";
 private _t0 = time;
@@ -39,10 +39,13 @@ while { true } do {
             if (_truck distance2D _tDepot < 60) then {
                 sleep 20;
                 if (alive _truck && { alive _tDepot }) then {
-                    private _give = _load min ((_target get "cap") - (_target get "stock"));
+                    private _give = (_load min ((_target get "cap") - (_target get "stock"))) max 0;
                     _target set ["stock", (_target get "stock") + _give];
                     _load = _load - _give;
-                    ["Enemy ammo delivered", format ["HQ #%1 received %2 ammo", _tid, round _give]] call CQ_fnc_announce;
+                    private _giveF = (_fuelLoad min ((_target get "cap") - (_target get "fuel"))) max 0;
+                    _target set ["fuel", (_target get "fuel") + _giveF];
+                    _fuelLoad = _fuelLoad - _giveF;
+                    ["Enemy supplies delivered", format ["HQ #%1 received %2 ammo and %3 fuel", _tid, round _give, round _giveF]] call CQ_fnc_announce;
                 };
                 _phase = "back";
                 _t0 = time;
@@ -61,10 +64,11 @@ _target set ["truckInbound", false];
 CQ_trucksActive = (CQ_trucksActive - 1) max 0;
 
 if (_phase == "lost") then {
-    ["Enemy ammo truck destroyed", format ["The truck bound for HQ #%1 is lost with %2 ammo", _tid, round _load]] call CQ_fnc_announce;
+    ["Enemy supply truck destroyed", format ["The truck bound for HQ #%1 is lost with %2 ammo and %3 fuel", _tid, round _load, round _fuelLoad]] call CQ_fnc_announce;
 } else {
     if ((_hub get "state") in CQ_activeStates && { alive (_hub get "depot") }) then {
         _hub set ["stock", ((_hub get "stock") + _load) min (_hub get "cap")];
+        _hub set ["fuel", ((_hub get "fuel") + _fuelLoad) min (_hub get "cap")];
     };
     { deleteVehicle _x } forEach crew _truck;
     deleteVehicle _truck;

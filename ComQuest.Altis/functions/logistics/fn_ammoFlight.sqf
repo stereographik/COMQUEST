@@ -17,7 +17,7 @@ private _escorts = [_start, _heading, _dest] call CQ_fnc_spawnEscorts;
 private _pad = [_hub] call CQ_fnc_hqAirPad;
 _heli doMove (getPosATL _pad);
 
-["Enemy ammo flight inbound", format ["A Taru with an ammo pod and 3 escorts is heading for main HQ #%1", _hid]] call CQ_fnc_announce;
+["Enemy supply flight inbound", format ["A Taru with an ammo pod and 3 escorts is heading for main HQ #%1 (ammo + fuel)", _hid]] call CQ_fnc_announce;
 
 private _delivered = false;
 private _landing = false;
@@ -35,10 +35,13 @@ while { true } do {
         if (isTouchingGround _heli) exitWith {
             sleep 20;
             if (alive _heli && { alive (_hub get "depot") }) then {
-                private _give = CQ_ammoFlightLoad min ((_hub get "cap") - (_hub get "stock"));
+                private _give = (CQ_ammoFlightLoad min ((_hub get "cap") - (_hub get "stock"))) max 0;
                 _hub set ["stock", (_hub get "stock") + _give];
+                private _giveF = (CQ_flightFuelLoad min ((_hub get "cap") - (_hub get "fuel"))) max 0;
+                _hub set ["fuel", (_hub get "fuel") + _giveF];
                 _delivered = true;
-                ["Enemy ammo delivered by air", format ["Main HQ #%1 received %2 ammo (stock %3/%4)", _hid, round _give, round (_hub get "stock"), _hub get "cap"]] call CQ_fnc_announce;
+                ["Enemy supplies delivered by air", format ["Main HQ #%1 received %2 ammo and %3 fuel (now %4 / %5, cap %6)",
+                    _hid, round _give, round _giveF, round (_hub get "stock"), round (_hub get "fuel"), _hub get "cap"]] call CQ_fnc_announce;
             };
         };
     };
@@ -46,7 +49,7 @@ while { true } do {
 };
 
 if (!alive _heli) then {
-    ["Enemy ammo flight shot down", format ["The ammo Taru for main HQ #%1 is down: %2 ammo lost", _hid, CQ_ammoFlightLoad]] call CQ_fnc_announce;
+    ["Enemy supply flight shot down", format ["The supply Taru for main HQ #%1 is down: %2 ammo and %3 fuel lost", _hid, CQ_ammoFlightLoad, CQ_flightFuelLoad]] call CQ_fnc_announce;
 };
 
 sleep 3;

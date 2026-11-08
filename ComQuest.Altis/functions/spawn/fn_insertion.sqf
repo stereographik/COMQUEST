@@ -11,10 +11,12 @@
                       site) and waits for orders; when the fleet is full it leaves instead
       4 Securing      hands over to CQ_fnc_hqTick (secure 1 km, install, hold, reinforce, split)
 */
-params ["_site"];
+params ["_site", ["_siteLevel", 0]];
 
 private _hq = [_site, -1] call CQ_fnc_hqNew;
+_hq set ["siteLevel", _siteLevel];
 _hq set ["stockInit", CQ_rootStartStock];
+_hq set ["fuelInit", CQ_rootStartFuel];
 private _id = _hq get "id";
 private _hqDir = _hq get "dir";
 

@@ -4,9 +4,9 @@
       1 Main HQ (supply hub) = oldest built HQ whose depot stands. Its cap is CQ_hubCap.
       2 Rearm pass at every depot (soldiers, vehicles, statics nearby).
       3 Groups low on ammo stop and go to the nearest stocked HQ; rearmed groups go home.
-      4 HQs linked to the hub by radio and under CQ_requestShare of their cap get a HEMTT
-        ammo truck from the hub (CQ_fnc_truckRun).
-      5 Ammo flight to the hub every CQ_ammoFlightInterval (CQ_fnc_ammoFlight).
+      4 HQs linked to the hub by radio and under CQ_requestShare of their cap (ammo or fuel)
+        get a HEMTT from the hub carrying ammo + fuel (CQ_fnc_truckRun).
+      5 Supply flight (ammo + fuel) to the hub every CQ_ammoFlightInterval (CQ_fnc_ammoFlight).
 */
 if (time < CQ_logiNext) exitWith {};
 CQ_logiNext = time + CQ_logiTickSeconds;
@@ -91,7 +91,7 @@ if (_hubId > -1) then {
         private _h = _x;
         private _id = _h get "id";
         if (_id == _hubId) then { continue };
-        private _low = (_h get "stock") < CQ_requestShare * (_h get "cap");
+        private _low = (_h get "stock") < CQ_requestShare * (_h get "cap") || { (_h get "fuel") < CQ_requestShare * (_h get "cap") };
         if (!_low) then { _h set ["lowWarned", false]; continue };
 
         if !(_id in _linked) then {
@@ -104,14 +104,15 @@ if (_hubId > -1) then {
         if (_h get "truckInbound") then { continue };
         if (CQ_trucksActive >= CQ_trucksMax) then { continue };
 
-        private _spare = (_hub get "stock") - CQ_hubReserve;
-        private _load = CQ_truckLoad min _spare min ((_h get "cap") - (_h get "stock"));
-        if (_load < 30) then { continue };
+        private _load = (CQ_truckLoad min ((_hub get "stock") - CQ_hubReserve) min ((_h get "cap") - (_h get "stock"))) max 0;
+        private _fuelLoad = (CQ_truckFuelLoad min ((_hub get "fuel") - CQ_hubFuelReserve) min ((_h get "cap") - (_h get "fuel"))) max 0;
+        if (_load < 30 && { _fuelLoad < 30 }) then { continue };
 
         _hub set ["stock", (_hub get "stock") - _load];
+        _hub set ["fuel", (_hub get "fuel") - _fuelLoad];
         _h set ["truckInbound", true];
         CQ_trucksActive = CQ_trucksActive + 1;
-        [_hub, _h, _load] spawn CQ_fnc_truckRun;
+        [_hub, _h, _load, _fuelLoad] spawn CQ_fnc_truckRun;
     } forEach _built;
 };
 
@@ -125,7 +126,7 @@ if (_hubId > -1 && { !CQ_ammoFlightActive } && { CQ_nextAmmoFlight > 0 } && { ti
 // ---- debug: stock report every minute
 if (CQ_debug && { time >= CQ_logiReportT }) then {
     CQ_logiReportT = time + 60;
-    { (format ["cq_hq_%1_exact", _x get "id"]) setMarkerText format ["DEBUG HQ #%1 %2 | ammo %3/%4", _x get "id", _x get "state", round (_x get "stock"), _x get "cap"] } forEach _built;
-    private _parts = _built apply { format ["HQ%1%2 %3/%4", _x get "id", ["", "(main)"] select ((_x get "id") == _hubId), round (_x get "stock"), _x get "cap"] };
+    { (format ["cq_hq_%1_exact", _x get "id"]) setMarkerText format ["DEBUG HQ #%1 %2 | ammo %3 fuel %4 /%5", _x get "id", _x get "state", round (_x get "stock"), round (_x get "fuel"), _x get "cap"] } forEach _built;
+    private _parts = _built apply { format ["HQ%1%2 ammo %3 fuel %4 /%5", _x get "id", ["", "(main)"] select ((_x get "id") == _hubId), round (_x get "stock"), round (_x get "fuel"), _x get "cap"] };
     ["Stocks: %1 | trucks on the road %2 | aircraft %3 | enemy AI %4", [_parts joinString ", ", CQ_trucksActive, count CQ_air, call CQ_fnc_enemyCount]] call CQ_fnc_log;
 };

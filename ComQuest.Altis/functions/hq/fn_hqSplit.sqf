@@ -34,21 +34,12 @@ if (_reason == "" && { !alive (_hq get "commander") }) then { _reason = "no comm
 private _site = [];
 if (_reason == "") then {
     // Best of a few candidates: far from other HQs, slight pull toward the player base
-    // Ring at ~2 km first; if nothing fits, the same search 1 km further out
-    private _best = -1e9;
-    {
-        _x params ["_rMin", "_rMax"];
-        for "_k" from 1 to 8 do {
-            private _p = [_c, _rMin, _rMax, true, 40] call CQ_fnc_findSite;
-            if (_p isNotEqualTo []) then {
-                private _others = (_active apply { (_x get "pos") distance2D _p });
-                private _score = (selectMin _others) - 0.2 * (_p distance2D CQ_basePos);
-                if (_score > _best) then { _best = _score; _site = _p };
-            };
-        };
-        if (_site isNotEqualTo []) exitWith {};
-    } forEach [CQ_childDistance, [(CQ_childDistance select 1), (CQ_childDistance select 1) + 1000]];
-    if (_site isEqualTo []) then { _reason = "no valid site 2 km out" };
+    // ~2 km ring; the search relaxes its tolerance until it finds a place (CQ_fnc_findSite)
+    _site = [_c, CQ_childDistance select 0, CQ_childDistance select 1, true, 40] call CQ_fnc_findSite;
+    if (_site isEqualTo []) then {
+        _site = [_c, CQ_childDistance select 1, (CQ_childDistance select 1) + 1000, true, 40] call CQ_fnc_findSite;
+    };
+    if (_site isEqualTo []) then { _reason = "only sea around" };
 };
 
 // Wave infantry not leaving -> patrols; armour always patrols the HQ
@@ -101,9 +92,13 @@ _cmdG createUnit ["O_officer_F", _from getPos [6, random 360], [], 0, "NONE"];
 [units _cmdG] call CQ_fnc_unitPrep;
 
 private _child = [_site, _id] call CQ_fnc_hqNew;
+_child set ["siteLevel", CQ_lastSiteLevel];
 private _carry = floor (((_hq get "stock") * CQ_childCarryShare) min CQ_childCarryMax);
 _hq set ["stock", (_hq get "stock") - _carry];
 _child set ["stockInit", _carry];
+private _carryFuel = floor (((_hq get "fuel") * CQ_childCarryShare) min CQ_childCarryMax);
+_hq set ["fuel", (_hq get "fuel") - _carryFuel];
+_child set ["fuelInit", _carryFuel];
 ["Enemy HQ splitting", format ["HQ #%1: %2 soldiers leave with %7 ammo to found HQ #%3 near grid %4 (%5 m), %6 stay",
     _id, _n, _child get "id", mapGridPosition _site, round (_site distance2D _c), _total - _n, _carry]] call CQ_fnc_announce;
 

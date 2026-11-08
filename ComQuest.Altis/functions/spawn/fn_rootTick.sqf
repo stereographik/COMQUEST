@@ -14,11 +14,12 @@ private _site = if (CQ_rootsLaunched == 0 && CQ_debugFirstAtRunway) then {
 };
 
 if (_site isEqualTo []) exitWith {
-    ["Root insertion: no valid site this tick, retrying"] call CQ_fnc_log;
+    ["Root insertion: no land found this tick, retrying"] call CQ_fnc_log;
 };
+private _level = CQ_lastSiteLevel;
 
 CQ_rootsLaunched = CQ_rootsLaunched + 1;
 CQ_nextRootTime = serverTime + CQ_rootInterval;
 ["Root insertion %1/%2 launched", [CQ_rootsLaunched, CQ_maxRoots]] call CQ_fnc_log;
 
-[_site] spawn CQ_fnc_insertion;
+[_site, _level] spawn CQ_fnc_insertion;

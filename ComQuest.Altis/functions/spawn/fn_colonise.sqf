@@ -49,6 +49,18 @@ _t0 = time;
 while { true } do {
     sleep 3;
     private _all = _groups + [_cmdG];
+    if (_child get "moveSkip") exitWith {
+        _child set ["moveSkip", false];
+        {
+            if (alive _x) then {
+                private _p = [_site getPos [60, random 360], 6, 40] call CQ_fnc_clearPos;
+                if (_p isEqualTo []) then { _p = _site getPos [70, random 360] };
+                _x setPosATL _p;
+            };
+        } forEach _vehs;
+        { { if (alive _x && { vehicle _x == _x }) then { _x setPosATL (_site getPos [20 + random 30, random 360]) } } forEach units _x } forEach _all;
+        ["HQ #%1: DEBUG skip, colonists moved to the site", [_id]] call CQ_fnc_log;
+    };
     if (([_all] call CQ_fnc_aliveCount) == 0) exitWith {};
     private _near = (_vehs findIf { alive _x && { _x distance2D _site < 150 } }) > -1
         || { (_all findIf { alive leader _x && { (leader _x) distance2D _site < 150 } }) > -1 };

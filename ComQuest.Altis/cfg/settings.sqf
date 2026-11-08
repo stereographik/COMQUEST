@@ -120,6 +120,17 @@ CQ_ammoFlightInterval = 1200;            // an ammo flight to the main HQ every 
 CQ_ammoFlightLoad = 600;
 CQ_ammoFlightClass = "O_Heli_Transport_04_ammo_F";   // Taru with ammo pod
 
+// --- Fuel (aircraft) ---------------------------------------------------------
+// Depots also store fuel points (FP): a full refuel of a helicopter costs CQ_fuelFullCost.
+CQ_airLowFuel = 0.25;                    // under this a heli flies to the nearest HQ with fuel
+CQ_airMinFuelToHunt = 0.4;               // under this it never goes hunting
+CQ_fuelFullCost = 100;
+CQ_rootStartFuel = 200;
+CQ_flightFuelLoad = 400;                 // brought by each supply flight to the main HQ
+CQ_truckFuelLoad = 150;                  // carried by each HEMTT next to its ammo
+CQ_hubFuelReserve = 100;
+CQ_rearmMinFuel = 15;                    // an HQ with less is not a refuel destination
+
 // --- Air fleet --------------------------------------------------------------
 CQ_escortClasses = ["O_Heli_Light_02_dynamicLoadout_F", "O_Heli_Light_02_dynamicLoadout_F", "O_Heli_Attack_02_dynamicLoadout_F"];
 CQ_fleetMax = 8;                         // aircraft parked at the main HQ waiting for orders
