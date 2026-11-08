@@ -139,7 +139,7 @@ if (CQ_runway isNotEqualTo []) then {
 };
 
 // fallback for what the runway could not take: a 25 m grid of flat, clear cells near the camp
- (aligned with the camp) over flat, clear ground close to the camp.
+// (aligned with the camp) over flat, clear ground close to the camp.
 // A cell is used only if it is dry, flat over 9 m, and has no rock, building, wall, tree or
 // any other object (camp pieces included) within CQ_parkClear. Ground vehicles take the
 // cells nearest to the park point behind the camp, helicopters the next ones (with a pad).
