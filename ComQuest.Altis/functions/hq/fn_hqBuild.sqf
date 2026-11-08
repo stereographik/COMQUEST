@@ -108,6 +108,8 @@ _depot addEventHandler ["Killed", {
     if (isNil "_hq") exitWith {};
     ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
     ["killDepot", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
+    params ["", "_k", "_i"];
+    [[_i, _k] select (isNull _i), 50, "supply depot"] call CQ_fnc_scoreAdd;
     _hq set ["stock", 0];
 }];
 
@@ -145,6 +147,8 @@ _radio addEventHandler ["Killed", {
     if (isNil "_hq") exitWith {};
     ["Radio tower destroyed", format ["HQ #%1 is cut off from the network", _hq get "id"]] call CQ_fnc_announce;
     ["killTower", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
+    params ["", "_k", "_i"];
+    [[_i, _k] select (isNull _i), 50, "radio tower"] call CQ_fnc_scoreAdd;
 }];
 _depot setVariable ["CQ_hqId", _id];
 _radio setVariable ["CQ_hqId", _id];

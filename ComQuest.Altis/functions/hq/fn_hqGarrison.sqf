@@ -48,6 +48,8 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
         if (isNil "_hq") exitWith {};
         ["Enemy commander killed", format ["HQ #%1 has lost its commander", _hq get "id"]] call CQ_fnc_announce;
         ["killCommander", [[_hq get "id"] call CQ_fnc_objName], _hq] call CQ_fnc_say;
+        params ["", "_k", "_i"];
+        [[_i, _k] select (isNull _i), 40, "HQ commander"] call CQ_fnc_scoreAdd;
     }];
 };
 

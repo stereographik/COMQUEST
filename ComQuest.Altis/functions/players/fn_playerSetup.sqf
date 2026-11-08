@@ -28,9 +28,22 @@ player addAction ["<t color='#C8E07A'>Unload supply crate</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); [ "unload", _v, player ] remoteExec ["CQ_fnc_crateCargo", 2] }, nil, 5, true, true, "",
     "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); count (_v getVariable ['CQ_crates', []]) > 0 && { _this distance _v < 8 }"];
 
-// Debug panel: scroll action (re-added on every respawn) + F3, bound once
+// Squad management (U) and leaderboard: scroll menu entries (re-added on every respawn) + U key
+player addAction ["<t color='#9FD3FF'>Squad management (U)</t>", { ["squads"] spawn CQ_fnc_squadUi }, nil, 0.6, false, true, "", "true"];
+player addAction ["<t color='#9FD3FF'>Leaderboard</t>", { ["board"] spawn CQ_fnc_squadUi }, nil, 0.59, false, true, "", "true"];
+if (isNil "CQ_squadKeyBound") then {
+    CQ_squadKeyBound = true;
+    [] spawn {
+        waitUntil { sleep 0.5; !isNull (findDisplay 46) };
+        (findDisplay 46) displayAddEventHandler ["KeyDown", {
+            params ["", "_key", "_shift", "_ctrl", "_alt"];
+            if (_key == 22 && { !_shift && !_ctrl && !_alt }) then { ["squads"] spawn CQ_fnc_squadUi; true } else { false };   // 22 = U
+        }];
+    };
+};
+
+// Debug panel: F3 only (no scroll menu entry), debug missions only
 if (CQ_debug) then {
-    player addAction ["<t color='#FF8800'>ComQuest debug panel (F3)</t>", { [] spawn CQ_fnc_debugUi }, nil, 0.5, false, true, "", "true"];
     if (isNil "CQ_debugKeyBound") then {
         CQ_debugKeyBound = true;
         [] spawn {

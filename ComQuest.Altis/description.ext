@@ -182,6 +182,9 @@ class CfgFunctions
             class crateCargo {};
             class crateSlots {};
             class crateTick {};
+            class squadCmd {};
+            class scoreAdd {};
+            class squadUi {};
             class baseDefBuild {};
             class baseDefTick {};
             class vehSpawn {};
