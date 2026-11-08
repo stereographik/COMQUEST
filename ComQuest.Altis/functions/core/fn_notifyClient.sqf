@@ -5,5 +5,5 @@ params [["_title", "", [""]], ["_text", "", [""]]];
 
 if (!hasInterface) exitWith {};
 
-["CQ_Phase", [_title, _text]] call BIS_fnc_showNotification;
-systemChat format ["[ComQuest] %1: %2", _title, _text];
+if (CQ_debugCards) then { ["CQ_Phase", [_title, _text]] call BIS_fnc_showNotification };
+systemChat format ["[DEBUG] %1: %2", _title, _text];

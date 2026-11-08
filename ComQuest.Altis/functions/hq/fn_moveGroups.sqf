@@ -174,4 +174,5 @@ _home set ["infantry", (_home get "infantry") + _alive];
     [_x, _home get "pos", (CQ_patrolRadius select 0) + random ((CQ_patrolRadius select 1) - (CQ_patrolRadius select 0))] call BIS_fnc_taskPatrol;
     _x enableDynamicSimulation CQ_dynSimGarrison;
 } forEach _alive;
+["reinf", [[_home get "id"] call CQ_fnc_objName], _home] call CQ_fnc_say;
 ["Enemy redeployment complete", format ["HQ #%1 received %2 soldiers (now %3)", _home get "id", [_alive] call CQ_fnc_aliveCount, [_home get "infantry"] call CQ_fnc_aliveCount]] call CQ_fnc_announce;

@@ -41,6 +41,7 @@ while { true } do {
                 _delivered = true;
                 ["Enemy supplies delivered by air", format ["Main HQ #%1 received %2 ammo and %3 fuel (now %4 / %5, cap %6)",
                     _hid, round _give, round _giveF, round (_hub get "stock"), round (_hub get "fuel"), _hub get "cap"]] call CQ_fnc_announce;
+                ["airSupply", [[_hid] call CQ_fnc_objName], _hub] call CQ_fnc_say;
             };
         };
     };
@@ -49,6 +50,7 @@ while { true } do {
 
 if (!alive _heli) then {
     ["Enemy supply flight shot down", format ["The supply Taru for main HQ #%1 is down: %2 ammo and %3 fuel lost", _hid, CQ_ammoFlightLoad, CQ_flightFuelLoad]] call CQ_fnc_announce;
+    ["killSupplyBird", []] call CQ_fnc_say;
 };
 
 sleep 3;

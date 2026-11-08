@@ -98,6 +98,7 @@ if (_assault) exitWith {
     } forEach (_col + (_colVehs apply { group effectiveCommander _x }) select { !isNull _x });
     ["ENEMY ASSAULT ON YOUR BASE", format ["HQ #%1 (%2 m from your base) sends %3 soldiers and %4 vehicles against the airport",
         _id, round (_c distance2D CQ_basePos), _n, count _colVehs]] call CQ_fnc_announce;
+    ["assault", [[_id] call CQ_fnc_objName]] call CQ_fnc_say;
 };
 
 _hq set ["infantry", (_hq get "infantry") - _col];

@@ -46,6 +46,7 @@ while { true } do {
                     _target set ["fuel", (_target get "fuel") + _giveF];
                     _fuelLoad = _fuelLoad - _giveF;
                     ["Enemy supplies delivered", format ["HQ #%1 received %2 ammo and %3 fuel", _tid, round _give, round _giveF]] call CQ_fnc_announce;
+                    ["truckSupply", [[_tid] call CQ_fnc_objName], _target] call CQ_fnc_say;
                 };
                 _phase = "back";
                 _t0 = time;

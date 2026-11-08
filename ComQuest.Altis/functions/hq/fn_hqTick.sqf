@@ -25,12 +25,14 @@ private _now = time;
             _hq set ["state", "Failed"];
             { deleteMarker _x } forEach (_hq get "markers");
             ["Enemy HQ wiped out", format ["HQ #%1 was destroyed before it could be built", _id]] call CQ_fnc_announce;
+            if (_hq get "secureStarted") then { ["fallenEarly", [[_id] call CQ_fnc_objName]] call CQ_fnc_say };
         };
     } else {
         if (!alive (_hq get "commander") && { !alive (_hq get "depot") }) then {
             _hq set ["state", "Destroyed"];
             { deleteMarker _x } forEach (_hq get "markers");
             ["Enemy HQ destroyed", format ["HQ #%1 has fallen. Enemy AI left on the map: %2", _id, call CQ_fnc_enemyCount]] call CQ_fnc_announce;
+            ["fallen", [[_id] call CQ_fnc_objName, { (_x get "state") in CQ_activeStates } count (values CQ_hqs)]] call CQ_fnc_say;
         };
     };
     _state = _hq get "state";
@@ -106,6 +108,7 @@ if (isNil "CQ_victory" && { CQ_rootsLaunched >= CQ_maxRoots }) then {
     if (((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates }) == -1) then {
         CQ_victory = true;
         ["VICTORY", format ["All %1 enemy insertions defeated, every HQ destroyed", CQ_maxRoots]] call CQ_fnc_announce;
+        ["victory", []] call CQ_fnc_say;
         [] spawn { sleep 15; "EveryoneWon" call BIS_fnc_endMissionServer };
     };
 };

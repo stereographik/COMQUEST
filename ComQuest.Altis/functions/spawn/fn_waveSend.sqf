@@ -107,6 +107,7 @@ while { true } do {
 private _infAlive = _inf select { ({ alive _x } count units _x) > 0 };
 if (_arrived) then {
     ["Enemy reinforcements arrived", format ["HQ #%1 received %2 soldiers", _id, [_infAlive] call CQ_fnc_aliveCount]] call CQ_fnc_announce;
+    ["reinf", [[_id] call CQ_fnc_objName], _hq] call CQ_fnc_say;
 } else {
     ["Enemy convoy stopped", format ["HQ #%1: reinforcement convoy destroyed or stuck, %2 soldiers walking in", _id, [_infAlive] call CQ_fnc_aliveCount]] call CQ_fnc_announce;
 };

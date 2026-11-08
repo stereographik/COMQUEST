@@ -5,6 +5,7 @@
 */
 
 CQ_debug = true;                         // log to systemChat as well as the .rpt
+CQ_debugCards = false;                   // debug phase messages as orange cards too (story lines use the cards)
 
 // --- Director -------------------------------------------------------------
 CQ_tickSeconds = 5;                      // one server tick every 5 s

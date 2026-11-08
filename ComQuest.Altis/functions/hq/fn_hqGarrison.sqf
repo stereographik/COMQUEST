@@ -47,6 +47,7 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
         private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
         if (isNil "_hq") exitWith {};
         ["Enemy commander killed", format ["HQ #%1 has lost its commander", _hq get "id"]] call CQ_fnc_announce;
+        ["killCommander", [[_hq get "id"] call CQ_fnc_objName], _hq] call CQ_fnc_say;
     }];
 };
 
@@ -88,14 +89,14 @@ if !(_hq get "markersMade") then {
     private _m2 = createMarker [format ["cq_hq_%1_label", _id], _fuzzy];
     _m2 setMarkerType "o_hq";
     _m2 setMarkerColor "ColorOPFOR";
-    _m2 setMarkerText format ["Enemy HQ #%1", _id];
+    _m2 setMarkerText format ["Objective %1", [_id] call CQ_fnc_objName];
     (_hq get "markers") append [_m1, _m2];
 
     if (CQ_debug) then {
         private _m3 = createMarker [format ["cq_hq_%1_exact", _id], _c];
         _m3 setMarkerType "mil_destroy";
         _m3 setMarkerColor "ColorRed";
-        _m3 setMarkerText format ["DEBUG exact HQ #%1", _id];
+        _m3 setMarkerText format ["DEBUG exact HQ #%1 (%2)", _id, [_id] call CQ_fnc_objName];
         (_hq get "markers") pushBack _m3;
     };
 };

@@ -77,6 +77,8 @@ if ((_hq get "siteLevel") >= 3) then {
 private _stage = {
     params ["_n", "_what"];
     ["Enemy HQ construction", format ["HQ #%1, stage %2/4: %3 (grid %4)", _id, _n, _what, mapGridPosition _c]] call CQ_fnc_announce;
+    private _sk = ["", "stage1", "", "stage3", "operational"] select _n;
+    if (_sk != "") then { [_sk, [[_id] call CQ_fnc_objName], _hq] call CQ_fnc_say };
 };
 
 // Stage 1 - command building
@@ -105,6 +107,7 @@ _depot addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
     if (isNil "_hq") exitWith {};
     ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
+    ["killDepot", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
     _hq set ["stock", 0];
 }];
 
@@ -141,6 +144,7 @@ _radio addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
     if (isNil "_hq") exitWith {};
     ["Radio tower destroyed", format ["HQ #%1 is cut off from the network", _hq get "id"]] call CQ_fnc_announce;
+    ["killTower", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
 }];
 _depot setVariable ["CQ_hqId", _id];
 _radio setVariable ["CQ_hqId", _id];

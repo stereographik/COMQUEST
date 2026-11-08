@@ -47,6 +47,24 @@ class CfgNotifications
         duration = 7;
         priority = 5;
     };
+    class CQ_Story
+    {
+        title = "%1";
+        description = "%2";
+        iconPicture = "\A3\ui_f\data\igui\cfg\simpleTasks\types\radio_ca.paa";
+        iconText = "";
+        color[] = {0.55, 0.8, 0.45, 1};
+        duration = 9;
+        priority = 6;
+    };
+};
+
+// --- Radio sounds (vanilla files) -----------------------------------------
+class CfgSounds
+{
+    sounds[] = {};
+    class CQ_radioIn { name = "CQ_radioIn"; sound[] = {"\A3\Dubbing_Radio_F\sfx\radionoise1.ogg", 0.6, 1}; titles[] = {}; };
+    class CQ_alarm   { name = "CQ_alarm";   sound[] = {"\A3\Sounds_F\sfx\alarm_independent.wss", 1, 1}; titles[] = {}; };
 };
 
 // --- Functions ------------------------------------------------------------
@@ -65,6 +83,9 @@ class CfgFunctions
             class directorStart {};
             class announce {};
             class notifyClient {};
+            class objName {};
+            class say {};
+            class storyClient {};
             class enemyCount {};
             class clearWaypoints {};
             class aliveCount {};
