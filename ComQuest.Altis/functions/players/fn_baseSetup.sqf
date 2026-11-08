@@ -90,6 +90,11 @@ private _cellOk = {
     && { (_p isFlatEmpty [-1, -1, CQ_parkMaxGradient, 9, 0, false, objNull]) isNotEqualTo [] }
     && { (nearestTerrainObjects [_p, [], CQ_parkClear, false, true]) isEqualTo [] }
     && { ((nearestObjects [_p, [], CQ_parkClear]) select { !(_x isKindOf "CAManBase") && { !(_x isKindOf "Logic") } }) isEqualTo [] }
+    // big objects (hangars, terminal, sheds): the cell must be outside their whole footprint,
+    // not only 10 m from their centre
+    && { ((nearestObjects [_p, [], 60]) + (nearestTerrainObjects [_p, ["BUILDING", "HOUSE", "HIDE", "WALL", "FENCE"], 60, false, true])) findIf {
+        !(_x isKindOf "CAManBase") && { _x distance2D _p < ((boundingBoxReal _x) select 2) * 0.8 + 6 }
+    } == -1 }
 };
 private _cells = [];
 private _n = ceil (CQ_parkSearch / CQ_parkGrid);
@@ -110,6 +115,12 @@ private _take = {
         private _p = _cells deleteAt 0;
         if (_pad) then { (createVehicle ["Land_HelipadSquare_F", _p, [], 0, "CAN_COLLIDE"]) setDir _d };
         CQ_baseSpots set [_role, (CQ_baseSpots getOrDefault [_role, []]) + [[_p, _d]]];
+        // small map marker per parking spot, so the motor pool is easy to find
+        private _m = createMarker [format ["cq_park_%1_%2", _role, _k], _p];
+        _m setMarkerType (["mil_dot", "c_air"] select _pad);
+        _m setMarkerColor "ColorWEST";
+        _m setMarkerSize [0.5, 0.5];
+        _m setMarkerText _role;
     };
 };
 private _isAir = { params ["_c"]; _c isKindOf "Air" || { getNumber (configFile >> "CfgVehicles" >> _c >> "isUav") == 1 } };
