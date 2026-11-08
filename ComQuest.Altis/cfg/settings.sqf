@@ -140,6 +140,19 @@ CQ_specialVehicle = "I_MRAP_03_hmg_F";   // Strider HMG
 CQ_specialRespawn = 300;                 // a wiped-out team is dropped again 5 min later
 CQ_specialRange = 6000;                  // how far a team drives for a job
 CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get treated
+// Radio direction finder (players with a radio): signal from enemy HQ radios
+CQ_rdfRange = 6000;                      // no signal beyond this
+CQ_rdfFieldPower = 0.45;                 // HQ still being set up: field radios only, weaker
+CQ_playerMapMarkers = false;             // true = enemy HQ areas and the carrier shown on the players' map
+// Supply crates at the base (load them into any vehicle)
+CQ_crateClass = "B_supplyCrate_F";
+CQ_crateCount = 6;
+CQ_crateCleanup = 600;                   // empty crates far from the base removed after 10 min
+CQ_crateRoles = ["B_Soldier_SL_F", "B_medic_F", "B_soldier_AR_F", "B_soldier_LAT_F", "B_engineer_F", "B_Soldier_F", "B_Helipilot_F"];
+CQ_crateExtraMags = [["HandGrenade", 12], ["MiniGrenade", 6], ["SmokeShell", 12], ["SmokeShellGreen", 6], ["SmokeShellRed", 4],
+    ["1Rnd_HE_Grenade_shell", 16], ["1Rnd_Smoke_Grenade_shell", 6], ["NLAW_F", 3], ["DemoCharge_Remote_Mag", 6],
+    ["SatchelCharge_Remote_Mag", 2], ["APERSMine_Range_Mag", 4], ["Chemlight_green", 6], ["16Rnd_9x21_Mag", 8]];
+CQ_crateItems = [["FirstAidKit", 24], ["Medikit", 2], ["ToolKit", 2], ["MineDetector", 1]];
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_minInfantryToExpand = 16;

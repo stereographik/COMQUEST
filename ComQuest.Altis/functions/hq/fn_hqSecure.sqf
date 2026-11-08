@@ -59,4 +59,4 @@ _hq set ["secureStarted", true];
 _hq set ["stateT", time];
 ["Enemy securing perimeter", format ["HQ #%1: %2 squads posting out to a %3 m perimeter around grid %4",
     _id, count _groups, CQ_secureRadius, mapGridPosition _c]] call CQ_fnc_announce;
-["hqNew", [[_id] call CQ_fnc_objName, mapGridPosition _c], _hq] call CQ_fnc_say;
+["hqNew", [[_id] call CQ_fnc_objName], _hq] call CQ_fnc_say;

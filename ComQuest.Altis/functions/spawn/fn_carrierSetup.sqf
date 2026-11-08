@@ -38,10 +38,12 @@ isNil {
         count (CQ_carrier getVariable ["bis_carrierParts", []])]] call CQ_fnc_log;
 };
 
-private _m = createMarker ["cq_carrier", CQ_carrierPos];
-_m setMarkerType "o_naval";
-_m setMarkerColor "ColorOPFOR";
-_m setMarkerText "CSAT carrier group";
+if (CQ_playerMapMarkers || CQ_debug) then {
+    private _m = createMarker ["cq_carrier", CQ_carrierPos];
+    _m setMarkerType "o_naval";
+    _m setMarkerColor "ColorOPFOR";
+    _m setMarkerText "CSAT carrier group";
+};
 
 ["CSAT carrier spotted", format ["An enemy carrier group is holding off the east coast (grid %1). Expect landings on the east coast.",
     mapGridPosition CQ_carrierPos]] call CQ_fnc_announce;

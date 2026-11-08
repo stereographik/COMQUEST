@@ -1,7 +1,8 @@
 /*
     ComQuest storytelling: what the players hear.  (loaded by CQ_fnc_settings)
     Serious milsim, with the dry irony of an old staff officer who has seen several wars.
-    Rules: no humour on alarms, no exact numbers, objectives by NATO name, intel stays thin:
+    Rules: no humour on alarms, no exact numbers, NO LOCATIONS (grids, places: debug log only;
+    players find positions with the direction finder), objectives by NATO name, intel stays thin:
     HQ building status, supplies received, reactions to the players' own kills, alarms.
     Speakers:
       CROSSROAD  friendly HQ           notification card + Side chat
@@ -16,12 +17,12 @@ CQ_objNames = ["ALPHA","BRAVO","CHARLIE","DELTA","ECHO","FOXTROT","GOLF","HOTEL"
 CQ_story = createHashMapFromArray [
     // [] - mission start
     ["carrier", [
-        [["CROSSROAD", "CROSSROAD to all stations. CSAT has parked a carrier off the east coast. They didn't come for the beaches."]]
+        [["CROSSROAD", "CROSSROAD to all stations. CSAT has parked a carrier group offshore. They didn't come for the beaches."]]
     ]],
-    // [obj, grid] - an HQ site is being secured
+    // [obj] - an HQ site is being secured (no location: players find it with the RDF)
     ["hqNew", [
-        [["MAGPIE", "New enemy position near grid %2, designated Objective %1. They're digging in."]],
-        [["MAGPIE", "Enemy troops securing ground near grid %2. Designating it Objective %1."]]
+        [["MAGPIE", "New enemy position, designated Objective %1. They're digging in. Find it with your direction finder."]],
+        [["MAGPIE", "Enemy troops securing ground somewhere out there. Designating it Objective %1."]]
     ]],
     // [obj] - construction stages
     ["stage1", [
@@ -74,9 +75,9 @@ CQ_story = createHashMapFromArray [
     ["assault", [
         [["CROSSROAD", "FLASH, FLASH. Enemy assault force moving on the airfield from %1. All units, defend the base."]]
     ]],
-    // [grid] - an HQ spotted the players, no humour
+    // [] - an HQ spotted the players, no humour
     ["contact", [
-        [["INTERCEPT", "Contact! Enemy infantry grid %1, requesting support!"], ["CROSSROAD", "You've been made. Expect company, likely airborne."]]
+        [["INTERCEPT", "Contact! Enemy infantry, requesting support!"], ["CROSSROAD", "You've been made. Expect company, likely airborne."]]
     ]],
     // []
     ["victory", [

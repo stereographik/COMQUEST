@@ -80,6 +80,7 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
 // Map markers, once: approximate circle for players, exact marker only in debug
 if !(_hq get "markersMade") then {
     _hq set ["markersMade", true];
+    if (!CQ_playerMapMarkers && { !CQ_debug }) exitWith {};   // players find HQs with the direction finder
     private _fuzzy = _c getPos [random (CQ_hqMarkerRadius * 0.6), random 360];
     private _m1 = createMarker [format ["cq_hq_%1_area", _id], _fuzzy];
     _m1 setMarkerShape "ELLIPSE";

@@ -11,6 +11,7 @@ if (!_didJIP || { player distance2D CQ_basePos < 200 }) then {
     player setDir CQ_baseDir;
 };
 call CQ_fnc_playerSetup;
+[] spawn CQ_fnc_rdfClient;   // radio direction finder panel
 call CQ_fnc_debugMap;
 
 ["Welcome to ComQuest (%1)", [roleDescription player]] call CQ_fnc_log;

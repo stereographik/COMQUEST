@@ -69,6 +69,10 @@ missionNamespace setVariable ["CQ_arsenalBox", _box, true];
 ["Land_Medevac_house_V1_F", 19, 8, 180, 3] call _put;
 ["Land_Stretcher_01_F", 15, 3, 90, 0.5] call _put;
 
+// --- supply crates row (inside the back wall, left of the gate): CQ_fnc_crateTick fills it
+CQ_crateSpots = [];
+for "_i" from 0 to CQ_crateCount - 1 do { CQ_crateSpots pushBack ([-27 + 2.6 * _i, -9] call _at) };
+
 // --- supply corner (back), lights in the corners
 ["Land_Pallets_stack_F", -26, -15, 0, 1] call _put;
 ["Land_CratesWooden_F", -21, -15, 0, 1] call _put;

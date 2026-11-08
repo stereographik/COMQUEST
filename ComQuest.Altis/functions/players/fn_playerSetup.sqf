@@ -20,6 +20,14 @@ player addEventHandler ["SeatSwitchedMan", {
     [_unit, _veh] call CQ_fnc_pilotGuard;
 }];
 
+// Supply crates: load into / unload from any vehicle (re-added on every respawn)
+player addAction ["<t color='#C8E07A'>Load supply crate into vehicle</t>",
+    { [ "load", cursorObject, player ] remoteExec ["CQ_fnc_crateCargo", 2] }, nil, 5, true, true, "",
+    "(cursorObject getVariable ['CQ_crate', false]) && { _this distance cursorObject < 4 } && { vehicle _this == _this }"];
+player addAction ["<t color='#C8E07A'>Unload supply crate</t>",
+    { private _v = [cursorObject, vehicle player] select (vehicle player != player); [ "unload", _v, player ] remoteExec ["CQ_fnc_crateCargo", 2] }, nil, 5, true, true, "",
+    "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); count (_v getVariable ['CQ_crates', []]) > 0 && { _this distance _v < 8 }"];
+
 // Debug panel: scroll action (re-added on every respawn) + F3, bound once
 if (CQ_debug) then {
     player addAction ["<t color='#FF8800'>ComQuest debug panel (F3)</t>", { [] spawn CQ_fnc_debugUi }, nil, 0.5, false, true, "", "true"];

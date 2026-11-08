@@ -16,7 +16,7 @@ _src set ["lastContactT", time];
 private _srcRadio = alive (_src get "radio") || { !(_src get "buildDone") };   // before the tower exists, they use field radios
 
 ["Enemy contact reported", format ["HQ #%1 spotted friendlies near grid %2, calling reinforcements", _srcId, mapGridPosition _pos]] call CQ_fnc_announce;
-["contact", [mapGridPosition _pos], _src] call CQ_fnc_say;
+["contact", [format ["HQ%1", _srcId]], _src] call CQ_fnc_say;   // arg only keys the cooldown
 
 private _report = [];
 
