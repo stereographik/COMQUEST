@@ -115,7 +115,9 @@ private _take = {
 private _isAir = { params ["_c"]; _c isKindOf "Air" || { getNumber (configFile >> "CfgVehicles" >> _c >> "isUav") == 1 } };
 { _x params ["_cls", "_role", ["_k", 1]]; if !([_cls] call _isAir) then { [_role, _k] call _take } } forEach CQ_baseVehicles;
 { _x params ["_cls", "_role", ["_k", 1]]; if ([_cls] call _isAir) then { [_role, _k, true] call _take } } forEach CQ_baseVehicles;
-["Base parking: %1 free grid cells found within %2 m", [count _cells + ({ count _y } count CQ_baseSpots), CQ_parkSearch]] call CQ_fnc_log;
+private _used = 0;
+{ _used = _used + count _y } forEach CQ_baseSpots;
+["Base parking: %1 free grid cells within %2 m, %3 used, %4 left", [count _cells + _used, CQ_parkSearch, _used, count _cells]] call CQ_fnc_log;
 
 // --- respawn on the muster area (between the flag and the back gate), map markers
 CQ_musterPos = [0, -11] call _at;
