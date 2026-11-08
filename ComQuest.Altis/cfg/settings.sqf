@@ -22,6 +22,7 @@ CQ_baseVehicles = [
     ["I_MRAP_03_F",       "cq_veh_strider", 0],   // Strider, unarmed
     ["B_MRAP_01_F",       "cq_veh_hunter",  0]    // Hunter, unarmed
 ];
+CQ_baseVehPadding = 25;                  // metres between base vehicles (and from the arsenal crate)
 CQ_vehRespawnDelay = 60;                 // seconds after destruction
 CQ_vehAbandonDelay = 600;                // seconds empty before it returns to base
 CQ_vehAbandonDistance = 300;             // only counts as abandoned this far from base

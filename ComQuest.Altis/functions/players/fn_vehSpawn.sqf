@@ -6,7 +6,7 @@
 params ["_entry"];
 
 private _class = _entry get "class";
-private _veh = createVehicle [_class, _entry get "pos", [], 0, "NONE"];   // NONE: shifts a little if blocked
+private _veh = createVehicle [_class, _entry get "pos", [], 0, "NONE"];   // NONE: shifts a little only if something blocks the spot
 _veh setDir (_entry get "dir");
 
 clearWeaponCargoGlobal _veh;
