@@ -34,6 +34,21 @@ wreckRemovalMinTime = 300;
 wreckRemovalMaxTime = 900;
 minPlayerDistance = 300;
 
+// --- On-screen phase messages ---------------------------------------------
+class CfgNotifications
+{
+    class CQ_Phase
+    {
+        title = "%1";
+        description = "%2";
+        iconPicture = "\A3\ui_f\data\map\markers\military\warning_ca.paa";
+        iconText = "";
+        color[] = {1, 0.55, 0.2, 1};
+        duration = 7;
+        priority = 5;
+    };
+};
+
 // --- Functions ------------------------------------------------------------
 class CfgFunctions
 {
@@ -48,6 +63,30 @@ class CfgFunctions
             class log {};
             class directorAddTask {};
             class directorStart {};
+            class announce {};
+            class notifyClient {};
+            class enemyCount {};
+        };
+
+        class hq
+        {
+            file = "functions\hq";
+            class isClear {};
+            class clearPos {};
+            class findSite {};
+            class debugRunwaySite {};
+            class hqNew {};
+            class hqBuild {};
+            class hqGarrison {};
+            class hqTick {};
+        };
+
+        class spawn
+        {
+            file = "functions\spawn";
+            class spawnHeli {};
+            class insertion {};
+            class rootTick {};
         };
 
         class players
