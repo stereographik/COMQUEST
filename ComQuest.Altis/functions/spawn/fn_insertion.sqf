@@ -93,6 +93,12 @@ private _lifts = [];
     ["HQ #%1: Blackfish with %2 airborne (%3)", [_id, _label, ["too big for the bay, own parachute at the drop", "in the cargo bay"] select _viv]] call CQ_fnc_log;
 
     private _lz = [_lzDist, _lzAng] call _lzAt;
+    // Paradrop LZ at least CQ_dropCoastGap from any water: pushed inland (away from the carrier) until safe
+    private _away = _start getDir _lz;
+    for "_k" from 1 to 12 do {
+        if ([_lz, CQ_dropCoastGap] call CQ_fnc_coastSafe) exitWith {};
+        _lz = _lz getPos [100, _away];
+    };
     _heli doMove _lz;
 
     _lifts pushBack createHashMapFromArray [
@@ -203,7 +209,12 @@ while { true } do {
                 // Paradrop a little before the LZ: the load keeps drifting forward under its canopy
                 private _d = _heli distance2D (_e get "lz");
                 if (_d < 900) then { _heli limitSpeed 220 };
-                if (_d < CQ_dropLead || { time - (_e get "t") > 400 }) then {
+                // released only over safe ground: the plane CQ_dropCoastGap from any water (or right over the LZ)
+                private _safe = [getPosATL _heli, CQ_dropCoastGap] call CQ_fnc_coastSafe;
+                private _minD = _e getOrDefault ["minD", 1e9];
+                if (_d < _minD) then { _e set ["minD", _d]; _minD = _d };
+                private _passed = _minD < CQ_dropLead && { _d > _minD + 40 };   // overflew the LZ between two checks
+                if ((_d < CQ_dropLead && _safe) || { _d < 80 } || { _passed && _safe } || { time - (_e get "t") > 400 && _safe }) then {
                     private _cargo = _e get "cargo";
                     if (_e get "slung") then {
                         _heli setVehicleCargo objNull;          // Vehicle-in-Vehicle unload in flight: own parachute
