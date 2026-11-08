@@ -71,7 +71,8 @@ waitUntil { sleep 2; !alive _v || { !alive driver _v } || { [_v, _drop, _st] cal
 } forEach _men;
 call _walk;
 if (alive _v) then {
-    ["Enemy airlift landed", format ["%1 colonists dropped near the site of HQ #%2", _aboard, _childId]] call CQ_fnc_announce;
+    ["Enemy airlift landed", format ["%1 colonists dropped at grid %2 (%3 m from the site of HQ #%4)",
+        _aboard, mapGridPosition _v, round (_v distance2D _to), _childId]] call CQ_fnc_announce;
 };
 
 sleep 3;

@@ -58,8 +58,18 @@ private _ferried = [];
 } forEach CQ_air;
 
 private _t0 = time;
-waitUntil { sleep 2; (_riders findIf { alive _x && { vehicle _x == _x } }) == -1 || { time - _t0 > 90 } };
-{ if (vehicle _x == _x) then { unassignVehicle _x } } forEach _riders;   // not in after 90 s: walk
+waitUntil { sleep 2; (_riders findIf { alive _x && { vehicle _x == _x } }) == -1 || { time - _t0 > 30 } };
+// AI boarding is slow: after 30 s, riders close to their vehicle are seated directly, the rest walk
+{
+    private _v = assignedVehicle _x;
+    if (alive _x && { vehicle _x == _x }) then {
+        if (!isNull _v && { alive _v } && { _x distance _v < 80 } && { (_v emptyPositions "cargo") > 0 }) then {
+            _x moveInCargo _v;
+        } else {
+            unassignVehicle _x;
+        };
+    };
+} forEach _riders;
 
 // --- move (airlifted groups are steered by CQ_fnc_airFerry)
 { (group effectiveCommander _x) move _site } forEach (_vehs select { alive _x });

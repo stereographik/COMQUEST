@@ -243,7 +243,7 @@ while { true } do {
                             (_hq get "vehicles") pushBack _c;
                         };
                     };
-                    ["Enemy vehicle dropped", format ["HQ #%1: %2 released at grid %3", _id, _e get "label", mapGridPosition _heli]] call CQ_fnc_announce;
+                    ["Enemy vehicle dropped", format ["HQ #%1: %2 released at grid %3 (%4 m from the site)", _id, _e get "label", mapGridPosition _heli, round (_heli distance2D _site)]] call CQ_fnc_announce;
 
                     _heli limitSpeed 500;   // lift the limit again
                     _e set ["state", "postDrop"];
@@ -296,7 +296,7 @@ while { true } do {
                         if (_stuck && !_onGround) then { _x setPosATL ((_e get "lz") getPos [3 + random 12, random 360]) };
                     } forEach _pass;
                     if (_stuck && !_onGround) then { ["HQ #%1: troop Taru never touched down, teleport fallback used", [_id]] call CQ_fnc_log };
-                    ["Enemy troops landed", format ["HQ #%1: %2 soldiers on the ground at grid %3", _id, count _pass, mapGridPosition (_e get "lz")]] call CQ_fnc_announce;
+                    ["Enemy troops landed", format ["HQ #%1: %2 soldiers on the ground at grid %3 (%4 m from the site)", _id, count _pass, mapGridPosition _heli, round (_heli distance2D _site)]] call CQ_fnc_announce;
                     _e set ["state", "unloaded"];
                     _e set ["t", time];
                 };

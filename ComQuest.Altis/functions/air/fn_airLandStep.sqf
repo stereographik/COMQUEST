@@ -11,13 +11,16 @@
 params ["_v", "_pad", "_st"];
 
 private _pp = getPosATL _pad;
-if (isTouchingGround _v || { (getPosATL _v select 2) < 1.5 }) exitWith { true };
 
+// Distance first: a heli still sitting on its previous pad is not "landed" at this one
 if (_v distance2D _pp > 150) exitWith {
+    if (isTouchingGround _v) then { _v engineOn true };
     if (time - (_st getOrDefault ["moveT", -100]) > 10) then { _v doMove _pp; _st set ["moveT", time] };
     _st set ["nearT", -1];
     false
 };
+
+if ((isTouchingGround _v || { (getPosATL _v select 2) < 1.5 }) && { _v distance2D _pp < 60 }) exitWith { true };
 
 if ((_st getOrDefault ["nearT", -1]) < 0) then { _st set ["nearT", time] };
 if (time - (_st getOrDefault ["landT", -100]) > 20) then { _v land "LAND"; _st set ["landT", time] };
