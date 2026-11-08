@@ -9,8 +9,9 @@ call CQ_fnc_baseSetup;
 call CQ_fnc_carrierSetup;           // CSAT carrier off the east coast: every insertion starts there
 
 {
-    _x params ["_class", "_marker", "_dir"];
-    [_class, _marker, _dir] call CQ_fnc_vehRegister;
+    _x params ["_class", "_role", ["_n", 1]];
+    private _spots = CQ_baseSpots getOrDefault [_role, []];
+    for "_i" from 0 to _n - 1 do { [_class, _spots param [_i, []], CQ_baseDir] call CQ_fnc_vehRegister };
 } forEach CQ_baseVehicles;
 
 // Enemy network state
@@ -40,6 +41,8 @@ CQ_balanceForceT = -1;
 CQ_vehRoamNext = 0;
 CQ_watchNext = 0;
 CQ_airBalanceNext = 0;
+["medic"] spawn CQ_fnc_specialTeam;
+["engineer"] spawn CQ_fnc_specialTeam;
 ["groupWatch", CQ_fnc_groupWatch] call CQ_fnc_directorAddTask;
 ["vehRoam", CQ_fnc_vehRoamTick] call CQ_fnc_directorAddTask;
 

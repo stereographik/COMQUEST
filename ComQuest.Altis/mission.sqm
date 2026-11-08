@@ -8,7 +8,7 @@ class EditorData
 	toggles=1;
 	class ItemIDProvider
 	{
-		nextID=20;
+		nextID=31;
 	};
 	class Camera
 	{
@@ -65,7 +65,7 @@ class Mission
 	};
 	class Entities
 	{
-		items=4;
+		items=5;
 		class Item0
 		{
 			dataType="Group";
@@ -78,7 +78,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14728.00,17.90,16738.00};
+						position[]={14722.00,17.90,16716.00};
 					};
 					side="West";
 					flags=7;
@@ -96,7 +96,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14730.00,17.90,16738.00};
+						position[]={14724.50,17.90,16716.00};
 					};
 					side="West";
 					flags=5;
@@ -113,7 +113,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14732.00,17.90,16738.00};
+						position[]={14727.00,17.90,16716.00};
 					};
 					side="West";
 					flags=5;
@@ -130,7 +130,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14734.00,17.90,16738.00};
+						position[]={14729.50,17.90,16716.00};
 					};
 					side="West";
 					flags=5;
@@ -147,7 +147,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14736.00,17.90,16738.00};
+						position[]={14732.00,17.90,16716.00};
 					};
 					side="West";
 					flags=5;
@@ -164,7 +164,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14738.00,17.90,16738.00};
+						position[]={14734.50,17.90,16716.00};
 					};
 					side="West";
 					flags=5;
@@ -194,7 +194,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14728.00,17.90,16734.00};
+						position[]={14722.00,17.90,16713.00};
 					};
 					side="West";
 					flags=7;
@@ -211,7 +211,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14730.00,17.90,16734.00};
+						position[]={14724.50,17.90,16713.00};
 					};
 					side="West";
 					flags=5;
@@ -228,7 +228,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14732.00,17.90,16734.00};
+						position[]={14727.00,17.90,16713.00};
 					};
 					side="West";
 					flags=5;
@@ -245,7 +245,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14734.00,17.90,16734.00};
+						position[]={14729.50,17.90,16713.00};
 					};
 					side="West";
 					flags=5;
@@ -262,7 +262,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14736.00,17.90,16734.00};
+						position[]={14732.00,17.90,16713.00};
 					};
 					side="West";
 					flags=5;
@@ -279,7 +279,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14738.00,17.90,16734.00};
+						position[]={14734.50,17.90,16713.00};
 					};
 					side="West";
 					flags=5;
@@ -303,40 +303,108 @@ class Mission
 			side="West";
 			class Entities
 			{
-				items=2;
+				items=6;
 				class Item0
 				{
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14728.00,17.90,16730.00};
+						position[]={14722.00,17.90,16710.00};
 					};
 					side="West";
 					flags=7;
 					class Attributes
 					{
-						description="Sapper - Engineer Lead";
+						description="Charlie - Squad Leader";
 						isPlayable=1;
 					};
 					id=15;
-					type="B_engineer_F";
+					type="B_Soldier_SL_F";
 				};
 				class Item1
 				{
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14730.00,17.90,16730.00};
+						position[]={14724.50,17.90,16710.00};
 					};
 					side="West";
 					flags=5;
 					class Attributes
 					{
-						description="Sapper - Engineer";
+						description="Charlie - Medic";
 						isPlayable=1;
 					};
 					id=16;
+					type="B_medic_F";
+				};
+				class Item2
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14727.00,17.90,16710.00};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Charlie - Autorifleman";
+						isPlayable=1;
+					};
+					id=17;
+					type="B_soldier_AR_F";
+				};
+				class Item3
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14729.50,17.90,16710.00};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Charlie - Rifleman AT";
+						isPlayable=1;
+					};
+					id=18;
+					type="B_soldier_LAT_F";
+				};
+				class Item4
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14732.00,17.90,16710.00};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Charlie - Engineer";
+						isPlayable=1;
+					};
+					id=19;
 					type="B_engineer_F";
+				};
+				class Item5
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14734.50,17.90,16710.00};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Charlie - Rifleman";
+						isPlayable=1;
+					};
+					id=20;
+					type="B_Soldier_F";
 				};
 			};
 			class Attributes
@@ -350,13 +418,128 @@ class Mission
 			side="West";
 			class Entities
 			{
+				items=6;
+				class Item0
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14722.00,17.90,16707.00};
+					};
+					side="West";
+					flags=7;
+					class Attributes
+					{
+						description="Delta - Squad Leader";
+						isPlayable=1;
+					};
+					id=22;
+					type="B_Soldier_SL_F";
+				};
+				class Item1
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14724.50,17.90,16707.00};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Delta - Medic";
+						isPlayable=1;
+					};
+					id=23;
+					type="B_medic_F";
+				};
+				class Item2
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14727.00,17.90,16707.00};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Delta - Autorifleman";
+						isPlayable=1;
+					};
+					id=24;
+					type="B_soldier_AR_F";
+				};
+				class Item3
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14729.50,17.90,16707.00};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Delta - Rifleman AT";
+						isPlayable=1;
+					};
+					id=25;
+					type="B_soldier_LAT_F";
+				};
+				class Item4
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14732.00,17.90,16707.00};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Delta - Engineer";
+						isPlayable=1;
+					};
+					id=26;
+					type="B_engineer_F";
+				};
+				class Item5
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14734.50,17.90,16707.00};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Delta - Rifleman";
+						isPlayable=1;
+					};
+					id=27;
+					type="B_Soldier_F";
+				};
+			};
+			class Attributes
+			{
+			};
+			id=21;
+		};
+		class Item4
+		{
+			dataType="Group";
+			side="West";
+			class Entities
+			{
 				items=2;
 				class Item0
 				{
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14728.00,17.90,16726.00};
+						position[]={14722.00,17.90,16704.00};
 					};
 					side="West";
 					flags=7;
@@ -365,7 +548,7 @@ class Mission
 						description="Raven - Pilot";
 						isPlayable=1;
 					};
-					id=18;
+					id=29;
 					type="B_Helipilot_F";
 				};
 				class Item1
@@ -373,7 +556,7 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14730.00,17.90,16726.00};
+						position[]={14724.50,17.90,16704.00};
 					};
 					side="West";
 					flags=5;
@@ -382,14 +565,14 @@ class Mission
 						description="Raven - Pilot";
 						isPlayable=1;
 					};
-					id=19;
+					id=30;
 					type="B_Helipilot_F";
 				};
 			};
 			class Attributes
 			{
 			};
-			id=17;
+			id=28;
 		};
 	};
 };

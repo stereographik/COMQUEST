@@ -1,8 +1,8 @@
 /*
     CQ_fnc_vehTick  (server, director task)
     - Destroyed: respawn on its home spot CQ_vehRespawnDelay s after destruction.
-    - Abandoned: empty, farther than CQ_vehAbandonDistance from base for CQ_vehAbandonDelay s,
-      and no player within 200 m -> deleted and respawned at base.
+    - Abandoned: empty and still, more than CQ_vehAbandonDistance from its parking spot for
+      CQ_vehAbandonDelay s (15 min), no player within 200 m -> deleted and respawned on its spot.
     Polling (not a Killed event handler) on purpose: a vehicle driven by a player is local
     to that player, where a Killed handler added by the server would not fire.
 */
@@ -24,7 +24,7 @@ if (isNil "CQ_vehEntries") exitWith {};
         };
     } else {
         private _empty = ({ alive _x } count crew _veh) == 0;
-        private _far = (_veh distance2D CQ_basePos) > CQ_vehAbandonDistance;
+        private _far = (_veh distance2D (_entry get "pos")) > CQ_vehAbandonDistance && { speed _veh < 1 };
 
         if (_empty && _far) then {
             if ((_entry get "abandonedSince") < 0) then { _entry set ["abandonedSince", serverTime] };

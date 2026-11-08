@@ -15,18 +15,22 @@ CQ_basePos = [14734, 16730, 0];
 CQ_baseRadius = 300;                     // base zone drawn on the map
 CQ_baseNoSpawnRadius = 2500;             // no enemy site closer than this (milestone 2)
 
-// --- Base vehicles --------------------------------------------------------
-// [classname, marker for an exact spot (optional, place it in Eden), direction]
-// If the marker does not exist, a free spot near CQ_basePos is used.
+CQ_baseDir = 45;                         // camp front (heli line) compass direction: turn it to fit the airfield
+// --- Base vehicles (fixed numbers, each respawns when destroyed or abandoned) ----
+// [classname, parking role in the camp (CQ_fnc_baseSetup), count]
 CQ_baseVehicles = [
-    ["B_Heli_Light_01_F", "cq_veh_heli",    0],   // MH-6 Hummingbird, unarmed
-    ["I_MRAP_03_F",       "cq_veh_strider", 0],   // Strider, unarmed
-    ["B_MRAP_01_F",       "cq_veh_hunter",  0]    // Hunter, unarmed
+    ["B_MRAP_01_F",               "hunter",     4],   // Hunter, unarmed
+    ["I_MRAP_03_F",               "strider",    4],   // Strider, unarmed
+    ["B_G_Offroad_01_armed_F",    "pickup",     4],   // Offroad HMG
+    ["B_Truck_01_transport_F",    "hemtt",      2],   // HEMTT troop transport
+    ["B_Heli_Light_01_F",         "littlebird", 2],   // MH-6 Little Bird
+    ["B_Heli_Transport_01_F",     "ghosthawk",  2],   // UH-80 Ghost Hawk
+    ["B_Heli_Attack_01_dynamicLoadout_F", "blackhawk", 1]   // AH-99 Blackfoot
 ];
 CQ_baseVehPadding = 25;                  // metres between base vehicles (and from the arsenal crate)
 CQ_vehRespawnDelay = 60;                 // seconds after destruction
-CQ_vehAbandonDelay = 600;                // seconds empty before it returns to base
-CQ_vehAbandonDistance = 300;             // only counts as abandoned this far from base
+CQ_vehAbandonDelay = 900;                // seconds empty and still away from its spot before it respawns there (15 min)
+CQ_vehAbandonDistance = 30;              // ...away from its parking spot
 
 // --- Enemy origin: a carrier off the east coast -------------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
@@ -127,6 +131,11 @@ CQ_heliPreferDist = 3000;                // farther than this, a helicopter is t
 CQ_watchIdle = 180;                      // a patrolling squad standing still 3 min outside combat gets a new patrol
 CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is finished: compass direction from the HQ (270 = west)
 CQ_hmgTowerDist = 45;                    // ...and distance
+// Enemy support teams: one medic team, one engineer team, dropped again after destruction
+CQ_specialVehicle = "I_MRAP_03_hmg_F";   // Strider HMG
+CQ_specialRespawn = 300;                 // a wiped-out team is dropped again 5 min later
+CQ_specialRange = 6000;                  // how far a team drives for a job
+CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get treated
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_minInfantryToExpand = 16;

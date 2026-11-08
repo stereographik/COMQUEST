@@ -167,6 +167,8 @@ class CfgFunctions
             class waveSend {};
             class colonise {};
             class rootTick {};
+            class paraDropVehicle {};
+            class specialTeam {};
         };
 
         class players
