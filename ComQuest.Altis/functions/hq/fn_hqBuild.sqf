@@ -187,6 +187,27 @@ _aaGroup setCombatMode "RED";
 (_hq get "support") pushBack _aaGroup;
 [4, "helipad with QRF helicopter, 3 AA pits"] call _stage;
 
+// Construction finished: an HMG watchtower on the west side (facing the player's side of the island)
+private _ta = CQ_hmgTowerDir - _d;
+private _tower = ["Land_Cargo_Patrol_V1_F", CQ_hmgTowerDist * sin _ta, CQ_hmgTowerDist * cos _ta, _ta, true] call _place;
+if (!isNull _tower) then {
+    private _bp = _tower buildingPos 0;
+    if (_bp isEqualTo [0, 0, 0]) then { _bp = (getPosATL _tower) vectorAdd [0, 0, 4.3] };
+    private _hmg = createVehicle ["O_HMG_01_high_F", [0, 0, 0], [], 0, "CAN_COLLIDE"];
+    _hmg setDir CQ_hmgTowerDir;
+    _hmg setPosATL _bp;
+    createVehicleCrew _hmg;
+    private _tg = createGroup [east, true];
+    (crew _hmg) joinSilent _tg;
+    [crew _hmg] call CQ_fnc_unitPrep;
+    [_hmg, 1] call CQ_fnc_vehAmmoInit;
+    _tg setBehaviour "AWARE";
+    _tg setCombatMode "RED";
+    (_hq get "objects") pushBack _hmg;
+    (_hq get "support") pushBack _tg;
+    ["HQ #%1: HMG watchtower up at grid %2 (west side)", [_id, mapGridPosition _tower]] call CQ_fnc_log;
+};
+
 // Recall the perimeter squads and set the garrison
 [_hq] call CQ_fnc_hqGarrison;
 _hq set ["buildDone", true];

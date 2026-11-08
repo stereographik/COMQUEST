@@ -67,6 +67,7 @@ CQ_blockerTypes = ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "HOUSE", "BUIL
 CQ_siteBlockerTypes = CQ_blockerTypes - ["BUSH"];
 // Footprint radius (m) of each composition object, used for spacing checks
 CQ_objRadius = createHashMapFromArray [
+    ["Land_Cargo_Patrol_V1_F", 4],
     ["Land_Cargo_HQ_V1_F", 8], ["Land_BagFence_Long_F", 1.6], ["Land_BagFence_Round_F", 1.5],
     ["Land_Cargo_House_V1_F", 3.5], ["Box_East_Ammo_F", 0.6], ["Land_TTowerBig_2_F", 3],
     ["Land_HelipadSquare_F", 5], ["O_static_AA_F", 1.2],
@@ -124,6 +125,8 @@ CQ_walkMaxDist = 1000;                   // closer than this, squads walk betwee
 CQ_transportPickRange = 200;             // a squad that must move takes a truck or a parked Taru only if one is this close, else it walks
 CQ_heliPreferDist = 3000;                // farther than this, a helicopter is tried before a truck
 CQ_watchIdle = 180;                      // a patrolling squad standing still 3 min outside combat gets a new patrol
+CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is finished: compass direction from the HQ (270 = west)
+CQ_hmgTowerDist = 45;                    // ...and distance
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_minInfantryToExpand = 16;
