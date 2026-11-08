@@ -28,6 +28,9 @@ CQ_baseVehicles = [
     ["B_Heli_Transport_01_F",     "blackhawk",  1]    // the "blackhawk": a 3rd UH-80 Ghost Hawk
 ];
 CQ_baseVehPadding = 25;                  // metres between base vehicles (fallback search)
+// Base parking area: the zone marked on the map (SW end of the runway, next to the camp).
+// An area marker named cq_park_area placed in Eden overrides it.
+CQ_parkArea = [[14193, 16226], [14480, 16194], [14158, 15889]];
 CQ_parkGrid = 25;                        // base parking grid: one vehicle per cell, cells 25 m apart
 CQ_parkClear = 10;                       // a cell needs no object / rock / building / tree within this
 CQ_parkMaxGradient = 0.1;                // ...and flat ground

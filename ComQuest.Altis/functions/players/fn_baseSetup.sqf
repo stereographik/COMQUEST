@@ -98,9 +98,43 @@ for "_i" from 0 to CQ_crateCount - 1 do { CQ_crateSpots pushBack ([-27 + 2.6 * _
 // the side with more clear ground. Spots 25 m+ apart, each flat and clear of objects.
 private _runwaySpots = [];
 private _runwayHeli = [];
+// Parking area chosen by the mission maker: an area marker "cq_park_area" placed in Eden,
+// else the polygon CQ_parkArea (settings). Cells: 25 m grid aligned with the runway, inside
+// the area, flat and clear; nearest to the camp first, helicopters after ground vehicles.
+private _areaSpots = [];
+private _useMarker = "cq_park_area" in allMapMarkers;
+if (_useMarker || { count CQ_parkArea >= 3 }) then {
+    private _pts = if (_useMarker) then {
+        (getMarkerPos "cq_park_area") params ["_mx", "_my"];
+        (getMarkerSize "cq_park_area") params ["_sx", "_sy"];
+        private _r = sqrt (_sx ^ 2 + _sy ^ 2);
+        [[_mx - _r, _my - _r], [_mx + _r, _my + _r]]
+    } else { CQ_parkArea };
+    private _xs = _pts apply { _x select 0 };
+    private _ys = _pts apply { _x select 1 };
+    private _cx = (selectMin _xs + selectMax _xs) / 2;
+    private _cy = (selectMin _ys + selectMax _ys) / 2;
+    private _half = ((selectMax _xs - selectMin _xs) max (selectMax _ys - selectMin _ys)) * 0.75;
+    private _h = if (CQ_runway isNotEqualTo []) then { CQ_runway select 1 } else { _d };
+    private _inside = if (_useMarker) then { { _this inArea "cq_park_area" } } else { { _this inPolygon CQ_parkArea } };
+    for "_i" from -(ceil (_half / CQ_parkGrid)) to ceil (_half / CQ_parkGrid) do {
+        for "_j" from -(ceil (_half / CQ_parkGrid)) to ceil (_half / CQ_parkGrid) do {
+            private _p = [_cx, _cy, 0] getPos [sqrt ((_i * CQ_parkGrid) ^ 2 + (_j * CQ_parkGrid) ^ 2), _h + ((_i * CQ_parkGrid) atan2 (_j * CQ_parkGrid))];
+            _p set [2, 0];
+            if !(_p call _inside) then { continue };
+            if (surfaceIsWater _p) then { continue };
+            if ((_p isFlatEmpty [-1, -1, 0.1, 6, 0, false, objNull]) isEqualTo []) then { continue };
+            if (((nearestObjects [_p, [], 7]) select { !(_x isKindOf "CAManBase") && { !(_x isKindOf "Logic") } }) isNotEqualTo []) then { continue };
+            if ((nearestTerrainObjects [_p, [], 6, false, true]) isNotEqualTo []) then { continue };
+            _areaSpots pushBack _p;
+        };
+    };
+    _areaSpots = [_areaSpots, [], { _x distance2D _o }, "ASCEND"] call BIS_fnc_sortBy;
+    ["Base parking area (%1): %2 free cells", [["CQ_parkArea polygon", "Eden marker cq_park_area"] select _useMarker, count _areaSpots]] call CQ_fnc_log;
+};
 private _nGround = 0; private _nAir = 0;
 { _x params ["_cls", "", ["_k", 1]]; if (_cls isKindOf "Air") then { _nAir = _nAir + _k } else { _nGround = _nGround + _k } } forEach CQ_baseVehicles;
-if (CQ_runway isNotEqualTo []) then {
+if (_areaSpots isEqualTo [] && { CQ_runway isNotEqualTo [] }) then {
     CQ_runway params ["_ilsP", "_h"];
     private _ax = [sin _h, cos _h, 0];
     private _pp = [cos _h, -(sin _h), 0];
@@ -159,7 +193,7 @@ private _cellOk = {
 };
 private _cells = [];
 private _n = ceil (CQ_parkSearch / CQ_parkGrid);
-if (count _runwaySpots >= _nGround && { count _runwayHeli >= _nAir }) then { _n = -1 };   // runway took everything
+if ((count _runwaySpots >= _nGround && { count _runwayHeli >= _nAir }) || { count _areaSpots >= _nGround + _nAir }) then { _n = -1 };   // nothing left for the grid
 for "_i" from -_n to _n do {
     for "_j" from -_n to _n do {
         private _x0 = _i * CQ_parkGrid;
@@ -174,11 +208,12 @@ private _take = {
     params ["_role", "_count", ["_pad", false]];
     for "_k" from 1 to _count do {
         private _p = [];
-        if (_pad && { _runwayHeli isNotEqualTo [] }) then { _p = _runwayHeli deleteAt 0 };
-        if (!_pad && { _runwaySpots isNotEqualTo [] }) then { _p = _runwaySpots deleteAt 0 };
+        if (_areaSpots isNotEqualTo []) then { _p = _areaSpots deleteAt 0 };
+        if (_p isEqualTo [] && { _pad } && { _runwayHeli isNotEqualTo [] }) then { _p = _runwayHeli deleteAt 0 };
+        if (_p isEqualTo [] && { !_pad } && { _runwaySpots isNotEqualTo [] }) then { _p = _runwaySpots deleteAt 0 };
         if (_p isEqualTo [] && { _cells isNotEqualTo [] }) then { _p = _cells deleteAt 0 };
         if (_p isEqualTo []) exitWith { ["Base parking: no free spot left for %1", [_role]] call CQ_fnc_log };
-        private _vd = if (CQ_runway isNotEqualTo []) then { (CQ_runway select 1) + ([0, 180] select (CQ_runwayDirSign < 0)) } else { _d };
+        private _vd = if (CQ_runway isNotEqualTo []) then { (CQ_runway select 1) + ([0, 180] select ((missionNamespace getVariable ["CQ_runwayDirSign", 1]) < 0)) } else { _d };
         if (_pad) then { (createVehicle ["Land_HelipadSquare_F", _p, [], 0, "CAN_COLLIDE"]) setDir _vd };
         CQ_baseSpots set [_role, (CQ_baseSpots getOrDefault [_role, []]) + [[_p, _vd]]];
         // small map marker per parking spot, so the motor pool is easy to find
