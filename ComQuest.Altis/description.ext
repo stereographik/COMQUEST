@@ -1,0 +1,64 @@
+// ComQuest.Altis - mission configuration
+// Vanilla Arma 3 only: no CBA, no ACE, no server mod.
+
+author = "Django";
+onLoadName = "ComQuest";
+onLoadMission = "Destroy the CSAT HQ network on Altis.";
+briefingName = "ComQuest";
+
+class Header
+{
+    gameType = "Coop";
+    minPlayers = 1;
+    maxPlayers = 16;
+};
+
+// --- Respawn: at the airport base -----------------------------------------
+respawn = 3;                    // BASE (marker "respawn_west", created by script)
+respawnDelay = 15;              // keep in sync with CQ_respawnDelay in cfg\settings.sqf
+respawnOnStart = -1;            // start on the Eden slot, no respawn at mission start
+respawnTemplates[] = {"Counter"};
+respawnDialog = 0;
+disabledAI = 1;                 // empty slots have no AI
+
+enableDebugConsole = 1;         // host / logged-in admin only
+
+// --- Garbage collector (vanilla) ------------------------------------------
+corpseManagerMode = 1;
+corpseLimit = 30;
+corpseRemovalMinTime = 300;
+corpseRemovalMaxTime = 900;
+wreckManagerMode = 1;
+wreckLimit = 10;
+wreckRemovalMinTime = 300;
+wreckRemovalMaxTime = 900;
+minPlayerDistance = 300;
+
+// --- Functions ------------------------------------------------------------
+class CfgFunctions
+{
+    class CQ
+    {
+        tag = "CQ";
+
+        class core
+        {
+            file = "functions\core";
+            class settings { preInit = 1; };   // loads cfg\settings.sqf on every machine
+            class log {};
+            class directorAddTask {};
+            class directorStart {};
+        };
+
+        class players
+        {
+            file = "functions\players";
+            class baseSetup {};
+            class vehRegister {};
+            class vehSpawn {};
+            class vehTick {};
+            class pilotGuard {};
+            class playerSetup {};
+        };
+    };
+};
