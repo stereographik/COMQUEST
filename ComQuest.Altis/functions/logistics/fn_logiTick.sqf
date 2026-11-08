@@ -68,8 +68,14 @@ if (_hubId != CQ_hubId) then {
         private _role = _g getVariable ["CQ_role", ""];
         private _r = [_g] call CQ_fnc_infAmmo;
         if (CQ_debug) then { _g setVariable ["CQ_dbg", format ["HQ%1 %2 ammo %3%%", _home get "id", _role, round (100 * _r)], true] };
-        if (_role in ["patrol", "qrf", "reinf"] && { _r < CQ_lowAmmo }) then { [_g, false] call _send };
+        if (_role in ["patrol", "qrf", "reinf"] && { _r < CQ_lowAmmo }) then {
+            // far from home: the HQ drives its field truck out; otherwise the group walks back
+            if !([_home, _g] call CQ_fnc_fieldResupplyTry) then { [_g, false] call _send };
+        };
         if (_role == "rearm" && { _r >= 0.8 }) then { [_g] call _back };
+        if (_role == "waitSupply" && { !(_home get "fieldRun") }) then {
+            _g setVariable ["CQ_role", _g getVariable ["CQ_prevRole", "patrol"]];   // truck gone: re-evaluated next pass
+        };
     } forEach (_home get "infantry");
 
     {
@@ -91,7 +97,8 @@ if (_hubId > -1) then {
         private _h = _x;
         private _id = _h get "id";
         if (_id == _hubId) then { continue };
-        private _low = (_h get "stock") < CQ_requestShare * (_h get "cap") || { (_h get "fuel") < CQ_requestShare * (_h get "cap") };
+        private _fuelOk = alive (_h get "tanker") && { alive (_hub get "tanker") };   // fuel only between two tankers
+        private _low = (_h get "stock") < CQ_requestShare * (_h get "cap") || { _fuelOk && { (_h get "fuel") < CQ_requestShare * (_h get "cap") } };
         if (!_low) then { _h set ["lowWarned", false]; continue };
 
         if !(_id in _linked) then {
@@ -105,7 +112,7 @@ if (_hubId > -1) then {
         if (CQ_trucksActive >= CQ_trucksMax) then { continue };
 
         private _load = (CQ_truckLoad min ((_hub get "stock") - CQ_hubReserve) min ((_h get "cap") - (_h get "stock"))) max 0;
-        private _fuelLoad = (CQ_truckFuelLoad min ((_hub get "fuel") - CQ_hubFuelReserve) min ((_h get "cap") - (_h get "fuel"))) max 0;
+        private _fuelLoad = if (_fuelOk) then { (CQ_truckFuelLoad min ((_hub get "fuel") - CQ_hubFuelReserve) min ((_h get "cap") - (_h get "fuel"))) max 0 } else { 0 };
         if (_load < 30 && { _fuelLoad < 30 }) then { continue };
 
         _hub set ["stock", (_hub get "stock") - _load];

@@ -47,7 +47,11 @@ private _hq = createHashMapFromArray [
     ["stock", 0],
     ["stockInit", 0],            // ammo points the depot starts with (root: insertion cargo, child: carried)
     ["cap", CQ_depotCap],        // same cap for ammo and fuel
-    ["fuel", 0],
+    ["fuel", 0],                 // held by the tanker: tanker destroyed = fuel lost
+    ["tanker", objNull],
+    ["fieldTruck", objNull],
+    ["fieldTruckHome", []],
+    ["fieldRun", false],
     ["fuelInit", 0],
     ["truckInbound", false],
     ["lowWarned", false],

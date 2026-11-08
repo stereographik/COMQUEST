@@ -37,7 +37,7 @@ while { true } do {
             if (alive _heli && { alive (_hub get "depot") }) then {
                 private _give = (CQ_ammoFlightLoad min ((_hub get "cap") - (_hub get "stock"))) max 0;
                 _hub set ["stock", (_hub get "stock") + _give];
-                private _giveF = (CQ_flightFuelLoad min ((_hub get "cap") - (_hub get "fuel"))) max 0;
+                private _giveF = if (alive (_hub get "tanker")) then { (CQ_flightFuelLoad min ((_hub get "cap") - (_hub get "fuel"))) max 0 } else { 0 };
                 _hub set ["fuel", (_hub get "fuel") + _giveF];
                 _delivered = true;
                 ["Enemy supplies delivered by air", format ["Main HQ #%1 received %2 ammo and %3 fuel (now %4 / %5, cap %6)",

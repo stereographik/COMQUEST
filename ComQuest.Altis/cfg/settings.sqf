@@ -47,7 +47,8 @@ CQ_siteBlockerTypes = CQ_blockerTypes - ["BUSH"];
 CQ_objRadius = createHashMapFromArray [
     ["Land_Cargo_HQ_V1_F", 8], ["Land_BagFence_Long_F", 1.6], ["Land_BagFence_Round_F", 1.5],
     ["Land_Cargo_House_V1_F", 3.5], ["Box_East_Ammo_F", 0.6], ["Land_TTowerBig_2_F", 3],
-    ["Land_HelipadSquare_F", 5], ["O_static_AA_F", 1.2]
+    ["Land_HelipadSquare_F", 5], ["O_static_AA_F", 1.2],
+    ["O_Truck_02_fuel_F", 4.5], ["O_Truck_02_Ammo_F", 4.5]
 ];
 CQ_siteMaxGradient = 0.15;
 CQ_siteNoPlayerRadius = 800;
@@ -130,6 +131,11 @@ CQ_flightFuelLoad = 400;                 // brought by each supply flight to the
 CQ_truckFuelLoad = 150;                  // carried by each HEMTT next to its ammo
 CQ_hubFuelReserve = 100;
 CQ_rearmMinFuel = 15;                    // an HQ with less is not a refuel destination
+CQ_tankerClass = "O_Truck_02_fuel_F";    // Zamak fuel tanker parked in every HQ: it HOLDS the HQ's fuel
+CQ_fieldTruckClass = "O_Truck_02_Ammo_F"; // Zamak ammo truck parked in every HQ: field resupply
+CQ_fieldResupplyMin = 400;               // a low group farther than this from its depot gets the truck...
+CQ_fieldResupplyRange = 2000;            // ...if it is within this
+CQ_fieldResupplyLoad = 100;              // ammo points the field truck takes out
 
 // --- Air fleet --------------------------------------------------------------
 CQ_escortClasses = ["O_Heli_Light_02_dynamicLoadout_F", "O_Heli_Light_02_dynamicLoadout_F", "O_Heli_Attack_02_dynamicLoadout_F"];

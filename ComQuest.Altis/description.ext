@@ -105,6 +105,8 @@ class CfgFunctions
             class hqRearmPass {};
             class logiTick {};
             class truckRun {};
+            class fieldResupplyTry {};
+            class fieldResupply {};
             class ammoFlight {};
         };
 

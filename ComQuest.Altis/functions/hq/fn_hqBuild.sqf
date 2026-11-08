@@ -94,7 +94,7 @@ for "_a" from 15 to 345 step 15 do {
 };
 [2, "sandbag perimeter"] call _stage;
 
-// Stage 3 - supply depot + ammo boxes, radio tower
+// Stage 3 - supply depot + ammo boxes, radio tower, fuel tanker, field resupply truck
 call _wait;
 private _depot = ["Land_Cargo_House_V1_F", -24, 0, 90, true] call _place;
 { ["Box_East_Ammo_F", _x, -6] call _place } forEach [-26, -24, -22];
@@ -104,10 +104,39 @@ private _radio = ["Land_TTowerBig_2_F", 0, 26, 0, true] call _place;
 _depot addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
     if (isNil "_hq") exitWith {};
-    ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo and %3 fuel: no more resupply there", _hq get "id", round (_hq get "stock"), round (_hq get "fuel")]] call CQ_fnc_announce;
+    ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
     _hq set ["stock", 0];
-    _hq set ["fuel", 0];
 }];
+
+// Fuel tanker: holds the HQ's fuel. Any weapon can destroy it.
+private _tanker = [CQ_tankerClass, 18, -18, 90] call _place;
+if (!isNull _tanker) then {
+    _tanker setFuelCargo 0;           // players can't refuel from it
+    _tanker lock 2;
+    _tanker setVariable ["CQ_hqId", _id];
+    _tanker addEventHandler ["Killed", {
+        private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
+        if (isNil "_hq") exitWith {};
+        ["Fuel tanker destroyed", format ["HQ #%1 lost its %2 fuel: no more refuelling there", _hq get "id", round (_hq get "fuel")]] call CQ_fnc_announce;
+        _hq set ["fuel", 0];
+    }];
+};
+_hq set ["tanker", _tanker];
+
+// Field resupply truck: driven out to groups short of ammo (CQ_fnc_fieldResupply)
+private _ftruck = [CQ_fieldTruckClass, -18, -20, 90] call _place;
+if (!isNull _ftruck) then {
+    _ftruck setAmmoCargo 0;
+    _ftruck lock 2;
+    _ftruck setVariable ["CQ_hqId", _id];
+    _ftruck addEventHandler ["Killed", {
+        private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
+        if (isNil "_hq") exitWith {};
+        ["Field supply truck destroyed", format ["HQ #%1 can no longer resupply its squads in the field", _hq get "id"]] call CQ_fnc_announce;
+    }];
+    _hq set ["fieldTruckHome", getPosATL _ftruck];
+};
+_hq set ["fieldTruck", _ftruck];
 _radio addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
     if (isNil "_hq") exitWith {};
@@ -119,7 +148,8 @@ _hq set ["depot", _depot];
 _hq set ["radio", _radio];
 _hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
 _hq set ["fuel", (_hq get "fuelInit") min (_hq get "cap")];
-[3, format ["supply depot (%1 ammo, %2 fuel) and radio tower", round (_hq get "stock"), round (_hq get "fuel")]] call _stage;
+if (isNull _tanker) then { _hq set ["fuel", 0] };
+[3, format ["supply depot (%1 ammo), fuel tanker (%2 fuel), field supply truck, radio tower", round (_hq get "stock"), round (_hq get "fuel")]] call _stage;
 
 // Stage 4 - helipad with the QRF helicopter parked on it + 3 AA pits
 call _wait;

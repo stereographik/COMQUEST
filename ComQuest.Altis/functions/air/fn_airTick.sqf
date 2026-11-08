@@ -5,7 +5,7 @@
       parked   -> low on ammo (armed) or fuel (any) -> toRearm
       hunting  -> search & destroy CQ_heliHuntTime  -> toPark, or toRearm when ammo/fuel runs low
       toRearm  -> lands at the nearest HQ holding what it lacks (or waits at the main HQ) -> rearming
-      rearming -> CQ_airRearmTime on the ground: rearm + refuel, paid from that depot;
+      rearming -> CQ_airRearmTime on the ground: rearm (depot) + refuel (fuel tanker);
                   still short (no stock there): keeps waiting for a delivery
     Fleet aircraft whose main HQ fell are re-based at the new main HQ.
 */
@@ -110,12 +110,12 @@ private _landAt = {
         case "rearming": {
             if (time > (_e get "until")) then {
                 private _t = CQ_hqs getOrDefault [_e get "target", createHashMap];
-                if (count _t > 0 && { alive (_t get "depot") }) then {
-                    if (_armed && { (_t get "stock") > 0 }) then {
+                if (count _t > 0) then {
+                    if (_armed && { alive (_t get "depot") } && { (_t get "stock") > 0 }) then {
                         _t set ["stock", [_v, _t get "stock", 1] call CQ_fnc_rearmVeh];
                     };
                     private _need = 1 - fuel _v;
-                    if (_need > 0.02 && { (_t get "fuel") > 0 }) then {
+                    if (_need > 0.02 && { alive (_t get "tanker") } && { (_t get "fuel") > 0 }) then {
                         private _add = _need min ((_t get "fuel") / CQ_fuelFullCost);
                         _v setFuel ((fuel _v + _add) min 1);
                         _t set ["fuel", ((_t get "fuel") - _add * CQ_fuelFullCost) max 0];

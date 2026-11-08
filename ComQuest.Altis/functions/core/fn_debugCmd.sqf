@@ -3,7 +3,7 @@
     [_cmd, _hqId] remoteExec ["CQ_fnc_debugCmd", 2];
       "next"    advance the selected HQ to its next phase
       "ammo"    +200 ammo in the selected HQ's depot
-      "fuel"    +200 fuel in the selected HQ's depot
+      "fuel"    +200 fuel in the selected HQ's tanker
       "destroy" kill the commander and blow the depot (before the build: kill its troops)
       "root"    launch the next root insertion now
       "flight"  launch the ammo flight to the main HQ now
@@ -50,11 +50,11 @@ if (_needHq && { count _hq == 0 }) then {
             };
         };
         case "fuel": {
-            if ((_hq get "buildDone") && { alive (_hq get "depot") }) then {
+            if ((_hq get "buildDone") && { alive (_hq get "tanker") }) then {
                 _hq set ["fuel", ((_hq get "fuel") + 200) min (_hq get "cap")];
                 _msg = format ["HQ #%1 fuel now %2/%3", _id, round (_hq get "fuel"), _hq get "cap"];
             } else {
-                _msg = format ["HQ #%1 has no depot yet", _id];
+                _msg = format ["HQ #%1 has no fuel tanker", _id];
             };
         };
         case "destroy": {

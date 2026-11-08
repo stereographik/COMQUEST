@@ -42,7 +42,7 @@ while { true } do {
                     private _give = (_load min ((_target get "cap") - (_target get "stock"))) max 0;
                     _target set ["stock", (_target get "stock") + _give];
                     _load = _load - _give;
-                    private _giveF = (_fuelLoad min ((_target get "cap") - (_target get "fuel"))) max 0;
+                    private _giveF = if (alive (_target get "tanker")) then { (_fuelLoad min ((_target get "cap") - (_target get "fuel"))) max 0 } else { 0 };
                     _target set ["fuel", (_target get "fuel") + _giveF];
                     _fuelLoad = _fuelLoad - _giveF;
                     ["Enemy supplies delivered", format ["HQ #%1 received %2 ammo and %3 fuel", _tid, round _give, round _giveF]] call CQ_fnc_announce;
@@ -66,9 +66,9 @@ CQ_trucksActive = (CQ_trucksActive - 1) max 0;
 if (_phase == "lost") then {
     ["Enemy supply truck destroyed", format ["The truck bound for HQ #%1 is lost with %2 ammo and %3 fuel", _tid, round _load, round _fuelLoad]] call CQ_fnc_announce;
 } else {
-    if ((_hub get "state") in CQ_activeStates && { alive (_hub get "depot") }) then {
-        _hub set ["stock", ((_hub get "stock") + _load) min (_hub get "cap")];
-        _hub set ["fuel", ((_hub get "fuel") + _fuelLoad) min (_hub get "cap")];
+    if ((_hub get "state") in CQ_activeStates) then {
+        if (alive (_hub get "depot")) then { _hub set ["stock", ((_hub get "stock") + _load) min (_hub get "cap")] };
+        if (alive (_hub get "tanker")) then { _hub set ["fuel", ((_hub get "fuel") + _fuelLoad) min (_hub get "cap")] };
     };
     { deleteVehicle _x } forEach crew _truck;
     deleteVehicle _truck;
