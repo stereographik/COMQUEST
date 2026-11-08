@@ -25,7 +25,7 @@ CQ_baseVehicles = [
     ["B_Truck_01_transport_F",    "hemtt",      2],   // HEMTT troop transport
     ["B_Heli_Light_01_F",         "littlebird", 2],   // MH-6 Little Bird
     ["B_Heli_Transport_01_F",     "ghosthawk",  2],   // UH-80 Ghost Hawk
-    ["B_Heli_Attack_01_dynamicLoadout_F", "blackhawk", 1]   // AH-99 Blackfoot
+    ["B_Heli_Transport_01_F",     "blackhawk",  1]    // the "blackhawk": a 3rd UH-80 Ghost Hawk
 ];
 CQ_baseVehPadding = 25;                  // metres between base vehicles (and from the arsenal crate)
 CQ_vehRespawnDelay = 60;                 // seconds after destruction
