@@ -31,87 +31,60 @@ if (CQ_debug) then {
     (_vehs apply { format ["%1 (%2)", typeOf _x, groupId group effectiveCommander _x] }) joinString ", ",
     ((_groups + [_cmdG]) apply { groupId _x }) joinString ", "]] call CQ_fnc_log;
 
-// A troop truck roaming away from the parent drives back first, the colonists gather there
-private _parentPos = ((CQ_hqs getOrDefault [_child get "parent", createHashMap]) getOrDefault ["pos", _site]);
-private _far = _vehs select { alive _x && { _x distance2D _parentPos > 150 } && { (_x emptyPositions "cargo") > 0 } };
-if (_far isNotEqualTo []) then {
-    { private _vg = group effectiveCommander _x; _vg setSpeedMode "FULL"; _vg move (_parentPos getPos [30, random 360]) } forEach _far;
-    private _tf = time;
-    waitUntil { sleep 3; (_far findIf { alive _x && { canMove _x } && { _x distance2D _parentPos > 150 } }) == -1 || { time - _tf > 180 } };
-};
-
-// --- boarding: assign cargo seats, officer first
-private _free = createHashMap;
-{ _free set [netId _x, _x emptyPositions "cargo"] } forEach _vehs;
-private _riders = [];
-private _allUnits = units _cmdG;
-{ _allUnits append (units _x) } forEach _groups;
+// --- transport, squad by squad (whole squads only):
+//   a free vehicle of the column with enough seats within CQ_transportPickRange -> rides
+//   else a parked troop Taru within CQ_transportPickRange -> airlift (picks them up there)
+//   else walks; with several squads, one squad always walks (ground presence on the route)
+private _all0 = (_groups + [_cmdG]) select { ({ alive _x } count units _x) > 0 };
+private _seatsLeft = createHashMap;
+{ _seatsLeft set [netId _x, _x emptyPositions "cargo"] } forEach _vehs;
+private _rides = createHashMap;          // vehicle netId -> groups
+private _ferried = [];
+private _walkers = [];
+private _forcedWalk = if (count _groups > 1) then { _groups select 0 } else { grpNull };
 {
-    private _u = _x;
-    private _vi = _vehs findIf { alive _x && { (_free get netId _x) > 0 } };
+    private _g = _x;
+    private _n = { alive _x } count units _g;
+    if (_g isEqualTo _forcedWalk) then { _walkers pushBack _g; continue };
+    private _l = leader _g;
+    private _vi = _vehs findIf { alive _x && { canMove _x } && { (_seatsLeft get netId _x) >= _n } && { _x distance2D _l < CQ_transportPickRange } };
     if (_vi > -1) then {
         private _v = _vehs select _vi;
-        _free set [netId _v, (_free get netId _v) - 1];
-        _u assignAsCargo _v;
-        [_u] orderGetIn true;
-        _riders pushBack _u;
+        _seatsLeft set [netId _v, (_seatsLeft get netId _v) - _n];
+        private _k = netId _v;
+        _rides set [_k, (_rides getOrDefault [_k, []]) + [_g]];
+        continue;
     };
-} forEach (_allUnits select { alive _x });
-
-// --- airlift: idle troop Taru carry the groups that got no seat in the convoy
-private _parent = CQ_hqs getOrDefault [_child get "parent", createHashMap];
-private _from = if (count _parent > 0) then { _parent get "pos" } else { getPosATL leader (_groups select 0) };
-private _walkers = (_groups + [_cmdG]) select { private _g = _x; ((units _g) findIf { _x in _riders }) == -1 && { ({ alive _x } count units _g) > 0 } };
-private _ferried = [];
-{
-    if (_walkers isEqualTo []) exitWith {};
-    private _e = _x;
-    private _v = _e get "veh";
-    if ((_e get "kind") == "transport" && { (_e get "state") == "parked" } && { alive _v } && { alive driver _v }
-        && { (_v emptyPositions "cargo") >= 4 } && { _v distance2D _from < 6000 } && { fuel _v > CQ_airLowFuel + 0.1 }) then {
-        private _seats = _v emptyPositions "cargo";
-        private _load = [];
-        { private _n = { alive _x } count units _x; if (_n <= _seats) then { _load pushBack _x; _seats = _seats - _n } } forEach _walkers;
-        if (_load isNotEqualTo []) then {
-            _walkers = _walkers - _load;
-            _ferried append _load;
-            [_e, _load, _from, _site, _id] spawn CQ_fnc_airFerry;
-        };
+    private _ai = CQ_air findIf {
+        (_x get "kind") == "transport" && { (_x get "state") == "parked" } && { alive (_x get "veh") } && { alive driver (_x get "veh") }
+        && { ((_x get "veh") emptyPositions "cargo") >= _n } && { (_x get "veh") distance2D _l < CQ_transportPickRange } && { fuel (_x get "veh") > CQ_airLowFuel + 0.1 }
     };
-} forEach CQ_air;
-
-private _t0 = time;
-waitUntil { sleep 2; (_riders findIf { alive _x && { vehicle _x == _x } }) == -1 || { time - _t0 > 20 } };
-// AI boarding is slow and unreliable: after 20 s, riders within 300 m of their vehicle are seated
-// directly (they stand next to it at the HQ anyway), the rest walk
-{
-    private _v = assignedVehicle _x;
-    if (alive _x && { vehicle _x == _x }) then {
-        if (!isNull _v && { alive _v } && { _x distance _v < 300 } && { (_v emptyPositions "cargo") > 0 }) then {
-            _x moveInCargo _v;
-        } else {
-            unassignVehicle _x;
-        };
+    if (_ai > -1) then {
+        private _e = CQ_air select _ai;
+        _e set ["state", "ferry"];
+        _ferried pushBack _g;
+        [_e, [_g], getPosATL _l, _site, _id] spawn CQ_fnc_airFerry;
+        continue;
     };
-} forEach _riders;
+    _walkers pushBack _g;
+} forEach ((([_cmdG] select { ({ alive _x } count units _x) > 0 })) + _groups);   // officer's group first
 
-// --- move (airlifted groups are steered by CQ_fnc_airFerry)
+// vehicles: carry their squads (or escort empty) and stay at the new HQ
 {
-    private _vg = group effectiveCommander _x;
-    _vg setBehaviour "SAFE";              // SAFE: drives on roads, does not stop at every noise
-    _vg setSpeedMode "NORMAL";
-    private _wp = _vg addWaypoint [_site getPos [50, random 360], 30];
-    _wp setWaypointType "MOVE";
-} forEach (_vehs select { alive _x && { !isNull effectiveCommander _x } });
-// Walking groups get a waypoint; mounted ones ride (a waypoint would make them get out)
+    private _v = _x;
+    if (alive _v) then { [_v, _rides getOrDefault [netId _v, []], _site, [], format ["HQ #%1 column", _id]] spawn CQ_fnc_convoyRide };
+} forEach _vehs;
+{ (_x addWaypoint [_site getPos [40, random 360], 30]) setWaypointType "MOVE" } forEach _walkers;
+
+private _mounted = 0;
+{ { _mounted = _mounted + ({ alive _x } count units _x) } forEach _y } forEach _rides;
+["Enemy colonists moving", format ["HQ #%1: %2 soldiers heading to grid %3: %4 by vehicle, %5 by helicopter, %6 on foot (%7)",
+    _id, [_all0] call CQ_fnc_aliveCount, mapGridPosition _site, _mounted, [_ferried] call CQ_fnc_aliveCount, [_walkers] call CQ_fnc_aliveCount,
+    (_walkers apply { groupId _x }) joinString ", "]] call CQ_fnc_announce;
 private _onFoot = {
     params ["_g"];
     ((units _g) findIf { alive _x && { vehicle _x != _x } }) == -1 && { currentWaypoint _g >= count waypoints _g }
 };
-{ if ([_x] call _onFoot) then { (_x addWaypoint [_site getPos [40, random 360], 30]) setWaypointType "MOVE" } } forEach ((_groups + [_cmdG]) - _ferried);
-["Enemy colonists moving", format ["HQ #%1: %2 soldiers (%3 mounted, %4 airlifted) heading to grid %5",
-    _id, [_groups + [_cmdG]] call CQ_fnc_aliveCount, count (_riders select { vehicle _x != _x }),
-    [_ferried] call CQ_fnc_aliveCount, mapGridPosition _site]] call CQ_fnc_announce;
 
 _t0 = time;
 while { true } do {
@@ -165,10 +138,10 @@ if (([_all] call CQ_fnc_aliveCount) == 0) exitWith {
     { if (vehicle _x != _x) then { unassignVehicle _x; moveOut _x } } forEach units _g;
 } forEach _all;
 
-_child set ["infantry", _groups select { ({ alive _x } count units _x) > 0 }];
+_child set ["infantry", ((_child get "infantry") + _groups) select { ({ alive _x } count units _x) > 0 }];   // keeps squads that came by redeployment
 _child set ["cmdGroup", _cmdG];
 _child set ["vehicles", _vehs select { alive _x }];
-{ _x setVariable ["CQ_busy", false]; (group effectiveCommander _x) setVariable ["CQ_roamT", -1] } forEach (_vehs select { alive _x });
+_child set ["incomingCol", 0];
 _child set ["state", "Securing"];
 _child set ["stateT", time];
 ["Enemy colonists arrived", format ["HQ #%1: on site at grid %2, securing the perimeter before building", _id, mapGridPosition _site]] call CQ_fnc_announce;

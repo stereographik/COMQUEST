@@ -131,6 +131,7 @@ _cmdG createUnit ["O_officer_F", _from getPos [6, random 360], [], 0, "NONE"];
 [units _cmdG] call CQ_fnc_unitPrep;
 
 private _child = [_site, _id] call CQ_fnc_hqNew;
+_child set ["incomingCol", _n];     // colonists on the way count for the balancing (CQ_fnc_hqBalance)
 _child set ["siteLevel", CQ_lastSiteLevel];
 private _carry = floor (((_hq get "stock") * CQ_childCarryShare) min CQ_childCarryMax);
 _hq set ["stock", (_hq get "stock") - _carry];

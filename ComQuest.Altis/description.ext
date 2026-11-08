@@ -63,8 +63,8 @@ class CfgNotifications
 class CfgSounds
 {
     sounds[] = {};
-    class CQ_radioIn { name = "CQ_radioIn"; sound[] = {"\A3\Dubbing_Radio_F\sfx\radionoise1.ogg", 0.6, 1}; titles[] = {}; };
-    class CQ_alarm   { name = "CQ_alarm";   sound[] = {"\A3\Sounds_F\sfx\alarm_independent.wss", 1, 1}; titles[] = {}; };
+    class CQ_radioIn { name = "CQ_radioIn"; sound[] = {"@A3\Dubbing_Radio_F\sfx\in2a.ogg", 0.6, 1}; titles[] = {}; };
+    class CQ_alarm   { name = "CQ_alarm";   sound[] = {"@A3\Sounds_F\sfx\alarm_independent.wss", 1, 1}; titles[] = {}; };
 };
 
 // --- Functions ------------------------------------------------------------
@@ -118,6 +118,7 @@ class CfgFunctions
             class roamSpotOk {};
             class infPatrol {};
             class groupWatch {};
+            class convoyRide {};
             class hqGuerilla {};
         };
 
