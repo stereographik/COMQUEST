@@ -53,6 +53,7 @@ private _toPatrol = {
     {
         [_x] call CQ_fnc_clearWaypoints;
         _x setVariable ["CQ_role", "patrol"];
+        _x setVariable ["CQ_roamT", -1];   // vehicle groups: roaming route from CQ_fnc_vehRoamTick
         [_x, _c, CQ_patrolRadius select 0] call BIS_fnc_taskPatrol;
     } forEach _groups;
 };

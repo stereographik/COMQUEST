@@ -62,8 +62,7 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
         if (_v isKindOf "Truck_F") then {
             _vg move (_c getPos [35, (_hq get "dir") + 270]);
         } else {
-            _vg setVariable ["CQ_role", "patrol"];
-            [_vg, _c, CQ_vehPatrolRadius] call BIS_fnc_taskPatrol;
+            [_vg, _v, _c] call CQ_fnc_vehRoam;
         };
         _vg enableDynamicSimulation CQ_dynSimGarrison;
     };

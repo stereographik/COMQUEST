@@ -52,6 +52,7 @@ if (_hubId != CQ_hubId) then {
     private _back = {
         params ["_g"];
         [_g] call CQ_fnc_clearWaypoints;
+        _g setVariable ["CQ_roamT", -1];   // vehicles: CQ_fnc_vehRoamTick gives them a new route
         private _prev = _g getVariable ["CQ_prevRole", "patrol"];
         if (_prev == "defend") then {
             _g setVariable ["CQ_role", "defend"];

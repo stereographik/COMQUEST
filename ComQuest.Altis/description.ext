@@ -89,6 +89,10 @@ class CfgFunctions
             class callReinf {};
             class hqSplit {};
             class hqTick {};
+            class hqBalance {};
+            class moveGroups {};
+            class vehRoam {};
+            class vehRoamTick {};
         };
 
         class logistics

@@ -94,7 +94,13 @@ CQ_wavePools = [                         // one vehicle from each pool per wave
 ];
 CQ_dynSimGarrison = false;               // true = HQ squads freeze when no player is near (saves CPU, but they stop patrolling)
 CQ_patrolRadius = [250, 700];            // patrol loop radius around an HQ: 1st patrol squad smallest, then wider
-CQ_vehPatrolRadius = 800;                // armed vehicles patrol this far around their HQ
+CQ_vehPatrolRadius = 1200;               // HQ vehicles (Ifrit, Marid, Mora, Nyx...) roam this far around their HQ
+CQ_vehRoamRefresh = 420;                 // new random roaming route every 7 min
+CQ_balanceInterval = 60;                 // every minute, infantry is evened out over the fully built HQs
+CQ_balanceMargin = 6;                    // only when an HQ is this many soldiers off the average
+CQ_balanceContactQuiet = 120;            // no redeployment from an HQ in contact the last 2 min
+CQ_walkMaxDist = 1000;                   // closer than this, squads walk between HQs
+CQ_heliPreferDist = 3000;                // farther than this, a helicopter is tried before a truck
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_minInfantryToExpand = 16;

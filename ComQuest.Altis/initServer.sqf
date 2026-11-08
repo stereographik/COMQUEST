@@ -34,5 +34,9 @@ CQ_logiReportT = 0;
 ["hqs", CQ_fnc_hqTick] call CQ_fnc_directorAddTask;
 ["logistics", CQ_fnc_logiTick] call CQ_fnc_directorAddTask;
 ["air", CQ_fnc_airTick] call CQ_fnc_directorAddTask;
+CQ_balanceNext = 0;
+["balance", CQ_fnc_hqBalance] call CQ_fnc_directorAddTask;
+CQ_vehRoamNext = 0;
+["vehRoam", CQ_fnc_vehRoamTick] call CQ_fnc_directorAddTask;
 
 call CQ_fnc_directorStart;
