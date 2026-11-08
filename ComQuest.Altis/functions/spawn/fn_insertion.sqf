@@ -3,9 +3,9 @@
     [_site] spawn CQ_fnc_insertion;
 
     Root insertion, phase by phase (each phase is announced on screen):
-      1 Inbound       2 Taru slinging a Zamak + an Ifrit, 2 Taru with 3 squads + commander,
+      1 Inbound       2 Blackfish carrying a Zamak + an Ifrit, 2 Taru with 3 squads + commander,
                       escorted by 2 Orcas + 1 Kajman, coming from the side opposite the player base
-      2 Drop/landing  lifters release their cargo over clear LZs (parachute fallback),
+      2 Drop/landing  Blackfish paradrop the vehicles over clear LZs and fly back to the carrier,
                       troop helis land on clear LZs and unload (teleport fallback)
       3 Fleet         3 s after its drop every heli flies to park near the main HQ (or this
                       site) and waits for orders; when the fleet is full it leaves instead
@@ -59,38 +59,44 @@ if (CQ_debug) then {
     (_hq get "markers") pushBack _m;
 };
 
-// ---------------------------------------------------------------- lifters
+// ---------------------------------------------------------------- vehicle drop planes
+// Each vehicle flies inside a Blackfish (vehicle transport, Vehicle-in-Vehicle) and is
+// paradropped over its LZ. A vehicle too big for the cargo bay rides hidden and gets its
+// own parachute at the drop. The Blackfish goes back to the carrier afterwards.
 private _lifts = [];
 {
     _x params ["_cargoClass", "_lat", "_lzDist", "_lzAng", "_label"];
     private _p = [_lat, 0] call _slot;
-    ([ "O_Heli_Transport_04_F", _p, _heading, true, CQ_heightLifter] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
+    private _heli = createVehicle [CQ_dropPlaneClass, [_p select 0, _p select 1, CQ_heightDrop], [], 0, "FLY"];
+    _heli setPosASL [_p select 0, _p select 1, (getTerrainHeightASL _p max 0) + CQ_heightDrop];
+    _heli setDir _heading;
+    _heli setVelocityModelSpace [0, 60, 0];
+    private _hg = [_heli] call CQ_fnc_crewVehicle;     // CSAT crew in the Blackfish
+    _hg setBehaviourStrong "CARELESS";
+    _hg setCombatMode "BLUE";
+    _heli flyInHeight CQ_heightDrop;
+    _heli setFuelConsumptionCoef CQ_fuelConsumption;
 
     private _cargo = objNull;
-    private _mass = 0;
-    private _slung = false;
+    private _viv = false;
     isNil {
-        // Unscheduled: create, place and hook in the same frame so the cargo never starts falling
+        // Unscheduled: create and load in the same frame so the cargo never starts falling
         _cargo = createVehicle [_cargoClass, [0, 0, 1000], [], 0, "CAN_COLLIDE"];
         _cargo allowDamage false;
-        _cargo setPosASL ((getPosASL _heli) vectorAdd [0, 0, -14]);
-        _mass = getMass _cargo;
-        _cargo setMass (_mass min 4000);   // stay under the Taru's sling limit during the flight
-        _slung = _heli setSlingLoad _cargo;
-        if (!_slung) then {
-            // Fallback: carry it hidden, parachute it over the LZ
+        if (((_heli canVehicleCargo _cargo) param [0, false])) then { _viv = _heli setVehicleCargo _cargo };
+        if (!_viv) then {
             _cargo hideObjectGlobal true;
             _cargo enableSimulationGlobal false;
             _cargo attachTo [_heli, [0, 0, -6]];
         };
     };
-    ["HQ #%1: Taru with %2 airborne (sling %3, cargo mass %4 kg)", [_id, _label, ["FAILED, parachute fallback", "OK"] select _slung, round _mass]] call CQ_fnc_log;
+    ["HQ #%1: Blackfish with %2 airborne (%3)", [_id, _label, ["too big for the bay, own parachute at the drop", "in the cargo bay"] select _viv]] call CQ_fnc_log;
 
     private _lz = [_lzDist, _lzAng] call _lzAt;
     _heli doMove _lz;
 
     _lifts pushBack createHashMapFromArray [
-        ["heli", _heli], ["grp", _hg], ["cargo", _cargo], ["mass", _mass], ["slung", _slung],
+        ["heli", _heli], ["grp", _hg], ["cargo", _cargo], ["mass", getMass _cargo], ["slung", _viv],
         ["lz", _lz], ["label", _label], ["state", "fly"], ["t", time]
     ];
 } forEach [
@@ -186,7 +192,7 @@ while { true } do {
 
         if (_state in ["fly", "near"] && { !alive _heli }) then {
             _e set ["state", "dead"];
-            ["CSAT transport shot down", format ["HQ #%1: the Taru carrying the %2 is down", _id, _e get "label"]] call CQ_fnc_announce;
+            ["CSAT transport shot down", format ["HQ #%1: the Blackfish carrying the %2 is down", _id, _e get "label"]] call CQ_fnc_announce;
             private _c = _e get "cargo";
             if (!(_e get "slung")) then { deleteVehicle _c };
             continue;
@@ -194,35 +200,20 @@ while { true } do {
 
         switch (_state) do {
             case "fly": {
-                if (_heli distance2D (_e get "lz") < 200) then {
-                    _heli flyInHeight 35;   // load still well clear of the ground
-                    _heli limitSpeed 40;
-                    _e set ["state", "near"];
-                    _e set ["t", time];
-                };
-            };
-            case "near": {
-                // Over the LZ the heli lowers the load until it touches down, then cuts the ropes.
-                // (Going low with ~15 m of rope + a vehicle below drags the Taru into the ground.)
+                // Paradrop a little before the LZ: the load keeps drifting forward under its canopy
                 private _d = _heli distance2D (_e get "lz");
-                private _cargo = _e get "cargo";
-                if (_d < 120) then { _heli flyInHeight 14 };
-                if (_d < 60 && { (_e getOrDefault ["overT", -1]) < 0 }) then { _e set ["overT", time] };
-                // release as soon as the load is low and the heli slow over the LZ, never hover more than 20 s
-                private _loadDown = (_e get "slung") && { _d < 60 } && { speed _heli < 25 } && { (getPosATL _cargo select 2) < 8 };
-                private _overLz = !(_e get "slung") && { _d < 40 } && { speed _heli < 30 };
-                private _overWait = (_e getOrDefault ["overT", -1]) >= 0 && { time - (_e get "overT") > 20 };
-                private _tooLow = (getPosATL _heli select 2) < 12;
-                if (_loadDown || _overLz || _overWait || _tooLow || { time - (_e get "t") > 60 }) then {
+                if (_d < 900) then { _heli limitSpeed 220 };
+                if (_d < CQ_dropLead || { time - (_e get "t") > 400 }) then {
                     private _cargo = _e get "cargo";
                     if (_e get "slung") then {
-                        _heli setSlingLoad objNull;
+                        _heli setVehicleCargo objNull;          // Vehicle-in-Vehicle unload in flight: own parachute
                     } else {
                         detach _cargo;
                         _cargo hideObjectGlobal false;
                         _cargo enableSimulationGlobal true;
+                        _cargo setPosASL ((getPosASL _heli) vectorAdd [0, 0, -12]);
                         private _chute = createVehicle ["B_Parachute_02_F", [0, 0, 1000], [], 0, "FLY"];
-                        _chute setPosASL ((getPosASL _heli) vectorAdd [0, 0, -10]);
+                        _chute setPosASL (getPosASL _cargo);
                         _cargo attachTo [_chute, [0, 0, -1.5]];
                         [_cargo, _chute] spawn {
                             params ["_c", "_p"];
@@ -231,27 +222,32 @@ while { true } do {
                             if (!isNull _p) then { deleteVehicle _p };
                         };
                     };
-                    _cargo setMass (_e get "mass");
-                    [_cargo] spawn { params ["_c"]; sleep 15; _c allowDamage true };
-                    [_cargo, _hq] spawn {
-                        params ["_c", "_hq"];
+                    [_cargo] spawn { params ["_c"]; sleep 60; _c allowDamage true };
+                    [_cargo, _hq, _id, _e get "label"] spawn {
+                        params ["_c", "_hq", "_id", "_label"];
                         private _t = time;
-                        waitUntil { sleep 1; !alive _c || { (getPosATL _c select 2) < 1 && { speed _c < 2 } } || { time - _t > 30 } };
+                        waitUntil { sleep 1; !alive _c || { isTouchingGround _c && { speed _c < 3 } } || { time - _t > 120 } };
                         if (alive _c) then {
+                            _c allowDamage true;
                             [_c] call CQ_fnc_crewVehicle;
                             [_c, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit;
                             (_hq get "vehicles") pushBack _c;
+                            ["Enemy vehicle landed", format ["HQ #%1: %2 down at grid %3 (%4 m from the site)", _id, _label, mapGridPosition _c, round (_c distance2D (_hq get "pos"))]] call CQ_fnc_announce;
                         };
                     };
-                    ["Enemy vehicle dropped", format ["HQ #%1: %2 released at grid %3 (%4 m from the site)", _id, _e get "label", mapGridPosition _heli, round (_heli distance2D _site)]] call CQ_fnc_announce;
-
-                    _heli limitSpeed 500;   // lift the limit again
+                    ["Enemy vehicle dropped", format ["HQ #%1: %2 paradropped at grid %3 (%4 m from its LZ)", _id, _e get "label", mapGridPosition _heli, round _d]] call CQ_fnc_announce;
+                    _heli limitSpeed 500;
                     _e set ["state", "postDrop"];
                     _e set ["t", time];
                 };
             };
             case "postDrop": {
-                if (time - (_e get "t") >= 3) then { [_e, "transport"] call _toFleet };
+                if (time - (_e get "t") >= 3) then {
+                    _heli flyInHeight 200;
+                    _heli doMove _exit;
+                    _e set ["state", "leaving"];
+                    _e set ["t", time];
+                };
             };
             case "leaving": {
                 if (!alive _heli || { _heli distance2D _exit < 600 } || { time - (_e get "t") > 240 }) then {

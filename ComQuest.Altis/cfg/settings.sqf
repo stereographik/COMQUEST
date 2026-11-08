@@ -45,7 +45,10 @@ CQ_firstRootDelay = 120;                 // seconds after mission start
 CQ_insertionSpawnDistance = 8000;        // helis appear this far from the site
 CQ_insertionFlyHeight = 80;              // default; each role has its own band below
 // Altitude bands keep formations from colliding (careless transports never dodge)
-CQ_heightLifter = 70;                    // Taru with a vehicle under the sling
+CQ_heightLifter = 70;
+CQ_dropPlaneClass = "B_T_VTOL_01_vehicle_F";   // V-44X Blackfish (vehicle transport): paradrops the insertion vehicles
+CQ_heightDrop = 220;                     // paradrop altitude (above ground)
+CQ_dropLead = 250;                       // released this far before the LZ (the canopy drifts forward)                    // Taru with a vehicle under the sling
 CQ_heightTroops = 95;                    // troop / supply Taru
 CQ_heightEscort = 150;                   // Orcas and Kajman above everything
 CQ_formationGap = 150;                   // lateral metres between transports
