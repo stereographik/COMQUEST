@@ -3,6 +3,8 @@
     Every helicopter under the air manager:
       toPark   -> flies to its pad and lands        -> parked (engine off, waiting for orders)
       parked   -> low on ammo (armed) or fuel (any) -> toRearm
+      parked   -> (armed, rested, fuel/ammo ok)     -> patrolling (CQ_fnc_airPatrol)
+      patrolling -> wandering pattern round an HQ   -> toPark when the sortie ends, toRearm when low
       hunting  -> search & destroy CQ_heliHuntTime  -> toPark, or toRearm when ammo/fuel runs low
       toRearm  -> lands at the nearest HQ holding what it lacks (or waits at the main HQ) -> rearming
       rearming -> CQ_airRearmTime on the ground: rearm (depot) + refuel (fuel tanker);
@@ -30,6 +32,10 @@ private _landAt = {
     params ["_e", "_pad"];
     [_e get "veh", _pad, _e] call CQ_fnc_airLandStep
 };
+
+// Armed helis allowed on patrol at the same time (the rest stay parked as quick reaction)
+private _armedAll = CQ_air select { (_x get "kind") == "armed" };
+private _patrolSlots = (ceil (CQ_airPatrolShare * count _armedAll)) - ({ (_x get "state") == "patrolling" } count _armedAll);
 
 {
     private _e = _x;
@@ -72,10 +78,39 @@ private _landAt = {
                 _g setBehaviour "SAFE";
                 _e set ["state", "parked"];
                 _e set ["nearT", -1];
+                _e set ["restUntil", time + (CQ_airPatrolRest select 0) + random ((CQ_airPatrolRest select 1) - (CQ_airPatrolRest select 0))];
             };
         };
         case "parked": {
             if (_low) then { [_e] call _goRearm };
+            if (!_low && { _armed } && { _patrolSlots > 0 } && { time > (_e getOrDefault ["restUntil", 0]) }
+                && { fuel _v >= CQ_airPatrolMinFuel } && { _lvl >= CQ_airLowAmmo + 0.15 }) then {
+                // Patrol its home HQ most of the time, sometimes a neighbouring one
+                private _homeHq = CQ_hqs getOrDefault [_home, createHashMap];
+                private _near = (values CQ_hqs) select {
+                    (_x get "state") in CQ_activeStates && { (_x get "pos") distance2D _v < CQ_airPatrolNearHq }
+                };
+                private _hq = _homeHq;
+                if (_near isNotEqualTo [] && { count _homeHq == 0 || { random 1 < 0.4 } }) then { _hq = selectRandom _near };
+                if (count _hq > 0) then {
+                    [_e, _hq] call CQ_fnc_airPatrol;
+                    _patrolSlots = _patrolSlots - 1;
+                };
+            };
+        };
+        case "patrolling": {
+            private _t = CQ_hqs getOrDefault [_e get "target", createHashMap];
+            if (_low) then {
+                [_e] call _goRearm;
+            } else {
+                if (time > (_e get "until") || { count _t == 0 } || { !((_t get "state") in CQ_activeStates) }) then {
+                    [_g] call CQ_fnc_clearWaypoints;
+                    _g setSpeedMode "NORMAL";
+                    _v flyInHeight CQ_heightEscort;
+                    _e set ["state", "toPark"];
+                    _e set ["nearT", -1];
+                };
+            };
         };
         case "hunting": {
             if (_low) then {

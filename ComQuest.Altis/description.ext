@@ -121,6 +121,7 @@ class CfgFunctions
             class airTick {};
             class airLandStep {};
             class airFerry {};
+            class airPatrol {};
         };
 
         class spawn

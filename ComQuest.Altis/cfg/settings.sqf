@@ -163,6 +163,14 @@ CQ_fieldResupplyLoad = 100;              // ammo points the field truck takes ou
 // --- Air fleet --------------------------------------------------------------
 CQ_escortClasses = ["O_Heli_Light_02_dynamicLoadout_F", "O_Heli_Light_02_dynamicLoadout_F", "O_Heli_Attack_02_dynamicLoadout_F"];
 CQ_fleetMax = 12;                        // helicopters under the air manager (each parks at its own HQ)
+CQ_airPatrolRest = [60, 180];           // an armed heli rests this long on its pad between patrols
+CQ_airPatrolTime = [240, 480];           // one patrol sortie lasts this long
+CQ_airPatrolRadius = [600, 1400];        // patrol ring around the HQ
+CQ_airPatrolHeight = [70, 170];          // random altitude per sortie (spreads the helis out)
+CQ_airPatrolMinFuel = 0.5;               // under this it stays parked (or goes to refuel)
+CQ_airPatrolShare = 0.7;                 // at most this share of armed helis in the air on patrol (the rest = ready QRF)
+CQ_airPatrolNearHq = 3500;               // a patrol may wander to another HQ within this range of its home
+CQ_airPatrolBaseGap = 2000;              // patrol points never closer than this to the player base
 CQ_airQrfMax = 2;                        // armed helis sent on one contact
 CQ_airQrfRange = 4000;
 CQ_airRearmTime = 60;
