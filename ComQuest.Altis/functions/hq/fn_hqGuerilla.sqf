@@ -30,9 +30,9 @@ for "_i" from 1 to CQ_guerillaSquads do {
     _g setBehaviour "SAFE";
     _g setCombatMode "RED";
     _g enableDynamicSimulation CQ_dynSimGarrison;
-    [_g, _ctr, [250, 500] select (_i > 1)] call BIS_fnc_taskPatrol;
+    [_g, _ctr, [250, 500] select (_i > 1)] call CQ_fnc_infPatrol;
     _made pushBack _g;
 };
 if (_made isEqualTo []) exitWith {};
 _hq set ["guerilla", (_hq getOrDefault ["guerilla", []]) + _made];
-["Local guerillas armed", format ["HQ #%1 armed %2 locals %3 (grid %4)", _id, [_made] call CQ_fnc_aliveCount, _place, mapGridPosition _ctr]] call CQ_fnc_announce;
+["Local guerillas armed", format ["HQ #%1 armed %2 locals %3 (grid %4): %5", _id, [_made] call CQ_fnc_aliveCount, _place, mapGridPosition _ctr, (_made apply { groupId _x }) joinString ", "]] call CQ_fnc_announce;

@@ -54,7 +54,7 @@ private _toPatrol = {
         [_x] call CQ_fnc_clearWaypoints;
         _x setVariable ["CQ_role", "patrol"];
         _x setVariable ["CQ_roamT", -1];   // vehicle groups: roaming route from CQ_fnc_vehRoamTick
-        [_x, _c, CQ_patrolRadius select 0] call BIS_fnc_taskPatrol;
+        [_x, _c, CQ_patrolRadius select 0] call CQ_fnc_infPatrol;
     } forEach _groups;
 };
 {
@@ -84,8 +84,27 @@ if (_col isEqualTo []) exitWith {
     ["Reinforcements joined", format ["HQ #%1 now has %2 infantry. No expansion: no free squad", _id, _total]] call CQ_fnc_announce;
 };
 
-// Vehicles that go: the wave's truck and random vehicle
+// Wave squads that stay behind patrol the HQ (they would otherwise stand where they dismounted)
+[(_waveInf - _col) select { ({ alive _x } count units _x) > 0 }] call _toPatrol;
+
+// Vehicles that go: the wave's truck and random vehicle; the wave's armour escorts the
+// column when the HQ keeps another armed vehicle; free troop trucks of the HQ carry the
+// colonists who have no seat yet
 private _colVehs = _waveVehs select { alive _x && { (_x getVariable ["CQ_pool", ""]) in ["truck", "random"] } };
+private _armour = _waveVehs select { alive _x && { canMove _x } && { (_x getVariable ["CQ_pool", ""]) == "armour" } };
+private _keeps = ((_hq get "vehicles") - _waveVehs) select { alive _x && { canMove _x } && { !(_x isKindOf "Truck_F") } };
+if (_armour isNotEqualTo [] && { _keeps isNotEqualTo [] }) then { _colVehs append _armour };
+private _seats = 0;
+{ _seats = _seats + (_x emptyPositions "cargo") } forEach _colVehs;
+{
+    if (_seats >= _n) exitWith {};
+    if (alive _x && { _x isKindOf "Truck_F" } && { canMove _x } && { alive driver _x } && { !(_x getVariable ["CQ_busy", false]) }
+        && { getAmmoCargo _x <= 0 } && { getFuelCargo _x <= 0 } && { getRepairCargo _x <= 0 }
+        && { (_x emptyPositions "cargo") >= 4 } && { _x distance2D _c < 1500 }) then {
+        _colVehs pushBack _x;
+        _seats = _seats + (_x emptyPositions "cargo");
+    };
+} forEach ((_hq get "vehicles") - _waveVehs);
 
 if (_assault) exitWith {
     {

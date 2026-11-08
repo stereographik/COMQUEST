@@ -61,7 +61,7 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
     } else {
         _g setVariable ["CQ_role", "patrol"];
         CQ_patrolRadius params ["_r0", "_r1"];
-        [_g, _c, (_r0 + 150 * (_forEachIndex - 1)) min _r1] call BIS_fnc_taskPatrol;
+        [_g, _c, (_r0 + 150 * (_forEachIndex - 1)) min _r1] call CQ_fnc_infPatrol;
     };
     _g enableDynamicSimulation CQ_dynSimGarrison;
 } forEach ((_hq get "infantry") select { ({ alive _x } count units _x) > 0 });

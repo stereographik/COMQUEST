@@ -19,7 +19,14 @@ private _men = [];
 { _men append (units _x) } forEach _groups;
 _men = _men select { alive _x };
 
-private _pickup = [_from, 50, 220] call CQ_fnc_airParkSpot;
+// Pickup where the squads actually are: a landing spot close to the middle of the group
+// (not at the HQ), so they only walk a few dozen metres to the bird
+private _mid = [0, 0, 0];
+{ _mid = _mid vectorAdd (getPosATL _x) } forEach _men;
+_mid = if (_men isEqualTo []) then { _from } else { _mid vectorMultiply (1 / count _men) };
+_mid set [2, 0];
+private _pickup = [_mid, 15, 150] call CQ_fnc_airParkSpot;
+["HQ #%1: airlift pickup at grid %2, %3 m from the squads' centre", [_childId, mapGridPosition _pickup, round (_pickup distance2D _mid)]] call CQ_fnc_log;
 private _drop = [_to, 60, 220] call CQ_fnc_airParkSpot;
 { _x enableDynamicSimulation false; [_x] call CQ_fnc_clearWaypoints; _x move (getPosATL _pickup) } forEach _groups;
 _hg enableDynamicSimulation false;
@@ -28,7 +35,7 @@ _v enableDynamicSimulation false;
 _v engineOn true;
 _v flyInHeight CQ_heightTroops;
 
-["Enemy airlift", format ["A Taru picks up %1 colonists for HQ #%2 (grid %3)", count _men, _childId, mapGridPosition _to]] call CQ_fnc_announce;
+["Enemy airlift", format ["A Taru picks up %1 soldiers at grid %2 for HQ #%3 (grid %4): %5", count _men, mapGridPosition _pickup, _childId, mapGridPosition _to, (_groups apply { groupId _x }) joinString ", "]] call CQ_fnc_announce;
 
 private _walk = {
     { _x move (_to getPos [40, random 360]) } forEach _groups;

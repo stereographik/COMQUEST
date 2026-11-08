@@ -51,7 +51,7 @@ private _now = time;
             [_x] call CQ_fnc_clearWaypoints;
             _x setVariable ["CQ_role", "patrol"];
             _x setSpeedMode "NORMAL";
-            [_x, _c, CQ_patrolRadius select 0] call BIS_fnc_taskPatrol;
+            [_x, _c, CQ_patrolRadius select 0] call CQ_fnc_infPatrol;
             ["HQ #%1: a QRF squad returns to patrol", [_id]] call CQ_fnc_log;
         };
     } forEach ((_hq get "infantry") select { !isNull _x });

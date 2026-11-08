@@ -26,6 +26,20 @@ if (CQ_debug) then {
     if (!isNull _vg) then { _vg enableDynamicSimulation false; [_vg] call CQ_fnc_clearWaypoints };
 } forEach _vehs;
 
+{ _x setVariable ["CQ_busy", true] } forEach _vehs;
+["HQ #%1: colonist column: %2 | squads %3", [_id,
+    (_vehs apply { format ["%1 (%2)", typeOf _x, groupId group effectiveCommander _x] }) joinString ", ",
+    ((_groups + [_cmdG]) apply { groupId _x }) joinString ", "]] call CQ_fnc_log;
+
+// A troop truck roaming away from the parent drives back first, the colonists gather there
+private _parentPos = ((CQ_hqs getOrDefault [_child get "parent", createHashMap]) getOrDefault ["pos", _site]);
+private _far = _vehs select { alive _x && { _x distance2D _parentPos > 150 } && { (_x emptyPositions "cargo") > 0 } };
+if (_far isNotEqualTo []) then {
+    { private _vg = group effectiveCommander _x; _vg setSpeedMode "FULL"; _vg move (_parentPos getPos [30, random 360]) } forEach _far;
+    private _tf = time;
+    waitUntil { sleep 3; (_far findIf { alive _x && { canMove _x } && { _x distance2D _parentPos > 150 } }) == -1 || { time - _tf > 180 } };
+};
+
 // --- boarding: assign cargo seats, officer first
 private _free = createHashMap;
 { _free set [netId _x, _x emptyPositions "cargo"] } forEach _vehs;
@@ -128,6 +142,12 @@ while { true } do {
             (_x addWaypoint [_site getPos [40, random 360], 30]) setWaypointType "MOVE";
         };
     } forEach (_all - _ferried);
+    if (CQ_debug && { time - (_child getOrDefault ["progT", 0]) > 60 }) then {
+        _child set ["progT", time];
+        ["HQ #%1: column progress | %2 | %3", [_id,
+            (_vehs select { alive _x } apply { format ["%1 %2 m", groupId group effectiveCommander _x, round (_x distance2D _site)] }) joinString ", ",
+            (_all select { ({ alive _x } count units _x) > 0 } apply { format ["%1 %2 m%3", groupId _x, round ((leader _x) distance2D _site), ["", " (in vehicle)"] select (vehicle leader _x != leader _x)] }) joinString ", "]] call CQ_fnc_log;
+    };
     if (time - _t0 > 1200) exitWith { ["HQ #%1: colonists timed out on the way (%2/%3 on site), securing from here", [_id, _onSite, count _men]] call CQ_fnc_log };
 };
 
@@ -148,6 +168,7 @@ if (([_all] call CQ_fnc_aliveCount) == 0) exitWith {
 _child set ["infantry", _groups select { ({ alive _x } count units _x) > 0 }];
 _child set ["cmdGroup", _cmdG];
 _child set ["vehicles", _vehs select { alive _x }];
+{ _x setVariable ["CQ_busy", false]; (group effectiveCommander _x) setVariable ["CQ_roamT", -1] } forEach (_vehs select { alive _x });
 _child set ["state", "Securing"];
 _child set ["stateT", time];
 ["Enemy colonists arrived", format ["HQ #%1: on site at grid %2, securing the perimeter before building", _id, mapGridPosition _site]] call CQ_fnc_announce;

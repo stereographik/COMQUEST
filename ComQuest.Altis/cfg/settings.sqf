@@ -118,6 +118,7 @@ CQ_balanceContactQuiet = 120;            // no redeployment from an HQ in contac
 CQ_walkMaxDist = 1000;                   // closer than this, squads walk between HQs
 CQ_truckRecallRange = 2500;              // a roaming troop truck this close is called back to carry a redeployment
 CQ_heliPreferDist = 3000;                // farther than this, a helicopter is tried before a truck
+CQ_watchIdle = 180;                      // a patrolling squad standing still 3 min outside combat gets a new patrol
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_minInfantryToExpand = 16;

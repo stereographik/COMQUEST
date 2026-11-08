@@ -50,7 +50,7 @@ while { true } do {
 if (({ alive _x } count units _g) > 0 && { (_g getVariable ["CQ_role", ""]) == "waitSupply" }) then {
     private _prev = _g getVariable ["CQ_prevRole", "patrol"];
     _g setVariable ["CQ_role", _prev];
-    if (_prev != "qrf") then { [_g, _hq get "pos", CQ_patrolRadius select 0] call BIS_fnc_taskPatrol };
+    if (_prev != "qrf") then { [_g, _hq get "pos", CQ_patrolRadius select 0] call CQ_fnc_infPatrol };
 };
 
 if (_lost) exitWith {

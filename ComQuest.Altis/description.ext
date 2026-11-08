@@ -115,6 +115,8 @@ class CfgFunctions
             class vehRoam {};
             class vehRoamTick {};
             class roamSpotOk {};
+            class infPatrol {};
+            class groupWatch {};
             class hqGuerilla {};
         };
 

@@ -67,7 +67,7 @@ if (_hubId != CQ_hubId) then {
             [_g, _hc] call BIS_fnc_taskDefend;
         } else {
             _g setVariable ["CQ_role", "patrol"];
-            [_g, _hc, CQ_patrolRadius select 0] call BIS_fnc_taskPatrol;
+            [_g, _hc, CQ_patrolRadius select 0] call CQ_fnc_infPatrol;
         };
     };
 
