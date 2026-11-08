@@ -43,6 +43,8 @@ CQ_watchNext = 0;
 CQ_airBalanceNext = 0;
 CQ_rdfNext = 0;
 ["rdf", CQ_fnc_rdfTick] call CQ_fnc_directorAddTask;
+CQ_baseDefNext = 0;
+["baseDef", CQ_fnc_baseDefTick] call CQ_fnc_directorAddTask;
 CQ_crateNext = 0;
 ["crates", CQ_fnc_crateTick] call CQ_fnc_directorAddTask;
 ["medic"] spawn CQ_fnc_specialTeam;

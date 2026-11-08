@@ -144,6 +144,10 @@ CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get tre
 CQ_rdfRange = 6000;                      // no signal beyond this
 CQ_rdfFieldPower = 0.45;                 // HQ still being set up: field radios only, weaker
 CQ_playerMapMarkers = false;             // true = enemy HQ areas and the carrier shown on the players' map
+// Base defence spots (AA + HMG, NATO gunners), around the camp, off the runway
+CQ_baseDefAngles = [45, 135, 225, 315];  // relative to the camp front
+CQ_baseDefRadius = 230;
+CQ_baseDefRespawn = 600;                 // a lost spot is rebuilt 10 min later
 // Supply crates at the base (load them into any vehicle)
 CQ_crateClass = "B_supplyCrate_F";
 CQ_crateCount = 6;
