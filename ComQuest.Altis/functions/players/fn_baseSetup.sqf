@@ -116,7 +116,8 @@ if (_useMarker || { count CQ_parkArea >= 3 }) then {
     private _cy = (selectMin _ys + selectMax _ys) / 2;
     private _half = ((selectMax _xs - selectMin _xs) max (selectMax _ys - selectMin _ys)) * 0.75;
     private _h = if (CQ_runway isNotEqualTo []) then { CQ_runway select 1 } else { _d };
-    private _inside = if (_useMarker) then { { _this inArea "cq_park_area" } } else { { _this inPolygon CQ_parkArea } };
+    private _poly = CQ_parkArea apply { [_x select 0, _x select 1, 0] };   // inPolygon wants [x, y, z]
+    private _inside = if (_useMarker) then { { _this inArea "cq_park_area" } } else { { _this inPolygon _poly } };
     for "_i" from -(ceil (_half / CQ_parkGrid)) to ceil (_half / CQ_parkGrid) do {
         for "_j" from -(ceil (_half / CQ_parkGrid)) to ceil (_half / CQ_parkGrid) do {
             private _p = [_cx, _cy, 0] getPos [sqrt ((_i * CQ_parkGrid) ^ 2 + (_j * CQ_parkGrid) ^ 2), _h + ((_i * CQ_parkGrid) atan2 (_j * CQ_parkGrid))];
