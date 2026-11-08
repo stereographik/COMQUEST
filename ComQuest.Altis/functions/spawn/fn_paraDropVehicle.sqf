@@ -10,24 +10,30 @@ params ["_class", "_lz", ["_onLanded", {}], ["_tag", "Paradrop"]];
 
 private _start = if (!isNil "CQ_carrierPos") then { CQ_carrierPos getPos [400, CQ_carrierPos getDir _lz] } else { _lz getPos [6000, 90] };
 private _away = _start getDir _lz;
+// Never spawn two planes on the same point (two drops at once collided and both blew up):
+// each plane starts on its own free slot, 250 m apart sideways, 300 m apart in altitude bands
+if (isNil "CQ_dropSlot") then { CQ_dropSlot = 0 };
+CQ_dropSlot = (CQ_dropSlot + 1) % 4;
+_start = _start getPos [250 * (CQ_dropSlot - 1.5), _away + 90];
+private _alt = CQ_heightDrop + 40 * CQ_dropSlot;
 for "_k" from 1 to 12 do {
     if ([_lz, CQ_dropCoastGap] call CQ_fnc_coastSafe) exitWith {};
     _lz = _lz getPos [100, _away];
 };
 
-private _pl = createVehicle [CQ_dropPlaneClass, [_start select 0, _start select 1, CQ_heightDrop], [], 0, "FLY"];
-_pl setPosASL [_start select 0, _start select 1, (getTerrainHeightASL _start max 0) + CQ_heightDrop];
+private _pl = createVehicle [CQ_dropPlaneClass, [_start select 0, _start select 1, 1500 + 50 * CQ_dropSlot], [], 0, "FLY"];
+_pl setPosASL [_start select 0, _start select 1, (getTerrainHeightASL _start max 0) + _alt];
 _pl setDir _away;
 _pl setVelocityModelSpace [0, 60, 0];
 private _pg = [_pl] call CQ_fnc_crewVehicle;
 _pg setBehaviourStrong "CARELESS";
 _pg setCombatMode "BLUE";
-_pl flyInHeight CQ_heightDrop;
+_pl flyInHeight _alt;
 
 private _cargo = objNull;
 private _viv = false;
 isNil {
-    _cargo = createVehicle [_class, [0, 0, 1000], [], 0, "CAN_COLLIDE"];
+    _cargo = createVehicle [_class, [500 * CQ_dropSlot, 0, 2000], [], 0, "CAN_COLLIDE"];
     _cargo allowDamage false;
     if (((_pl canVehicleCargo _cargo) param [0, false])) then { _viv = _pl setVehicleCargo _cargo };
     if (!_viv) then {
@@ -85,7 +91,7 @@ if (alive _pl) then {
     };
 };
 if (!_dropped) exitWith {
-    ["%1: Blackfish lost before the drop", [_tag]] call CQ_fnc_log;
+    ["%1: Blackfish lost before the drop (alive %2, damage %3, at grid %4)", [_tag, alive _pl, damage _pl, mapGridPosition _pl]] call CQ_fnc_log;
     if (!_viv) then { deleteVehicle _cargo };
 };
 

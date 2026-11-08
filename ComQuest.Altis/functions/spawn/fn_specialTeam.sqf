@@ -17,6 +17,7 @@ private _tag = format ["%1 team", ["Engineer", "Medic"] select _medic];
 while { true } do {
     // --- first drop: CQ_specialFirstDelay s after the first Blackfish drop; then any time
     waitUntil { sleep 2; !isNil "CQ_firstDropT" && { time > CQ_firstDropT + CQ_specialFirstDelay } };
+    sleep (20 * (["medic", "engineer"] find _kind));   // the two teams never take off together
     waitUntil { sleep 5; ((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates }) > -1 };
     private _home = CQ_hqs getOrDefault [CQ_hubId, createHashMap];
     if (count _home == 0 || { !((_home get "state") in CQ_activeStates) }) then {
