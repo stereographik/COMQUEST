@@ -20,7 +20,7 @@ _heli doMove (getPosATL _pad);
 ["Enemy supply flight inbound", format ["A Taru with an ammo pod and 3 escorts is heading for main HQ #%1 (ammo + fuel)", _hid]] call CQ_fnc_announce;
 
 private _delivered = false;
-private _landing = false;
+private _landSt = createHashMap;
 private _t0 = time;
 while { true } do {
     sleep 2;
@@ -28,12 +28,10 @@ while { true } do {
     if (time - _t0 > 900) exitWith { ["Ammo flight timed out", []] call CQ_fnc_log };
     if (!((_hub get "state") in CQ_activeStates)) exitWith { ["Ammo flight: main HQ #%1 fell, aborting", [_hid]] call CQ_fnc_log };
 
-    if (_heli distance2D _pad > 400) then {
-        _heli doMove (getPosATL _pad);
-    } else {
-        if (!_landing) then { _heli land "LAND"; _landing = true };
-        if (isTouchingGround _heli) exitWith {
+    if ([_heli, _pad, _landSt] call CQ_fnc_airLandStep) then {
+        if (true) then {
             sleep 20;
+            _delivered = true;      // landed: the flight ends here even if the depot fell meanwhile
             if (alive _heli && { alive (_hub get "depot") }) then {
                 private _give = (CQ_ammoFlightLoad min ((_hub get "cap") - (_hub get "stock"))) max 0;
                 _hub set ["stock", (_hub get "stock") + _give];
@@ -68,12 +66,12 @@ private _leave = {
 };
 if (alive _heli) then {
     _heli engineOn true;
-    if !([_heli, _hg, "transport", -1, objNull, _dest] call CQ_fnc_airRegister) then { [_heli, _hg] call _leave };
+    if !([_heli, _hg, "transport", _hid, objNull, _dest] call CQ_fnc_airRegister) then { [_heli, _hg] call _leave };
 };
 {
     _x params ["_h", "_g"];
     if (alive _h) then {
-        if !([_h, _g, "armed", -1, objNull, _dest] call CQ_fnc_airRegister) then { [_h, _g] call _leave };
+        if !([_h, _g, "armed", _hid, objNull, _dest] call CQ_fnc_airRegister) then { [_h, _g] call _leave };
     };
 } forEach _escorts;
 

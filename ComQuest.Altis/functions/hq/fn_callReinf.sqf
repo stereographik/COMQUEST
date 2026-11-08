@@ -43,7 +43,7 @@ _air = [_air, [], { (_x get "veh") distance2D _pos }, "ASCEND"] call BIS_fnc_sor
     _wp setWaypointType "SAD";
     _x set ["state", "hunting"];
     _x set ["until", time + CQ_heliHuntTime];
-    _x set ["landing", false];
+    _x set ["nearT", -1];
     _report pushBack format ["%1 (%2 m)", getText (configOf _v >> "displayName"), round (_v distance2D _pos)];
 } forEach _air;
 

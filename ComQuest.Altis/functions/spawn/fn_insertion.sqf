@@ -9,7 +9,9 @@
                       troop helis land on clear LZs and unload (teleport fallback)
       3 Fleet         3 s after its drop every heli flies to park near the main HQ (or this
                       site) and waits for orders; when the fleet is full it leaves instead
-      4 Securing      hands over to CQ_fnc_hqTick (secure 1 km, install, hold, reinforce, split)
+      4 Securing      hands over to CQ_fnc_hqTick as soon as every troop heli has unloaded
+                      (secure, install, hold, reinforce, split); vehicles join the HQ when they
+                      are down, even if securing has already started
 */
 params ["_site", ["_siteLevel", 0]];
 
@@ -147,7 +149,7 @@ private _deleteHeli = {
 private _toFleet = {
     params ["_e", "_kind"];
     private _heli = _e get "heli";
-    if ([_heli, _e get "grp", _kind, -1, objNull, _site] call CQ_fnc_airRegister) then {
+    if ([_heli, _e get "grp", _kind, _id, objNull, _site] call CQ_fnc_airRegister) then {
         _e set ["state", "fleet"];
     } else {
         _heli flyInHeight 100;
@@ -156,7 +158,20 @@ private _toFleet = {
         _e set ["t", time];
     };
 };
-private _dropped = [];
+private _handed = false;
+private _handoff = {
+    _handed = true;
+    private _infantry = _squads select { ({ alive _x } count units _x) > 0 };
+    if (_infantry isEqualTo [] && { ({ alive _x } count units _cmdGroup) == 0 }) exitWith {
+        _hq set ["state", "Failed"];
+        { deleteMarker _x } forEach (_hq get "markers");
+        ["Enemy insertion failed", format ["HQ #%1: no troops made it to the ground", _id]] call CQ_fnc_announce;
+    };
+    _hq set ["infantry", _infantry];
+    _hq set ["cmdGroup", _cmdGroup];
+    _hq set ["state", "Securing"];          // CQ_fnc_hqTick takes over: secure -> install -> hold -> reinforce -> split
+    _hq set ["stateT", time];
+};
 private _t0 = time;
 
 while { true } do {
@@ -190,11 +205,14 @@ while { true } do {
                 // (Going low with ~15 m of rope + a vehicle below drags the Taru into the ground.)
                 private _d = _heli distance2D (_e get "lz");
                 private _cargo = _e get "cargo";
-                if (_d < 50) then { _heli flyInHeight 14 };
-                private _loadDown = (_e get "slung") && { (getPosATL _cargo select 2) < 2.5 };
+                if (_d < 120) then { _heli flyInHeight 14 };
+                if (_d < 60 && { (_e getOrDefault ["overT", -1]) < 0 }) then { _e set ["overT", time] };
+                // release as soon as the load is low and the heli slow over the LZ, never hover more than 20 s
+                private _loadDown = (_e get "slung") && { _d < 60 } && { speed _heli < 25 } && { (getPosATL _cargo select 2) < 8 };
                 private _overLz = !(_e get "slung") && { _d < 40 } && { speed _heli < 30 };
+                private _overWait = (_e getOrDefault ["overT", -1]) >= 0 && { time - (_e get "overT") > 20 };
                 private _tooLow = (getPosATL _heli select 2) < 12;
-                if (_loadDown || _overLz || _tooLow || { time - (_e get "t") > 120 }) then {
+                if (_loadDown || _overLz || _overWait || _tooLow || { time - (_e get "t") > 60 }) then {
                     private _cargo = _e get "cargo";
                     if (_e get "slung") then {
                         _heli setSlingLoad objNull;
@@ -214,7 +232,16 @@ while { true } do {
                     };
                     _cargo setMass (_e get "mass");
                     [_cargo] spawn { params ["_c"]; sleep 15; _c allowDamage true };
-                    _dropped pushBack _cargo;
+                    [_cargo, _hq] spawn {
+                        params ["_c", "_hq"];
+                        private _t = time;
+                        waitUntil { sleep 1; !alive _c || { (getPosATL _c select 2) < 1 && { speed _c < 2 } } || { time - _t > 30 } };
+                        if (alive _c) then {
+                            [_c] call CQ_fnc_crewVehicle;
+                            [_c, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit;
+                            (_hq get "vehicles") pushBack _c;
+                        };
+                    };
                     ["Enemy vehicle dropped", format ["HQ #%1: %2 released at grid %3", _id, _e get "label", mapGridPosition _heli]] call CQ_fnc_announce;
 
                     _heli limitSpeed 500;   // lift the limit again
@@ -288,6 +315,8 @@ while { true } do {
         };
     } forEach _troops;
 
+    if (!_handed && { (_troops findIf { (_x get "state") in ["fly", "landing"] }) == -1 }) then { call _handoff };
+
     private _pending = (_lifts + _troops) findIf { (_x get "state") in ["fly", "near", "landing", "postDrop", "unloaded", "leaving"] };
     if (_pending == -1) exitWith {};
     if (time - _t0 > 900) exitWith { ["HQ #%1: insertion timed out after 15 min", [_id]] call CQ_fnc_log };
@@ -297,7 +326,7 @@ while { true } do {
 {
     _x params ["_heli", "_hg"];
     if (alive _heli) then {
-        if !([_heli, _hg, "armed", -1, objNull, _site] call CQ_fnc_airRegister) then {
+        if !([_heli, _hg, "armed", _id, objNull, _site] call CQ_fnc_airRegister) then {
             [_hg] call CQ_fnc_clearWaypoints;
             _heli doMove _exit;
             [_heli, _hg, _site, _deleteHeli] spawn {
@@ -311,20 +340,5 @@ while { true } do {
 } forEach _escorts;
 
 // ---------------------------------------------------------------- securing
-private _infantry = _squads select { ({ alive _x } count units _x) > 0 };
-if (_infantry isEqualTo [] && { ({ alive _x } count units _cmdGroup) == 0 }) exitWith {
-    _hq set ["state", "Failed"];
-    { deleteMarker _x } forEach (_hq get "markers");
-    ["Enemy insertion failed", format ["HQ #%1: no troops made it to the ground", _id]] call CQ_fnc_announce;
-};
-
-// Crews for the dropped vehicles
-private _vehicles = _dropped select { alive _x };
-{ [_x] call CQ_fnc_crewVehicle; [_x, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit } forEach _vehicles;
-
-_hq set ["infantry", _infantry];
-_hq set ["cmdGroup", _cmdGroup];
-_hq set ["vehicles", _vehicles];
-_hq set ["state", "Securing"];
-_hq set ["stateT", time];
-// CQ_fnc_hqTick takes over from here: secure 1 km -> install -> hold -> reinforcements -> split
+// Normally already handed off when the troops landed; here only after a timeout
+if (!_handed) then { call _handoff };

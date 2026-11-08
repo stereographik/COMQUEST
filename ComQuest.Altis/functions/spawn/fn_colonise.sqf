@@ -35,15 +35,38 @@ private _allUnits = units _cmdG;
     };
 } forEach (_allUnits select { alive _x });
 
-private _t0 = time;
-waitUntil { sleep 2; (_riders findIf { alive _x && { vehicle _x == _x } }) == -1 || { time - _t0 > 120 } };
-{ if (vehicle _x == _x) then { unassignVehicle _x } } forEach _riders;   // not in after 2 min: walk
+// --- airlift: idle troop Taru carry the groups that got no seat in the convoy
+private _parent = CQ_hqs getOrDefault [_child get "parent", createHashMap];
+private _from = if (count _parent > 0) then { _parent get "pos" } else { getPosATL leader (_groups select 0) };
+private _walkers = (_groups + [_cmdG]) select { private _g = _x; ((units _g) findIf { _x in _riders }) == -1 && { ({ alive _x } count units _g) > 0 } };
+private _ferried = [];
+{
+    if (_walkers isEqualTo []) exitWith {};
+    private _e = _x;
+    private _v = _e get "veh";
+    if ((_e get "kind") == "transport" && { (_e get "state") == "parked" } && { alive _v } && { alive driver _v }
+        && { (_v emptyPositions "cargo") >= 4 } && { _v distance2D _from < 6000 } && { fuel _v > CQ_airLowFuel + 0.1 }) then {
+        private _seats = _v emptyPositions "cargo";
+        private _load = [];
+        { private _n = { alive _x } count units _x; if (_n <= _seats) then { _load pushBack _x; _seats = _seats - _n } } forEach _walkers;
+        if (_load isNotEqualTo []) then {
+            _walkers = _walkers - _load;
+            _ferried append _load;
+            [_e, _load, _from, _site, _id] spawn CQ_fnc_airFerry;
+        };
+    };
+} forEach CQ_air;
 
-// --- move
+private _t0 = time;
+waitUntil { sleep 2; (_riders findIf { alive _x && { vehicle _x == _x } }) == -1 || { time - _t0 > 90 } };
+{ if (vehicle _x == _x) then { unassignVehicle _x } } forEach _riders;   // not in after 90 s: walk
+
+// --- move (airlifted groups are steered by CQ_fnc_airFerry)
 { (group effectiveCommander _x) move _site } forEach (_vehs select { alive _x });
-{ _x move (_site getPos [40, random 360]) } forEach (_groups + [_cmdG]);
-["Enemy colonists moving", format ["HQ #%1: %2 soldiers (%3 mounted) heading to grid %4",
-    _id, [_groups + [_cmdG]] call CQ_fnc_aliveCount, count (_riders select { vehicle _x != _x }), mapGridPosition _site]] call CQ_fnc_announce;
+{ _x move (_site getPos [40, random 360]) } forEach ((_groups + [_cmdG]) - _ferried);
+["Enemy colonists moving", format ["HQ #%1: %2 soldiers (%3 mounted, %4 airlifted) heading to grid %5",
+    _id, [_groups + [_cmdG]] call CQ_fnc_aliveCount, count (_riders select { vehicle _x != _x }),
+    [_ferried] call CQ_fnc_aliveCount, mapGridPosition _site]] call CQ_fnc_announce;
 
 _t0 = time;
 while { true } do {
@@ -62,10 +85,12 @@ while { true } do {
         ["HQ #%1: DEBUG skip, colonists moved to the site", [_id]] call CQ_fnc_log;
     };
     if (([_all] call CQ_fnc_aliveCount) == 0) exitWith {};
-    private _near = (_vehs findIf { alive _x && { _x distance2D _site < 150 } }) > -1
-        || { (_all findIf { alive leader _x && { (leader _x) distance2D _site < 150 } }) > -1 };
-    if (_near) exitWith {};
-    if (time - _t0 > 1500) exitWith { ["HQ #%1: colonists timed out on the way, securing from here", [_id]] call CQ_fnc_log };
+    // Arrived once most of the colonists are on site, not when the first truck gets there
+    private _men = [];
+    { _men append ((units _x) select { alive _x }) } forEach _all;
+    private _onSite = { _x distance2D _site < 300 } count _men;
+    if (_onSite >= CQ_colonistArrivalShare * count _men) exitWith {};
+    if (time - _t0 > 1200) exitWith { ["HQ #%1: colonists timed out on the way (%2/%3 on site), securing from here", [_id, _onSite, count _men]] call CQ_fnc_log };
 };
 
 // --- dismount and hand over to the lifecycle

@@ -16,23 +16,19 @@ private _goRearm = {
     private _t = if (_needFuel) then { [getPosATL _v, CQ_rearmMinFuel, "fuel"] call CQ_fnc_nearestStockHq } else { [getPosATL _v, CQ_rearmMinStock] call CQ_fnc_nearestStockHq };
     if (count _t == 0) then { _t = CQ_hqs getOrDefault [CQ_hubId, createHashMap] };
     if (count _t == 0) then { _t = CQ_hqs getOrDefault [_e get "homeId", createHashMap] };
-    if (count _t == 0) exitWith { _e set ["state", "toPark"]; _e set ["landing", false] };
+    if (count _t == 0) exitWith { _e set ["state", "toPark"]; _e set ["nearT", -1] };
     _e set ["target", _t get "id"];
     _e set ["state", "toRearm"];
-    _e set ["landing", false];
+    _e set ["nearT", -1];
     [_e get "grp"] call CQ_fnc_clearWaypoints;
     (_e get "grp") setBehaviour "AWARE";
     _v engineOn true;
     ["Air: %1 low (ammo %2%%, fuel %3%%), heading to HQ #%4 to resupply", [typeOf _v, round (100 * ([_v] call CQ_fnc_vehAmmoLevel)), round (100 * fuel _v), _t get "id"]] call CQ_fnc_log;
 };
-// Fly to a pad and land on it; true once on the ground
+// Fly to a pad and land on it; true once on the ground (re-issued orders + fallback)
 private _landAt = {
     params ["_e", "_pad"];
-    private _v = _e get "veh";
-    if (_v distance2D _pad > 150) exitWith { _v doMove (getPosATL _pad); false };
-    if (isTouchingGround _v) exitWith { true };
-    if !(_e get "landing") then { _v land "LAND"; _e set ["landing", true] };
-    false
+    [_e get "veh", _pad, _e] call CQ_fnc_airLandStep
 };
 
 {
@@ -57,7 +53,7 @@ private _landAt = {
         deleteVehicle (_e get "pad");
         _e set ["pad", [(CQ_hqs get CQ_hubId) get "pos"] call CQ_fnc_airParkSpot];
         _e set ["state", "toPark"];
-        _e set ["landing", false];
+        _e set ["nearT", -1];
         _v engineOn true;
     };
 
@@ -75,7 +71,7 @@ private _landAt = {
                 _v engineOn false;
                 _g setBehaviour "SAFE";
                 _e set ["state", "parked"];
-                _e set ["landing", false];
+                _e set ["nearT", -1];
             };
         };
         case "parked": {
@@ -89,7 +85,7 @@ private _landAt = {
                     [_g] call CQ_fnc_clearWaypoints;
                     _g setBehaviour "AWARE";
                     _e set ["state", "toPark"];
-                    _e set ["landing", false];
+                    _e set ["nearT", -1];
                 };
             };
         };
@@ -103,7 +99,7 @@ private _landAt = {
                     _v engineOn false;
                     _e set ["state", "rearming"];
                     _e set ["until", time + CQ_airRearmTime];
-                    _e set ["landing", false];
+                    _e set ["nearT", -1];
                 };
             };
         };
@@ -128,7 +124,7 @@ private _landAt = {
                 } else {
                     _v engineOn true;
                     _e set ["state", "toPark"];
-                    _e set ["landing", false];
+                    _e set ["nearT", -1];
                 };
             };
         };

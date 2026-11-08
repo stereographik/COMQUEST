@@ -1,15 +1,18 @@
 /*
     CQ_fnc_rearmUnit  (server)
-    [_unit, _stock] call CQ_fnc_rearmUnit  ->  stock left
-    Tops a soldier up to his loadout (CQ_fnc_unitPrep values), paying from _stock.
+    [_unit, _stock, _below] call CQ_fnc_rearmUnit  ->  stock left
+    Tops a soldier up to his loadout (CQ_fnc_unitPrep values), paying from _stock, but only
+    when he holds fewer than _below x his magazines (1 = always top up). Missing rockets
+    are always replaced.
 */
-params ["_u", "_stock"];
+params ["_u", "_stock", ["_below", 1]];
 
 private _t = _u getVariable ["CQ_magTarget", -1];
-if (_t >= 0) then {
+private _have = ({ _x == (_u getVariable ["CQ_magClass", ""]) } count (magazines _u));
+if (_t >= 0 && { _have < _t * _below || { _below >= 1 } }) then {
     private _cls = _u getVariable ["CQ_magClass", ""];
     private _cost = _u getVariable ["CQ_magCost", CQ_costMag];
-    private _need = _t - ({ _x == _cls } count (magazines _u));
+    private _need = _t - _have;
     private _n = floor (_stock / _cost) min _need;
     if (_n > 0) then {
         _u addMagazines [_cls, _n];

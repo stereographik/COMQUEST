@@ -60,9 +60,11 @@ private _now = time;
             if !(_hq get "secureStarted") then {
                 [_hq] call CQ_fnc_hqSecure;
             } else {
+                // Secured once every squad is CQ_secureShare of the way out (they keep walking to their posts)
                 private _pending = (_hq get "infantry") select {
                     alive leader _x
                     && { (_x getVariable ["CQ_role", ""]) == "secure" }
+                    && { (leader _x) distance2D _c < CQ_secureRadius * CQ_secureShare }
                     && { (leader _x) distance2D (_x getVariable ["CQ_securePos", getPosATL leader _x]) > 80 }
                 };
                 private _timeout = _now - (_hq get "stateT") > CQ_secureTimeout;

@@ -68,7 +68,8 @@ CQ_activeStates = ["Inbound", "Securing", "Installing", "Hold", "Holding", "Wait
 CQ_maxHqs = 8;                           // HQs alive at once
 CQ_maxAI = 200;                          // enemy AI alive at once
 CQ_secureRadius = 1000;                  // squads post out to this perimeter before building
-CQ_secureTimeout = 900;                  // build starts anyway after 15 min
+CQ_secureShare = 0.5;                    // perimeter counts as secured once every squad is this far out
+CQ_secureTimeout = 180;                  // build starts anyway after 3 min (squads keep walking to their posts)
 CQ_holdTime = 60;                        // hold after installation, before calling reinforcements
 CQ_waveInterval = 600;                   // a new reinforcement wave every 10 min per HQ
 CQ_waveSpawnDist = [1000, 1500];         // convoy spawns on a road this far from the HQ
@@ -81,6 +82,7 @@ CQ_wavePools = [                         // one vehicle from each pool per wave
     ["random", ["O_MRAP_02_hmg_F", "O_G_Offroad_01_armed_F"]]
 ];
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
+CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_minInfantryToExpand = 16;
 CQ_minDefenders = 8;                     // never send away the last 8 infantry of an HQ
 CQ_childDistance = [1600, 2400];         // child HQ ~2 km from its parent
@@ -114,7 +116,9 @@ CQ_hubCap = 1500;                        // main HQ (oldest standing HQ) depot
 CQ_rootStartStock = 300;                 // brought by a root insertion
 CQ_childCarryShare = 0.3;                // colonists take this share of the parent's stock...
 CQ_childCarryMax = 150;                  // ...capped
-CQ_rearmRadius = 60;                     // units this close to a depot get rearmed
+CQ_rearmRadius = 60;                     // units this close to a depot get rearmed...
+CQ_rearmUnitBelow = 0.7;                 // ...a soldier only under 70% of his magazines
+CQ_rearmVehBelow = 0.5;                  // ...a vehicle only under 50% (statics 60%)
 CQ_rearmMinStock = 20;                   // an HQ with less is not a rearm destination
 CQ_logiTickSeconds = 15;
 CQ_requestShare = 0.4;                   // an HQ under 40% of its cap requests a truck
@@ -144,7 +148,7 @@ CQ_fieldResupplyLoad = 100;              // ammo points the field truck takes ou
 
 // --- Air fleet --------------------------------------------------------------
 CQ_escortClasses = ["O_Heli_Light_02_dynamicLoadout_F", "O_Heli_Light_02_dynamicLoadout_F", "O_Heli_Attack_02_dynamicLoadout_F"];
-CQ_fleetMax = 8;                         // aircraft parked at the main HQ waiting for orders
+CQ_fleetMax = 12;                        // helicopters under the air manager (each parks at its own HQ)
 CQ_airQrfMax = 2;                        // armed helis sent on one contact
 CQ_airQrfRange = 4000;
 CQ_airRearmTime = 60;
@@ -155,6 +159,7 @@ if (CQ_debug) then {
     CQ_firstRootDelay = 30;
     CQ_insertionSpawnDistance = 3500;
     CQ_hqBuildStageTime = 45;
+    CQ_secureTimeout = 90;
     CQ_baseNoSpawnRadius = 1200;         // the runway HQ is only ~900 m from the base
     CQ_waveInterval = 300;
     CQ_ammoFlightInterval = 300;

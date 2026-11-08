@@ -119,6 +119,8 @@ class CfgFunctions
             class spawnEscorts {};
             class airRegister {};
             class airTick {};
+            class airLandStep {};
+            class airFerry {};
         };
 
         class spawn

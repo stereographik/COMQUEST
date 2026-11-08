@@ -26,7 +26,7 @@ private _n = count _groups max 1;
     private _wp = _g addWaypoint [_p, 30];
     _wp setWaypointType "MOVE";
     _wp setWaypointBehaviour "AWARE";
-    _wp setWaypointSpeed "NORMAL";
+    _wp setWaypointSpeed "FULL";
     _wp setWaypointCompletionRadius 40;
     _g setVariable ["CQ_securePos", _p];
 } forEach _groups;
