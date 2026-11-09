@@ -113,6 +113,8 @@ class CfgFunctions
             class hqTick {};
             class hqBalance {};
             class moveGroups {};
+            class cmdCapture {};
+            class flareSupport {};
             class vehRoam {};
             class vehRoamTick {};
             class roamSpotOk {};

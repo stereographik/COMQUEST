@@ -43,9 +43,18 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
     private _cmd = leader _cmdGroup;
     _cmd setVariable ["CQ_hqId", _id];
     _hq set ["commander", _cmd];
+    // Capture: hold action for every player (JIP too), only once his guards are down
+    [_cmd, "<t color='#9FD3FF'>Capture the commander</t>",
+        "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_secure_ca.paa",
+        "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_secure_ca.paa",
+        "alive _target && { _this distance _target < 3 } && { !(_target getVariable ['CQ_captured', false]) } && { ({ alive _x && { side group _x == east } && { _x != _target } } count (_target nearEntities ['CAManBase', 15])) == 0 }",
+        "alive _target && { _caller distance _target < 4 }",
+        {}, {}, { ["capture", _target, _caller] remoteExec ["CQ_fnc_cmdCapture", 2] }, {},
+        [], 6, 10, true, false] remoteExec ["BIS_fnc_holdActionAdd", 0, _cmd];
     _cmd addEventHandler ["Killed", {
         private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
         if (isNil "_hq") exitWith {};
+        if ((_this select 0) getVariable ["CQ_captured", false]) exitWith {};   // a prisoner's death is not a kill
         ["Enemy commander killed", format ["HQ #%1 has lost its commander", _hq get "id"]] call CQ_fnc_announce;
         ["killCommander", [[_hq get "id"] call CQ_fnc_objName], _hq] call CQ_fnc_say;
         params ["", "_k", "_i"];

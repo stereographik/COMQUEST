@@ -8,8 +8,13 @@
       - no radio: only the spotting HQ's own forces respond
     Each HQ keeps at least CQ_minDefenders infantry at home. Groups (and helis) short of ammo
     (under CQ_minAmmoToAdvance) never go forward.
+    Also:
+      - squads patrolling within CQ_helpRadius of the contact join in (small-perimeter help)
+      - the squad that made contact is watched: if it is mostly wiped out within
+        CQ_flareWindow, it fires a red flare -> heavy support (CQ_fnc_flareSupport)
+      - contact at a ROOT HQ (the first HQ of an insertion): every child HQ rallies to it
 */
-params ["_src", "_pos"];
+params ["_src", "_pos", ["_spotter", grpNull]];
 
 private _srcId = _src get "id";
 _src set ["lastContactT", time];
@@ -91,6 +96,70 @@ _air = [_air, [], { (_x get "veh") distance2D _pos }, "ASCEND"] call BIS_fnc_sor
         _report pushBack format ["HQ #%1: %2 men (%3 m away)", _hq get "id", _sent, round _d];
     };
 } forEach CQ_hqs;
+
+// --- small-perimeter help: patrolling squads close to the contact push in
+{
+    private _hq = _y;
+    if !((_hq get "state") in CQ_activeStates) then { continue };
+    {
+        private _g = _x;
+        if ((_g getVariable ["CQ_role", ""]) in ["patrol", "reinf"] && { (leader _g) distance2D _pos < CQ_helpRadius }
+            && { ([_g] call CQ_fnc_infAmmo) >= CQ_minAmmoToAdvance }) then {
+            [_g] call CQ_fnc_clearWaypoints;
+            _g setVariable ["CQ_role", "qrf"];
+            _g setVariable ["CQ_qrfUntil", time + CQ_qrfTime];
+            _g setBehaviour "AWARE";
+            _g setSpeedMode "FULL";
+            (_g addWaypoint [_pos, 60]) setWaypointType "SAD";
+            _report pushBack format ["%1 nearby (%2 m)", groupId _g, round ((leader _g) distance2D _pos)];
+        };
+    } forEach (_hq get "infantry");
+} forEach CQ_hqs;
+
+// --- the spotting squad is watched: wiped quickly -> red flare, heavy support
+if (!isNull _spotter && { !(_spotter getVariable ["CQ_watched", false]) }) then {
+    _spotter setVariable ["CQ_watched", true];
+    [_spotter, _src, _pos] spawn {
+        params ["_g", "_hq", "_pos"];
+        private _n0 = { alive _x } count units _g;
+        private _t0 = time;
+        waitUntil { sleep 3; time - _t0 > CQ_flareWindow || { ({ alive _x } count units _g) <= floor (_n0 * CQ_flareLossShare) } };
+        _g setVariable ["CQ_watched", false];
+        if (time - _t0 <= CQ_flareWindow && { _n0 >= 2 }) then { [_hq, _pos, _g] call CQ_fnc_flareSupport };
+    };
+};
+
+// --- root HQ attacked: every child HQ sends everything it can spare to defend it
+private _root = _src;
+private _guard = 0;
+while { (_root get "parent") > -1 && { _guard < 20 } } do {
+    _guard = _guard + 1;
+    private _p = CQ_hqs getOrDefault [_root get "parent", createHashMap];
+    if (count _p == 0) exitWith {};
+    _root = _p;
+};
+if ((_src get "parent") == -1 && { time - (_src get "rootDefendT") > CQ_rootDefendCooldown }) then {
+    _src set ["rootDefendT", time];
+    private _kids = (values CQ_hqs) select {
+        (_x get "state") in CQ_activeStates && { (_x get "id") != _srcId } && {
+            private _r = _x; private _k = 0;
+            while { (_r get "parent") > -1 && { (_r get "parent") != _srcId } && { _k < 20 } } do {
+                _k = _k + 1; _r = CQ_hqs getOrDefault [_r get "parent", createHashMap];
+                if (count _r == 0) exitWith {};
+            };
+            (_r getOrDefault ["parent", -1]) == _srcId
+        }
+    };
+    {
+        private _kid = _x;
+        private _gs = (_kid get "infantry") select { (_x getVariable ["CQ_role", ""]) in ["patrol", "reinf", "qrf"] && { ({ alive _x } count units _x) > 0 } };
+        if (_gs isNotEqualTo []) then { [_gs, _kid, _src, "rootDefend"] spawn CQ_fnc_moveGroups };
+    } forEach _kids;
+    if (_kids isNotEqualTo []) then {
+        ["ROOT HQ UNDER ATTACK", format ["HQ #%1 (root) attacked: %2 child HQs send their troops to defend it", _srcId, count _kids]] call CQ_fnc_announce;
+        ["rootDefend", [[_srcId] call CQ_fnc_objName], _src] call CQ_fnc_say;
+    };
+};
 
 if (_report isEqualTo []) then {
     ["QRF", format ["HQ #%1: nobody available to respond%2", _srcId, ["", " (radio down)"] select !_srcRadio]] call CQ_fnc_announce;

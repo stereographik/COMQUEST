@@ -14,6 +14,7 @@ private _hq = createHashMapFromArray [
     ["pos", _pos],
     ["dir", random 360],
     ["parent", _parent],
+    ["installations", []], ["cmdCaptured", false], ["rootDefendT", -1e6],
     ["state", "Inbound"],
     ["stateT", time],
     ["born", time],

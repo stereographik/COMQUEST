@@ -8,7 +8,8 @@
       Holding       defends until the next wave (CQ_waveInterval)  -> requests a wave
     In every state: contact -> CQ_fnc_callReinf (heli + QRF), QRF groups return after
     CQ_qrfTime. Helicopters: CQ_fnc_airTick. Ammo: CQ_fnc_logiTick.
-    Destroyed: commander dead AND depot destroyed. Failed: wiped out before being built.
+    Destroyed: commander dead or captured AND every installation destroyed (depot, radio
+    tower, fuel tanker, AA guns, HMG tower). Failed: wiped out before being built.
 */
 private _now = time;
 
@@ -28,7 +29,9 @@ private _now = time;
             if (_hq get "secureStarted") then { ["fallenEarly", [[_id] call CQ_fnc_objName]] call CQ_fnc_say };
         };
     } else {
-        if (!alive (_hq get "commander") && { !alive (_hq get "depot") }) then {
+        private _cmdGone = !alive (_hq get "commander") || { _hq get "cmdCaptured" };
+        private _standing = (_hq get "installations") select { alive _x };
+        if (_cmdGone && { _standing isEqualTo [] }) then {
             _hq set ["state", "Destroyed"];
             { deleteMarker _x } forEach (_hq get "markers");
             ["Enemy HQ destroyed", format ["HQ #%1 has fallen. Enemy AI left on the map: %2", _id, call CQ_fnc_enemyCount]] call CQ_fnc_announce;
@@ -41,7 +44,7 @@ private _now = time;
     // ---- contact -> call for reinforcements
     if (_now - (_hq get "lastContactT") > CQ_contactCooldown) then {
         private _ct = [_hq] call CQ_fnc_hqContact;
-        if (_ct isNotEqualTo []) then { [_hq, _ct select 0] call CQ_fnc_callReinf };
+        if (_ct isNotEqualTo []) then { [_hq, _ct select 0, _ct param [2, grpNull]] call CQ_fnc_callReinf };
     };
 
     // ---- QRF groups come home

@@ -117,7 +117,7 @@ private _troops = [];
 {
     _x params ["_lat", "_lzDist", "_lzAng", "_nSquads", "_withCmd"];
     private _p = [_lat, 120] call _slot;
-    ([ "O_Heli_Transport_04_covered_F", _p, _heading, true, CQ_heightTroops] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
+    ([ CQ_troopHeliClass, _p, _heading, true, CQ_heightTroops] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
     private _seats = _heli emptyPositions "cargo";
     private _lost = 0;
 

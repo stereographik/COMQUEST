@@ -180,6 +180,14 @@ CQ_crateItems = [["FirstAidKit", 24], ["Medikit", 2], ["ToolKit", 2], ["MineDete
 CQ_loadZoneCount = 4;                    // loadout zones in the base parking area (auto-fill vehicles)
 CQ_loadZoneRadius = 9;
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads
+// Contact / heavy support
+CQ_helpRadius = 700;                     // patrolling squads this close to a contact join in
+CQ_flareWindow = 120;                    // the spotting squad wiped (to CQ_flareLossShare) within this -> red flare
+CQ_flareLossShare = 0.4;                 // ...i.e. 60% of it lost
+CQ_flareGarrisonShare = 0.3;             // heavy support: 30% of the HQ garrison to the flare
+CQ_flareRecallRange = 2500;              // half of the roaming squads within this fall back to the HQ
+CQ_flareCooldown = 600;
+CQ_rootDefendCooldown = 1200;            // contact at a root HQ: all its child HQs rally (once per 20 min)
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_minInfantryToExpand = 16;
@@ -231,7 +239,8 @@ CQ_trucksMax = 3;
 CQ_hubReserve = 150;                     // the main HQ never ships its last 150 AP
 CQ_ammoFlightInterval = 1200;            // an ammo flight to the main HQ every 20 min
 CQ_ammoFlightLoad = 600;
-CQ_ammoFlightClass = "O_Heli_Transport_04_ammo_F";   // Taru with ammo pod
+CQ_ammoFlightClass = "I_Heli_Transport_02_F";   // CH-49 Mohawk (base game) carries the ammo/fuel resupply
+CQ_troopHeliClass = "I_Heli_Transport_02_F";    // CH-49 Mohawk (base game) for troop insertions (was the Taru, DLC)
 
 // --- Fuel (aircraft) ---------------------------------------------------------
 // Depots also store fuel points (FP): a full refuel of a helicopter costs CQ_fuelFullCost.

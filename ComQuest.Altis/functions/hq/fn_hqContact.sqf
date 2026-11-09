@@ -21,7 +21,7 @@ private _res = [];
     if (!isNull _t && { side group _t == west } && { _l knowsAbout _t >= 1.5 } && { _t distance2D _c < CQ_contactRadius }) exitWith {
         private _seen = _l getHideFrom _t;
         if (_seen isEqualTo [0, 0, 0]) then { _seen = getPosATL _t };
-        _res = [_seen, _t];
+        _res = [_seen, _t, _g];
     };
 } forEach _groups;
 

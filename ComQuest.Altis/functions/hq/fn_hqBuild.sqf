@@ -154,6 +154,7 @@ _depot setVariable ["CQ_hqId", _id];
 _radio setVariable ["CQ_hqId", _id];
 _hq set ["depot", _depot];
 _hq set ["radio", _radio];
+(_hq get "installations") append ([_depot, _radio, _tanker] select { !isNull _x });
 _hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
 _hq set ["fuel", (_hq get "fuelInit") min (_hq get "cap")];
 if (isNull _tanker) then { _hq set ["fuel", 0] };
@@ -182,6 +183,7 @@ private _aaGroup = createGroup [east, true];
     if (!isNull _aa) then {
         { ["Land_BagFence_Round_F", _ox + 2.6 * sin _x, _oy + 2.6 * cos _x, _x + 180] call _place } forEach [0, 120, 240];
         createVehicleCrew _aa;
+        (_hq get "installations") pushBack _aa;
         (crew _aa) joinSilent _aaGroup;
         [_aa, 1] call CQ_fnc_vehAmmoInit;
     };
@@ -208,6 +210,7 @@ if (!isNull _tower) then {
     _tg setBehaviour "AWARE";
     _tg setCombatMode "RED";
     (_hq get "objects") pushBack _hmg;
+    (_hq get "installations") pushBack _hmg;
     (_hq get "support") pushBack _tg;
     ["HQ #%1: HMG watchtower up at grid %2 (west side)", [_id, mapGridPosition _tower]] call CQ_fnc_log;
 };

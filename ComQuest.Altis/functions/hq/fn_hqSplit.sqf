@@ -33,7 +33,7 @@ if (([_waveInf] call CQ_fnc_aliveCount) == 0) then { _reason = "the reinforcemen
 private _active = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
 if (_reason == "" && { !_assault } && { count _active >= CQ_maxHqs }) then { _reason = format ["HQ limit %1 reached", CQ_maxHqs] };
 if (_reason == "" && { _total < CQ_minInfantryToExpand }) then { _reason = format ["only %1 infantry", _total] };
-if (_reason == "" && { !alive (_hq get "commander") }) then { _reason = "no commander to order it" };
+if (_reason == "" && { !alive (_hq get "commander") || { _hq get "cmdCaptured" } }) then { _reason = "no commander to order it" };
 
 private _site = [];
 if (_reason == "" && { !_assault }) then {

@@ -79,6 +79,22 @@ CQ_story = createHashMapFromArray [
     ["contact", [
         [["INTERCEPT", "Contact! Enemy infantry, requesting support!"], ["CROSSROAD", "You've been made. Expect company, likely airborne."]]
     ]],
+    // [obj, n] - players captured an HQ commander: his network goes on the map
+    ["cmdCaptured", [
+        [["CROSSROAD", "Commander from %1 in custody. He's been unusually talkative. %2 enemy positions now on your maps."]]
+    ]],
+    // [] - the friendly commander is dead: mission lost, no humour
+    ["defeat", [
+        [["CROSSROAD", "All stations, this is CROSSROAD. Colonel Harlan is down. The operation is over. Fall back to the coast."]]
+    ]],
+    // [obj] - a red flare over an HQ: heavy support, no humour
+    ["flare", [
+        [["MAGPIE", "Red flare over %1. They're calling everything they have."]]
+    ]],
+    // [obj] - the root HQ is attacked: every child HQ rallies to it
+    ["rootDefend", [
+        [["INTERCEPT", "...all units, %1 under attack, converge, converge!"], ["CROSSROAD", "You've kicked the hornets' nest. Everything they own is heading your way."]]
+    ]],
     // []
     ["victory", [
         [["CROSSROAD", "Last position has fallen. The CSAT landing on Altis is broken. Mission accomplished. Bring them home."]]

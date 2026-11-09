@@ -8,6 +8,12 @@ params ["_class", "_pos", "_dir", ["_careless", true], ["_height", CQ_insertionF
 
 private _r = [_pos, _dir, _class, east] call BIS_fnc_spawnVehicle;
 _r params ["_heli", "_crew", "_grp"];
+// Non-CSAT airframes (Mohawk...) get a CSAT crew instead of their own faction's
+if ((toUpper _class) find "O_" != 0) then {
+    { deleteVehicle _x } forEach _crew;
+    deleteGroup _grp;
+    _grp = [_heli] call CQ_fnc_crewVehicle;
+};
 
 _heli setPosASL [_pos select 0, _pos select 1, (getTerrainHeightASL _pos max 0) + _height];
 _heli setDir _dir;

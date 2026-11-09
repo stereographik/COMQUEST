@@ -61,7 +61,25 @@ private _put = {
 ["Windsock_01_F", 12, 40, 0, 0.6] call _put;
 ["Land_Sign_WarningMilitaryArea_F", 6, 26, 0, 0.5] call _put;
 // --- core: command post, flag, arsenal
-["Land_Cargo_House_V1_F", 0, 10, 180, 3.5] call _put;
+private _ops = ["Land_Cargo_House_V1_F", 0, 10, 180, 3.5] call _put;
+// Friendly commander in the ops building: if he dies, the mission is lost
+private _fg = createGroup [west, true];
+private _fp = if (!isNull _ops && { (_ops buildingPos 0) isNotEqualTo [0, 0, 0] }) then { _ops buildingPos 0 } else { [0, 4] call _at };
+CQ_friendlyCmd = _fg createUnit ["B_officer_F", _fp, [], 0, "CAN_COLLIDE"];
+CQ_friendlyCmd setPosATL _fp;
+CQ_friendlyCmd setDir (_d + 180);
+CQ_friendlyCmd disableAI "PATH";
+CQ_friendlyCmd setUnitPos "UP";
+CQ_friendlyCmd setName "Colonel Harlan";
+_fg setGroupIdGlobal ["CROSSROAD Actual"];
+publicVariable "CQ_friendlyCmd";
+CQ_friendlyCmd addEventHandler ["Killed", {
+    if (!isNil "CQ_victory" || { !isNil "CQ_defeat" }) exitWith {};
+    CQ_defeat = true;
+    ["DEFEAT", "The friendly commander has been killed"] call CQ_fnc_announce;
+    ["defeat", []] call CQ_fnc_say;
+    [] spawn { sleep 12; "EveryoneLost" call BIS_fnc_endMissionServer };
+}];
 ["Flag_NATO_F", 0, -2, 0, 0.5] call _put;
 private _boxPos = [5, -1] call _at;
 private _box = createVehicle ["B_supplyCrate_F", _boxPos, [], 0, "NONE"];
