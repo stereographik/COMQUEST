@@ -60,4 +60,8 @@ private _hq = createHashMapFromArray [
 ];
 
 CQ_hqs set [_id, _hq];
+// every new HQ (insertion or split) uses one HQ's worth of the carrier's supplies
+CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs]) - 1;
+call CQ_fnc_carrierMarker;
+["Carrier: supplies for %1 more HQ(s) (%2%%)", [CQ_carrierLeft max 0, round (100 * (CQ_carrierLeft max 0) / CQ_carrierHqs)]] call CQ_fnc_log;
 _hq

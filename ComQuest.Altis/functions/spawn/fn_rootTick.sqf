@@ -5,7 +5,12 @@
     server from the debug console:  CQ_nextRootTime = 0;
 */
 if (CQ_rootsLaunched >= CQ_maxRoots) exitWith {};
+if ((missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0) exitWith {};          // carrier empty
 if (serverTime < CQ_nextRootTime) exitWith {};
+if ((call CQ_fnc_enemyInfantry) > CQ_maxInfantry - 30) exitWith {
+    CQ_nextRootTime = serverTime + 60;
+    ["Root insertion postponed: infantry cap (%1/%2)", [call CQ_fnc_enemyInfantry, CQ_maxInfantry]] call CQ_fnc_log;
+};
 
 private _site = if (CQ_rootsLaunched == 0 && CQ_debugFirstAtRunway) then {
     call CQ_fnc_debugRunwaySite

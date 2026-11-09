@@ -32,6 +32,7 @@ private _reason = "";
 if (([_waveInf] call CQ_fnc_aliveCount) == 0) then { _reason = "the reinforcements never arrived" };
 private _active = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
 if (_reason == "" && { !_assault } && { count _active >= CQ_maxHqs }) then { _reason = format ["HQ limit %1 reached", CQ_maxHqs] };
+if (_reason == "" && { !_assault } && { (missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0 }) then { _reason = "the carrier has no supplies left for a new HQ" };
 if (_reason == "" && { _total < CQ_minInfantryToExpand }) then { _reason = format ["only %1 infantry", _total] };
 if (_reason == "" && { !alive (_hq get "commander") || { _hq get "cmdCaptured" } }) then { _reason = "no commander to order it" };
 

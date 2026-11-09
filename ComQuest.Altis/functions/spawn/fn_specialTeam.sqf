@@ -3,7 +3,8 @@
     [_kind] spawn CQ_fnc_specialTeam;     _kind: "medic" or "engineer"
     One support team for the whole enemy army, paradropped CQ_specialFirstDelay s after the
     first Mohawk drop of the game, next to that first HQ, and dropped again
-    CQ_specialRespawn s (15 min) after it is wiped out (vehicle destroyed or crew dead):
+    CQ_specialRespawn s (15 min) after it is wiped out (vehicle destroyed or crew dead), at most
+    CQ_specialRespawns times (shown on the carrier marker):
       medic     white Strider HMG, white-clad medics: drives to wounded CSAT soldiers
                 (damage > CQ_medicHealAbove) and treats everyone within 40 m back to health
       engineer  Strider HMG, engineers in urban camo: drives to damaged CSAT vehicles and
@@ -109,6 +110,10 @@ while { true } do {
             };
         };
     };
-    ["%1 wiped out, a new one in %2 s", [_tag, CQ_specialRespawn]] call CQ_fnc_log;
+    private _left = (missionNamespace getVariable ["CQ_specialLeft", createHashMap]) getOrDefault [_kind, CQ_specialRespawns];
+    if (_left <= 0) exitWith { ["%1 wiped out, the carrier has no replacement left", [_tag]] call CQ_fnc_log };
+    CQ_specialLeft set [_kind, _left - 1];
+    call CQ_fnc_carrierMarker;
+    ["%1 wiped out, a new one in %2 s (%3 replacement(s) left after it)", [_tag, CQ_specialRespawn, _left - 1]] call CQ_fnc_log;
     sleep CQ_specialRespawn;
 };

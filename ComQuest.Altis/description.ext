@@ -90,6 +90,7 @@ class CfgFunctions
             class storyClient {};
             class storyUi {};
             class enemyCount {};
+            class enemyInfantry {};
             class clearWaypoints {};
             class aliveCount {};
             class debugMap {};
@@ -176,6 +177,7 @@ class CfgFunctions
             class rootTick {};
             class paraDropVehicle {};
             class specialTeam {};
+            class carrierMarker {};
         };
 
         class players

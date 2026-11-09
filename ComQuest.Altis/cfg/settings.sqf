@@ -106,8 +106,10 @@ CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted
 // --- HQ lifecycle (realistic timings) ---------------------------------------
 // Securing -> Installing -> Hold -> WaitingReinf -> split (child HQ) -> Holding -> WaitingReinf ...
 CQ_activeStates = ["Inbound", "Securing", "Installing", "Hold", "Holding", "WaitingReinf"];
-CQ_maxHqs = 8;                           // HQs alive at once
-CQ_maxAI = 200;                          // enemy AI alive at once
+CQ_maxHqs = 6;                           // HQs alive at once
+CQ_maxAI = 220;                          // hidden safety limit: every enemy AI alive at once (crews included)
+CQ_maxInfantry = 160;                    // enemy foot soldiers alive at once (vehicle / heli / static crews not counted)
+CQ_carrierHqs = 6;                       // the carrier has supplies for this many new HQs (insertions + splits), then it is empty
 CQ_secureRadius = 1000;                  // squads post out to this perimeter before building
 CQ_secureShare = 0.5;                    // perimeter counts as secured once every squad is this far out
 CQ_secureTimeout = 180;                  // build starts anyway after 3 min (squads keep walking to their posts)
@@ -154,6 +156,7 @@ CQ_hmgTowerDist = 45;                    // ...and distance
 CQ_specialVehicle = "I_MRAP_03_hmg_F";   // Strider HMG
 CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Blackfish drop of the game
 CQ_specialRespawn = 900;                 // a wiped-out team is dropped again 15 min later
+CQ_specialRespawns = 3;                  // ...at most this many times per team (first drop not counted)
 CQ_specialRange = 6000;                  // how far a team drives for a job
 CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get treated
 // Radio direction finder (players with a radio): signal from enemy HQ radios

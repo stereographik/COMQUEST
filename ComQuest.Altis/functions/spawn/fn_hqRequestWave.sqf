@@ -7,10 +7,10 @@
 params ["_hq"];
 private _id = _hq get "id";
 
-if ((call CQ_fnc_enemyCount) > CQ_maxAI - CQ_waveSize) exitWith {
+if ((call CQ_fnc_enemyCount) > CQ_maxAI - CQ_waveSize || { (call CQ_fnc_enemyInfantry) > CQ_maxInfantry - CQ_waveSize }) exitWith {
     _hq set ["state", "Holding"];
     _hq set ["nextWaveT", time + 60];
-    ["HQ #%1: wave postponed, AI cap (%2/%3)", [_id, call CQ_fnc_enemyCount, CQ_maxAI]] call CQ_fnc_log;
+    ["HQ #%1: wave postponed, cap (infantry %2/%3, all AI %4/%5)", [_id, call CQ_fnc_enemyInfantry, CQ_maxInfantry, call CQ_fnc_enemyCount, CQ_maxAI]] call CQ_fnc_log;
 };
 if ((_hq get "buildDone") && { !alive (_hq get "radio") }) exitWith {
     _hq set ["state", "Holding"];

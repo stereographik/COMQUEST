@@ -5,7 +5,7 @@
     on the CSAT side) appear in the nearest village within CQ_guerillaVillageRange, or around
     the HQ, and patrol there. Limited ammo like every enemy soldier (CQ_fnc_unitPrep).
     Kept in the HQ's "guerilla" list: they never leave on colonisations, QRFs or transfers.
-    Respects the CQ_maxAI cap.
+    Respects the CQ_maxInfantry and CQ_maxAI caps.
 */
 params ["_hq"];
 
@@ -18,7 +18,7 @@ private _place = if (_towns isEqualTo []) then { "around the HQ" } else { format
 private _made = [];
 for "_i" from 1 to CQ_guerillaSquads do {
     private _size = (CQ_guerillaSize select 0) + floor random ((CQ_guerillaSize select 1) - (CQ_guerillaSize select 0) + 1);
-    if ((call CQ_fnc_enemyCount) + _size > CQ_maxAI) exitWith { ["HQ #%1: AI cap, no more guerillas", [_id]] call CQ_fnc_log };
+    if ((call CQ_fnc_enemyCount) + _size > CQ_maxAI || { (call CQ_fnc_enemyInfantry) + _size > CQ_maxInfantry }) exitWith { ["HQ #%1: AI cap, no more guerillas", [_id]] call CQ_fnc_log };
     private _p = [_ctr getPos [50 + random 150, random 360], 4, 60] call CQ_fnc_clearPos;
     if (_p isEqualTo []) then { _p = _ctr getPos [80, random 360] };
     private _g = createGroup [east, true];

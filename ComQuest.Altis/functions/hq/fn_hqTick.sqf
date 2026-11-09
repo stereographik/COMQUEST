@@ -106,11 +106,11 @@ private _now = time;
     };
 } forEach CQ_hqs;
 
-// ---- victory: every root has landed and no HQ is left
-if (isNil "CQ_victory" && { CQ_rootsLaunched >= CQ_maxRoots }) then {
+// ---- victory: no HQ left, and the carrier cannot send more (all roots landed or no supplies)
+if (isNil "CQ_victory" && { CQ_rootsLaunched >= CQ_maxRoots || { (missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0 } }) then {
     if (((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates }) == -1) then {
         CQ_victory = true;
-        ["VICTORY", format ["All %1 enemy insertions defeated, every HQ destroyed", CQ_maxRoots]] call CQ_fnc_announce;
+        ["VICTORY", "The carrier has nothing left to send and every enemy HQ is destroyed"] call CQ_fnc_announce;
         ["victory", []] call CQ_fnc_say;
         [] spawn { sleep 15; "EveryoneWon" call BIS_fnc_endMissionServer };
     };
