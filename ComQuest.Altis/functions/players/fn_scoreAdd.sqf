@@ -17,3 +17,15 @@ _r set [2, (_r select 2) + 1];
 _r set [3, (_r select 3) + _pts];
 publicVariable "CQ_scoreTable";
 ["Score: %1 +%2 (%3)", [name _u, _pts, _what]] call CQ_fnc_log;
+
+// detailed statistics
+private _k = switch (_what) do {
+    case "supply depot": { "objDepot" };
+    case "radio tower": { "objTower" };
+    case "HQ commander": { "objCmdKilled" };
+    case "HQ commander captured": { "objCmdCaptured" };
+    default { "" };
+};
+private _pairs = [["objPoints", _pts]];
+if (_k != "") then { _pairs pushBack [_k, 1] };
+[_u, _pairs] call CQ_fnc_statsAdd;

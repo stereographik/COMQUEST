@@ -20,6 +20,7 @@ if (isNil "CQ_unassignedDone") then {
     [] spawn { sleep 6; hint parseText "<t size='1.1' color='#9FD3FF'>You are unassigned.</t><br/>Press <t color='#c8e07a'>U</t> to join or create a squad."; };
 };
 [] spawn CQ_fnc_rdfClient;   // radio direction finder panel
+[] spawn CQ_fnc_statsClient; // shots, heals, distances, time played
 call CQ_fnc_debugMap;
 
 ["Welcome to ComQuest (%1)", [roleDescription player]] call CQ_fnc_log;

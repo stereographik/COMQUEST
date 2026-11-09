@@ -7,9 +7,10 @@
                    squad leader invites the selected unassigned player, who gets an
                    accept / decline window, CQ_fnc_squadInvite)
       CLASS        every lobby slot is a Rifleman: take your class here (at the base)
-      LEADERBOARD  per class (Squad Leader, Medic, Autorifleman...) or All = MVP ranking:
-                   kills, vehicles, objectives, deaths, score. Nothing is stored: a server
-                   restart wipes it.
+      STATS        class filter | ranking sortable by score, kills, vehicles, objectives,
+                   heals, longest kill, K/D, deaths, shots, distance, time | details of the
+                   selected player. Data: CQ_statsPub (CQ_fnc_statsTick). Nothing is stored:
+                   a server restart wipes it.
     Refreshes every second while open. U or Esc closes it.
 */
 params [["_view", "squads"]];
@@ -40,7 +41,7 @@ private _mk = {
 (["RscText", -1, [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor [0.12, 0.16, 0.1, 0.95];
 private _tabS = ["RscButton", 7090, [_X + 0.01, _Y + 0.004, _W * 0.18, _L], "SQUADS"] call _mk;
 private _tabC = ["RscButton", 7093, [_X + 0.02 + _W * 0.18, _Y + 0.004, _W * 0.16, _L], "CLASS"] call _mk;
-private _tabB = ["RscButton", 7091, [_X + 0.03 + _W * 0.34, _Y + 0.004, _W * 0.22, _L], "LEADERBOARD"] call _mk;
+private _tabB = ["RscButton", 7091, [_X + 0.03 + _W * 0.34, _Y + 0.004, _W * 0.22, _L], "STATS"] call _mk;
 _tabC ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "class"] }];
 private _close = ["RscButton", 7092, [_X + _W - 0.05, _Y + 0.004, 0.04, _L], "X"] call _mk;
 _tabS ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "squads"] }];
@@ -110,12 +111,52 @@ _bInv ctrlAddEventHandler ["ButtonClick", {
 _grpList ctrlAddEventHandler ["LBSelChanged", { uiNamespace setVariable ["CQ_sqRefreshMembers", true] }];
 private _sqCtrls = [_info, _h1, _h2, _h3, _grpList, _memList, _solList, _bJoin, _bNew, _bUng, _bDis, _bInv];
 
-// --- leaderboard view
-private _clsList = ["RscListBox", 7102, [_X + 0.01, _top, _W * 0.22, _H - _L * 2]] call _mk;
-private _board = ["RscListNBox", 7103, [_X + 0.02 + _W * 0.22, _top, _W * 0.78 - 0.03, _H - _L * 2]] call _mk;
-_board lnbSetColumnsPos [0, 0.06, 0.38, 0.55, 0.66, 0.77, 0.86, 0.93];
-_clsList ctrlAddEventHandler ["LBSelChanged", { uiNamespace setVariable ["CQ_sqBoardDirty", true] }];
-private _bdCtrls = [_clsList, _board];
+// --- stats view: class filter | ranking (sortable) | details of the selected player
+private _cfW = _W * 0.17;
+private _rkW = _W * 0.47;
+private _dtW = _W - _cfW - _rkW - 0.04;
+private _hdrB = {
+    params ["_x0", "_w", "_txt"];
+    private _c = ["RscText", -1, [_x0, _top, _w, _L * 0.75], _txt] call _mk;
+    _c ctrlSetFont "PuristaMedium";
+    _c ctrlSetTextColor [0.65, 0.65, 0.65, 1];
+    _c
+};
+private _bh1 = [_X + 0.01, _cfW, "CLASS"] call _hdrB;
+private _bh2 = [_X + 0.02 + _cfW, _rkW * 0.35, "RANKING  -  sort by"] call _hdrB;
+private _bh3 = [_X + 0.03 + _cfW + _rkW, _dtW, "PLAYER DETAILS"] call _hdrB;
+private _clsList = ["RscListBox", 7102, [_X + 0.01, _top + _L * 0.85, _cfW, _H - _L * 2.9]] call _mk;
+private _sortCb = ["RscCombo", 7104, [_X + 0.02 + _cfW + _rkW * 0.36, _top, _rkW * 0.64, _L * 0.75]] call _mk;
+private _board = ["RscListNBox", 7103, [_X + 0.02 + _cfW, _top + _L * 0.85, _rkW, _H - _L * 2.9]] call _mk;
+private _detail = ["RscStructuredText", 7105, [_X + 0.03 + _cfW + _rkW, _top + _L * 0.85, _dtW, _H - _L * 2.9]] call _mk;
+_detail ctrlSetBackgroundColor [0, 0, 0, 0.35];
+_board lnbSetColumnsPos [0, 0.07, 0.36, 0.6, 0.72, 0.8, 0.88];
+// sort options: [label, column title, value code on a stats row]
+CQ_sqSorts = [
+    ["Score",            "SCORE"],
+    ["Kills",            "KILLS"],
+    ["Vehicles",         "VEH."],
+    ["Objectives",       "OBJ."],
+    ["Heals given",      "HEALS"],
+    ["Longest kill",     "LONGEST"],
+    ["K/D ratio",        "K/D"],
+    ["Deaths",           "DEATHS"],
+    ["Shots fired",      "SHOTS"],
+    ["Distance",         "KM"],
+    ["Time played",      "TIME"]
+];
+{ _sortCb lbAdd (_x select 0) } forEach CQ_sqSorts;
+_sortCb lbSetCurSel 0;
+_clsList lbAdd "All classes (MVP)";
+{ _clsList lbAdd (_x select 0) } forEach CQ_classes;
+_clsList lbSetCurSel 0;
+_board ctrlAddEventHandler ["LBSelChanged", {
+    params ["_c", "_row"];
+    private _uid = _c lnbData [_row, 0];
+    if (_uid != "") then { uiNamespace setVariable ["CQ_sqStatSel", _uid] };
+}];
+uiNamespace setVariable ["CQ_sqStatSel", getPlayerUID player];
+private _bdCtrls = [_bh1, _bh2, _bh3, _clsList, _sortCb, _board, _detail];
 
 // --- class view
 private _classList = ["RscListBox", 7201, [_X + 0.01, _top, _W * 0.35, _H - _L * 3.2]] call _mk;
@@ -235,40 +276,125 @@ while { !isNull _d } do {
                 if (!alive _x) then { _memList lbSetColor [_i, [0.6, 0.3, 0.3, 1]] };
             } forEach units _sg;
         };
-    } else {
-        // classes present
-        private _classes = ["All (MVP)"];
-        { _classes pushBackUnique ([_x] call _role) } forEach _players;
-        if ((lbSize _clsList) != count _classes) then {
-            lbClear _clsList;
-            { _clsList lbAdd _x } forEach _classes;
-            _clsList lbSetCurSel ((_classes find _clsSel) max 0);
-        };
-        private _ci = lbCurSel _clsList;
-        if (_ci >= 0) then { _clsSel = _clsList lbText _ci };
-        private _rows = [];
+    };
+    if (_view == "board") then {
+        // ---- STATS: one row per player (online, or seen this session)
+        private _keys = CQ_statKeys;
+        private _rows = createHashMap;    // uid -> [name, class, online, values HashMap]
         {
-            private _s = getPlayerScores _x;
-            if (count _s < 6) then { _s = [0, 0, 0, 0, 0, 0] };
+            _x params ["_uid", "_n", "_c", "_vals"];
+            private _m = createHashMap;
+            { _m set [_x, _vals param [_forEachIndex, 0]] } forEach _keys;
+            _rows set [_uid, [_n, _c, false, _m]];
+        } forEach (missionNamespace getVariable ["CQ_statsPub", []]);
+        {
             private _uid = getPlayerUID _x;
-            private _e = (missionNamespace getVariable ["CQ_scoreTable", []]) select { (_x select 0) == _uid };
-            private _obj = if (_e isEqualTo []) then { 0 } else { (_e select 0) select 2 };
-            private _pts = if (_e isEqualTo []) then { 0 } else { (_e select 0) select 3 };
-            private _r = [_x] call _role;
-            if (_clsSel == "All (MVP)" || { _r == _clsSel }) then {
-                _rows pushBack [(_s select 5) + _pts, name _x, _r, _s select 0, (_s select 1) + (_s select 2) + (_s select 3), _obj, _s select 4, _x == player];
-            };
+            private _r = _rows getOrDefault [_uid, [name _x, "", true, createHashMap]];
+            _r set [0, name _x];
+            _r set [1, _x getVariable ["CQ_class", "Rifleman"]];
+            _r set [2, true];
+            _rows set [_uid, _r];
         } forEach _players;
-        _rows = [_rows, [], { _x select 0 }, "DESCEND"] call BIS_fnc_sortBy;
+        private _g = { params ["_m", "_k"]; _m getOrDefault [_k, 0] };
+        private _score = {
+            params ["_m"];
+            private _t = 0;
+            { _t = _t + ([_m, _x select 0] call _g) * (_x select 1) } forEach CQ_statWeights;
+            _t
+        };
+        private _veh = { params ["_m"]; ([_m, "vehLight"] call _g) + ([_m, "vehArmor"] call _g) + ([_m, "vehAir"] call _g) + ([_m, "vehStatic"] call _g) };
+        private _obj = { params ["_m"]; ([_m, "objTower"] call _g) + ([_m, "objDepot"] call _g) + ([_m, "objCmdKilled"] call _g) + ([_m, "objCmdCaptured"] call _g) };
+        private _kd = { params ["_m"]; ([_m, "killsInf"] call _g) / (([_m, "deaths"] call _g) max 1) };
+        private _sortI = (lbCurSel _sortCb) max 0;
+        private _val = {
+            params ["_m"];
+            switch (_sortI) do {
+                case 0: { [_m] call _score };
+                case 1: { [_m, "killsInf"] call _g };
+                case 2: { [_m] call _veh };
+                case 3: { [_m] call _obj };
+                case 4: { [_m, "heals"] call _g };
+                case 5: { [_m, "longest"] call _g };
+                case 6: { [_m] call _kd };
+                case 7: { [_m, "deaths"] call _g };
+                case 8: { [_m, "shots"] call _g };
+                case 9: { (([_m, "distFoot"] call _g) + ([_m, "distVeh"] call _g)) / 1000 };
+                default { [_m, "timePlayed"] call _g };
+            }
+        };
+        private _fmt = {
+            params ["_v"];
+            switch (_sortI) do {
+                case 5: { format ["%1 m", round _v] };
+                case 6: { (_v toFixed 2) };
+                case 9: { (_v toFixed 1) };
+                case 10: { format ["%1:%2", floor (_v / 3600), [str (floor (_v % 3600 / 60)), "0" + str (floor (_v % 3600 / 60))] select ((floor (_v % 3600 / 60)) < 10)] };
+                default { str round _v };
+            }
+        };
+        private _ci = (lbCurSel _clsList) max 0;
+        private _filter = if (_ci == 0) then { "" } else { (CQ_classes select (_ci - 1)) select 0 };
+        // players per class in the filter list
+        private _perCls = createHashMap;
+        { if (_y select 2) then { _perCls set [_y select 1, (_perCls getOrDefault [_y select 1, 0]) + 1] } } forEach _rows;
+        { _clsList lbSetTextRight [_forEachIndex + 1, str (_perCls getOrDefault [_x select 0, 0])] } forEach CQ_classes;
+        _clsList lbSetTextRight [0, str count _players];
+        private _list = [];
+        { if (_filter == "" || { (_y select 1) == _filter }) then { _list pushBack [[_y select 3] call _val, _x] } } forEach _rows;
+        _list sort false;
+        private _selUid = uiNamespace getVariable ["CQ_sqStatSel", getPlayerUID player];
         lnbClear _board;
-        _board lnbAddRow ["#", "NAME", "CLASS", "KILLS", "VEHICLES", "OBJ.", "DEATHS", "SCORE"];
-        _board lnbSetColor [[0, 0], [0.78, 0.88, 0.48, 1]];
+        _board lnbAddRow ["#", "NAME", "CLASS", (CQ_sqSorts select _sortI) select 1, "K", "D", "SCORE"];
+        for "_c" from 0 to 6 do { _board lnbSetColor [[0, _c], [0.6, 0.6, 0.6, 1]] };
+        private _selRow = -1;
         {
-            _x params ["_sc", "_n", "_r", "_k", "_v", "_o", "_de", "_me"];
-            private _row = _board lnbAddRow [str (_forEachIndex + 1), _n, _r, str _k, str _v, str _o, str _de, str _sc];
-            if (_me) then { for "_c" from 0 to 7 do { _board lnbSetColor [[_row, _c], [0.55, 0.9, 0.45, 1]] } };
-            if (_forEachIndex == 0 && { _clsSel == "All (MVP)" }) then { _board lnbSetText [[_row, 1], format ["%1  (MVP)", _n]] };
-        } forEach _rows;
+            _x params ["_v", "_uid"];
+            (_rows get _uid) params ["_n", "_c", "_on", "_m"];
+            private _row = _board lnbAddRow [str (_forEachIndex + 1), [_n, _n + "  (MVP)"] select (_forEachIndex == 0 && { _filter == "" } && { _sortI == 0 } && { _v > 0 }), _c,
+                [_v] call _fmt, str ([_m, "killsInf"] call _g), str ([_m, "deaths"] call _g), str round ([_m] call _score)];
+            _board lnbSetData [[_row, 0], _uid];
+            private _col = switch (true) do {
+                case (_uid == getPlayerUID player): { [0.55, 0.9, 0.45, 1] };
+                case (!_on): { [0.5, 0.5, 0.5, 1] };
+                default { [1, 1, 1, 1] };
+            };
+            for "_cc" from 0 to 6 do { _board lnbSetColor [[_row, _cc], _col] };
+            if (_uid == _selUid) then { _selRow = _row };
+        } forEach _list;
+        if (_selRow > 0) then { _board lnbSetCurSelRow _selRow };
+
+        // details
+        private _sel = _rows getOrDefault [_selUid, []];
+        if (_sel isEqualTo []) then {
+            _detail ctrlSetStructuredText parseText "<t size='0.85' color='#9a9a9a'>Select a player in the ranking.</t>";
+        } else {
+            _sel params ["_n", "_c", "_on", "_m"];
+            private _rank = 1 + ((([_rows] call {
+                params ["_rs"]; private _a = []; { _a pushBack [[_y select 3] call _score, _x] } forEach _rs; _a sort false; _a apply { _x select 1 }
+            }) find _selUid) max 0);
+            private _t = [_m, "timePlayed"] call _g;
+            private _line = { params ["_l", "_v"]; format ["<t size='0.8' color='#a0a0a0'>%1:  </t><t size='0.8' color='#ffffff'>%2</t><br/>", _l, _v] };
+            private _sec = { params ["_l"]; format ["<br/><t size='0.75' font='PuristaMedium' color='#707070'>%1</t><br/>", _l] };
+            private _txt = format ["<t size='1.05' font='PuristaSemibold' color='#ffffff'>%1</t><br/><t size='0.8' color='#a0a0a0'>%2  -  %3</t><br/><t size='0.95' color='#ffffff'>SCORE %4</t><t size='0.8' color='#a0a0a0'>   overall rank #%5</t><br/>",
+                _n, _c, ["offline", "online"] select _on, round ([_m] call _score), _rank];
+            _txt = _txt + (["COMBAT"] call _sec)
+                + (["Infantry kills", [_m, "killsInf"] call _g] call _line)
+                + (["Vehicles: light / armour", format ["%1 / %2", [_m, "vehLight"] call _g, [_m, "vehArmor"] call _g]] call _line)
+                + (["Vehicles: air / static", format ["%1 / %2", [_m, "vehAir"] call _g, [_m, "vehStatic"] call _g]] call _line)
+                + (["Longest kill", format ["%1 m", [_m, "longest"] call _g]] call _line)
+                + (["Deaths   -   K/D", format ["%1   -   %2", [_m, "deaths"] call _g, ([_m] call _kd) toFixed 2]] call _line)
+                + (["Team kills", [_m, "teamkills"] call _g] call _line)
+                + (["OBJECTIVES"] call _sec)
+                + (["Radio towers / depots", format ["%1 / %2", [_m, "objTower"] call _g, [_m, "objDepot"] call _g]] call _line)
+                + (["Commanders killed / captured", format ["%1 / %2", [_m, "objCmdKilled"] call _g, [_m, "objCmdCaptured"] call _g]] call _line)
+                + (["Objective points", [_m, "objPoints"] call _g] call _line)
+                + (["SUPPORT & ACTIVITY"] call _sec)
+                + (["Heals given", [_m, "heals"] call _g] call _line)
+                + (["Shots fired", [_m, "shots"] call _g] call _line)
+                + (["On foot / in vehicles", format ["%1 km / %2 km", (([_m, "distFoot"] call _g) / 1000) toFixed 1, (([_m, "distVeh"] call _g) / 1000) toFixed 1]] call _line)
+                + (["Time played", format ["%1 h %2 min", floor (_t / 3600), floor (_t % 3600 / 60)]] call _line);
+            _detail ctrlSetStructuredText parseText _txt;
+        };
     };
     sleep 1;
 };

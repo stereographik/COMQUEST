@@ -309,3 +309,11 @@ if (CQ_debug) then {
 // --- Roles ----------------------------------------------------------------
 CQ_pilotClasses = ["B_Helipilot_F"];     // only these may fly aircraft
 CQ_engineerClasses = ["B_engineer_F"];   // get engineer + explosiveSpecialist traits
+
+// Player statistics (in memory only, wiped by a server restart)
+// stat keys, in the order CQ_statsPub carries them
+CQ_statKeys = ["killsInf", "vehLight", "vehArmor", "vehAir", "vehStatic", "deaths", "teamkills", "longest",
+    "objTower", "objDepot", "objCmdKilled", "objCmdCaptured", "objPoints", "heals", "shots", "distFoot", "distVeh", "timePlayed"];
+// score = sum of stat x weight (objPoints are already points)
+CQ_statWeights = [["killsInf", 10], ["vehLight", 20], ["vehArmor", 40], ["vehAir", 50], ["vehStatic", 10],
+    ["objPoints", 1], ["heals", 5], ["teamkills", -50]];

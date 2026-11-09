@@ -5,6 +5,7 @@ author = "Django";
 onLoadName = "ComQuest";
 onLoadMission = "Destroy the CSAT HQ network on Altis.";
 briefingName = "ComQuest";
+briefing = 0;                   // no briefing map screen after the lobby: straight into the game
 
 class Header
 {
@@ -188,6 +189,10 @@ class CfgFunctions
             class squadCmd {};
             class squadInvite {};
             class scoreAdd {};
+            class statsAdd {};
+            class statsTick {};
+            class statsInit {};
+            class statsClient {};
             class squadUi {};
             class setClass {};
             class applyTraits {};

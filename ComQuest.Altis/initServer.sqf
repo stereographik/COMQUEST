@@ -50,6 +50,8 @@ CQ_crateNext = 0;
 ["medic"] spawn CQ_fnc_specialTeam;
 ["engineer"] spawn CQ_fnc_specialTeam;
 ["groupWatch", CQ_fnc_groupWatch] call CQ_fnc_directorAddTask;
+call CQ_fnc_statsInit;
+["stats", CQ_fnc_statsTick] call CQ_fnc_directorAddTask;
 ["vehRoam", CQ_fnc_vehRoamTick] call CQ_fnc_directorAddTask;
 
 call CQ_fnc_directorStart;

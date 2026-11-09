@@ -37,7 +37,7 @@ player addAction ["<t color='#FFD27F'>Empty vehicle inventory</t>",
 
 // Squad management (U) and leaderboard: scroll menu entries (re-added on every respawn) + U key
 player addAction ["<t color='#9FD3FF'>Squad management (U)</t>", { ["squads"] spawn CQ_fnc_squadUi }, nil, 0.6, false, true, "", "true"];
-player addAction ["<t color='#9FD3FF'>Leaderboard</t>", { ["board"] spawn CQ_fnc_squadUi }, nil, 0.59, false, true, "", "true"];
+player addAction ["<t color='#9FD3FF'>Stats & ranking</t>", { ["board"] spawn CQ_fnc_squadUi }, nil, 0.59, false, true, "", "true"];
 if (isNil "CQ_squadKeyBound") then {
     CQ_squadKeyBound = true;
     [] spawn {
