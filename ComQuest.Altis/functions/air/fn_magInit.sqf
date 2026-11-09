@@ -1,8 +1,8 @@
 /*
     CQ_fnc_magInit  (server, once)
-    MAGPIE, the friendly UAV operator (a bot). Three drones (CQ_magDrones): all spawn at once,
-    one on the take-off spot and the others waiting beside the runway, and take off one after
-    the other (CQ_fnc_magTick); a lost drone is replaced after CQ_magRespawn s. CQ_fnc_magTick flies them, identifies enemies and writes her reports.
+    MAGPIE, the friendly UAV operator (a bot). Three drones (CQ_magDrones) + the scan chain
+    Darters: each spawns on the take-off spot in turn and takes off by itself (vanilla AI,
+    CQ_fnc_magTick); a lost drone is replaced after CQ_magRespawn s. CQ_fnc_magTick flies them, identifies enemies and writes her reports.
     Also builds the search grid over CQ_magArea (dry cells clear of the east coast).
 */
 if (!isServer) exitWith {};

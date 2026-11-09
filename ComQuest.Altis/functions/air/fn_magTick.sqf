@@ -29,118 +29,60 @@ private _cat = {
     }
 };
 
-// ---- drones: spawn, take-off queue, loss, fuel
-// Every due drone spawns at once: the first on the take-off spot, the others on waiting spots
-// beside the runway. One drone rolls at a time: it is placed on the take-off spot, its AI is
-// released and it gets a push down the runway (no slow AI taxiing). Watchdog: still on the
-// ground after CQ_magRollTimeout s -> put back and pushed again; after 2 retries it is
-// started in the air. A lost drone is reported and comes back after CQ_magRespawn s.
+// ---- drones: spawn, loss, fuel
+// Vanilla take-off: a due drone spawns on the take-off spot (engine on, a waypoint down the
+// runway) and the game AI flies it from there; nothing is forced. One drone at a time: the next
+// one spawns once the previous one has left the ground (> 30 m) and the spot is clear.
+// A lost drone is reported and comes back after CQ_magRespawn s.
 CQ_magRunway params ["_rp", "_hdg"];
-private _waitPos = {
-    params ["_k"];
-    private _p = (_rp getPos [30, _hdg + 90]) getPos [18 * _k, _hdg];
-    [_p select 0, _p select 1, 0]
-};
-private _launch = {
-    params ["_m"];
-    private _v = _m get "veh";
-    private _g = group effectiveCommander _v;
-    { _x enableAI "MOVE" } forEach crew _v;
-    _v setDir _hdg;
-    _v setPosATL [_rp select 0, _rp select 1, 0.3];
-    while { (waypoints _g) isNotEqualTo [] } do { deleteWaypoint ((waypoints _g) select 0) };
-    private _wp = _g addWaypoint [_rp getPos [3000, _hdg], 0];
-    _wp setWaypointType "MOVE";
-    _v engineOn true;
-    _v flyInHeight (_m get "alt");
-    if (_v isKindOf "Helicopter" || { (getNumber (configOf _v >> "vtol")) > 0 } || { (_m get "cls") == "B_UAV_01_F" }) then {
-        _v setVelocity [0, 0, 6];                         // quadcopter: straight up
-    } else {
-        _v setVelocityModelSpace [0, 45, 0];              // fixed wing: rolling start (~160 km/h)
-    };
-    _v allowDamage false;                                  // no bounce damage during the take-off run
-    _m set ["phase", "rolling"];
-    _m set ["rollT", time];
-    _m set ["planT", time];
-    CQ_magLastLaunch = time;
-    ["MAGPIE: %1 cleared for take-off (try %2)", [_m get "name", (_m get "tries") + 1]] call CQ_fnc_log;
-};
+private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "rolling" } }) > -1;
 {
     private _m = _x;
     private _v = _m get "veh";
     if (!isNull _v && { !alive _v } && { !(_m get "lost") }) then {
         _m set ["lost", true];
         _m set ["phase", "none"];
+        _m set ["due", time + CQ_magRespawn];
         CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
         publicVariable "CQ_magVehs";
-        _m set ["due", time + CQ_magRespawn];
         ["magDown", [_m get "name"]] call CQ_fnc_say;
         ["MAGPIE: %1 lost at %2, replacement in %3 s", [_m get "name", mapGridPosition _v, CQ_magRespawn]] call CQ_fnc_log;
     };
-    // spawn (on a waiting spot; the queue below sends it to the runway)
-    if ((isNull _v || { !alive _v }) && { time >= (_m get "due") }) then {
-        private _k = 1 + (_m get "i");
-        private _sp = [_k] call _waitPos;
-        private _nv = createVehicle [_m get "cls", _sp, [], 0, "CAN_COLLIDE"];
+    if ((isNull _v || { !alive _v }) && { time >= (_m get "due") } && { !_onRunway }) then {
+        if (((nearestObjects [_rp, ["LandVehicle", "Air"], 30]) select { alive _x }) isNotEqualTo []) exitWith {};   // spot busy
+        private _nv = createVehicle [_m get "cls", _rp, [], 0, "CAN_COLLIDE"];
         _nv setDir _hdg;
-        _nv setPosATL [_sp select 0, _sp select 1, 0.3];
+        _nv setPosATL [_rp select 0, _rp select 1, 0.3];
         createVehicleCrew _nv;
         { _nv setPylonLoadout [_forEachIndex + 1, ""] } forEach (getPylonMagazines _nv);
         private _g = group effectiveCommander _nv;
         _g setGroupIdGlobal [format ["MAGPIE %1", _m get "name"]];
         _g setBehaviour "CARELESS";
         _g setCombatMode "BLUE";
-        { _x disableAI "MOVE" } forEach crew _nv;        // waits until cleared for take-off
+        _nv flyInHeight (_m get "alt");
+        _nv engineOn true;
+        private _wp = _g addWaypoint [_rp getPos [3000, _hdg], 0];
+        _wp setWaypointType "MOVE";
         _nv setVariable ["CQ_magpie", true, true];
         _nv setVariable ["CQ_magName", _m get "name", true];
-        CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
-        publicVariable "CQ_magVehs";
         _m set ["veh", _nv];
         _m set ["lost", false];
-        _m set ["phase", "waiting"];
-        _m set ["tries", 0];
+        _m set ["phase", "rolling"];
+        _m set ["rollT", time];
         _m set ["planT", time];
-        ["MAGPIE: %1 (%2) waiting beside the runway", [_m get "name", _m get "cls"]] call CQ_fnc_log;
+        _onRunway = true;
+        CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
+        publicVariable "CQ_magVehs";
+        ["MAGPIE: %1 (%2) on the runway, take-off heading %3", [_m get "name", _m get "cls", round _hdg]] call CQ_fnc_log;
     };
     if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 };
-    // rolling -> airborne, or watchdog
-    if (alive _v && { (_m getOrDefault ["phase", ""]) == "rolling" }) then {
-        if (((getPosATL _v) select 2) > 30) then {
-            _m set ["phase", "air"];
-            _m set ["planT", -1e6];                         // first exploration route right away
-            _v allowDamage true;
-            ["magLaunch", [_m get "name"]] call CQ_fnc_say;
-            ["MAGPIE: %1 airborne after %2 s", [_m get "name", round (time - (_m get "rollT"))]] call CQ_fnc_log;
-        } else {
-            if (time - (_m get "rollT") > CQ_magRollTimeout) then {
-                _m set ["tries", (_m get "tries") + 1];
-                if ((_m get "tries") > 2) then {
-                    _v setPosATL ((_rp getPos [600, _hdg]) vectorAdd [0, 0, 200]);
-                    _v setDir _hdg;
-                    _v setVelocityModelSpace [0, 60, 0];
-                    _v allowDamage true;
-                    _m set ["phase", "air"];
-                    _m set ["planT", -1e6];
-                    ["magLaunch", [_m get "name"]] call CQ_fnc_say;
-                    ["MAGPIE: %1 could not take off, started in the air", [_m get "name"]] call CQ_fnc_log;
-                } else {
-                    [_m] call _launch;
-                };
-            };
-        };
+    if (alive _v && { (_m getOrDefault ["phase", ""]) == "rolling" } && { ((getPosATL _v) select 2) > 30 }) then {
+        _m set ["phase", "air"];
+        _m set ["planT", -1e6];                             // first route right away
+        ["magLaunch", [_m get "name"]] call CQ_fnc_say;
+        ["MAGPIE: %1 airborne after %2 s", [_m get "name", round (time - (_m get "rollT"))]] call CQ_fnc_log;
     };
 } forEach CQ_mag;
-// the queue: one drone on the runway at a time, in order
-private _next = CQ_mag select { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "waiting" } };
-private _gap = if (_next isNotEqualTo [] && { ((_next select 0) get "cls") == "B_UAV_01_F" }) then { CQ_magLaunchGapQuad } else { CQ_magLaunchGap };
-if ((CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "rolling" } }) == -1
-    && { time - (missionNamespace getVariable ["CQ_magLastLaunch", -1e6]) > _gap }) then {
-    if (_next isNotEqualTo []) then {
-        private _busy = ((nearestObjects [_rp, ["LandVehicle", "Air"], 25]) select { alive _x && { !(_x getVariable ["CQ_magpie", false]) } }) isNotEqualTo [];
-        if (_busy) exitWith { ["MAGPIE: take-off spot blocked by %1", [typeOf ((nearestObjects [_rp, ["LandVehicle", "Air"], 25]) select 0)]] call CQ_fnc_log };
-        [_next select 0] call _launch;
-    };
-};
 
 private _flying = CQ_mag select { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "air" } };
 
