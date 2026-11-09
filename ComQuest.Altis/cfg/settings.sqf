@@ -163,6 +163,7 @@ CQ_playerMapMarkers = false;             // true = enemy HQ areas and the carrie
 // Base defence spots (AA + HMG, NATO gunners), around the camp, off the runway
 CQ_baseDefAngles = [45, 135, 225, 315];  // relative to the camp front
 CQ_baseDefRadius = 230;
+CQ_runwayClear = 80;                     // defence spots stay this far from the runway centre line
 CQ_baseDefRespawn = 600;                 // a lost spot is rebuilt 10 min later
 // Supply crates at the base (load them into any vehicle)
 CQ_crateClass = "B_supplyCrate_F";

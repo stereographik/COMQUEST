@@ -360,7 +360,22 @@ _shm setMarkerText "Vehicle shop";
 CQ_baseDefs = [];
 {
     private _ang = _d + _x;
-    private _p = [_o getPos [CQ_baseDefRadius, _ang], 7, 40] call CQ_fnc_clearPos;
+    private _want = _o getPos [CQ_baseDefRadius, _ang];
+    // keep off the runway: at least CQ_runwayClear m from its centre line (drones take off there)
+    private _ils = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsPosition");
+    private _ilsDir = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsDirection");
+    if (count _ils >= 2 && { count _ilsDir >= 3 }) then {
+        private _h = (_ilsDir select 0) atan2 (_ilsDir select 2);
+        private _rel = _want vectorDiff [_ils select 0, _ils select 1, 0];
+        private _off = (_rel select 0) * cos _h - (_rel select 1) * sin _h;      // signed distance to the centre line
+        if (abs _off < CQ_runwayClear) then {
+            // push it out on the side of the line it is already on (toward the base if exactly on it)
+            private _side = if (abs _off < 1) then { [-1, 1] select ((((_o vectorDiff [_ils select 0, _ils select 1, 0]) select 0) * cos _h - (((_o vectorDiff [_ils select 0, _ils select 1, 0]) select 1) * sin _h)) > 0) } else { [-1, 1] select (_off > 0) };
+            _want = _want getPos [CQ_runwayClear - abs _off + 15, _h + 90 * _side];
+            ["Base defence spot %1: moved off the runway", [_forEachIndex + 1]] call CQ_fnc_log;
+        };
+    };
+    private _p = [_want, 7, 40] call CQ_fnc_clearPos;
     if (_p isEqualTo []) then { continue };
     CQ_baseDefs pushBack createHashMapFromArray [["pos", _p], ["dir", _ang], ["objs", []], ["lostT", -1]];
 } forEach CQ_baseDefAngles;
