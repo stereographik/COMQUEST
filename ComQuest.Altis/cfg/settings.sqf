@@ -159,7 +159,11 @@ CQ_crateCleanup = 600;                   // empty crates far from the base remov
 CQ_crateRoles = ["B_Soldier_SL_F", "B_medic_F", "B_soldier_AR_F", "B_soldier_LAT_F", "B_engineer_F", "B_Soldier_F", "B_Helipilot_F"];
 CQ_crateExtraMags = [["HandGrenade", 12], ["MiniGrenade", 6], ["SmokeShell", 12], ["SmokeShellGreen", 6], ["SmokeShellRed", 4],
     ["1Rnd_HE_Grenade_shell", 16], ["1Rnd_Smoke_Grenade_shell", 6], ["NLAW_F", 3], ["DemoCharge_Remote_Mag", 6],
-    ["SatchelCharge_Remote_Mag", 2], ["APERSMine_Range_Mag", 4], ["Chemlight_green", 6], ["16Rnd_9x21_Mag", 8]];
+    ["SatchelCharge_Remote_Mag", 2], ["APERSMine_Range_Mag", 4], ["Chemlight_green", 6],
+    // launcher rounds: Vorona, MAAWS, RPG-42, RPG-7
+    ["Vorona_HEAT", 3], ["Vorona_HE", 2], ["MRAWS_HEAT_F", 3], ["MRAWS_HE_F", 2], ["RPG32_F", 4], ["RPG32_HE_F", 2], ["RPG7_F", 4]];
+// launchers in every crate / auto-fill (one of each, for the rounds above)
+CQ_crateWeapons = [["launch_O_Vorona_brown_F", 1], ["launch_MRAWS_green_F", 1], ["launch_RPG32_F", 1], ["launch_RPG7_F", 1]];
 CQ_crateItems = [["FirstAidKit", 24], ["Medikit", 2], ["ToolKit", 2], ["MineDetector", 1]];
 CQ_loadZoneCount = 4;                    // loadout zones in the base parking area (auto-fill vehicles)
 CQ_loadZoneRadius = 9;

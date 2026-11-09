@@ -17,6 +17,7 @@ if (isNil "CQ_crateMags") then {
         {
             private _w = _x;
             if (_w in ["Throw", "Put"]) then { continue };
+            if (getNumber (configFile >> "CfgWeapons" >> _w >> "type") == 2) then { continue };   // no handgun mags
             private _m = (getArray (configFile >> "CfgWeapons" >> _w >> "magazines")) param [0, ""];
             if (_m != "") then { _mags set [_m, (_mags getOrDefault [_m, 0]) + 1] };
         } forEach getArray (_cfg >> "weapons");
@@ -30,4 +31,5 @@ if (isNil "CQ_crateMags") then {
 } forEach (keys CQ_crateMags);
 { _x params ["_cls", "_k"]; _c addMagazineCargoGlobal [_cls, [_k] call _n] } forEach CQ_crateExtraMags;
 { _x params ["_cls", "_k"]; _c addItemCargoGlobal [_cls, [_k] call _n] } forEach CQ_crateItems;
+{ _x params ["_cls", "_k"]; _c addWeaponCargoGlobal [_cls, [_k] call _n] } forEach CQ_crateWeapons;
 if (_isCrate) then { _c setVariable ["CQ_crate", true, true] };
