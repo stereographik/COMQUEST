@@ -360,7 +360,7 @@ CQ_magDrones = [
     ["Greyhawk", ["B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"],     900, 1.2],
     ["Reaper",   ["B_UAV_05_F", "B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"], 1500, 1.6]
 ];
-CQ_magFirstDelay = 45;                   // s after mission start: first take-off
+CQ_magFirstDelay = 5;                    // s after mission start: first take-off (the carrier arrives at start)
 CQ_magLaunchGap = 60;                    // s between the take-offs of the three drones
 CQ_magRespawn = 480;                     // s before a lost drone is replaced (8 min), on the runway
 CQ_magReportEvery = 120;                 // s between two MAGPIE reports (only if something is new)
