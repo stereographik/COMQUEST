@@ -161,6 +161,8 @@ CQ_crateExtraMags = [["HandGrenade", 12], ["MiniGrenade", 6], ["SmokeShell", 12]
     ["1Rnd_HE_Grenade_shell", 16], ["1Rnd_Smoke_Grenade_shell", 6], ["NLAW_F", 3], ["DemoCharge_Remote_Mag", 6],
     ["SatchelCharge_Remote_Mag", 2], ["APERSMine_Range_Mag", 4], ["Chemlight_green", 6], ["16Rnd_9x21_Mag", 8]];
 CQ_crateItems = [["FirstAidKit", 24], ["Medikit", 2], ["ToolKit", 2], ["MineDetector", 1]];
+CQ_loadZoneCount = 4;                    // loadout zones in the base parking area (auto-fill vehicles)
+CQ_loadZoneRadius = 9;
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site

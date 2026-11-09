@@ -185,6 +185,7 @@ class CfgFunctions
             class squadCmd {};
             class scoreAdd {};
             class squadUi {};
+            class vehAutoFill {};
             class baseDefBuild {};
             class baseDefTick {};
             class vehSpawn {};

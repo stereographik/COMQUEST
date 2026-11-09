@@ -233,6 +233,27 @@ private _take = {
 private _isAir = { params ["_c"]; _c isKindOf "Air" || { getNumber (configFile >> "CfgVehicles" >> _c >> "isUav") == 1 } };
 { _x params ["_cls", "_role", ["_k", 1]]; if !([_cls] call _isAir) then { [_role, _k] call _take } } forEach CQ_baseVehicles;
 { _x params ["_cls", "_role", ["_k", 1]]; if ([_cls] call _isAir) then { [_role, _k, true] call _take } } forEach CQ_baseVehicles;
+
+// --- loadout zones: the next free spots of the parking area. Drive a vehicle in and use
+// "Auto-fill vehicle" (scroll menu) to load a full squad resupply into its inventory.
+CQ_loadZones = [];
+for "_z" from 1 to CQ_loadZoneCount do {
+    private _p = [];
+    if (_areaSpots isNotEqualTo []) then { _p = _areaSpots deleteAt 0 };
+    if (_p isEqualTo [] && { _cells isNotEqualTo [] }) then { _p = _cells deleteAt 0 };
+    if (_p isEqualTo []) exitWith { ["Base: no free spot for loadout zone %1", [_z]] call CQ_fnc_log };
+    _p set [2, 0];
+    CQ_loadZones pushBack _p;
+    { (createVehicle ["RoadCone_L_F", _p getPos [8, _d + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
+    private _sg = createVehicle ["Land_Sign_WarningMilitaryArea_F", _p getPos [10, _d + 180], [], 0, "CAN_COLLIDE"];
+    _sg setDir _d;
+    _sg allowDamage false;
+    private _m = createMarker [format ["cq_loadzone_%1", _z], _p];
+    _m setMarkerType "loc_rearm";
+    _m setMarkerColor "ColorWEST";
+    _m setMarkerText format ["Loadout zone %1", _z];
+};
+publicVariable "CQ_loadZones";
 private _used = 0;
 { _used = _used + count _y } forEach CQ_baseSpots;
 ["Base parking: %1 free grid cells within %2 m, %3 used, %4 left", [count _cells + _used, CQ_parkSearch, _used, count _cells]] call CQ_fnc_log;

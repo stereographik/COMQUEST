@@ -28,6 +28,13 @@ player addAction ["<t color='#C8E07A'>Unload supply crate</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); [ "unload", _v, player ] remoteExec ["CQ_fnc_crateCargo", 2] }, nil, 5, true, true, "",
     "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); count (_v getVariable ['CQ_crates', []]) > 0 && { _this distance _v < 8 }"];
 
+// Loadout zones: auto-fill / empty the inventory of the vehicle you sit in or look at
+private _zoneVeh = "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); !isNull _v && { _v isKindOf 'AllVehicles' } && { !(_v isKindOf 'CAManBase') } && { _this distance _v < 10 } && { speed _v < 3 } && { (missionNamespace getVariable ['CQ_loadZones', []]) findIf { _v distance2D _x < CQ_loadZoneRadius } > -1 }";
+player addAction ["<t color='#FFD27F'>Auto-fill vehicle (squad resupply)</t>",
+    { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["fill", _v, player] remoteExec ["CQ_fnc_vehAutoFill", 2] }, nil, 4.9, true, true, "", _zoneVeh];
+player addAction ["<t color='#FFD27F'>Empty vehicle inventory</t>",
+    { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["clear", _v, player] remoteExec ["CQ_fnc_vehAutoFill", 2] }, nil, 0.5, false, true, "", _zoneVeh];
+
 // Squad management (U) and leaderboard: scroll menu entries (re-added on every respawn) + U key
 player addAction ["<t color='#9FD3FF'>Squad management (U)</t>", { ["squads"] spawn CQ_fnc_squadUi }, nil, 0.6, false, true, "", "true"];
 player addAction ["<t color='#9FD3FF'>Leaderboard</t>", { ["board"] spawn CQ_fnc_squadUi }, nil, 0.59, false, true, "", "true"];
