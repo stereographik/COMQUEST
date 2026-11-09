@@ -1,9 +1,8 @@
 /*
     CQ_fnc_storyClient  (client, from CQ_fnc_say through remoteExec)
     [_speaker, _text] call CQ_fnc_storyClient;
-      CROSSROAD  wide panel top right (CQ_fnc_storyUi) + Side chat from the BLUFOR HQ
-      MAGPIE     typewriter panel bottom centre (CQ_fnc_storyUi) + chat line
-      INTERCEPT  red text in the middle of the screen + chat line
+      All three speakers: the same notification card (CQ_fnc_storyUi), stacked on the left;
+      CROSSROAD also in Side chat, the others in the chat log.
     Every line also goes to the "Radio log" page of the map so it can be read again.
 */
 params ["_who", "_txt"];
@@ -21,8 +20,7 @@ switch (_who) do {
         systemChat format ["MAGPIE: %1", _txt];
     };
     default {
-        [parseText format ["<t color='#d9452b' size='0.75' font='EtelkaMonospacePro'>[INTERCEPT] %1</t>", _txt],
-            -1, 0.72, 7, 0.6, 0, 791] spawn BIS_fnc_dynamicText;
+        ["INTERCEPT", _txt] call CQ_fnc_storyUi;
         systemChat format ["[INTERCEPT] %1", _txt];
     };
 };

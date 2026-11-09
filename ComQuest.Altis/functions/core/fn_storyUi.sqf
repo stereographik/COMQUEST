@@ -1,90 +1,89 @@
 /*
     CQ_fnc_storyUi  (client)
-    [_panel, _text] call CQ_fnc_storyUi;
-    Draws the story panels on the game screen (vanilla controls created on display 46):
-      "CROSSROAD"  wide panel top right, title + full text wrapped, height fits the text
-      "MAGPIE"     panel bottom centre, monospace text typed out like a typewriter
-    Each panel has its own queue: messages never cover each other or get cut.
+    [_speaker, _text] call CQ_fnc_storyUi;      _speaker: "CROSSROAD", "MAGPIE" or "INTERCEPT"
+    One notification card per message, the same design for every speaker (modern, black /
+    grey / white), docked on the left of the screen 50 px from the edge, the first card
+    250 px from the top. A card is a horizontal block: speaker icon | speaker name + message.
+    Several cards stack downward; when one expires the ones below slide up.
+    Settings: CQ_uiCardWidth (px), CQ_uiCardMax.
 */
-params ["_panel", "_txt"];
+params ["_who", "_txt"];
 if (!hasInterface) exitWith {};
+disableSerialization;
 
-private _qk = format ["CQ_uiQ_%1", _panel];
-private _q = missionNamespace getVariable [_qk, []];
-_q pushBack _txt;
-missionNamespace setVariable [_qk, _q];
-if (missionNamespace getVariable [format ["CQ_uiBusy_%1", _panel], false]) exitWith {};
-missionNamespace setVariable [format ["CQ_uiBusy_%1", _panel], true];
+if (isNil "CQ_uiCards") then { CQ_uiCards = [] };
+CQ_uiQueue = (missionNamespace getVariable ["CQ_uiQueue", []]) + [[_who, _txt]];
+if (!isNil "CQ_uiLoop") exitWith {};
+CQ_uiLoop = true;
 
-[_panel, _qk] spawn {
-    params ["_panel", "_qk"];
+[] spawn {
+    disableSerialization;
     waitUntil { !isNull findDisplay 46 };
     private _d = findDisplay 46;
+    private _px = pixelW;
+    private _py = pixelH;
+    private _x0 = safezoneX + 50 * _px;
+    private _y0 = safezoneY + 250 * _py;
+    private _w = CQ_uiCardWidth * _px;
+    private _ic = 44 * _px;                     // icon column
+    private _gap = 6 * _py;
+    private _pad = 8 * _px;
+    private _icons = createHashMapFromArray [
+        ["CROSSROAD", "\A3\ui_f\data\igui\cfg\simpleTasks\types\radio_ca.paa"],
+        ["MAGPIE", "\A3\ui_f\data\igui\cfg\simpleTasks\types\scout_ca.paa"],
+        ["INTERCEPT", "\A3\ui_f\data\igui\cfg\simpleTasks\types\listen_ca.paa"]
+    ];
     private _esc = { params ["_s"]; ((_s splitString "&") joinString "&amp;") splitString "<" joinString "&lt;" };
-    private _crossroad = _panel == "CROSSROAD";
 
-    // geometry
-    private _w = [0.5 * safezoneW, 0.34 * safezoneW] select _crossroad;
-    private _px = [safezoneX + (safezoneW - _w) / 2, safezoneX + safezoneW - _w - 0.012 * safezoneW] select _crossroad;
-    private _py = [safezoneY + 0.74 * safezoneH, safezoneY + 0.1 * safezoneH] select _crossroad;
-    private _pad = 0.008 * safezoneW;
-    private _sz = [1.05, 1] select _crossroad;   // text size factor
-
-    while { count (missionNamespace getVariable [_qk, []]) > 0 } do {
-        private _q = missionNamespace getVariable [_qk, []];
-        private _txt = [_q deleteAt 0] call _esc;
-        missionNamespace setVariable [_qk, _q];
-
-        private _bg = _d ctrlCreate ["RscText", -1];
-        private _bar = _d ctrlCreate ["RscText", -1];
-        private _st = _d ctrlCreate ["RscStructuredText", -1];
-        _bg ctrlSetBackgroundColor [0.02, 0.03, 0.02, 0.72];
-        _bar ctrlSetBackgroundColor ([[0.85, 0.75, 0.35, 0.9], [0.45, 0.8, 0.4, 0.95]] select _crossroad);
-
-        private _title = if (_crossroad) then { "<t font='PuristaBold' color='#7fd36b' size='1.0'>CROSSROAD</t><br/>" } else { "<t font='EtelkaMonospaceProBold' color='#e3cf7a' size='0.9'>MAGPIE &gt;</t> " };
-        private _body = {
-            params ["_s", ["_cursor", ""]];
-            if (_crossroad) then {
-                format ["%1<t font='PuristaMedium' color='#f0f0e8' size='%3'>%2</t>", _title, _s, _sz]
-            } else {
-                format ["%1<t font='EtelkaMonospacePro' color='#e8e4d0' size='%3'>%2%4</t>", _title, _s, _sz * 0.9, _cursor]
-            };
-        };
-
-        // size the panel on the full text first, so typing does not make it jump
-        _st ctrlSetPosition [_px + _pad * 1.6, _py + _pad, _w - _pad * 2.6, 0.05];
-        _st ctrlSetStructuredText parseText ([_txt, "_"] call _body);
-        _st ctrlCommit 0;
-        private _h = (ctrlTextHeight _st) + 0.004;
-        _st ctrlSetPosition [_px + _pad * 1.6, _py + _pad, _w - _pad * 2.6, _h];
-        _bg ctrlSetPosition [_px, _py, _w, _h + _pad * 2];
-        _bar ctrlSetPosition [_px, _py, 0.0025 * safezoneW, _h + _pad * 2];
-        { _x ctrlSetFade 1; _x ctrlCommit 0; _x ctrlSetFade 0; _x ctrlCommit 0.25 } forEach [_bg, _bar, _st];
-
-        if (_crossroad) then {
-            sleep (6 + 0.045 * count _txt);
-        } else {
-            // typewriter: a few characters at a time, blinking cursor at the end
-            private _chars = _txt splitString "";
-            private _shown = "";
-            {
-                _shown = _shown + _x;
-                if (_forEachIndex % 2 == 0 || { _forEachIndex == count _chars - 1 }) then {
-                    _st ctrlSetStructuredText parseText ([_shown, "_"] call _body);
-                    sleep 0.035;
-                };
-            } forEach _chars;
-            for "_i" from 1 to 6 do {
-                _st ctrlSetStructuredText parseText ([_shown, ["", "_"] select (_i % 2 == 0)] call _body);
-                sleep 0.45;
-            };
-            sleep (2 + 0.02 * count _txt);
-        };
-
-        { _x ctrlSetFade 1; _x ctrlCommit 0.8 } forEach [_bg, _bar, _st];
-        sleep 0.8;
-        { ctrlDelete _x } forEach [_bg, _bar, _st];
-        sleep 0.3;
+    // re-place every card under the previous one (animated)
+    private _layout = {
+        private _y = _y0;
+        {
+            _x params ["_ctrls", "_h"];
+            _ctrls params ["_bg", "_iconBg", "_icon", "_txtC"];
+            _bg ctrlSetPosition [_x0, _y, _w, _h];
+            _iconBg ctrlSetPosition [_x0, _y, _ic, _h];
+            _icon ctrlSetPosition [_x0 + (_ic - 26 * _px) / 2, _y + (_h - 26 * _py) / 2, 26 * _px, 26 * _py];
+            _txtC ctrlSetPosition [_x0 + _ic + _pad, _y + 5 * _py, _w - _ic - 2 * _pad, _h - 8 * _py];
+            { _x ctrlCommit 0.2 } forEach _ctrls;
+            _y = _y + _h + _gap;
+        } forEach CQ_uiCards;
     };
-    missionNamespace setVariable [format ["CQ_uiBusy_%1", _panel], false];
+
+    while { true } do {
+        // new messages -> new cards at the bottom of the stack
+        while { (CQ_uiQueue isNotEqualTo []) && { count CQ_uiCards < CQ_uiCardMax } } do {
+            (CQ_uiQueue deleteAt 0) params ["_who", "_txt"];
+            private _bg = _d ctrlCreate ["RscText", -1];
+            _bg ctrlSetBackgroundColor [0.06, 0.06, 0.06, 0.82];
+            private _iconBg = _d ctrlCreate ["RscText", -1];
+            _iconBg ctrlSetBackgroundColor [0.16, 0.16, 0.16, 0.92];
+            private _icon = _d ctrlCreate ["RscPicture", -1];
+            _icon ctrlSetText (_icons getOrDefault [_who, _icons get "CROSSROAD"]);
+            _icon ctrlSetTextColor [0.92, 0.92, 0.92, 1];
+            private _txtC = _d ctrlCreate ["RscStructuredText", -1];
+            _txtC ctrlSetStructuredText parseText format [
+                "<t font='PuristaSemibold' size='0.72' color='#9a9a9a'>%1</t><br/><t font='PuristaLight' size='0.88' color='#f2f2f2'>%2</t>",
+                _who, [_txt] call _esc];
+            // height from the wrapped text (min: the icon column)
+            _txtC ctrlSetPosition [_x0 + _ic + _pad, -1, _w - _ic - 2 * _pad, 0.05];
+            _txtC ctrlCommit 0;
+            private _h = ((ctrlTextHeight _txtC) + 12 * _py) max (40 * _py);
+            private _ctrls = [_bg, _iconBg, _icon, _txtC];
+            { _x ctrlSetFade 1; _x ctrlCommit 0 } forEach _ctrls;
+            CQ_uiCards pushBack [_ctrls, _h, time + 6 + 0.05 * count _txt];
+            call _layout;
+            { _x ctrlSetFade 0; _x ctrlCommit 0.25 } forEach _ctrls;
+        };
+        // expired cards fade out, the rest slide up
+        private _old = CQ_uiCards select { time > (_x select 2) };
+        if (_old isNotEqualTo []) then {
+            { { _x ctrlSetFade 1; _x ctrlCommit 0.4 } forEach (_x select 0) } forEach _old;
+            sleep 0.4;
+            { { ctrlDelete _x } forEach (_x select 0) } forEach _old;
+            CQ_uiCards = CQ_uiCards - _old;
+            call _layout;
+        };
+        sleep 0.25;
+    };
 };
