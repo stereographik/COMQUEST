@@ -182,15 +182,19 @@ CQ_loadZoneRadius = 9;
 // Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
 // [label, unit class (loadout), traits, max players in that class]
 CQ_classes = [
-    ["Rifleman",     "B_Soldier_F",      [],                                  26],
-    ["Squad Leader", "B_Soldier_SL_F",   [],                                  4],
-    ["Medic",        "B_medic_F",        ["Medic"],                           4],
-    ["Autorifleman", "B_soldier_AR_F",   [],                                  4],
-    ["Rifleman AT",  "B_soldier_LAT_F",  [],                                  4],
-    ["Engineer",     "B_engineer_F",     ["Engineer", "explosiveSpecialist"], 4],
-    ["Marksman",     "B_soldier_M_F",    [],                                  2],
-    ["Pilot",        "B_Helipilot_F",    [],                                  4]
+    ["Rifleman",        "B_Soldier_F",      [],                                  26],
+    ["Squad Leader",    "B_Soldier_SL_F",   [],                                  4],
+    ["Medic",           "B_medic_F",        ["Medic"],                           4],
+    ["Grenadier",       "B_Soldier_GL_F",   [],                                  4],
+    ["Autorifleman",    "B_soldier_AR_F",   [],                                  4],
+    ["Light Anti-Tank", "B_soldier_LAT_F",  [],                                  4],
+    ["Heavy Anti-Tank", "B_soldier_AT_F",   [],                                  2],
+    ["Anti-Air",        "B_soldier_AA_F",   [],                                  2],
+    ["Engineer",        "B_engineer_F",     ["Engineer", "explosiveSpecialist"], 4],
+    ["Marksman",        "B_soldier_M_F",    [],                                  2],
+    ["Pilot",           "B_Helipilot_F",    [],                                  4]
 ];
+CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
 CQ_classChangeRange = 300;               // classes are changed within this distance of the camp
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads
 // Contact / heavy support

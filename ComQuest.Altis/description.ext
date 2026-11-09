@@ -186,6 +186,7 @@ class CfgFunctions
             class crateSlots {};
             class crateTick {};
             class squadCmd {};
+            class squadInvite {};
             class scoreAdd {};
             class squadUi {};
             class setClass {};

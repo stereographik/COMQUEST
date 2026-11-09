@@ -8,8 +8,11 @@
       (ungroup / disband also work when the player is alone in his squad)
       unassign  on connection: every player starts unassigned (no lobby squad)
       create    an unassigned player founds a new squad (first free name) and leads it
+    ["invite", _leader, _target]   squad leader invites an unassigned player: the target gets
+                                   an accept / decline window (CQ_fnc_squadInvite)
+    ["inviteReply", _target, _leader, _accepted]   answer; accepted -> the target joins
 */
-params ["_cmd", "_p", ["_g", grpNull]];
+params ["_cmd", "_p", ["_g", grpNull], ["_extra", false]];
 if (!isServer || { isNull _p }) exitWith {};
 private _solo = {
     params ["_u"];
@@ -57,6 +60,41 @@ switch (_cmd) do {
         _g setGroupIdGlobal [_name];
         _g setVariable ["CQ_solo", false, true];
         ["Squads: %1 created squad %2", [name _p, _name]] call CQ_fnc_log;
+    };
+    case "invite": {
+        private _t = _g;                                   // target player
+        if (isNull _t || { !isPlayer _t } || { _t == _p }) exitWith {};
+        private _grp = group _p;
+        if (_grp getVariable ["CQ_solo", false] || { leader _grp != _p }) exitWith {};
+        if !((group _t) getVariable ["CQ_solo", false]) exitWith {
+            [format ["%1 is already in a squad", name _t]] remoteExec ["hint", _p];
+        };
+        if (time < (_t getVariable ["CQ_inviteUntil", -1])) exitWith {
+            [format ["%1 already has an invite pending", name _t]] remoteExec ["hint", _p];
+        };
+        _t setVariable ["CQ_inviteUntil", time + CQ_inviteTimeout];
+        _t setVariable ["CQ_inviteGroup", _grp];
+        [name _p, groupId _grp, _p] remoteExec ["CQ_fnc_squadInvite", _t];
+        [format ["Invite sent to %1", name _t]] remoteExec ["hint", _p];
+        ["Squads: %1 invited %2 to %3", [name _p, name _t, groupId _grp]] call CQ_fnc_log;
+    };
+    case "inviteReply": {
+        private _leader = _g;
+        private _grp = _p getVariable ["CQ_inviteGroup", grpNull];
+        private _valid = time < (_p getVariable ["CQ_inviteUntil", -1]);
+        _p setVariable ["CQ_inviteUntil", -1];
+        _p setVariable ["CQ_inviteGroup", grpNull];
+        if (!_extra || { !_valid } || { isNull _grp } || { units _grp isEqualTo [] } || { _grp getVariable ["CQ_solo", false] }) exitWith {
+            if (!isNull _leader) then {
+                [format ["%1 %2 your invite", name _p, ["declined", "could not accept"] select _extra]] remoteExec ["hint", _leader];
+            };
+            ["Squads: %1 declined the invite", [name _p]] call CQ_fnc_log;
+        };
+        private _old = group _p;
+        [_p] joinSilent _grp;
+        if (count units _old == 0) then { deleteGroup _old };
+        if (!isNull _leader) then { [format ["%1 joined your squad", name _p]] remoteExec ["hint", _leader] };
+        ["Squads: %1 accepted the invite and joined %2", [name _p, groupId _grp]] call CQ_fnc_log;
     };
     case "disband": {
         private _grp = group _p;
