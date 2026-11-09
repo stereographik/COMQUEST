@@ -2,7 +2,7 @@
     CQ_fnc_specialTeam  (server, spawned)
     [_kind] spawn CQ_fnc_specialTeam;     _kind: "medic" or "engineer"
     One support team for the whole enemy army, paradropped CQ_specialFirstDelay s after the
-    first Blackfish drop of the game, next to that first HQ, and dropped again
+    first Mohawk drop of the game, next to that first HQ, and dropped again
     CQ_specialRespawn s (15 min) after it is wiped out (vehicle destroyed or crew dead):
       medic     white Strider HMG, white-clad medics: drives to wounded CSAT soldiers
                 (damage > CQ_medicHealAbove) and treats everyone within 40 m back to health
@@ -15,7 +15,7 @@ private _medic = _kind == "medic";
 private _tag = format ["%1 team", ["Engineer", "Medic"] select _medic];
 
 while { true } do {
-    // --- first drop: CQ_specialFirstDelay s after the first Blackfish drop; then any time
+    // --- first drop: CQ_specialFirstDelay s after the first Mohawk drop; then any time
     waitUntil { sleep 2; !isNil "CQ_firstDropT" && { time > CQ_firstDropT + CQ_specialFirstDelay } };
     sleep (20 * (["medic", "engineer"] find _kind));   // the two teams never take off together
     waitUntil { sleep 5; ((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates }) > -1 };

@@ -58,7 +58,7 @@ CQ_insertionSpawnDistance = 8000;        // helis appear this far from the site
 CQ_insertionFlyHeight = 80;              // default; each role has its own band below
 // Altitude bands keep formations from colliding (careless transports never dodge)
 CQ_heightLifter = 70;
-CQ_dropPlaneClass = "B_T_VTOL_01_vehicle_F";   // V-44X Blackfish (vehicle transport): paradrops the insertion vehicles
+CQ_dropPlaneClass = "I_Heli_Transport_02_F";   // CH-49 Mohawk (base game): carries a vehicle and paradrops it (own parachute)
 CQ_heightDrop = 220;                     // paradrop altitude (above ground)
 CQ_dropLead = 250;                       // released this far before the LZ (the canopy drifts forward)
 CQ_dropCoastGap = 350;                   // paradrop LZ and release point at least this far from any water                    // Taru with a vehicle under the sling
@@ -107,7 +107,7 @@ CQ_waveSquads = 2;
 CQ_waveSize = 25;                        // AI budget reserved for one wave
 CQ_wavePools = [                         // one vehicle from each pool per wave
     ["truck",  ["O_Truck_02_transport_F", "B_Truck_01_transport_F"]],
-    ["armour", ["O_APC_Wheeled_02_rcws_v2_F", "I_APC_tracked_03_cannon_F", "I_LT_01_cannon_F"]],
+    ["armour", ["O_APC_Wheeled_02_rcws_v2_F", "I_APC_tracked_03_cannon_F", "O_APC_Tracked_02_cannon_F"]],   // Marid, Mora, BTR-K Kamysh (no DLC)
     ["random", ["O_MRAP_02_hmg_F", "O_G_Offroad_01_armed_F"]]
 ];
 CQ_dynSimGarrison = false;               // true = HQ squads freeze when no player is near (saves CPU, but they stop patrolling)
@@ -160,22 +160,22 @@ CQ_crateRoles = ["B_Soldier_SL_F", "B_medic_F", "B_soldier_AR_F", "B_soldier_LAT
 CQ_crateExtraMags = [["HandGrenade", 12], ["MiniGrenade", 6], ["SmokeShell", 12], ["SmokeShellGreen", 6], ["SmokeShellRed", 4],
     ["1Rnd_HE_Grenade_shell", 16], ["1Rnd_Smoke_Grenade_shell", 6], ["NLAW_F", 3], ["DemoCharge_Remote_Mag", 6],
     ["SatchelCharge_Remote_Mag", 2], ["APERSMine_Range_Mag", 4], ["Chemlight_green", 6],
-    // launcher rounds: Vorona, MAAWS, RPG-42, RPG-7
-    ["Vorona_HEAT", 3], ["Vorona_HE", 2], ["MRAWS_HEAT_F", 3], ["MRAWS_HE_F", 2], ["RPG32_F", 4], ["RPG32_HE_F", 2], ["RPG7_F", 4]];
-// Rifle, DMR / sniper and machine-gun ammunition for every common vanilla weapon (no pistols)
+    // launcher rounds (base game only): RPG-42, Titan AT
+    ["RPG32_F", 5], ["RPG32_HE_F", 3], ["Titan_AT", 2]];
+// Rifle, DMR / sniper and machine-gun ammunition for the base-game weapons (no DLC, no pistols):
+// MX, Katiba, TRG/Mk20, Mk18, SDAR, Rahim, LRR, Lynx, MX SW, Mk200, Zafir
 CQ_crateRifleMags = [
     // assault rifles
-    ["30Rnd_65x39_caseless_mag", 8], ["30Rnd_65x39_caseless_green", 6], ["30Rnd_556x45_Stanag", 8], ["30Rnd_580x42_Mag_F", 6],
-    ["30Rnd_762x39_Mag_F", 6], ["30Rnd_762x39_AK12_Mag_F", 6], ["30Rnd_65x39_caseless_msbs_mag", 6], ["20Rnd_762x51_Mag", 6],
+    ["30Rnd_65x39_caseless_mag", 8], ["30Rnd_65x39_caseless_green", 8], ["30Rnd_556x45_Stanag", 8], ["20Rnd_762x51_Mag", 6],
+    ["20Rnd_556x45_UW_mag", 4],
     // DMR / sniper
-    ["10Rnd_762x54_Mag", 4], ["10Rnd_338_Mag", 4], ["10Rnd_93x64_DMR_05_Mag", 4], ["10Rnd_127x54_Mag", 4],
+    ["10Rnd_762x54_Mag", 4],
     ["7Rnd_408_Mag", 4], ["5Rnd_127x108_Mag", 4],
     // machine-gun belts / boxes
-    ["100Rnd_65x39_caseless_mag", 3], ["200Rnd_65x39_cased_Box", 3], ["150Rnd_762x54_Box", 3], ["130Rnd_338_Mag", 3],
-    ["150Rnd_93x64_Mag", 3], ["200Rnd_556x45_Box_F", 3], ["100Rnd_580x42_Mag_F", 3], ["150Rnd_556x45_Drum_Mag_F", 3], ["75Rnd_762x39_Mag_F", 3]
+    ["100Rnd_65x39_caseless_mag", 3], ["200Rnd_65x39_cased_Box", 3], ["150Rnd_762x54_Box", 3]
 ];
 // launchers in every crate / auto-fill (one of each, for the rounds above)
-CQ_crateWeapons = [["launch_O_Vorona_brown_F", 1], ["launch_MRAWS_green_F", 1], ["launch_RPG32_F", 1], ["launch_RPG7_F", 1]];
+CQ_crateWeapons = [["launch_RPG32_F", 1], ["launch_O_Titan_short_F", 1]];   // base game launchers (NLAW rounds come with the AT class)
 CQ_crateItems = [["FirstAidKit", 24], ["Medikit", 2], ["ToolKit", 2], ["MineDetector", 1]];
 CQ_loadZoneCount = 4;                    // loadout zones in the base parking area (auto-fill vehicles)
 CQ_loadZoneRadius = 9;

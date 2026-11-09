@@ -3,9 +3,9 @@
     [_site] spawn CQ_fnc_insertion;
 
     Root insertion, phase by phase (each phase is announced on screen):
-      1 Inbound       2 Blackfish carrying a Zamak + an Ifrit, 2 Taru with 3 squads + commander,
+      1 Inbound       2 Mohawk carrying a Zamak + an Ifrit, 2 Mohawk with 3 squads + commander,
                       escorted by 2 Orcas + 1 Kajman, coming from the side opposite the player base
-      2 Drop/landing  Blackfish paradrop the vehicles over clear LZs and fly back to the carrier,
+      2 Drop/landing  Mohawk paradrop the vehicles over clear LZs and fly back to the carrier,
                       troop helis land on clear LZs and unload (teleport fallback)
       3 Fleet         3 s after its drop every heli flies to park near the main HQ (or this
                       site) and waits for orders; when the fleet is full it leaves instead
@@ -60,9 +60,9 @@ if (CQ_debug) then {
 };
 
 // ---------------------------------------------------------------- vehicle drop planes
-// Each vehicle flies inside a Blackfish (vehicle transport, Vehicle-in-Vehicle) and is
+// Each vehicle flies inside a Mohawk (vehicle transport, Vehicle-in-Vehicle) and is
 // paradropped over its LZ. A vehicle too big for the cargo bay rides hidden and gets its
-// own parachute at the drop. The Blackfish goes back to the carrier afterwards.
+// own parachute at the drop. The Mohawk goes back to the carrier afterwards.
 private _lifts = [];
 {
     _x params ["_cargoClass", "_lat", "_lzDist", "_lzAng", "_label"];
@@ -71,7 +71,7 @@ private _lifts = [];
     _heli setPosASL [_p select 0, _p select 1, (getTerrainHeightASL _p max 0) + CQ_heightDrop];
     _heli setDir _heading;
     _heli setVelocityModelSpace [0, 60, 0];
-    private _hg = [_heli] call CQ_fnc_crewVehicle;     // CSAT crew in the Blackfish
+    private _hg = [_heli] call CQ_fnc_crewVehicle;     // CSAT crew in the Mohawk
     _hg setBehaviourStrong "CARELESS";
     _hg setCombatMode "BLUE";
     _heli flyInHeight CQ_heightDrop;
@@ -90,7 +90,7 @@ private _lifts = [];
             _cargo attachTo [_heli, [0, 0, -6]];
         };
     };
-    ["HQ #%1: Blackfish with %2 airborne (%3)", [_id, _label, ["too big for the bay, own parachute at the drop", "in the cargo bay"] select _viv]] call CQ_fnc_log;
+    ["HQ #%1: Mohawk with %2 airborne (%3)", [_id, _label, ["too big for the bay, own parachute at the drop", "in the cargo bay"] select _viv]] call CQ_fnc_log;
 
     private _lz = [_lzDist, _lzAng] call _lzAt;
     // Paradrop LZ at least CQ_dropCoastGap from any water: pushed inland (away from the carrier) until safe
@@ -198,7 +198,7 @@ while { true } do {
 
         if (_state in ["fly", "near"] && { !alive _heli }) then {
             _e set ["state", "dead"];
-            ["CSAT transport shot down", format ["HQ #%1: the Blackfish carrying the %2 is down", _id, _e get "label"]] call CQ_fnc_announce;
+            ["CSAT transport shot down", format ["HQ #%1: the Mohawk carrying the %2 is down", _id, _e get "label"]] call CQ_fnc_announce;
             private _c = _e get "cargo";
             if (!(_e get "slung")) then { deleteVehicle _c };
             continue;

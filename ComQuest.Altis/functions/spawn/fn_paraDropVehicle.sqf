@@ -1,7 +1,7 @@
 /*
     CQ_fnc_paraDropVehicle  (server, spawned)
     [_class, _lz, _onLanded, _tag] spawn CQ_fnc_paraDropVehicle;
-    A Blackfish (CQ_dropPlaneClass) leaves the carrier with the vehicle in its cargo bay
+    A Mohawk (CQ_dropPlaneClass) leaves the carrier with the vehicle in its cargo bay
     (Vehicle-in-Vehicle; hidden + own parachute if it does not fit), flies to _lz (pushed
     inland until CQ_dropCoastGap from water), paradrops it over safe ground and goes home.
     _onLanded is called with [vehicle] once it stands on the ground (not if it is lost).
@@ -43,7 +43,7 @@ isNil {
     };
 };
 _pl doMove _lz;
-["%1: Blackfish with %2 airborne (%3)", [_tag, _class, ["own parachute", "cargo bay"] select _viv]] call CQ_fnc_log;
+["%1: Mohawk with %2 airborne (%3)", [_tag, _class, ["own parachute", "cargo bay"] select _viv]] call CQ_fnc_log;
 
 private _t0 = time;
 private _minD = 1e9;
@@ -91,7 +91,7 @@ if (alive _pl) then {
     };
 };
 if (!_dropped) exitWith {
-    ["%1: Blackfish lost before the drop (alive %2, damage %3, at grid %4)", [_tag, alive _pl, damage _pl, mapGridPosition _pl]] call CQ_fnc_log;
+    ["%1: Mohawk lost before the drop (alive %2, damage %3, at grid %4)", [_tag, alive _pl, damage _pl, mapGridPosition _pl]] call CQ_fnc_log;
     if (!_viv) then { deleteVehicle _cargo };
 };
 

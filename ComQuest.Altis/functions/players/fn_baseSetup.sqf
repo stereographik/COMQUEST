@@ -96,7 +96,7 @@ missionNamespace setVariable ["CQ_arsenalBox", _box, true];
 ["Land_CampingTable_F", -18, 8, 90, 1] call _put;
 { ["Land_CampingChair_V2_F", -18 + (_x select 0), 8 + (_x select 1), _x select 2, 0.4] call _put } forEach [[-1.5, -1.6, 0], [1.5, -1.6, 0], [-1.5, 1.6, 180], [1.5, 1.6, 180]];
 ["Land_Medevac_house_V1_F", 19, 8, 180, 3] call _put;
-["Land_Stretcher_01_F", 15, 3, 90, 0.5] call _put;
+["Land_CampingTable_F", 15, 3, 90, 0.6] call _put;
 
 // --- supply crates row (inside the back wall, left of the gate): CQ_fnc_crateTick fills it
 CQ_crateSpots = [];
