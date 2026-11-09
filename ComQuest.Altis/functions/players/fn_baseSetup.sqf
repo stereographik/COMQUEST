@@ -1,70 +1,164 @@
 /*
     CQ_fnc_baseSetup  (server)
-    Builds the player base as a rural airfield at CQ_basePos, aligned with the runway
-    (CfgWorlds ilsPosition / ilsDirection; CQ_baseDir if the map has none). Layout in metres,
-    x = right, y = front:
-      open camp (no wall): ops building, flag, arsenal + crates, briefing area under a camo
-        net, medical post, supply corner, containers, windsock, lights, supply crate row
-      vehicles parked ON THE RUNWAY: ground vehicles in two columns, helicopters in one
-        centre column on pads, every spot 25 m+ apart and clear (fallback: 25 m grid)
-      CQ_baseDefSpots defence spots around the perimeter: sandbagged AA + HMG, crewed
-        (CQ_fnc_baseDefTick rebuilds a lost one)
-    Every piece is spacing-checked (CQ_fnc_clearPos); a blocked piece is shifted a little or
-    skipped and logged. Parking spots are left in CQ_baseSpots (role -> [[pos, dir]...]).
-    Also: respawn marker on the muster area, map markers.
+    Builds the player base at CQ_basePos. Front = toward the parking area (CQ_parkArea centre,
+    or the Eden marker cq_park_area), CQ_baseDir otherwise. Local coordinates in metres:
+    x = right, y = front.
+
+    1. Walled compound (CQ_compoundSize), H-barrier walls, a vehicle gate in the front wall
+       flanked by two H-barrier towers, guard towers in the corners, tank traps outside:
+         back row     warehouse | HQ offices (friendly commander inside) | cargo HQ
+         courtyard    radar + watchtower, flag, 4 squad equipment boxes aligned in the
+                      centre (arsenal + squad resupply), medical post
+         ammo depot   right side, under a camo net: the ready-filled loadable supply crates
+       Terrain objects inside the compound are hidden.
+    2. Four "sun rays" fanning out from the gate (CQ_rayAngles). Each ray: a loadout zone,
+       then its vehicles parked side by side, PERPENDICULAR to the ray, from the smallest to
+       the largest (gap = vehicle footprint from its bounding box + CQ_raySpacing), helicopters
+       on pads, and a repair station at the end (CQ_fnc_baseRepairTick). Vehicles are shared
+       out so every ray gets a similar mix. Spots must be dry, flat and free of buildings;
+       trees, bushes, rocks and fences on a spot are hidden.
+    3. Defence spots around the perimeter (CQ_fnc_baseDefBuild), respawn, map markers.
+    Every class is checked (exists, no DLC); a missing one falls back or is skipped and logged.
 */
 if (!isServer) exitWith {};
 
 private _o = CQ_basePos;
 private _d = CQ_baseDir;
-// Runway axis from the map config (main airfield)
-private _ils = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsPosition");
-private _ilsDir = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsDirection");
-CQ_runway = [];
-if (count _ils >= 2 && { count _ilsDir >= 3 }) then {
-    private _h = (_ilsDir select 0) atan2 (_ilsDir select 2);
-    CQ_runway = [[_ils select 0, _ils select 1, 0], _h];
-    // camp front faces the runway (toward the nearest point of its centre line)
-    private _ilsP = CQ_runway select 0;
-    private _rel = _o vectorDiff _ilsP;
-    private _t = (_rel select 0) * sin _h + (_rel select 1) * cos _h;
-    private _near = _ilsP vectorAdd ([sin _h, cos _h, 0] vectorMultiply _t);
-    _d = if (_o distance2D _near > 20) then { _o getDir _near } else { _h + 90 };
-    CQ_baseDir = _d;
-    publicVariable "CQ_baseDir";
+private _useMarker = "cq_park_area" in allMapMarkers;
+if (_useMarker) then { _d = _o getDir (getMarkerPos "cq_park_area") } else {
+    if (count CQ_parkArea >= 3) then {
+        private _c = [0, 0, 0];
+        { _c = _c vectorAdd [_x select 0, _x select 1, 0] } forEach CQ_parkArea;
+        _d = _o getDir (_c vectorMultiply (1 / count CQ_parkArea));
+    };
 };
+CQ_baseDir = _d;
+publicVariable "CQ_baseDir";
+
 private _at = {
     params ["_x0", "_y0"];
     private _p = _o getPos [sqrt (_x0 ^ 2 + _y0 ^ 2), _d + (_x0 atan2 _y0)];
     [_p select 0, _p select 1, 0]
 };
+// first class of the list that exists and needs no DLC
+private _pick = {
+    params ["_list"];
+    private _i = _list findIf {
+        private _c = configFile >> "CfgVehicles" >> _x;
+        isClass _c && { getNumber (_c >> "scope") >= 1 } && { getText (_c >> "DLC") == "" }
+    };
+    if (_i < 0) exitWith { ["Base: none of %1 available, skipped", [_list]] call CQ_fnc_log; "" };
+    _list select _i
+};
+// footprint [width (x), length (y)] from the model bounding box, cached
+if (isNil "CQ_dimCache") then { CQ_dimCache = createHashMap };
+private _dims = {
+    params ["_cls"];
+    if (_cls in CQ_dimCache) exitWith { CQ_dimCache get _cls };
+    private _t = createSimpleObject [_cls, [50, 50, 500]];
+    private _r = [4, 4];
+    if (!isNull _t) then {
+        (boundingBoxReal _t) params ["_a", "_b"];
+        _r = [abs ((_b select 0) - (_a select 0)), abs ((_b select 1) - (_a select 1))];
+        deleteVehicle _t;
+    };
+    CQ_dimCache set [_cls, _r];
+    _r
+};
 private _placed = 0;
-private _skipped = 0;
 private _put = {
-    params ["_cls", "_x0", "_y0", ["_rot", 0], ["_r", 1.5], ["_simple", true]];
-    private _want = [_x0, _y0] call _at;
-    private _p = [_want, _r, 4] call CQ_fnc_clearPos;
-    if (_p isEqualTo []) exitWith { _skipped = _skipped + 1; objNull };
+    params ["_list", "_x0", "_y0", ["_rot", 0], ["_upright", false]];
+    private _cls = [_list] call _pick;
+    if (_cls == "") exitWith { objNull };
+    private _p = [_x0, _y0] call _at;
     private _obj = createVehicle [_cls, _p, [], 0, "CAN_COLLIDE"];
     _obj setDir (_d + _rot);
-    _obj setVectorUp surfaceNormal _p;
-    if (_simple) then { _obj allowDamage false };
+    _obj setPosATL _p;
+    if (_upright) then { _obj setVectorUp [0, 0, 1] } else { _obj setVectorUp surfaceNormal _p };
+    _obj allowDamage false;
     _placed = _placed + 1;
     _obj
 };
+// straight wall of segments from A to B (local coordinates)
+private _wall = {
+    params ["_list", "_a", "_b"];
+    private _cls = [_list] call _pick;
+    if (_cls == "") exitWith {};
+    private _seg = (([_cls] call _dims) select 0) max 2;
+    private _len = (_a distance2D _b);
+    if (_len < 1) exitWith {};
+    private _n = ceil (_len / _seg);
+    private _ux = ((_b select 0) - (_a select 0)) / _len;
+    private _uy = ((_b select 1) - (_a select 1)) / _len;
+    private _rot = (_ux atan2 _uy) - 90;
+    for "_i" from 0 to _n - 1 do {
+        private _t = (_i + 0.5) * (_len / _n);
+        [[_cls], (_a select 0) + _ux * _t, (_a select 1) + _uy * _t, _rot] call _put;
+    };
+};
 
-// --- open airfield camp: no wall, a sandbag bunker by the entrance, containers, windsock
-["Land_BagBunker_Small_F", -10, 24, 180, 3] call _put;
-["Land_Cargo20_military_green_F", -34, -4, 90, 3.5] call _put;
-["Land_Cargo20_military_green_F", -34, 4, 90, 3.5] call _put;
-["Land_Cargo40_military_green_F", 34, -2, 90, 6] call _put;
-["Windsock_01_F", 12, 40, 0, 0.6] call _put;
-["Land_Sign_WarningMilitaryArea_F", 6, 26, 0, 0.5] call _put;
-// --- core: command post, flag, arsenal
-private _ops = ["Land_Cargo_House_V1_F", 0, 10, 180, 3.5] call _put;
-// Friendly commander in the ops building: if he dies, the mission is lost
+// ---------------------------------------------------------------- 1. compound
+CQ_compoundSize params ["_W", "_D"];
+private _hw = _W / 2;
+private _hd = _D / 2;
+// clear the ground: hide every terrain object inside the compound (+ 6 m)
+private _hidden = 0;
+{
+    private _p = getPosATL _x;
+    private _dx = (_p select 0) - (_o select 0);
+    private _dy = (_p select 1) - (_o select 1);
+    private _lx = _dx * cos _d - _dy * sin _d;      // local x (right)
+    private _ly = _dx * sin _d + _dy * cos _d;      // local y (front)
+    if (abs _lx < _hw + 6 && { abs _ly < _hd + 6 }) then { hideObjectGlobal _x; _hidden = _hidden + 1 };
+} forEach (nearestTerrainObjects [_o, [], sqrt ((_hw + 6) ^ 2 + (_hd + 6) ^ 2), false, true]);
+
+private _hb = ["Land_HBarrier_Big_F", "Land_HBarrier_5_F", "Land_HBarrier_3_F"];
+private _gate = 9;                                  // half width of the vehicle gate
+[_hb, [-_hw, -_hd], [_hw, -_hd]] call _wall;        // back
+[_hb, [-_hw, -_hd], [-_hw, _hd]] call _wall;        // left
+[_hb, [_hw, -_hd], [_hw, _hd]] call _wall;          // right
+[_hb, [-_hw, _hd], [-_gate, _hd]] call _wall;       // front, left of the gate
+[_hb, [_gate, _hd], [_hw, _hd]] call _wall;         // front, right of the gate
+// gate towers (H-barrier bunkers) and short chicane walls outside the gate
+[["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"], -_gate - 4, _hd + 1, 0] call _put;
+[["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"], _gate + 4, _hd + 1, 0] call _put;
+[["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], -_gate - 10, _hd + 9, 15] call _put;
+[["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], _gate + 10, _hd + 9, -15] call _put;
+// guard towers in the corners
+{ [["Land_Cargo_Patrol_V1_F", "Land_BagBunker_Tower_F"], (_x select 0) * (_hw - 5), (_x select 1) * (_hd - 5), [180, 0] select ((_x select 1) > 0), true] call _put } forEach [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+// tank traps outside the front corners
+{ [["Land_CzechHedgehog_01_F", "Land_CzechHedgehog_01_new_F", "Land_CncBarrier_F"], _x select 0, _x select 1, random 90] call _put }
+    forEach [[-_hw - 8, _hd + 4], [-_hw - 13, _hd + 8], [-_hw - 6, _hd + 11], [_hw + 8, _hd + 4], [_hw + 13, _hd + 8], [_hw + 6, _hd + 11]];
+
+// back row of buildings, packed from the left, their back 4 m from the back wall
+private _row = [
+    ["Land_i_Shed_Ind_F", "Land_Shed_Big_F"],
+    ["Land_MilOffices_V1_F", "Land_Cargo_HQ_V1_F"],
+    ["Land_Cargo_HQ_V1_F", "Land_Cargo_House_V1_F"]
+];
+private _rowCls = (_row apply { [_x] call _pick }) select { _x != "" };
+private _rowW = 0;
+{ _rowW = _rowW + (([_x] call _dims) select 0) + 5 } forEach _rowCls;
+while { _rowW - 5 > _W - 8 && { count _rowCls > 1 } } do {
+    private _drop = _rowCls deleteAt (count _rowCls - 1);
+    _rowW = _rowW - (([_drop] call _dims) select 0) - 5;
+};
+private _cx = -(_rowW - 5) / 2;
+private _ops = objNull;
+{
+    ([_x] call _dims) params ["_bw", "_bl"];
+    private _b = [[_x], _cx + _bw / 2, -_hd + 4 + _bl / 2, 0, true] call _put;
+    if (_x find "Offices" > -1 || { isNull _ops && { _forEachIndex == 1 } }) then { _ops = _b };
+    _cx = _cx + _bw + 5;
+} forEach _rowCls;
+
+// friendly commander in the HQ offices: if he dies, the mission is lost
 private _fg = createGroup [west, true];
-private _fp = if (!isNull _ops && { (_ops buildingPos 0) isNotEqualTo [0, 0, 0] }) then { _ops buildingPos 0 } else { [0, 4] call _at };
+private _fp = [0, -_hd + 10] call _at;
+if (!isNull _ops) then {
+    private _bp = _ops buildingPos -1;
+    if (_bp isNotEqualTo []) then { _fp = _bp select 0 };
+};
 CQ_friendlyCmd = _fg createUnit ["B_officer_F", _fp, [], 0, "CAN_COLLIDE"];
 CQ_friendlyCmd setPosATL _fp;
 CQ_friendlyCmd setDir (_d + 180);
@@ -80,222 +174,162 @@ CQ_friendlyCmd addEventHandler ["Killed", {
     ["defeat", []] call CQ_fnc_say;
     [] spawn { sleep 12; "EveryoneLost" call BIS_fnc_endMissionServer };
 }];
-["Flag_NATO_F", 0, -2, 0, 0.5] call _put;
-private _boxPos = [5, -1] call _at;
-private _box = createVehicle ["B_supplyCrate_F", _boxPos, [], 0, "NONE"];
-_box setDir (_d + 90);
-_box allowDamage false;
-clearWeaponCargoGlobal _box; clearMagazineCargoGlobal _box; clearItemCargoGlobal _box; clearBackpackCargoGlobal _box;
-missionNamespace setVariable ["CQ_arsenalBox", _box, true];
-["Box_NATO_Ammo_F", 7.5, -1, 90, 0.6] call _put;
-["Box_NATO_Wps_F", 9.5, -1, 90, 0.6] call _put;
-["Box_NATO_Support_F", 7.5, 1, 90, 0.6] call _put;
 
-// --- briefing area under a camo net (left), medical post (right)
-["CamoNet_BLUFOR_big_F", -18, 8, 0, 1, true] call _put;
-["Land_CampingTable_F", -18, 8, 90, 1] call _put;
-{ ["Land_CampingChair_V2_F", -18 + (_x select 0), 8 + (_x select 1), _x select 2, 0.4] call _put } forEach [[-1.5, -1.6, 0], [1.5, -1.6, 0], [-1.5, 1.6, 180], [1.5, 1.6, 180]];
-["Land_Medevac_house_V1_F", 19, 8, 180, 3] call _put;
-["Land_CampingTable_F", 15, 3, 90, 0.6] call _put;
+// courtyard: radar + watchtower (front left), flag, medical post (left), 4 squad boxes
+[["Land_Radar_Small_F", "Land_TTowerSmall_2_F"], -22, _hd - 14, 0, true] call _put;
+[["Land_Cargo_Patrol_V1_F"], -10, _hd - 10, 0, true] call _put;
+[["Flag_NATO_F"], 0, 9, 0] call _put;
+[["Land_Medevac_house_V1_F", "Land_Cargo_House_V1_F"], -_hw + 9, 2, 90, true] call _put;
+CQ_arsenalBoxes = [];
+private _boxCls = [["B_CargoNet_01_ammo_F", "B_supplyCrate_F"]] call _pick;
+{
+    private _p = [-10.5 + 7 * _forEachIndex, 0] call _at;
+    private _b = createVehicle [_boxCls, _p, [], 0, "CAN_COLLIDE"];
+    _b setDir _d;
+    _b setPosATL _p;
+    _b allowDamage false;
+    [_b, 2, false] call CQ_fnc_crateFill;     // big squad box: not loadable
+    _b setVariable ["CQ_squadBox", _x, true];
+    CQ_arsenalBoxes pushBack _b;
+    private _m = createMarker [format ["cq_sqbox_%1", _x], _p];
+    _m setMarkerType "mil_box";
+    _m setMarkerColor "ColorWEST";
+    _m setMarkerSize [0.5, 0.5];
+    _m setMarkerText format ["%1 equipment", _x];
+} forEach ["Alpha", "Bravo", "Charlie", "Delta"];
+publicVariable "CQ_arsenalBoxes";
+CQ_arsenalBox = CQ_arsenalBoxes select 0;
+publicVariable "CQ_arsenalBox";
 
-// --- supply crates row (inside the back wall, left of the gate): CQ_fnc_crateTick fills it
+// ammo depot (right side, under a camo net): the ready-filled loadable crates
+private _dx0 = _hw - 13;
+[["CamoNet_BLUFOR_open_F", "CamoNet_BLUFOR_F"], _dx0, 2, 90] call _put;
 CQ_crateSpots = [];
-for "_i" from 0 to CQ_crateCount - 1 do { CQ_crateSpots pushBack ([-27 + 2.6 * _i, -9] call _at) };
-private _cm = createMarker ["cq_crates", [-20.5, -9] call _at];
+for "_i" from 0 to CQ_crateCount - 1 do {
+    CQ_crateSpots pushBack ([_dx0 - 2.5 + 5 * (_i mod 2), -4 + 3 * floor (_i / 2)] call _at);
+};
+[["Land_Pallets_stack_F"], _dx0 + 6, -6, 0] call _put;
+[["Land_CratesWooden_F"], _dx0 + 6, 9, 90] call _put;
+private _cm = createMarker ["cq_crates", [_dx0, 2] call _at];
 _cm setMarkerType "mil_box";
 _cm setMarkerColor "ColorWEST";
 _cm setMarkerSize [0.6, 0.6];
-_cm setMarkerText "Caisses de ravitaillement";
+_cm setMarkerText "Ammo crates";
+// lights
+{ [["Land_PortableLight_double_F"], _x select 0, _x select 1, _x select 2] call _put } forEach [[-_hw + 3, _hd - 3, 225], [_hw - 3, _hd - 3, 135], [-_hw + 3, -_hd + 3, 315], [_hw - 3, -_hd + 3, 45]];
 
-// --- supply corner (back), lights in the corners
-["Land_Pallets_stack_F", -26, -15, 0, 1] call _put;
-["Land_CratesWooden_F", -21, -15, 0, 1] call _put;
-["Land_PaperBox_closed_F", -16, -16, 15, 0.8] call _put;
-["Land_WaterTank_F", 22, -15, 0, 1.2] call _put;
-["Land_FieldToilet_F", 26, -12, 270, 0.8] call _put;
-["Land_FieldToilet_F", 28, -12, 270, 0.8] call _put;
-{ ["Land_PortableLight_double_F", _x select 0, _x select 1, _x select 2, 0.6] call _put } forEach [[-29, 18, 225], [29, 18, 135], [-29, -18, 315], [29, -18, 45]];
-
-// --- parking ON THE RUNWAY (2 columns of ground vehicles, 1 centre column of helicopters on
-// pads), starting at the runway point nearest the camp and going along the runway toward
-// the side with more clear ground. Spots 25 m+ apart, each flat and clear of objects.
-private _runwaySpots = [];
-private _runwayHeli = [];
-// Parking area chosen by the mission maker: an area marker "cq_park_area" placed in Eden,
-// else the polygon CQ_parkArea (settings). Cells: 25 m grid aligned with the runway, inside
-// the area, flat and clear; nearest to the camp first, helicopters after ground vehicles.
-private _areaSpots = [];
-private _useMarker = "cq_park_area" in allMapMarkers;
-if (_useMarker || { count CQ_parkArea >= 3 }) then {
-    private _pts = if (_useMarker) then {
-        (getMarkerPos "cq_park_area") params ["_mx", "_my"];
-        (getMarkerSize "cq_park_area") params ["_sx", "_sy"];
-        private _r = sqrt (_sx ^ 2 + _sy ^ 2);
-        [[_mx - _r, _my - _r], [_mx + _r, _my + _r]]
-    } else { CQ_parkArea };
-    private _xs = _pts apply { _x select 0 };
-    private _ys = _pts apply { _x select 1 };
-    private _cx = (selectMin _xs + selectMax _xs) / 2;
-    private _cy = (selectMin _ys + selectMax _ys) / 2;
-    private _half = ((selectMax _xs - selectMin _xs) max (selectMax _ys - selectMin _ys)) * 0.75;
-    private _h = if (CQ_runway isNotEqualTo []) then { CQ_runway select 1 } else { _d };
-    private _poly = CQ_parkArea apply { [_x select 0, _x select 1, 0] };   // inPolygon wants [x, y, z]
-    private _inside = if (_useMarker) then { { _this inArea "cq_park_area" } } else { { _this inPolygon _poly } };
-    for "_i" from -(ceil (_half / CQ_parkGrid)) to ceil (_half / CQ_parkGrid) do {
-        for "_j" from -(ceil (_half / CQ_parkGrid)) to ceil (_half / CQ_parkGrid) do {
-            private _p = [_cx, _cy, 0] getPos [sqrt ((_i * CQ_parkGrid) ^ 2 + (_j * CQ_parkGrid) ^ 2), _h + ((_i * CQ_parkGrid) atan2 (_j * CQ_parkGrid))];
-            _p set [2, 0];
-            if !(_p call _inside) then { continue };
-            if (surfaceIsWater _p) then { continue };
-            if ((_p isFlatEmpty [-1, -1, 0.1, 6, 0, false, objNull]) isEqualTo []) then { continue };
-            if (((nearestObjects [_p, [], 7]) select { !(_x isKindOf "CAManBase") && { !(_x isKindOf "Logic") } }) isNotEqualTo []) then { continue };
-            if ((nearestTerrainObjects [_p, [], 6, false, true]) isNotEqualTo []) then { continue };
-            _areaSpots pushBack _p;
-        };
-    };
-    _areaSpots = [_areaSpots, [], { _x distance2D _o }, "ASCEND"] call BIS_fnc_sortBy;
-    ["Base parking area (%1): %2 free cells", [["CQ_parkArea polygon", "Eden marker cq_park_area"] select _useMarker, count _areaSpots]] call CQ_fnc_log;
-};
-private _nGround = 0; private _nAir = 0;
-{ _x params ["_cls", "", ["_k", 1]]; if (_cls isKindOf "Air") then { _nAir = _nAir + _k } else { _nGround = _nGround + _k } } forEach CQ_baseVehicles;
-if (_areaSpots isEqualTo [] && { CQ_runway isNotEqualTo [] }) then {
-    CQ_runway params ["_ilsP", "_h"];
-    private _ax = [sin _h, cos _h, 0];
-    private _pp = [cos _h, -(sin _h), 0];
-    private _rel = _o vectorDiff _ilsP;
-    private _t = (_rel select 0) * (_ax select 0) + (_rel select 1) * (_ax select 1);
-    private _p0 = _ilsP vectorAdd (_ax vectorMultiply _t);
-    private _ok = {
-        params ["_p"];
-        !surfaceIsWater _p
-        && { (_p isFlatEmpty [-1, -1, 0.08, 6, 0, false, objNull]) isNotEqualTo [] }
-        && { ((nearestObjects [_p, [], 7]) select { !(_x isKindOf "CAManBase") && { !(_x isKindOf "Logic") } }) isEqualTo [] }
-        && { (nearestTerrainObjects [_p, [], 6, false, true]) isEqualTo [] }
-    };
-    private _line = {
-        params ["_sgn", "_lats", "_step", "_from", "_n"];
-        private _out = [];
-        private _k = 0;
-        while { count _out < _n && { _k < 60 } } do {
-            {
-                private _p = (_p0 vectorAdd (_ax vectorMultiply (_sgn * (_from + _k * _step)))) vectorAdd (_pp vectorMultiply _x);
-                _p set [2, 0];
-                if (count _out < _n && { [_p] call _ok }) then { _out pushBack _p };
-            } forEach _lats;
-            _k = _k + 1;
-        };
-        _out
-    };
-    // pick the direction along the runway with more clear spots
-    private _a = [1, [-12, 12], 25, 60, _nGround] call _line;
-    private _b = [-1, [-12, 12], 25, 60, _nGround] call _line;
-    private _sgn = [-1, 1] select (count _a >= count _b);
-    _runwaySpots = [_a, _b] select (_sgn < 0);
-    private _airFrom = 60 + 25 * ceil (_nGround / 2) + 40;
-    _runwayHeli = [_sgn, [0], 32, _airFrom, _nAir] call _line;
-    CQ_runwayDirSign = _sgn;
-};
-
-// fallback for what the runway could not take: a 25 m grid of flat, clear cells near the camp
-// (aligned with the camp) over flat, clear ground close to the camp.
-// A cell is used only if it is dry, flat over 9 m, and has no rock, building, wall, tree or
-// any other object (camp pieces included) within CQ_parkClear. Ground vehicles take the
-// cells nearest to the park point behind the camp, helicopters the next ones (with a pad).
-CQ_baseSpots = createHashMap;
-private _anchor = [0, -60] call _at;
-private _cellOk = {
-    params ["_p"];
+// ---------------------------------------------------------------- 2. vehicle rays
+private _blockTypes = ["BUILDING", "HOUSE", "CHURCH", "CHAPEL", "FUELSTATION", "HOSPITAL", "LIGHTHOUSE", "POWER LINES", "TRANSMITTER", "WATERTOWER", "BUNKER", "FORTRESS", "VIEW-TOWER", "RUIN"];
+private _softTypes = ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "FENCE", "WALL", "HIDE", "STACK", "FOREST BORDER", "FOREST TRIANGLE", "FOREST SQUARE"];
+private _spotOk = {
+    params ["_p", "_rad"];
     !surfaceIsWater _p
-    && { (_p isFlatEmpty [-1, -1, CQ_parkMaxGradient, 9, 0, false, objNull]) isNotEqualTo [] }
-    && { (nearestTerrainObjects [_p, [], CQ_parkClear, false, true]) isEqualTo [] }
-    && { ((nearestObjects [_p, [], CQ_parkClear]) select { !(_x isKindOf "CAManBase") && { !(_x isKindOf "Logic") } }) isEqualTo [] }
-    // big objects (hangars, terminal, sheds): the cell must be outside their whole footprint,
-    // not only 10 m from their centre
-    && { ((nearestObjects [_p, [], 60]) + (nearestTerrainObjects [_p, ["BUILDING", "HOUSE", "HIDE", "WALL", "FENCE"], 60, false, true])) findIf {
-        !(_x isKindOf "CAManBase") && { _x distance2D _p < ((boundingBoxReal _x) select 2) * 0.8 + 6 }
-    } == -1 }
+    && { (_p isFlatEmpty [-1, -1, 0.2, (_rad max 3) min 12, 0, false, objNull]) isNotEqualTo [] }
+    && { (nearestTerrainObjects [_p, _blockTypes, _rad + 2, false, true]) isEqualTo [] }
+    && { ((nearestObjects [_p, ["Building", "LandVehicle", "Air", "Thing", "StaticWeapon"], _rad + 2]) select { !(_x isKindOf "HeliH") && { !isObjectHidden _x } }) isEqualTo [] }
 };
-private _cells = [];
-private _n = ceil (CQ_parkSearch / CQ_parkGrid);
-if ((count _runwaySpots >= _nGround && { count _runwayHeli >= _nAir }) || { count _areaSpots >= _nGround + _nAir }) then { _n = -1 };   // nothing left for the grid
-for "_i" from -_n to _n do {
-    for "_j" from -_n to _n do {
-        private _x0 = _i * CQ_parkGrid;
-        private _y0 = -60 + _j * CQ_parkGrid;
-        private _p = [_x0, _y0] call _at;
-        if (_p distance2D _anchor > CQ_parkSearch) then { continue };
-        if ([_p] call _cellOk) then { _cells pushBack _p };
-    };
-};
-_cells = [_cells, [], { _x distance2D _anchor }, "ASCEND"] call BIS_fnc_sortBy;
-private _take = {
-    params ["_role", "_count", ["_pad", false]];
-    for "_k" from 1 to _count do {
-        private _p = [];
-        if (_areaSpots isNotEqualTo []) then { _p = _areaSpots deleteAt 0 };
-        if (_p isEqualTo [] && { _pad } && { _runwayHeli isNotEqualTo [] }) then { _p = _runwayHeli deleteAt 0 };
-        if (_p isEqualTo [] && { !_pad } && { _runwaySpots isNotEqualTo [] }) then { _p = _runwaySpots deleteAt 0 };
-        if (_p isEqualTo [] && { _cells isNotEqualTo [] }) then { _p = _cells deleteAt 0 };
-        if (_p isEqualTo []) exitWith { ["Base parking: no free spot left for %1", [_role]] call CQ_fnc_log };
-        private _vd = if (CQ_runway isNotEqualTo []) then { (CQ_runway select 1) + ([0, 180] select ((missionNamespace getVariable ["CQ_runwayDirSign", 1]) < 0)) } else { _d };
-        if (_pad) then { (createVehicle ["Land_HelipadSquare_F", _p, [], 0, "CAN_COLLIDE"]) setDir _vd };
-        CQ_baseSpots set [_role, (CQ_baseSpots getOrDefault [_role, []]) + [[_p, _vd]]];
-        // small map marker per parking spot, so the motor pool is easy to find
-        private _m = createMarker [format ["cq_park_%1_%2", _role, _k], _p];
-        _m setMarkerType (["mil_dot", "c_air"] select _pad);
-        _m setMarkerColor "ColorWEST";
-        _m setMarkerSize [0.5, 0.5];
-        _m setMarkerText _role;
-    };
-};
-private _isAir = { params ["_c"]; _c isKindOf "Air" || { getNumber (configFile >> "CfgVehicles" >> _c >> "isUav") == 1 } };
-{ _x params ["_cls", "_role", ["_k", 1]]; if !([_cls] call _isAir) then { [_role, _k] call _take } } forEach CQ_baseVehicles;
-{ _x params ["_cls", "_role", ["_k", 1]]; if ([_cls] call _isAir) then { [_role, _k, true] call _take } } forEach CQ_baseVehicles;
+private _clearSoft = { params ["_p", "_rad"]; { hideObjectGlobal _x } forEach (nearestTerrainObjects [_p, _softTypes, _rad + 1, false, true]) };
 
-// --- loadout zones: the next free spots of the parking area. Drive a vehicle in and use
-// "Auto-fill vehicle" (scroll menu) to load a full squad resupply into its inventory.
+// every vehicle with its footprint, shared out over the rays (largest types first so the
+// big ones spread evenly), then each ray sorted from the smallest to the largest
+private _isAir = { params ["_c"]; _c isKindOf "Air" };
+private _all = [];
+{
+    _x params ["_cls", "_role", ["_k", 1]];
+    ([_cls] call _dims) params ["_w", "_l"];
+    for "_i" from 1 to _k do { _all pushBack [_cls, _role, _w, _l, _w * _l, [_cls] call _isAir] };
+} forEach CQ_baseVehicles;
+_all = [_all, [], { _x select 4 }, "DESCEND"] call BIS_fnc_sortBy;
+private _nRays = count CQ_rayAngles;
+private _rays = [];
+for "_i" from 1 to _nRays do { _rays pushBack [] };
+{
+    private _best = 0;
+    { if (count _x < count (_rays select _best)) then { _best = _forEachIndex } } forEach _rays;
+    (_rays select _best) pushBack _x;
+} forEach _all;
+_rays = _rays apply { [_x, [], { _x select 4 }, "ASCEND"] call BIS_fnc_sortBy };
+
+CQ_baseSpots = createHashMap;
 CQ_loadZones = [];
-for "_z" from 1 to CQ_loadZoneCount do {
-    private _p = [];
-    if (_areaSpots isNotEqualTo []) then { _p = _areaSpots deleteAt 0 };
-    if (_p isEqualTo [] && { _cells isNotEqualTo [] }) then { _p = _cells deleteAt 0 };
-    if (_p isEqualTo []) exitWith { ["Base: no free spot for loadout zone %1", [_z]] call CQ_fnc_log };
-    _p set [2, 0];
-    CQ_loadZones pushBack _p;
-    { (createVehicle ["RoadCone_L_F", _p getPos [8, _d + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
-    private _sg = createVehicle ["Land_Sign_WarningMilitaryArea_F", _p getPos [10, _d + 180], [], 0, "CAN_COLLIDE"];
-    _sg setDir _d;
-    _sg allowDamage false;
-    private _m = createMarker [format ["cq_loadzone_%1", _z], _p];
+CQ_repairPoints = [];
+private _names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"];
+{
+    private _ray = _x;
+    private _ri = _forEachIndex;
+    private _ang = _d + (CQ_rayAngles select _ri);
+    private _vd = _ang + 90;                         // parked perpendicular to the ray
+    private _at2 = { params ["_r"]; private _p = _o getPos [_r, _ang]; [_p select 0, _p select 1, 0] };
+    // loadout zone at the foot of the ray
+    private _lz = [CQ_rayLoadZone] call _at2;
+    [_lz, CQ_loadZoneRadius] call _clearSoft;
+    CQ_loadZones pushBack _lz;
+    { (createVehicle ["RoadCone_L_F", _lz getPos [CQ_loadZoneRadius - 1, _ang + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
+    private _m = createMarker [format ["cq_loadzone_%1", _ri + 1], _lz];
     _m setMarkerType "loc_rearm";
     _m setMarkerColor "ColorWEST";
-    _m setMarkerText format ["Loadout zone %1", _z];
-};
+    _m setMarkerText format ["%1 motor pool - loadout zone", _names select _ri];
+    // vehicles
+    private _r = CQ_rayFirst;
+    {
+        _x params ["_cls", "_role", "_w", "_l", "", "_air"];
+        private _half = if (_air) then { (_w max _l) / 2 } else { _w / 2 };   // extent along the ray
+        private _rad = ((_w max _l) / 2) + 1;
+        private _p = [];
+        private _tries = 0;
+        while { _p isEqualTo [] && { _tries < 60 } } do {
+            private _c = [_r + _half] call _at2;
+            if ([_c, _rad] call _spotOk) then { _p = _c } else { _r = _r + 3; _tries = _tries + 1 };
+        };
+        if (_p isEqualTo []) then { ["Base ray %1: no spot for %2", [_ri + 1, _cls]] call CQ_fnc_log; continue };
+        [_p, _rad] call _clearSoft;
+        if (_air) then { (createVehicle ["Land_HelipadSquare_F", _p, [], 0, "CAN_COLLIDE"]) setDir _vd };
+        CQ_baseSpots set [_role, (CQ_baseSpots getOrDefault [_role, []]) + [[_p, _vd]]];
+        private _mk = createMarker [format ["cq_park_%1_%2", _ri, _forEachIndex], _p];
+        _mk setMarkerType (["mil_dot", "c_air"] select _air);
+        _mk setMarkerColor "ColorWEST";
+        _mk setMarkerSize [0.4, 0.4];
+        _r = _r + 2 * _half + CQ_raySpacing;
+    } forEach _ray;
+    // repair station at the end of the ray
+    private _rp = [];
+    private _tries = 0;
+    while { _rp isEqualTo [] && { _tries < 30 } } do {
+        private _c = [_r + 6] call _at2;
+        if ([_c, 6] call _spotOk) then { _rp = _c } else { _r = _r + 3; _tries = _tries + 1 };
+    };
+    if (_rp isNotEqualTo []) then {
+        [_rp, 7] call _clearSoft;
+        private _st = [["B_Slingload_01_Repair_F", "Land_Cargo20_military_green_F"]] call _pick;
+        if (_st != "") then {
+            private _s = createVehicle [_st, _rp getPos [4, _ang], [], 0, "CAN_COLLIDE"];
+            _s setDir _vd;
+            _s allowDamage false;
+            _s lock 2;
+        };
+        { (createVehicle ["RoadCone_L_F", _rp getPos [CQ_repairRadius - 2, _ang + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [0, 90, 180, 270];
+        CQ_repairPoints pushBack _rp;
+        private _rm = createMarker [format ["cq_repair_%1", _ri + 1], _rp];
+        _rm setMarkerType "loc_repair";
+        _rm setMarkerColor "ColorWEST";
+        _rm setMarkerText "Repair";
+    } else { ["Base ray %1: no room for the repair station", [_ri + 1]] call CQ_fnc_log };
+    ["Base ray %1 (%2 deg): %3", [_ri + 1, round (_ang % 360), (_ray apply { _x select 0 }) joinString " < "]] call CQ_fnc_log;
+} forEach _rays;
 publicVariable "CQ_loadZones";
-private _used = 0;
-{ _used = _used + count _y } forEach CQ_baseSpots;
-["Base parking: %1 free grid cells within %2 m, %3 used, %4 left", [count _cells + _used, CQ_parkSearch, _used, count _cells]] call CQ_fnc_log;
+publicVariable "CQ_repairPoints";
 
-// --- defence spots around the perimeter (off the runway): AA + HMG behind sandbags
+// ---------------------------------------------------------------- 3. defences, respawn, markers
 CQ_baseDefs = [];
 {
     private _ang = _d + _x;
-    private _want = _o getPos [CQ_baseDefRadius, _ang];
-    // keep off the runway strip
-    if (CQ_runway isNotEqualTo []) then {
-        CQ_runway params ["_ilsP", "_h"];
-        private _rel = _want vectorDiff _ilsP;
-        private _off = abs ((_rel select 0) * cos _h - (_rel select 1) * sin _h);
-        if (_off < 70) then { _want = _want getPos [70 - _off + 10, _o getDir _want] };
-    };
-    private _p = [_want, 7, 40] call CQ_fnc_clearPos;
+    private _p = [_o getPos [CQ_baseDefRadius, _ang], 7, 40] call CQ_fnc_clearPos;
     if (_p isEqualTo []) then { continue };
     CQ_baseDefs pushBack createHashMapFromArray [["pos", _p], ["dir", _ang], ["objs", []], ["lostT", -1]];
 } forEach CQ_baseDefAngles;
 { [_x] call CQ_fnc_baseDefBuild } forEach CQ_baseDefs;
 
-// --- respawn on the muster area (between the flag and the back gate), map markers
-CQ_musterPos = [0, -11] call _at;
+CQ_musterPos = [0, -6] call _at;
 publicVariable "CQ_musterPos";
 private _respawn = createMarker ["respawn_west", CQ_musterPos];
 _respawn setMarkerType "Empty";
@@ -309,4 +343,5 @@ _zone setMarkerSize [CQ_baseRadius, CQ_baseRadius];
 _zone setMarkerBrush "Border";
 _zone setMarkerColor "ColorWEST";
 
-["Base camp built at %1 (facing %2): %3 pieces, %4 skipped for spacing", [mapGridPosition _o, _d, _placed, _skipped]] call CQ_fnc_log;
+["Base built at %1 (front %2 deg): %3 pieces, %4 terrain objects hidden, %5 rays, %6 repair stations",
+    [mapGridPosition _o, round _d, _placed, _hidden, _nRays, count CQ_repairPoints]] call CQ_fnc_log;

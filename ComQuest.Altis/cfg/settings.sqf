@@ -28,6 +28,13 @@ CQ_baseVehicles = [
     ["B_Heli_Transport_01_F",     "blackhawk",  1]    // the "blackhawk": a 3rd UH-80 Ghost Hawk
 ];
 CQ_baseVehPadding = 25;                  // metres between base vehicles (fallback search)
+// Base layout (CQ_fnc_baseSetup): walled compound + 4 "sun rays" of parked vehicles
+CQ_compoundSize = [100, 72];             // inner compound width x depth (m)
+CQ_rayAngles = [-36, -12, 12, 36];       // the 4 vehicle rays, degrees from the compound front
+CQ_rayLoadZone = 58;                     // distance from the base centre: loadout zone of each ray
+CQ_rayFirst = 72;                        // ...first parked vehicle
+CQ_raySpacing = 5;                       // safety gap between two vehicles (on top of their own size)
+CQ_repairRadius = 12;                    // repair station service radius (repair, refuel, rearm)
 // Base parking area: the zone marked on the map (SW end of the runway, next to the camp).
 // An area marker named cq_park_area placed in Eden overrides it.
 CQ_parkArea = [[14193, 16226, 0], [14480, 16194, 0], [14158, 15889, 0]];   // [x, y, 0]: inPolygon needs 3 numbers per point

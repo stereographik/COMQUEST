@@ -199,6 +199,7 @@ class CfgFunctions
             class vehAutoFill {};
             class baseDefBuild {};
             class baseDefTick {};
+            class baseRepairTick {};
             class vehSpawn {};
             class vehTick {};
             class pilotGuard {};

@@ -73,11 +73,13 @@ if (isNil "CQ_arsenalReady") then {
     }] call BIS_fnc_addScriptedEventHandler;
 
     [] spawn {
-        waitUntil { sleep 0.5; !isNil "CQ_arsenalBox" };
-        CQ_arsenalBox addAction [
-            "<t color='#7FD4FF'>Arsenal</t>",
-            { ["Open", true] spawn BIS_fnc_arsenal },
-            nil, 6, true, true, "", "true", 6
-        ];
+        waitUntil { sleep 0.5; !isNil "CQ_arsenalBoxes" };
+        {
+            _x addAction [
+                format ["<t color='#7FD4FF'>Arsenal (%1 equipment)</t>", _x getVariable ["CQ_squadBox", ""]],
+                { ["Open", true] spawn BIS_fnc_arsenal },
+                nil, 6, true, true, "", "true", 6
+            ];
+        } forEach CQ_arsenalBoxes;
     };
 };
