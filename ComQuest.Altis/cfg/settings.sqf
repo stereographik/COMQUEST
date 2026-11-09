@@ -372,6 +372,14 @@ CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (t
 CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
+CQ_magSensor = [150, 0.6, 1200];         // sensor radius = 150 + altitude x 0.6, max 1200 m (Darter ~300, Greyhawk ~690, Reaper ~1050)
+CQ_magSpotChance = createHashMapFromArray [["inf", 0.25], ["light", 0.45], ["armour", 0.5], ["air", 0.6], ["static", 0.35]];   // chance per pass to identify a new contact in sight
+CQ_magAaClasses = ["O_APC_Tracked_02_AA_F", "O_static_AA_F", "O_SAM_System_04_F"];   // anti-air MAGPIE keeps away from once identified
+CQ_magAaAvoid = 3500;                    // m kept from known anti-air
+CQ_magAoRange = 2500;                    // a contact belongs to the nearest known AO within this range
+// Tigris: one long-range anti-air vehicle paradropped with each carrier insertion; it roams the HQ network
+CQ_tigrisClass = "O_APC_Tracked_02_AA_F";
+CQ_tigrisPerInsertion = 1;
 CQ_magRunwayFlip = false;
 CQ_runwayLength = 2600;                  // take-off strip cleared ahead of the drone spawn point (m)
 CQ_runwayHalfWidth = 40;                 // ... this far either side of the centre line                // true if the drones spawn facing off the runway end

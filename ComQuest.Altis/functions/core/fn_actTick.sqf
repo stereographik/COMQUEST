@@ -12,6 +12,7 @@
 */
 if (time < (missionNamespace getVariable ["CQ_actNext", 0])) exitWith {};
 CQ_actNext = time + 15;
+if (missionNamespace getVariable ["CQ_playerView", false]) then { call CQ_fnc_playerViewMarkers };
 
 private _left = missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs];
 private _pct = (_left max 0) / (CQ_carrierHqs max 1);

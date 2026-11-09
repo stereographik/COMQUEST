@@ -8,6 +8,7 @@
     MAGPIE:               magReport, magLaunch, magKill
     Player (the caller):  heal, tpBase, tpHq, points, vehFix
     Base and world:       vehReset, defRebuild, time1, noon, night, clearWx
+    View:                 playerView (the game as a final player sees it: no debug output)
     list                  just refresh
     Answers the caller with the HQ list (CQ_fnc_debugUiFill).
 */
@@ -165,6 +166,12 @@ if (_needHq && { count _hq == 0 }) then {
         case "defRebuild": {
             { [_x] call CQ_fnc_baseDefBuild; _x set ["lostT", -1] } forEach CQ_baseDefs;
             _msg = format ["%1 base defence spots rebuilt", count CQ_baseDefs];
+        };
+        case "playerView": {
+            CQ_playerView = _id == 1;        // the panel sends the wanted state (1 on, 0 off)
+            publicVariable "CQ_playerView";
+            call CQ_fnc_playerViewMarkers;
+            _msg = format ["final player view %1 (debug chat, debug cards and debug map markers %2)", ["OFF", "ON"] select CQ_playerView, ["shown", "hidden"] select CQ_playerView];
         };
         case "time1": { skipTime 1; _msg = "+1 hour" };
         case "noon": { skipTime ((12 - daytime + 24) % 24); _msg = "noon" };

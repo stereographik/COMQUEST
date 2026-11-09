@@ -7,6 +7,30 @@
 */
 params ["_who", "_txt"];
 if (!hasInterface) exitWith {};
+// MAGPIE's icon report carries structured text ("<rich>" marker): plain copy for chat / log
+// replace every _a by _b (search resumes after each replacement)
+private _rep = {
+    params ["_s", "_a", "_b"];
+    private _out = "";
+    private _i = _s find _a;
+    while { _i > -1 } do {
+        _out = _out + (_s select [0, _i]) + _b;
+        _s = _s select [_i + count _a];
+        _i = _s find _a;
+    };
+    _out + _s
+};
+private _rich = _txt find "<rich>" > -1;
+_txt = [_txt, "<rich>", ""] call _rep;
+private _plain = _txt;
+if (_rich) then {
+    _plain = [_plain, "<br/>", " | "] call _rep;
+    { _plain = [_plain, _x select 0, _x select 1] call _rep } forEach [
+        ["iconMan_ca.paa'/>", "iconMan_ca.paa'/>inf "], ["iconCar_ca.paa'/>", "iconCar_ca.paa'/>veh "], ["iconHelicopter_ca.paa'/>", "iconHelicopter_ca.paa'/>air "]];
+    private _out = ""; private _in = false;
+    { if (_x == "<") then { _in = true }; if (!_in) then { _out = _out + _x }; if (_x == ">") then { _in = false } } forEach (_plain splitString "");
+    _plain = _out;
+};
 
 playSound "CQ_radioIn";
 switch (_who) do {
@@ -16,8 +40,8 @@ switch (_who) do {
         if ((toUpper _txt) find "FLASH" == 0) then { playSound "CQ_alarm" };
     };
     case "MAGPIE": {
-        ["MAGPIE", _txt] call CQ_fnc_storyUi;
-        systemChat format ["MAGPIE: %1", _txt];
+        ["MAGPIE", [_txt, "<rich>" + _txt] select _rich] call CQ_fnc_storyUi;
+        systemChat format ["MAGPIE: %1", _plain];
     };
     default {
         ["COMHAT", _txt] call CQ_fnc_storyUi;
@@ -31,4 +55,4 @@ if (isNil "CQ_radioLogMade") then {
 };
 private _t = daytime;
 private _m = floor ((_t % 1) * 60);
-player createDiaryRecord ["CQ_radio", [format ["%1:%2%3  %4", floor _t, ["", "0"] select (_m < 10), _m, _who], _txt]];
+player createDiaryRecord ["CQ_radio", [format ["%1:%2%3  %4", floor _t, ["", "0"] select (_m < 10), _m, _who], _plain]];

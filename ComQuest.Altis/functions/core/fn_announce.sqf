@@ -6,4 +6,4 @@
 params [["_title", "", [""]], ["_text", "", [""]]];
 
 ["PHASE | %1 | %2", [_title, _text]] call CQ_fnc_log;
-if (CQ_debug) then { [_title, _text] remoteExec ["CQ_fnc_notifyClient", 0] };   // story lines: CQ_fnc_say
+if (CQ_debug && { !(missionNamespace getVariable ["CQ_playerView", false]) }) then { [_title, _text] remoteExec ["CQ_fnc_notifyClient", 0] };   // story lines: CQ_fnc_say

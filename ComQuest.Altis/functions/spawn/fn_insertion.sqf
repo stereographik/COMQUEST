@@ -20,6 +20,22 @@ _hq set ["siteLevel", _siteLevel];
 _hq set ["stockInit", CQ_rootStartStock];
 _hq set ["fuelInit", CQ_rootStartFuel];
 private _id = _hq get "id";
+
+// a long-range anti-air Tigris comes with every carrier insertion: paradropped near the site,
+// it joins the HQ's vehicles and roams the network (CQ_fnc_vehRoamTick); it hunts MAGPIE's drones
+for "_t" from 1 to CQ_tigrisPerInsertion do {
+    [CQ_tigrisClass, _site getPos [350 + random 250, random 360], compile format ["
+        params ['_v'];
+        [_v] call CQ_fnc_crewVehicle;
+        [_v, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit;
+        _v setVariable ['CQ_hqId', %1, true];
+        (group effectiveCommander _v) setCombatMode 'RED';
+        (group effectiveCommander _v) setBehaviour 'AWARE';
+        private _h = CQ_hqs getOrDefault [%1, createHashMap];
+        if (count _h > 0) then { (_h get 'vehicles') pushBack _v };
+        ['Tigris down for HQ #%1 at grid %%1', [mapGridPosition _v]] call CQ_fnc_log;
+    ", _id], "Tigris"] spawn CQ_fnc_paraDropVehicle;
+};
 private _hqDir = _hq get "dir";
 
 // Helis take off from the carrier (fallback: from the side opposite the player base)

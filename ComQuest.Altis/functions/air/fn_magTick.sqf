@@ -71,6 +71,8 @@ private _launch = {
     if (!isNull _v && { !alive _v } && { !(_m get "lost") }) then {
         _m set ["lost", true];
         _m set ["phase", "none"];
+        CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
+        publicVariable "CQ_magVehs";
         _m set ["due", time + CQ_magRespawn];
         ["magDown", [_m get "name"]] call CQ_fnc_say;
         ["MAGPIE: %1 lost at %2, replacement in %3 s", [_m get "name", mapGridPosition _v, CQ_magRespawn]] call CQ_fnc_log;
@@ -90,6 +92,9 @@ private _launch = {
         _g setCombatMode "BLUE";
         { _x disableAI "MOVE" } forEach crew _nv;        // waits until cleared for take-off
         _nv setVariable ["CQ_magpie", true, true];
+        _nv setVariable ["CQ_magName", _m get "name", true];
+        CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
+        publicVariable "CQ_magVehs";
         _m set ["veh", _nv];
         _m set ["lost", false];
         _m set ["phase", "waiting"];
@@ -139,13 +144,18 @@ if ((CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) =
 private _flying = CQ_mag select { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "air" } };
 
 // ---- detection
+// Sensor radius grows with altitude (CQ_magSensor). A new contact in line of sight is only
+// identified with a chance per pass (CQ_magSpotChance by kind): it takes several passes to see
+// everything. A contact already identified is tracked while it stays in line of sight: those
+// are the live enemy positions every player sees on the map (CQ_magVisible).
 if (time >= CQ_magDetectT) then {
     CQ_magDetectT = time + CQ_magDetectEvery;
     {
         private _v = _x get "veh";
         private _alt = (getPosATL _v) select 2;
         if (_alt < 40) then { continue };                 // still taking off
-        private _r = (250 + _alt) min 2000;
+        CQ_magSensor params ["_r0", "_rk", "_rmax"];
+        private _r = (_r0 + _alt * _rk) min _rmax;
         private _eye = getPosASL _v vectorAdd [0, 0, -1.5];
         // search cells seen
         { if (!(_x select 1) && { (_x select 0) distance2D _v < _r * 0.8 }) then { _x set [1, true] } } forEach CQ_magCells;
@@ -155,12 +165,15 @@ if (time >= CQ_magDetectT) then {
             if (!alive _o || { !(side _o in [east, resistance]) }) then { continue };
             private _k = hashValue _o;
             private _rec = CQ_magSeen getOrDefault [_k, []];
-            if (_rec isNotEqualTo [] && { time - (_rec select 2) < 30 }) then { continue };
-            if (_checks >= 40) then { break };
+            if (_rec isNotEqualTo [] && { time - (_rec select 2) < CQ_magDetectEvery - 1 }) then { continue };   // another drone just saw it
+            if (_checks >= 60) then { break };
             _checks = _checks + 1;
             if (([_v, "VIEW", _o] checkVisibility [_eye, aimPos _o]) < 0.2) then { continue };
             if (_rec isEqualTo []) then {
-                CQ_magSeen set [_k, [_o, time, time, getPosATL _o, [_o] call _cat, false]];
+                private _c = [_o] call _cat;
+                if (random 1 > (CQ_magSpotChance getOrDefault [_c, 0.3])) then { continue };   // not identified this pass
+                CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false]];
+                if ((typeOf _o) in CQ_magAaClasses) then { ["magAa", []] call CQ_fnc_say; ["MAGPIE: anti-air identified (%1) at %2", [typeOf _o, mapGridPosition _o]] call CQ_fnc_log };
             } else {
                 _rec set [2, time];
                 _rec set [3, getPosATL _o];
@@ -183,6 +196,23 @@ if (time >= CQ_magDetectT) then {
         private _r = CQ_magSeen get _x;
         if (!alive (_r select 0) || { time - (_r select 2) > CQ_magMemory * 2 }) then { CQ_magSeen deleteAt _x };
     } forEach (keys CQ_magSeen);
+    // live picture for the players' maps: what a drone has in sight right now
+    CQ_magVisible = ((values CQ_magSeen) select { time - (_x select 2) <= CQ_magDetectEvery + 2 }) apply { _x select 0 };
+    publicVariable "CQ_magVisible";
+};
+
+// known anti-air (Tigris, AA statics) MAGPIE has seen recently: the drones keep CQ_magAaAvoid away
+private _aa = ((values CQ_magSeen) select {
+    time - (_x select 2) < CQ_magMemory && { alive (_x select 0) } && { (typeOf (_x select 0)) in CQ_magAaClasses }
+}) apply { _x select 3 };
+private _aaOk = { params ["_p"]; (_aa findIf { _x distance2D _p < CQ_magAaAvoid }) == -1 };
+private _aaPush = {
+    params ["_p"];
+    {
+        private _d = _x distance2D _p;
+        if (_d < CQ_magAaAvoid) then { _p = _x getPos [CQ_magAaAvoid + 100, _x getDir _p]; _p = [_p select 0, _p select 1, 0] };
+    } forEach _aa;
+    _p
 };
 
 // ---- flight plans
@@ -210,8 +240,9 @@ private _known = [];
     private _pts = [];
     if (_explore) then {
         private _taken = ((_flying select { (_x get "i") != _i }) apply { _x get "target" }) select { _x isNotEqualTo [] };
-        private _free = CQ_magCells select { !(_x select 1) };
-        if (_free isEqualTo []) then { { _x set [1, false] } forEach CQ_magCells; _free = +CQ_magCells };   // all scanned: start over
+        private _free = CQ_magCells select { !(_x select 1) && { [_x select 0] call _aaOk } };
+        if (_free isEqualTo []) then { { _x set [1, false] } forEach CQ_magCells; _free = CQ_magCells select { [_x select 0] call _aaOk } };   // all scanned: start over
+        if (_free isEqualTo []) then { _free = +CQ_magCells };
         private _far = _free select { private _c = _x select 0; (_taken findIf { _x distance2D _c < 1500 }) == -1 };
         if (_far isNotEqualTo []) then { _free = _far };
         private _c = ([_free, [], { (_x select 0) distance2D _v }, "ASCEND"] call BIS_fnc_sortBy) select 0 select 0;
@@ -249,29 +280,42 @@ private _known = [];
                 _p = _p vectorAdd ((_ctr vectorDiff _p) vectorMultiply 0.2);
                 _tries = _tries + 1;
             };
-            if ([_p] call CQ_magEastOk) then { _pts pushBack _p };
+            _p = [_p] call _aaPush;                       // stay out of known anti-air range
+            if ([_p] call CQ_magEastOk && { [_p] call _aaOk }) then { _pts pushBack _p };
         };
-        if (_pts isEqualTo []) then { _pts = [_ctr] };
+        if (_pts isEqualTo []) then { _pts = [[_ctr] call _aaPush] };
         _m set ["target", _ctr];
     };
     _m set ["explore", _explore];
     { private _wp = _g addWaypoint [_x, 0]; _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 300 } forEach _pts;
     if (count _pts > 1) then { (_g addWaypoint [_pts select 0, 0]) setWaypointType "CYCLE" };
-    ["MAGPIE: %1 %2 (%3 waypoints, %4 known positions, alt %5)", [_m get "name", ["orbits the known positions", "explores a new cell"] select _explore,
-        count _pts, count _known, _m get "alt"]] call CQ_fnc_log;
+    ["MAGPIE: %1 %2 (%3 waypoints, %4 known positions, %5 known AA, alt %6)", [_m get "name", ["orbits the known positions", "explores a new cell"] select _explore,
+        count _pts, count _known, count _aa, _m get "alt"]] call CQ_fnc_log;
 } forEach _flying;
 
-// ---- report
+// ---- report (every CQ_magReportEvery s, only when something is new)
+// New identifications grouped by known AO (HQs MAGPIE has seen or that a captured commander
+// revealed; nearest within CQ_magAoRange, else "outside known AOs"), counted in three kinds:
+// infantry, vehicles (incl. statics), helicopters / aircraft. Shown as a small icon list on the
+// MAGPIE card. HQ news (new position, construction stage) leads the card.
 if (time - CQ_magReportT >= CQ_magReportEvery) then {
     CQ_magReportT = time;
-    private _cnt = createHashMap;
-    private _dots = [];
+    private _aos = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { (_x get "id") in CQ_magHqSeen || { _x getOrDefault ["revealed", false] } } };
+    private _tab = createHashMap;            // AO name -> [inf, veh, air]
+    private _order = [];
+    private _new = 0;
     {
         if !(_y select 5) then {
             _y set [5, true];
-            private _c = _y select 4;
-            _cnt set [_c, (_cnt getOrDefault [_c, 0]) + 1];
-            _dots pushBack [_y select 3, _c];
+            _new = _new + 1;
+            private _p = _y select 3;
+            private _ao = "Outside known AOs";
+            private _best = CQ_magAoRange;
+            { private _d = (_x get "pos") distance2D _p; if (_d < _best) then { _best = _d; _ao = [_x get "id"] call CQ_fnc_objName } } forEach _aos;
+            if !(_ao in _tab) then { _tab set [_ao, [0, 0, 0]]; _order pushBack _ao };
+            private _row = _tab get _ao;
+            private _i = switch (_y select 4) do { case "inf": { 0 }; case "air": { 2 }; default { 1 } };
+            _row set [_i, (_row select _i) + 1];
         };
     } forEach CQ_magSeen;
     private _news = [];
@@ -281,35 +325,37 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
         if (count _h == 0) then { continue };
         private _st = _h getOrDefault ["magSeenStage", 0];
         if (_y == -2) then {
-            _news pushBack format ["New enemy position, designated Objective %1.", [_x] call CQ_fnc_objName];
-            _dots pushBack [_h get "pos", "hq"];
+            _news pushBack format ["New enemy position: Objective %1.", [_x] call CQ_fnc_objName];
         } else {
             if (_st > _y) then {
                 _news pushBack (if (_st >= 4) then { format ["%1 is fully operational.", [_x] call CQ_fnc_objName] }
                     else { format ["%1: construction, stage %2 of 4.", [_x] call CQ_fnc_objName, _st] });
-                _dots pushBack [_h get "pos", "hq"];
             };
         };
         CQ_magHqSeen set [_x, _st];
     } forEach (keys CQ_magHqSeen);
-    private _parts = [];
-    {
-        _x params ["_k", "_one", "_many"];
-        private _n = _cnt getOrDefault [_k, 0];
-        if (_n > 0) then { _parts pushBack format ["%1 %2", _n, [_many, _one] select (_n == 1)] };
-    } forEach [["inf", "infantry", "infantry"], ["light", "light vehicle", "light vehicles"], ["armour", "armoured vehicle", "armoured vehicles"],
-        ["air", "aircraft", "aircraft"], ["static", "static weapon", "static weapons"]];
-    CQ_magNewSince = count _dots;
+    CQ_magNewSince = _new + count _news;
     // three empty reports in a row: she says so once
-    CQ_magEmpty = if (_dots isEqualTo []) then { (missionNamespace getVariable ["CQ_magEmpty", 0]) + 1 } else { 0 };
+    CQ_magEmpty = if (CQ_magNewSince == 0) then { (missionNamespace getVariable ["CQ_magEmpty", 0]) + 1 } else { 0 };
     if (CQ_magEmpty == 3 && { ((CQ_mag select { alive (_x get "veh") }) isNotEqualTo []) }) then { ["magQuiet", []] call CQ_fnc_say };
-    if (_dots isNotEqualTo []) then {
-        private _txt = "";
-        if (_parts isNotEqualTo []) then { _txt = format ["New identifications: %1.", _parts joinString ", "] };
-        if (_news isNotEqualTo []) then { _txt = (_txt + " " + (_news joinString " ")) trim [" ", 0] };
-        if (_parts isEqualTo [] && { _news isEqualTo [] }) exitWith {};
-        ["magReport", [_txt]] call CQ_fnc_say;
-        [_dots select [0, 120]] remoteExec ["CQ_fnc_magMarks", 0];
-        ["MAGPIE report: %1 (%2 dots)", [_txt, count _dots]] call CQ_fnc_log;
+    if (CQ_magNewSince > 0) then {
+        // "outside known AOs" last
+        private _out = "Outside known AOs";
+        if (_out in _order) then { _order = (_order - [_out]) + [_out] };
+        private _ico = [
+            "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa",
+            "\A3\ui_f\data\map\vehicleicons\iconCar_ca.paa",
+            "\A3\ui_f\data\map\vehicleicons\iconHelicopter_ca.paa"
+        ];
+        private _rich = "<rich>";
+        { _rich = _rich + format ["<br/><t size='0.8' color='#f2f2f2'>%1</t>", _x] } forEach _news;
+        {
+            private _row = _tab get _x;
+            private _cells = "";
+            { if ((_row select _forEachIndex) > 0) then { _cells = _cells + format ["   <img size='0.75' image='%1'/> %2", _x, _row select _forEachIndex] } } forEach _ico;
+            _rich = _rich + format ["<br/><t size='0.78' font='PuristaMedium' color='#c8c8c8'>%1</t><t size='0.8' color='#ffffff'>%2</t>", _x, _cells];
+        } forEach _order;
+        ["magReport", [_rich]] call CQ_fnc_say;
+        ["MAGPIE report: %1 new identifications, %2 HQ news, areas %3", [_new, count _news, _order]] call CQ_fnc_log;
     };
 };

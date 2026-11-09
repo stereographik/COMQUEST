@@ -300,24 +300,30 @@ CQ_story = createHashMapFromArray [
     // ================================================================ MAGPIE (her UAVs)
     // [summary]
     ["magReport@1", [
-        [["MAGPIE", "Picture so far. %1 Still early."]],
-        [["MAGPIE", "Sweep report. %1"]],
-        [["MAGPIE", "First picture. %1 They're still settling in."]]
+        [["MAGPIE", "Sweep report. Still early.%1"]],
+        [["MAGPIE", "First picture.%1"]],
+        [["MAGPIE", "Picture so far.%1"]]
     ]],
     ["magReport@2", [
-        [["MAGPIE", "Sweep report. %1 Busy out there."]],
-        [["MAGPIE", "Updated picture. %1"]],
-        [["MAGPIE", "Sweep report. %1 They're spreading out."]]
+        [["MAGPIE", "Updated picture. They're spreading out.%1"]],
+        [["MAGPIE", "Sweep report. Busy out there.%1"]],
+        [["MAGPIE", "Sweep report.%1"]]
     ]],
     ["magReport@3", [
-        [["MAGPIE", "Updated picture. %1 Fewer than last time."]],
-        [["MAGPIE", "Sweep report. %1 They're thinning out."]],
-        [["MAGPIE", "Updated picture. %1 Looks like they're scraping the barrel."]]
+        [["MAGPIE", "Sweep report. Fewer than last time.%1"]],
+        [["MAGPIE", "Updated picture. They're scraping the barrel.%1"]],
+        [["MAGPIE", "Sweep report.%1"]]
     ]],
     ["magReport@4", [
-        [["MAGPIE", "Sweep report. %1 Leftovers."]],
-        [["MAGPIE", "Sweep report. %1 Stragglers, mostly."]],
-        [["MAGPIE", "Updated picture. %1 Not much left to find."]]
+        [["MAGPIE", "Sweep report. Stragglers, mostly.%1"]],
+        [["MAGPIE", "Updated picture. Not much left to find.%1"]],
+        [["MAGPIE", "Leftovers.%1"]]
+    ]],
+    // [] - a drone found an anti-air vehicle
+    ["magAa", [
+        [["MAGPIE", "Tigris on the ground. I'm keeping my birds out of its reach. Expect thinner coverage there."]],
+        [["MAGPIE", "Anti-air spotted. I'm not feeding it drones. That area goes dark for me."]],
+        [["MAGPIE", "I've found their Tigris. Lovely radar. I'll stay well clear, which means you'll see less."]]
     ]],
     // [airframe]
     ["magLaunch", [

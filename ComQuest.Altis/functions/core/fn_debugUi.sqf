@@ -77,8 +77,9 @@ private _cats = [
         ["Respawn empty base vehicles", "vehReset"], ["Rebuild base defences", "defRebuild"], ["+1 hour", "time1"],
         ["Noon", "noon"], ["Night", "night"], ["Clear weather", "clearWx"]
     ]],
-    ["MAP OVERLAY", [
-        ["Enemies on map", "!mapEnemy"], ["Friendlies on map", "!mapFriend"], ["HQ sites on map", "!mapHq"]
+    ["MAP OVERLAY & VIEW", [
+        ["Enemies on map", "!mapEnemy"], ["Friendlies on map", "!mapFriend"], ["HQ sites on map", "!mapHq"],
+        ["FINAL PLAYER VIEW", "!playerView"]
     ]]
 ];
 private _rx = _X + 0.03 + _lw;
@@ -109,6 +110,12 @@ private _toggles = [];
                 case "!mapFriend": { CQ_dbgShowFriend = !CQ_dbgShowFriend };
                 case "!mapHq": { CQ_dbgShowHq = !CQ_dbgShowHq };
                 case "!god": { CQ_dbgGod = !CQ_dbgGod; player allowDamage !CQ_dbgGod; if (vehicle player != player) then { (vehicle player) allowDamage !CQ_dbgGod } };
+                case "!playerView": {
+                    private _on = !(missionNamespace getVariable ["CQ_playerView", false]);
+                    if (_on) then { CQ_dbgShowEnemy = false; CQ_dbgShowFriend = false; CQ_dbgShowHq = false; CQ_dbgGod = false; player allowDamage true };
+                    CQ_playerView = _on;       // label right away; the server publishes the same value
+                    ["playerView", [0, 1] select _on] remoteExec ["CQ_fnc_debugCmd", 2];
+                };
                 case "!arsenal": { (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) closeDisplay 1; ["Open", true] spawn BIS_fnc_arsenal };
                 default { [_cmd, call (uiNamespace getVariable "CQ_dbgSel")] remoteExec ["CQ_fnc_debugCmd", 2] };
             };
@@ -126,6 +133,7 @@ uiNamespace setVariable ["CQ_dbgToggleLabels", {
             case "!mapFriend": { CQ_dbgShowFriend };
             case "!mapHq": { CQ_dbgShowHq };
             case "!god": { CQ_dbgGod };
+            case "!playerView": { missionNamespace getVariable ["CQ_playerView", false] };
             default { false };
         };
         _x ctrlSetText format ["%1: %2", _x getVariable ["CQ_label", ""], ["OFF", "ON"] select _on];

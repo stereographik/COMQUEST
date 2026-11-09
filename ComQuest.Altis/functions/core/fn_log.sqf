@@ -8,6 +8,6 @@ params [["_msg", "", [""]], ["_args", [], [[]]]];
 private _text = format ([_msg] + _args);
 diag_log text format ["[CQ] %1", _text];
 
-if (CQ_debug && hasInterface) then {
+if (CQ_debug && { hasInterface } && { !(missionNamespace getVariable ["CQ_playerView", false]) }) then {
     systemChat format ["[CQ] %1", _text];
 };

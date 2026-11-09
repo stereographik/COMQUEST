@@ -21,6 +21,7 @@ if (isNil "CQ_unassignedDone") then {
 };
 [] spawn CQ_fnc_rdfClient;   // radio direction finder panel
 [] spawn CQ_fnc_statsClient; // shots, heals, distances, time played
+call CQ_fnc_magMapClient;    // MAGPIE drones + enemies in their sight, live on the map
 call CQ_fnc_debugMap;
 
 ["Welcome to ComQuest (%1)", [roleDescription player]] call CQ_fnc_log;

@@ -92,6 +92,7 @@ class CfgFunctions
             class enemyCount {};
             class enemyInfantry {};
             class actTick {};
+            class playerViewMarkers {};
             class clearWaypoints {};
             class aliveCount {};
             class debugMap {};
@@ -154,6 +155,7 @@ class CfgFunctions
             class magInit {};
             class magTick {};
             class magMarks {};
+            class magMapClient {};
             class airLoadout {};
             class airParkSpot {};
             class hqAirPad {};
