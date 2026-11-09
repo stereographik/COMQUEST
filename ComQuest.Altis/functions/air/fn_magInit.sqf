@@ -1,8 +1,8 @@
 /*
     CQ_fnc_magInit  (server, once)
-    MAGPIE, the friendly UAV operator (a bot). Three drones (CQ_magDrones): spawn on the main
-    runway ready to take off, CQ_magLaunchGap s apart; a lost drone is replaced after
-    CQ_magRespawn s. CQ_fnc_magTick flies them, identifies enemies and writes her reports.
+    MAGPIE, the friendly UAV operator (a bot). Three drones (CQ_magDrones): all spawn at once,
+    one on the take-off spot and the others waiting beside the runway, and take off one after
+    the other (CQ_fnc_magTick); a lost drone is replaced after CQ_magRespawn s. CQ_fnc_magTick flies them, identifies enemies and writes her reports.
     Also builds the search grid over CQ_magArea (dry cells clear of the east coast).
 */
 if (!isServer) exitWith {};
@@ -78,7 +78,7 @@ CQ_mag = [];
     if (_cls == "") then { ["MAGPIE: no airframe available for %1", [_name]] call CQ_fnc_log; continue };
     CQ_mag pushBack createHashMapFromArray [
         ["i", _forEachIndex], ["name", _name], ["cls", _cls], ["alt", _alt], ["scale", _scale],
-        ["veh", objNull], ["due", time + CQ_magFirstDelay + _forEachIndex * CQ_magLaunchGap],
+        ["veh", objNull], ["due", time + CQ_magFirstDelay], ["phase", "none"], ["tries", 0], ["rollT", 0],
         ["planT", 0], ["explore", false], ["target", []], ["lost", false]
     ];
 } forEach CQ_magDrones;
