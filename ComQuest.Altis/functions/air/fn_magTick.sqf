@@ -48,7 +48,6 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         _m set ["due", time + CQ_magRespawn];
         CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
         publicVariable "CQ_magVehs";
-        ["magDown", [_m get "name"]] call CQ_fnc_say;
         ["MAGPIE: %1 lost at %2, replacement in %3 s", [_m get "name", mapGridPosition _v, CQ_magRespawn]] call CQ_fnc_log;
     };
     if ((isNull _v || { !alive _v }) && { time >= (_m get "due") }) then {
@@ -109,7 +108,6 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
     if (alive _v && { (_m getOrDefault ["phase", ""]) == "rolling" } && { ((getPosATL _v) select 2) > 30 }) then {
         _m set ["phase", "air"];
         _m set ["planT", -1e6];                             // first route right away
-        ["magLaunch", [_m get "name"]] call CQ_fnc_say;
         ["MAGPIE: %1 airborne after %2 s", [_m get "name", round (time - (_m get "rollT"))]] call CQ_fnc_log;
     };
 } forEach CQ_mag;
@@ -453,7 +451,7 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
     CQ_magNewSince = _new + count _news;
     // three empty reports in a row: she says so once
     CQ_magEmpty = if (CQ_magNewSince == 0) then { (missionNamespace getVariable ["CQ_magEmpty", 0]) + 1 } else { 0 };
-    if (CQ_magEmpty == 3 && { ((CQ_mag select { alive (_x get "veh") }) isNotEqualTo []) }) then { ["magQuiet", []] call CQ_fnc_say };
+    // MAGPIE only speaks about enemies she tracks (reports, first contact, AA): no word on her own drones
     if (CQ_magNewSince > 0) then {
         // "outside known AOs" last
         private _out = "Outside known AOs";
