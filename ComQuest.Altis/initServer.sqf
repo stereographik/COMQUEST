@@ -53,6 +53,8 @@ CQ_crateNext = 0;
 ["engineer"] spawn CQ_fnc_specialTeam;
 ["groupWatch", CQ_fnc_groupWatch] call CQ_fnc_directorAddTask;
 call CQ_fnc_statsInit;
+call CQ_fnc_magInit;
+["magpie", CQ_fnc_magTick] call CQ_fnc_directorAddTask;
 ["stats", CQ_fnc_statsTick] call CQ_fnc_directorAddTask;
 ["vehRoam", CQ_fnc_vehRoamTick] call CQ_fnc_directorAddTask;
 

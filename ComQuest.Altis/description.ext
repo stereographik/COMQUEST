@@ -149,6 +149,9 @@ class CfgFunctions
         class air
         {
             file = "functions\air";
+            class magInit {};
+            class magTick {};
+            class magMarks {};
             class airLoadout {};
             class airParkSpot {};
             class hqAirPad {};

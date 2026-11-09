@@ -1,6 +1,6 @@
 /*
     CQ_fnc_storyUi  (client)
-    [_speaker, _text] call CQ_fnc_storyUi;      _speaker: "CROSSROAD", "MAGPIE" or "INTERCEPT"
+    [_speaker, _text] call CQ_fnc_storyUi;      _speaker: "CROSSROAD", "MAGPIE" or "COMHAT"
     One notification card per message, the same design for every speaker (modern, black /
     grey / white), docked on the left of the screen 50 px from the edge, the first card
     250 px from the top. A card is a horizontal block: speaker icon | speaker name + message.
@@ -31,7 +31,7 @@ CQ_uiLoop = true;
     private _icons = createHashMapFromArray [
         ["CROSSROAD", "\A3\ui_f\data\igui\cfg\simpleTasks\types\radio_ca.paa"],
         ["MAGPIE", "\A3\ui_f\data\igui\cfg\simpleTasks\types\scout_ca.paa"],
-        ["INTERCEPT", "\A3\ui_f\data\igui\cfg\simpleTasks\types\listen_ca.paa"]
+        ["COMHAT", "\A3\ui_f\data\igui\cfg\simpleTasks\types\listen_ca.paa"]
     ];
     private _esc = { params ["_s"]; ((_s splitString "&") joinString "&amp;") splitString "<" joinString "&lt;" };
 

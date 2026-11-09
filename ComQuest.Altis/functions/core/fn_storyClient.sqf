@@ -20,8 +20,8 @@ switch (_who) do {
         systemChat format ["MAGPIE: %1", _txt];
     };
     default {
-        ["INTERCEPT", _txt] call CQ_fnc_storyUi;
-        systemChat format ["[INTERCEPT] %1", _txt];
+        ["COMHAT", _txt] call CQ_fnc_storyUi;
+        systemChat format ["[COMHAT] %1", _txt];
     };
 };
 

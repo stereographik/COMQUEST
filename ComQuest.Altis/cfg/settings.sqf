@@ -346,3 +346,25 @@ CQ_shopCatalog = [
 ];
 CQ_shopMaxPerSquad = 1;                  // bought vehicles alive at the same time per squad
 CQ_shopRange = 6;                        // metres from the shop terminal to use it
+
+// MAGPIE - friendly UAV recon (CQ_fnc_magInit / CQ_fnc_magTick)
+// [callsign / airframe name, classes (first available, no DLC), flight altitude m, ellipse scale]
+// Arma 3 has no MQ-9 Reaper and its Sentinel UCAV needs the Jets DLC: the "Reaper" slot flies a
+// second Greyhawk airframe, higher and wider. Weapons are removed: MAGPIE only looks.
+CQ_magDrones = [
+    ["Darter",   ["B_UAV_01_F"],                                  250, 0.8],
+    ["Greyhawk", ["B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"],     900, 1.2],
+    ["Reaper",   ["B_UAV_05_F", "B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"], 1500, 1.6]
+];
+CQ_magFirstDelay = 45;                   // s after mission start: first take-off
+CQ_magLaunchGap = 60;                    // s between the take-offs of the three drones
+CQ_magRespawn = 480;                     // s before a lost drone is replaced (8 min), on the runway
+CQ_magReportEvery = 120;                 // s between two MAGPIE reports (only if something is new)
+CQ_magMarkerTime = 10;                   // s the report dots stay on the map
+CQ_magDetectEvery = 10;                  // s between two detection passes
+CQ_magPlanEvery = 90;                    // s between two flight plans of a drone
+CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (the carrier group)
+CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
+CQ_magCell = 1000;                       // search grid cell (m)
+CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
+CQ_magRunwayFlip = false;                // true if the drones spawn facing off the runway end

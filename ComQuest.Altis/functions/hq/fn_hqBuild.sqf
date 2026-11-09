@@ -76,6 +76,7 @@ if ((_hq get "siteLevel") >= 3) then {
 
 private _stage = {
     params ["_n", "_what"];
+    _hq set ["buildStage", _n];
     ["Enemy HQ construction", format ["HQ #%1, stage %2/4: %3 (grid %4)", _id, _n, _what, mapGridPosition _c]] call CQ_fnc_announce;
     private _sk = ["", "stage1", "", "stage3", "operational"] select _n;
     if (_sk != "") then { [_sk, [[_id] call CQ_fnc_objName], _hq] call CQ_fnc_say };

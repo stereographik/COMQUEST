@@ -6,8 +6,9 @@
     HQ building status, supplies received, reactions to the players' own kills, alarms.
     Speakers:
       CROSSROAD  friendly HQ           notification card + Side chat
-      MAGPIE     drone operator         subtitle, facts only
-      INTERCEPT  enemy radio, translated  red text; only heard while that HQ's radio works
+      MAGPIE     drone operator         reports only what her UAVs identify (CQ_fnc_magTick): the
+                                        scripted MAGPIE lines below are no longer played
+      COMHAT     enemy radio, translated  only heard through a standing radio tower
     key -> list of variants (one picked at random); variant -> lines said in order.
     %1, %2... are filled by the caller (see the comment on each key).
 */
@@ -46,16 +47,16 @@ CQ_story = createHashMapFromArray [
     ]],
     // [obj] - supplies received
     ["airSupply", [
-        [["INTERCEPT", "...%1, supply drop received, over."], ["CROSSROAD", "%1 just restocked. Somebody should look into their logistics. With explosives."]],
-        [["INTERCEPT", "...%1, pod on the ground, ammunition and fuel, over."]]
+        [["COMHAT", "...%1, supply drop received, over."], ["CROSSROAD", "%1 just restocked. Somebody should look into their logistics. With explosives."]],
+        [["COMHAT", "...%1, pod on the ground, ammunition and fuel, over."]]
     ]],
     ["truckSupply", [
-        [["INTERCEPT", "...%1, convoy arrived, fuel and ammunition."]],
-        [["INTERCEPT", "...%1, supply truck in, unloading now."]]
+        [["COMHAT", "...%1, convoy arrived, fuel and ammunition."]],
+        [["COMHAT", "...%1, supply truck in, unloading now."]]
     ]],
     ["reinf", [
-        [["INTERCEPT", "...reinforcements at %1, two sections."]],
-        [["INTERCEPT", "...%1, fresh troops arrived, over."]]
+        [["COMHAT", "...reinforcements at %1, two sections."]],
+        [["COMHAT", "...%1, fresh troops arrived, over."]]
     ]],
     // [obj] - the players' own kills
     ["killTower", [
@@ -65,7 +66,7 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "Large secondary at %1. That was their ammunition depot. Was."]]
     ]],
     ["killCommander", [
-        [["INTERCEPT", "The commander is down! Who has command?"], ["CROSSROAD", "Good question. Let's keep them asking."]]
+        [["COMHAT", "The commander is down! Who has command?"], ["CROSSROAD", "Good question. Let's keep them asking."]]
     ]],
     // []
     ["killSupplyBird", [
@@ -77,7 +78,7 @@ CQ_story = createHashMapFromArray [
     ]],
     // [] - an HQ spotted the players, no humour
     ["contact", [
-        [["INTERCEPT", "Contact! Enemy infantry, requesting support!"], ["CROSSROAD", "You've been made. Expect company, likely airborne."]]
+        [["COMHAT", "Contact! Enemy infantry, requesting support!"], ["CROSSROAD", "You've been made. Expect company, likely airborne."]]
     ]],
     // [obj, n] - players captured an HQ commander: his network goes on the map
     ["cmdCaptured", [
@@ -89,15 +90,29 @@ CQ_story = createHashMapFromArray [
     ]],
     // [obj] - a red flare over an HQ: heavy support, no humour
     ["flare", [
-        [["MAGPIE", "Red flare over %1. They're calling everything they have."]]
+        [["CROSSROAD", "Red flare over %1. They're calling everything they have."]]
     ]],
     // [obj] - the root HQ is attacked: every child HQ rallies to it
     ["rootDefend", [
-        [["INTERCEPT", "...all units, %1 under attack, converge, converge!"], ["CROSSROAD", "You've kicked the hornets' nest. Everything they own is heading your way."]]
+        [["COMHAT", "...all units, %1 under attack, converge, converge!"], ["CROSSROAD", "You've kicked the hornets' nest. Everything they own is heading your way."]]
     ]],
     // []
     ["victory", [
         [["CROSSROAD", "Last position has fallen. The CSAT landing on Altis is broken. Mission accomplished. Bring them home."]]
+    ]],
+    // ---- MAGPIE, driven by the UAVs (CQ_fnc_magTick) ----
+    // [summary] - every CQ_magReportEvery s, when there is something new
+    ["magReport", [
+        [["MAGPIE", "Sweep report. %1"]],
+        [["MAGPIE", "Updated picture. %1"]]
+    ]],
+    // [airframe]
+    ["magLaunch", [
+        [["MAGPIE", "%1 is airborne. Eyes up shortly."]]
+    ]],
+    ["magDown", [
+        [["MAGPIE", "Lost the %1. Replacement airframe in eight minutes."]],
+        [["MAGPIE", "%1 is down. I'll have another one on the runway in eight."]]
     ]]
 ];
 CQ_uiCardWidth = 620;                     // notification card width in pixels (message text block ~560 px)
