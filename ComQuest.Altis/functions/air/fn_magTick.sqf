@@ -76,6 +76,20 @@ private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault 
         ["MAGPIE: %1 (%2) on the runway, take-off heading %3", [_m get "name", _m get "cls", round _hdg]] call CQ_fnc_log;
     };
     if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 };
+    // anti-stuck: on the ground and not moving for CQ_magStuckTime s -> a gentle push forward and a
+    // fresh waypoint straight ahead (it may roll on the grass, that's fine)
+    if (alive _v && { (_m getOrDefault ["phase", ""]) == "rolling" } && { ((getPosATL _v) select 2) < 5 }) then {
+        if (speed _v > 3) then { _m set ["moveT", time] };
+        if (time - (_m getOrDefault ["moveT", _m get "rollT"]) > CQ_magStuckTime) then {
+            _m set ["moveT", time];
+            private _g = group effectiveCommander _v;
+            while { (waypoints _g) isNotEqualTo [] } do { deleteWaypoint ((waypoints _g) select 0) };
+            (_g addWaypoint [_v getPos [3000, getDir _v], 0]) setWaypointType "MOVE";
+            _v engineOn true;
+            _v setVelocityModelSpace [0, 12, 0];
+            ["MAGPIE: %1 stuck on the ground, nudged forward", [_m get "name"]] call CQ_fnc_log;
+        };
+    };
     if (alive _v && { (_m getOrDefault ["phase", ""]) == "rolling" } && { ((getPosATL _v) select 2) > 30 }) then {
         _m set ["phase", "air"];
         _m set ["planT", -1e6];                             // first route right away

@@ -361,6 +361,7 @@ CQ_magDrones = [
     ["Reaper",   ["B_UAV_05_F", "B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"], 1500, 1.6]
 ];
 CQ_magFirstDelay = 5;                    // s after mission start: first take-off (the carrier arrives at start)
+CQ_magStuckTime = 20;                    // s still on the ground before a drone is nudged forward
 CQ_magRespawn = 480;                     // s before a lost drone is replaced (8 min), on the runway
 CQ_magReportEvery = 120;                 // s between two MAGPIE reports (only if something is new)
 CQ_magMarkerTime = 10;                   // s the report dots stay on the map
