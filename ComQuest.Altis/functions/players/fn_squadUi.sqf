@@ -74,6 +74,7 @@ _bUng ctrlAddEventHandler ["ButtonClick", {
     ["ungroup", player] remoteExec ["CQ_fnc_squadCmd", 2];
 }];
 _bDis ctrlAddEventHandler ["ButtonClick", {
+    if ((group player) getVariable ["CQ_solo", false]) exitWith { hint "You are not in a squad" };
     if (leader group player != player) exitWith { hint "Only the squad leader can disband the squad" };
     ["disband", player] remoteExec ["CQ_fnc_squadCmd", 2];
 }];

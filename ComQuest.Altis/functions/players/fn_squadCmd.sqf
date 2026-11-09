@@ -4,7 +4,8 @@
     / ["unassign", _player] / ["create", _player]
       join      the player joins that (friendly) squad
       ungroup   the player leaves his squad and becomes unassigned
-      disband   squad leader only: every other member becomes unassigned
+      disband   squad leader only: every member, leader included, becomes unassigned
+      (ungroup / disband also work when the player is alone in his squad)
       unassign  on connection: every player starts unassigned (no lobby squad)
       create    an unassigned player founds a new squad (first free name) and leads it
 */
@@ -17,6 +18,12 @@ private _solo = {
     _ng setGroupIdGlobal [format ["Unassigned %1 %2", name _u, floor random 1000]];
     _ng setVariable ["CQ_solo", true, true];
 };
+private _toSolo = {
+    params ["_grp"];
+    private _u = leader _grp;
+    _grp setGroupIdGlobal [format ["Unassigned %1 %2", name _u, floor random 1000]];
+    _grp setVariable ["CQ_solo", true, true];
+};
 switch (_cmd) do {
     case "join": {
         if (isNull _g || { side _g != west } || { group _p isEqualTo _g }) exitWith {};
@@ -26,9 +33,16 @@ switch (_cmd) do {
         ["Squads: %1 joined %2", [name _p, groupId _g]] call CQ_fnc_log;
     };
     case "ungroup": {
-        if (count units group _p <= 1) exitWith {};
-        [_p] call _solo;
-        ["Squads: %1 left his squad", [name _p]] call CQ_fnc_log;
+        private _old = group _p;
+        if (_old getVariable ["CQ_solo", false]) exitWith {};
+        private _name = groupId _old;
+        if (count units _old <= 1) then {
+            // alone in his squad: the squad itself goes back to "unassigned"
+            [_old] call _toSolo;
+        } else {
+            [_p] call _solo;
+        };
+        ["Squads: %1 left %2", [name _p, _name]] call CQ_fnc_log;
     };
     case "unassign": {
         private _old = group _p;
@@ -46,8 +60,11 @@ switch (_cmd) do {
     };
     case "disband": {
         private _grp = group _p;
-        if (leader _grp != _p) exitWith {};
+        if (leader _grp != _p || { _grp getVariable ["CQ_solo", false] }) exitWith {};
+        private _name = groupId _grp;
         { if (_x != _p) then { [_x] call _solo } } forEach units _grp;
-        ["Squads: %1 disbanded %2", [name _p, groupId _grp]] call CQ_fnc_log;
+        // the leader is unassigned too: his group becomes a solo group again, the name is freed
+        [_grp] call _toSolo;
+        ["Squads: %1 disbanded %2", [name _p, _name]] call CQ_fnc_log;
     };
 };

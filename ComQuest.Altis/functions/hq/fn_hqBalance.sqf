@@ -32,8 +32,8 @@ private _total = 0;
 private _avg = _total / count _all;
 
 // --- 1 who moves
-private _cnt = createHashMap;      // live counts, updated as squads are assigned
-{ _cnt set [_x get "id", [_x] call _need] } forEach _all;
+private _hqLoadMap = createHashMap;      // live counts, updated as squads are assigned
+{ _hqLoadMap set [_x get "id", [_x] call _need] } forEach _all;
 private _donors = _all select {
     (_x get "buildDone") && { alive (_x get "radio") } && { time - (_x get "lastContactT") > CQ_balanceContactQuiet }
 };
@@ -51,15 +51,15 @@ private _plan = [];                // [donor, receiver, groups]
     {
         private _g = _x;
         private _s = { alive _x } count units _g;
-        if ((_cnt get _did) - _s < _avg - CQ_balanceMargin / 2 || { _real - _s < CQ_minDefenders }) then { continue };
-        if ((_cnt get _did) - _avg < CQ_balanceMargin) exitWith {};
-        private _recvs = _all select { (_x get "id") != _did && { (_cnt get (_x get "id")) < _avg - CQ_balanceMargin } };
+        if ((_hqLoadMap get _did) - _s < _avg - CQ_balanceMargin / 2 || { _real - _s < CQ_minDefenders }) then { continue };
+        if ((_hqLoadMap get _did) - _avg < CQ_balanceMargin) exitWith {};
+        private _recvs = _all select { (_x get "id") != _did && { (_hqLoadMap get (_x get "id")) < _avg - CQ_balanceMargin } };
         if (_recvs isEqualTo []) exitWith {};
-        private _r = ([_recvs, [], { _cnt get (_x get "id") }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+        private _r = ([_recvs, [], { _hqLoadMap get (_x get "id") }, "ASCEND"] call BIS_fnc_sortBy) select 0;
         private _pi = _plan findIf { (_x select 0) isEqualTo _d && { (_x select 1) isEqualTo _r } };
         if (_pi > -1) then { ((_plan select _pi) select 2) pushBack _g } else { _plan pushBack [_d, _r, [_g]] };
-        _cnt set [_did, (_cnt get _did) - _s];
-        _cnt set [_r get "id", (_cnt get (_r get "id")) + _s];
+        _hqLoadMap set [_did, (_hqLoadMap get _did) - _s];
+        _hqLoadMap set [_r get "id", (_hqLoadMap get (_r get "id")) + _s];
         _real = _real - _s;
     } forEach _cands;
 } forEach ([_donors, [], { [_x] call _count }, "DESCEND"] call BIS_fnc_sortBy);
