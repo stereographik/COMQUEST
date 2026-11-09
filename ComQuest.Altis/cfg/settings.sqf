@@ -38,6 +38,7 @@ CQ_dispensers = [[14293, 16200, 0], [14310, 16189, 0], [14339, 16175, 0], [14364
 CQ_repairSpots = [[14409, 16135, 0], [14380, 16102, 0]];
 CQ_dispenserCrates = 2;                  // ready-filled crates per dispenser
 CQ_raySpacing = 5;                       // safety gap between two vehicles (on top of their own size)
+CQ_repairDepotRot = 0;                   // turn the repair depot model if its open side is not toward the runway (e.g. 180)
 CQ_repairRadius = 12;                    // repair station service radius (repair, refuel, rearm)
 // Base parking area: the zone marked on the map (SW end of the runway, next to the camp).
 // An area marker named cq_park_area placed in Eden overrides it.

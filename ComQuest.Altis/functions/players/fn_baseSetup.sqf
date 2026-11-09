@@ -30,11 +30,12 @@ private _at = {
     [_p select 0, _p select 1, 0]
 };
 // first class of the list that exists and needs no DLC
+// (_free: objects from free platform updates, allowed even if their config names a DLC)
 private _pick = {
-    params ["_list"];
+    params ["_list", ["_free", []]];
     private _i = _list findIf {
         private _c = configFile >> "CfgVehicles" >> _x;
-        isClass _c && { getNumber (_c >> "scope") >= 1 } && { getText (_c >> "DLC") == "" }
+        isClass _c && { getNumber (_c >> "scope") >= 1 } && { getText (_c >> "DLC") == "" || { _x in _free } }
     };
     if (_i < 0) exitWith { ["Base: none of %1 available, skipped", [_list]] call CQ_fnc_log; "" };
     _list select _i
@@ -290,12 +291,30 @@ CQ_repairPoints = [];
 {
     private _rp = [_x select 0, _x select 1, 0];
     [_rp, 8] call _clearSoft;
-    private _st = [["B_Slingload_01_Repair_F", "Land_Cargo20_military_green_F"]] call _pick;
+    // repair depot (free object, Tanks platform update) facing the runway centre line:
+    // vehicles stop between the depot and the runway
+    private _face = _ang;
+    private _ils = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsPosition");
+    private _ilsDir = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsDirection");
+    if (count _ils >= 2 && { count _ilsDir >= 3 }) then {
+        private _h = (_ilsDir select 0) atan2 (_ilsDir select 2);
+        private _ip = [_ils select 0, _ils select 1, 0];
+        private _rel = _rp vectorDiff _ip;
+        private _t = (_rel select 0) * sin _h + (_rel select 1) * cos _h;
+        _face = _rp getDir (_ip vectorAdd [_t * sin _h, _t * cos _h, 0]);
+    };
+    private _free = ["Land_RepairDepot_01_tan_F", "Land_RepairDepot_01_green_F", "Land_RepairDepot_01_civ_F"];
+    private _st = [_free + ["B_Slingload_01_Repair_F", "Land_Cargo20_military_green_F"], _free] call _pick;
     if (_st != "") then {
-        private _s = createVehicle [_st, _rp getPos [CQ_repairRadius - 3, _ang], [], 0, "CAN_COLLIDE"];
-        _s setDir _vd;
+        private _sp = _rp getPos [7, _face + 180];
+        _sp = [_sp select 0, _sp select 1, 0];
+        [_sp, 6] call _clearSoft;
+        private _s = createVehicle [_st, _sp, [], 0, "CAN_COLLIDE"];
+        _s setDir (_face + CQ_repairDepotRot);
+        _s setPosATL _sp;
+        _s setVectorUp surfaceNormal _sp;
         _s allowDamage false;
-        _s lock 2;
+        ["Repair station %1: %2 facing %3 deg", [_forEachIndex + 1, _st, round _face]] call CQ_fnc_log;
     };
     { (createVehicle ["RoadCone_L_F", _rp getPos [CQ_repairRadius - 1, _ang + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
     CQ_repairPoints pushBack _rp;
