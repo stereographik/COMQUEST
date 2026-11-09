@@ -29,6 +29,8 @@ for "_t" from 1 to CQ_tigrisPerInsertion do {
         [_v] call CQ_fnc_crewVehicle;
         [_v, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit;
         _v setVariable ['CQ_hqId', %1, true];
+        if (isNil 'CQ_tigrises') then { CQ_tigrises = [] };
+        CQ_tigrises pushBack _v;
         (group effectiveCommander _v) setCombatMode 'RED';
         (group effectiveCommander _v) setBehaviour 'AWARE';
         private _h = CQ_hqs getOrDefault [%1, createHashMap];

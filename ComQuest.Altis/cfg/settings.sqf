@@ -379,12 +379,13 @@ CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
 CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2, max 2400 m (Darter ~600, Greyhawk ~1380, Reaper ~2100)
 CQ_magSpotChance = createHashMapFromArray [["inf", 0.6], ["static", 0.7], ["light", 0.8], ["armour", 0.85], ["air", 0.9]];   // chance per pass to identify a new contact in sight
-CQ_magAaClasses = ["O_APC_Tracked_02_AA_F", "O_static_AA_F", "O_SAM_System_04_F"];   // anti-air MAGPIE keeps away from once identified
-CQ_magAaAvoid = 3500;                    // m kept from known anti-air
+CQ_magAaClasses = ["O_APC_Tracked_02_AA_F"];   // anti-air MAGPIE keeps away from once identified (HQ AA guns are a plain risk)
+CQ_magAaAvoid = 2500;                    // m kept from the last known position of a Tigris (its missiles reach ~4 km: a moved Tigris is deadly)
 CQ_magAoRange = 2500;                    // a contact belongs to the nearest known AO within this range
 // Tigris: one long-range anti-air vehicle paradropped with each carrier insertion; it roams the HQ network
 CQ_tigrisClass = "O_APC_Tracked_02_AA_F";
 CQ_tigrisPerInsertion = 1;
+CQ_tigrisRadar = 6000;                   // m: any MAGPIE drone in line of sight within this range is locked and engaged
 CQ_magRunwayFlip = false;
 CQ_runwayLength = 2600;                  // take-off strip cleared ahead of the drone spawn point (m)
 CQ_runwayHalfWidth = 40;                 // ... this far either side of the centre line                // true if the drones spawn facing off the runway end
