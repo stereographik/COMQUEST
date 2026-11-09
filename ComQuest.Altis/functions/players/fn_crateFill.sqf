@@ -30,6 +30,8 @@ if (isNil "CQ_crateMags") then {
     _c addMagazineCargoGlobal [_x, [[[20, 4] select _isRocket, 8] select _big] call _n];
 } forEach (keys CQ_crateMags);
 { _x params ["_cls", "_k"]; _c addMagazineCargoGlobal [_cls, [_k] call _n] } forEach CQ_crateExtraMags;
+// every common rifle / sniper / MG magazine (skipped if the class does not exist, e.g. a DLC missing)
+{ _x params ["_cls", "_k"]; if (isClass (configFile >> "CfgMagazines" >> _cls) && { !(_cls in keys CQ_crateMags) }) then { _c addMagazineCargoGlobal [_cls, [_k] call _n] } } forEach CQ_crateRifleMags;
 { _x params ["_cls", "_k"]; _c addItemCargoGlobal [_cls, [_k] call _n] } forEach CQ_crateItems;
 { _x params ["_cls", "_k"]; _c addWeaponCargoGlobal [_cls, [_k] call _n] } forEach CQ_crateWeapons;
 if (_isCrate) then { _c setVariable ["CQ_crate", true, true] };

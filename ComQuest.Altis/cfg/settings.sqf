@@ -162,6 +162,18 @@ CQ_crateExtraMags = [["HandGrenade", 12], ["MiniGrenade", 6], ["SmokeShell", 12]
     ["SatchelCharge_Remote_Mag", 2], ["APERSMine_Range_Mag", 4], ["Chemlight_green", 6],
     // launcher rounds: Vorona, MAAWS, RPG-42, RPG-7
     ["Vorona_HEAT", 3], ["Vorona_HE", 2], ["MRAWS_HEAT_F", 3], ["MRAWS_HE_F", 2], ["RPG32_F", 4], ["RPG32_HE_F", 2], ["RPG7_F", 4]];
+// Rifle, DMR / sniper and machine-gun ammunition for every common vanilla weapon (no pistols)
+CQ_crateRifleMags = [
+    // assault rifles
+    ["30Rnd_65x39_caseless_mag", 8], ["30Rnd_65x39_caseless_green", 6], ["30Rnd_556x45_Stanag", 8], ["30Rnd_580x42_Mag_F", 6],
+    ["30Rnd_762x39_Mag_F", 6], ["30Rnd_762x39_AK12_Mag_F", 6], ["30Rnd_65x39_caseless_msbs_mag", 6], ["20Rnd_762x51_Mag", 6],
+    // DMR / sniper
+    ["10Rnd_762x54_Mag", 4], ["10Rnd_338_Mag", 4], ["10Rnd_93x64_DMR_05_Mag", 4], ["10Rnd_127x54_Mag", 4],
+    ["7Rnd_408_Mag", 4], ["5Rnd_127x108_Mag", 4],
+    // machine-gun belts / boxes
+    ["100Rnd_65x39_caseless_mag", 3], ["200Rnd_65x39_cased_Box", 3], ["150Rnd_762x54_Box", 3], ["130Rnd_338_Mag", 3],
+    ["150Rnd_93x64_Mag", 3], ["200Rnd_556x45_Box_F", 3], ["100Rnd_580x42_Mag_F", 3], ["150Rnd_556x45_Drum_Mag_F", 3], ["75Rnd_762x39_Mag_F", 3]
+];
 // launchers in every crate / auto-fill (one of each, for the rounds above)
 CQ_crateWeapons = [["launch_O_Vorona_brown_F", 1], ["launch_MRAWS_green_F", 1], ["launch_RPG32_F", 1], ["launch_RPG7_F", 1]];
 CQ_crateItems = [["FirstAidKit", 24], ["Medikit", 2], ["ToolKit", 2], ["MineDetector", 1]];
