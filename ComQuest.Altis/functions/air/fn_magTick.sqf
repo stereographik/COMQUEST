@@ -83,8 +83,10 @@ private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault 
         if (time - (_m getOrDefault ["moveT", _m get "rollT"]) > CQ_magStuckTime) then {
             _m set ["moveT", time];
             private _g = group effectiveCommander _v;
-            while { (waypoints _g) isNotEqualTo [] } do { deleteWaypoint ((waypoints _g) select 0) };
-            (_g addWaypoint [_v getPos [3000, getDir _v], 0]) setWaypointType "MOVE";
+            [_g] call CQ_fnc_clearWaypoints;
+            private _nw = _g addWaypoint [_v getPos [3000, getDir _v], 0];
+            _nw setWaypointType "MOVE";
+            _g setCurrentWaypoint _nw;
             _v engineOn true;
             _v setVelocityModelSpace [0, 12, 0];
             ["MAGPIE: %1 stuck on the ground, nudged forward", [_m get "name"]] call CQ_fnc_log;
@@ -219,11 +221,12 @@ if (_chain isNotEqualTo []) then {
         if (_s isEqualTo []) then { continue };
         private _v = _m get "veh";
         private _g = group effectiveCommander _v;
-        while { (waypoints _g) isNotEqualTo [] } do { deleteWaypoint ((waypoints _g) select 0) };
+        [_g] call CQ_fnc_clearWaypoints;
         _v flyInHeight (_m get "alt");
         private _wp = _g addWaypoint [_s, 0];
         _wp setWaypointType "MOVE";
         _wp setWaypointCompletionRadius 150;
+        _g setCurrentWaypoint _wp;
         _m set ["target", _s];
     } forEach _chain;
 };
@@ -236,6 +239,8 @@ if (_chain isNotEqualTo []) then {
     private _tgt = _m get "target";
     private _arrived = (_m get "explore") && { _tgt isNotEqualTo [] } && { _v distance2D _tgt < 500 };
     if (_arrived) then { { if ((_x select 0) isEqualTo _tgt) then { _x set [1, true] } } forEach CQ_magCells };
+    private _gr = group effectiveCommander _v;
+    if (currentWaypoint _gr >= count waypoints _gr) then { _arrived = true };   // route flown: new one now
     if (time - (_m get "planT") < CQ_magPlanEvery && { !_arrived }) then { continue };
     _m set ["planT", time];
     private _i = _m get "i";
@@ -245,7 +250,7 @@ if (_chain isNotEqualTo []) then {
         default { count _known < 3 || { !(_m get "explore") } };   // alternates
     };
     private _g = group effectiveCommander _v;
-    while { (waypoints _g) isNotEqualTo [] } do { deleteWaypoint ((waypoints _g) select 0) };
+    [_g] call CQ_fnc_clearWaypoints;
     _v flyInHeight (_m get "alt");
     private _pts = [];
     if (_explore) then {
@@ -297,8 +302,9 @@ if (_chain isNotEqualTo []) then {
         _m set ["target", _ctr];
     };
     _m set ["explore", _explore];
-    { private _wp = _g addWaypoint [_x, 0]; _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 300 } forEach _pts;
-    if (count _pts > 1) then { (_g addWaypoint [_pts select 0, 0]) setWaypointType "CYCLE" };
+    private _first = -1;
+    { private _wp = _g addWaypoint [_x, 0]; _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 300; if (_first < 0) then { _first = _wp select 1 } } forEach _pts;
+    if (_first >= 0) then { _g setCurrentWaypoint [_g, _first] };     // start the new route at its first point
     ["MAGPIE: %1 %2 (%3 waypoints, %4 known positions, %5 known AA, alt %6)", [_m get "name", ["orbits the known positions", "explores a new cell"] select _explore,
         count _pts, count _known, count _aa, _m get "alt"]] call CQ_fnc_log;
 } forEach _flying;
