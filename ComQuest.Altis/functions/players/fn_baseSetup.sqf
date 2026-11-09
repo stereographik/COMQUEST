@@ -368,13 +368,9 @@ CQ_baseDefs = [];
         private _h = (_ilsDir select 0) atan2 (_ilsDir select 2);
         private _rel = _want vectorDiff [_ils select 0, _ils select 1, 0];
         private _off = (_rel select 0) * cos _h - (_rel select 1) * sin _h;      // signed distance to the centre line
-        if (abs _off < CQ_runwayClear) then {
-            // push it out on the side of the line it is already on (toward the base if exactly on it)
-            private _side = if (abs _off < 1) then { [-1, 1] select ((((_o vectorDiff [_ils select 0, _ils select 1, 0]) select 0) * cos _h - (((_o vectorDiff [_ils select 0, _ils select 1, 0]) select 1) * sin _h)) > 0) } else { [-1, 1] select (_off > 0) };
-            _want = _want getPos [CQ_runwayClear - abs _off + 15, _h + 90 * _side];
-            ["Base defence spot %1: moved off the runway", [_forEachIndex + 1]] call CQ_fnc_log;
-        };
+        if (abs _off < CQ_runwayClear) then { _want = [] };    // too close to the runway, its taxiways and aprons: no spot here
     };
+    if (_want isEqualTo []) then { ["Base defence spot %1 skipped: too close to the runway", [_forEachIndex + 1]] call CQ_fnc_log; continue };
     private _p = [_want, 7, 40] call CQ_fnc_clearPos;
     if (_p isEqualTo []) then { continue };
     if (count _ils >= 2 && { count _ilsDir >= 3 }) then {

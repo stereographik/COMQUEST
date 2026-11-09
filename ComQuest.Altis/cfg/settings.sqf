@@ -166,7 +166,7 @@ CQ_playerMapMarkers = false;             // true = enemy HQ areas and the carrie
 // Base defence spots (AA + HMG, NATO gunners), around the camp, off the runway
 CQ_baseDefAngles = [45, 225, 315];       // relative to the camp front (135 removed: it sat on the taxiway the drones use)
 CQ_baseDefRadius = 230;
-CQ_runwayClear = 80;                     // defence spots stay this far from the runway centre line
+CQ_runwayClear = 250;                    // no base defence spot within this distance of the runway centre line (taxiways, aprons)
 CQ_baseDefRespawn = 600;                 // a lost spot is rebuilt 10 min later
 // Supply crates at the base (load them into any vehicle)
 CQ_crateClass = "B_supplyCrate_F";
@@ -395,6 +395,7 @@ CQ_magAoRange = 2500;                    // a contact belongs to the nearest kno
 CQ_tigrisClass = "O_APC_Tracked_02_AA_F";
 CQ_tigrisPerInsertion = 1;
 CQ_tigrisRadar = 6000;                   // m: any MAGPIE drone in line of sight within this range is locked and engaged
+CQ_magRunwayIn = 15;                     // m past the runway threshold (SW end): where the fixed-wing drones spawn
 CQ_magRunwayFlip = false;                // true if the drones spawn facing off the runway end
 CQ_runwayLength = 3200;                  // m cleared ahead of the drones' take-off spot (whole runway)
 CQ_runwayHalfWidth = 30;                 // ... runway half width either side of the centre line

@@ -13,7 +13,7 @@ CQ_magRunway = [];
 if (count _ils >= 2 && { count _ilsDir >= 3 }) then {
     private _hdg = (-(_ilsDir select 0)) atan2 (-(_ilsDir select 2));
     if (CQ_magRunwayFlip) then { _hdg = _hdg + 180 };
-    private _p = [_ils select 0, _ils select 1, 0] getPos [80, _hdg];
+    private _p = [_ils select 0, _ils select 1, 0] getPos [CQ_magRunwayIn, _hdg];   // the very start of the runway
     CQ_magRunway = [[_p select 0, _p select 1, 0], _hdg];
 } else {
     CQ_magRunway = [CQ_basePos getPos [150, CQ_baseDir], CQ_baseDir];

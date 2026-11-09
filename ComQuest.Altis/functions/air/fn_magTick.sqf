@@ -32,11 +32,11 @@ private _cat = {
 };
 
 // ---- drones: spawn, loss, fuel
-// Darters take off together from their pads in the UAV field. Fixed-wing drones line up on the
-// runway: the first 5 m behind the take-off spot, the next ones 10 m apart behind it, facing
-// down the runway. They have no orders while waiting; the front one gets its take-off order
-// (a waypoint down the runway: the game AI flies the take-off) as soon as the runway is clear,
-// i.e. the previous one is airborne (> 30 m). A lost drone comes back after CQ_magRespawn s.
+// Darters take off together from their pads in the UAV field. Fixed-wing drones come one at a
+// time at the very start of the runway (SW threshold), facing down it: cleared at once with a
+// waypoint down the runway and a 70 km/h rolling start (otherwise the AI taxis away to its own
+// start point); the next one spawns once it is airborne (> 30 m). A lost drone comes back after
+// CQ_magRespawn s.
 CQ_magRunway params ["_rp", "_hdg"];
 private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault ["pad", -1]) > -1 }) };
 {
@@ -55,11 +55,11 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         private _quad = !(_m call _fixed);
         private _sp = [];
         if (_quad) then { _sp = CQ_magPads select (_m get "pad") } else {
-            // next free place in the line behind the take-off spot
-            private _line = { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) == "waiting" } } count CQ_mag;
-            private _rolling = (CQ_mag findIf { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) == "rolling" } }) > -1;
-            _sp = _rp getPos [-(5 + 10 * (_line + ([0, 1] select _rolling))), _hdg];
+            // fixed wing: one at a time, at the very start of the runway; the next one only
+            // spawns once the previous one is airborne
+            if ((CQ_mag findIf { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) in ["waiting", "rolling"] } }) > -1) then { _sp = [] } else { _sp = _rp };
         };
+        if (_sp isEqualTo []) then { continue };
         _sp = [_sp select 0, _sp select 1, 0];
         if (((nearestObjects [_sp, ["LandVehicle", "Air"], 4]) select { alive _x }) isNotEqualTo []) exitWith {};   // place busy
         private _nv = createVehicle [_m get "cls", _sp, [], 0, "CAN_COLLIDE"];
@@ -83,11 +83,11 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
             _m set ["phase", "rolling"];
             _m set ["rollT", time];
         } else {
-            _m set ["phase", "waiting"];               // no orders until cleared for take-off
+            _m set ["phase", "waiting"];               // cleared for take-off just below
         };
         CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
         publicVariable "CQ_magVehs";
-        ["MAGPIE: %1 (%2) %3", [_m get "name", _m get "cls", if (_quad) then { format ["on pad %1 of the UAV field", _m get "pad"] } else { format ["lined up %1 m behind the take-off spot", round (_sp distance2D _rp)] }]] call CQ_fnc_log;
+        ["MAGPIE: %1 (%2) %3", [_m get "name", _m get "cls", if (_quad) then { format ["on pad %1 of the UAV field", _m get "pad"] } else { "at the start of the runway" }]] call CQ_fnc_log;
     };
     if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 };
     // anti-stuck: on the ground and not moving for CQ_magStuckTime s -> a gentle push forward and a
@@ -124,6 +124,8 @@ if ((CQ_mag findIf { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOr
         private _wp = _g addWaypoint [_rp getPos [3000, _hdg], 0];
         _wp setWaypointType "MOVE";
         _g setCurrentWaypoint _wp;
+        _v setDir _hdg;
+        _v setVelocityModelSpace [0, 20, 0];       // already rolling down the runway: the AI takes off instead of taxiing away
         _m set ["phase", "rolling"];
         _m set ["rollT", time];
         _m set ["moveT", time];

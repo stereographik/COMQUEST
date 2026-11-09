@@ -36,6 +36,7 @@ if (_terrainToo) then {
 };
 {
     private _o = _x;
+    if (getObjectType _o != 8) then { continue };          // map objects: hidden above, never deleted
     if (_o isKindOf "CAManBase" || { _o isKindOf "Logic" } || { _o isKindOf "HeliH" }
         || { (_o isKindOf "LandVehicle" || { _o isKindOf "Air" } || { _o isKindOf "Ship" }) && { !(_o isKindOf "StaticWeapon") } && { alive _o } }) then { continue };
     private _p = getPosATL _o;
@@ -45,6 +46,13 @@ if (_terrainToo) then {
     { deleteVehicle _x } forEach (crew _o);
     deleteVehicle _o;
 } forEach (nearestObjects [_mid, ["All"], _rad]);
+{
+    if ([_x get "pos"] call _inStrip) then {
+        { if (!isNull _x) then { { deleteVehicle _x } forEach (crew _x); deleteVehicle _x } } forEach (_x get "objs");
+        _gone pushBack "base defence spot";
+    };
+} forEach (missionNamespace getVariable ["CQ_baseDefs", []]);
+CQ_baseDefs = (missionNamespace getVariable ["CQ_baseDefs", []]) select { !([_x get "pos"] call _inStrip) };
 if (_hidden > 0 || { _gone isNotEqualTo [] }) then {
     ["Runway cleared: %1 terrain objects hidden, %2 mission objects removed %3", [_hidden, count _gone, _gone arrayIntersect _gone]] call CQ_fnc_log;
 };
