@@ -1,37 +1,26 @@
 /*
     CQ_fnc_baseSetup  (server)
-    Builds the player base at CQ_basePos. Front = toward the parking area (CQ_parkArea centre,
-    or the Eden marker cq_park_area), CQ_baseDir otherwise. Local coordinates in metres:
-    x = right, y = front.
-
-    1. Walled compound (CQ_compoundSize), H-barrier walls, a vehicle gate in the front wall
-       flanked by two H-barrier towers, guard towers in the corners, tank traps outside:
+    Builds the player base from the zones drawn on the map (cfg/settings.sqf):
+    1. HQ compound at CQ_basePos, front toward CQ_baseDir (CQ_compoundSize), H-barrier walls,
+       vehicle gate flanked by two H-barrier towers, guard towers in the corners, tank traps:
          back row     warehouse | HQ offices (friendly commander inside) | cargo HQ
-         courtyard    radar + watchtower, flag, 4 squad equipment boxes aligned in the
-                      centre (arsenal + squad resupply), medical post
-         ammo depot   right side, under a camo net: the ready-filled loadable supply crates
+         courtyard    radar + watchtower, flag, medical post, 4 squad equipment boxes aligned
+                      in the centre (arsenal + squad resupply)
        Terrain objects inside the compound are hidden.
-    2. Four "sun rays" fanning out from the gate (CQ_rayAngles). Each ray: a loadout zone,
-       then its vehicles parked side by side, PERPENDICULAR to the ray, from the smallest to
-       the largest (gap = vehicle footprint from its bounding box + CQ_raySpacing), helicopters
-       on pads, and a repair station at the end (CQ_fnc_baseRepairTick). Vehicles are shared
-       out so every ray gets a similar mix. Spots must be dry, flat and free of buildings;
-       trees, bushes, rocks and fences on a spot are hidden.
-    3. Defence spots around the perimeter (CQ_fnc_baseDefBuild), respawn, map markers.
+    2. Vehicle zone: 4 parallel rows starting at CQ_rayStarts and running along CQ_baseDir.
+       Vehicles parked side by side, PERPENDICULAR to the row, from the smallest to the
+       largest (gap = footprint from the bounding box + CQ_raySpacing), helicopters on pads.
+       Vehicles are shared out so every row gets a similar mix.
+    3. At the far end of each row a crate dispenser (CQ_dispensers, pushed further if the row
+       is longer): CQ_dispenserCrates ready-filled loadable crates + a loadout zone.
+    4. Repair stations at CQ_repairSpots (CQ_fnc_baseRepairTick).
+    5. Defence spots around the perimeter, respawn, a few map markers.
     Every class is checked (exists, no DLC); a missing one falls back or is skipped and logged.
 */
 if (!isServer) exitWith {};
 
 private _o = CQ_basePos;
 private _d = CQ_baseDir;
-private _useMarker = "cq_park_area" in allMapMarkers;
-if (_useMarker) then { _d = _o getDir (getMarkerPos "cq_park_area") } else {
-    if (count CQ_parkArea >= 3) then {
-        private _c = [0, 0, 0];
-        { _c = _c vectorAdd [_x select 0, _x select 1, 0] } forEach CQ_parkArea;
-        _d = _o getDir (_c vectorMultiply (1 / count CQ_parkArea));
-    };
-};
 CQ_baseDir = _d;
 publicVariable "CQ_baseDir";
 
@@ -191,30 +180,20 @@ private _boxCls = [["B_CargoNet_01_ammo_F", "B_supplyCrate_F"]] call _pick;
     [_b, 2, false] call CQ_fnc_crateFill;     // big squad box: not loadable
     _b setVariable ["CQ_squadBox", _x, true];
     CQ_arsenalBoxes pushBack _b;
-    private _m = createMarker [format ["cq_sqbox_%1", _x], _p];
-    _m setMarkerType "mil_box";
-    _m setMarkerColor "ColorWEST";
-    _m setMarkerSize [0.5, 0.5];
-    _m setMarkerText format ["%1 equipment", _x];
 } forEach ["Alpha", "Bravo", "Charlie", "Delta"];
 publicVariable "CQ_arsenalBoxes";
+private _sm = createMarker ["cq_sqboxes", [0, 0] call _at];
+_sm setMarkerType "mil_box";
+_sm setMarkerColor "ColorWEST";
+_sm setMarkerSize [0.5, 0.5];
+_sm setMarkerText "Equipment";
 CQ_arsenalBox = CQ_arsenalBoxes select 0;
 publicVariable "CQ_arsenalBox";
 
-// ammo depot (right side, under a camo net): the ready-filled loadable crates
-private _dx0 = _hw - 13;
-[["CamoNet_BLUFOR_open_F", "CamoNet_BLUFOR_F"], _dx0, 2, 90] call _put;
-CQ_crateSpots = [];
-for "_i" from 0 to CQ_crateCount - 1 do {
-    CQ_crateSpots pushBack ([_dx0 - 2.5 + 5 * (_i mod 2), -4 + 3 * floor (_i / 2)] call _at);
-};
-[["Land_Pallets_stack_F"], _dx0 + 6, -6, 0] call _put;
-[["Land_CratesWooden_F"], _dx0 + 6, 9, 90] call _put;
-private _cm = createMarker ["cq_crates", [_dx0, 2] call _at];
-_cm setMarkerType "mil_box";
-_cm setMarkerColor "ColorWEST";
-_cm setMarkerSize [0.6, 0.6];
-_cm setMarkerText "Ammo crates";
+// supply corner (right side of the courtyard)
+[["Land_Pallets_stack_F"], _hw - 7, -6, 0] call _put;
+[["Land_CratesWooden_F"], _hw - 7, 2, 90] call _put;
+[["Land_PaperBox_closed_F"], _hw - 10, 6, 15] call _put;
 // lights
 { [["Land_PortableLight_double_F"], _x select 0, _x select 1, _x select 2] call _put } forEach [[-_hw + 3, _hd - 3, 225], [_hw - 3, _hd - 3, 135], [-_hw + 3, -_hd + 3, 315], [_hw - 3, -_hd + 3, 45]];
 
@@ -240,7 +219,7 @@ private _all = [];
     for "_i" from 1 to _k do { _all pushBack [_cls, _role, _w, _l, _w * _l, [_cls] call _isAir] };
 } forEach CQ_baseVehicles;
 _all = [_all, [], { _x select 4 }, "DESCEND"] call BIS_fnc_sortBy;
-private _nRays = count CQ_rayAngles;
+private _nRays = count CQ_rayStarts;
 private _rays = [];
 for "_i" from 1 to _nRays do { _rays pushBack [] };
 {
@@ -252,71 +231,78 @@ _rays = _rays apply { [_x, [], { _x select 4 }, "ASCEND"] call BIS_fnc_sortBy };
 
 CQ_baseSpots = createHashMap;
 CQ_loadZones = [];
-CQ_repairPoints = [];
+CQ_crateSpots = [];
 private _names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"];
+private _ang = _d;                               // rows run along the base axis
+private _vd = _ang + 90;                         // vehicles parked perpendicular to the row
 {
     private _ray = _x;
     private _ri = _forEachIndex;
-    private _ang = _d + (CQ_rayAngles select _ri);
-    private _vd = _ang + 90;                         // parked perpendicular to the ray
-    private _at2 = { params ["_r"]; private _p = _o getPos [_r, _ang]; [_p select 0, _p select 1, 0] };
-    // loadout zone at the foot of the ray
-    private _lz = [CQ_rayLoadZone] call _at2;
-    [_lz, CQ_loadZoneRadius] call _clearSoft;
-    CQ_loadZones pushBack _lz;
-    { (createVehicle ["RoadCone_L_F", _lz getPos [CQ_loadZoneRadius - 1, _ang + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
-    private _m = createMarker [format ["cq_loadzone_%1", _ri + 1], _lz];
-    _m setMarkerType "loc_rearm";
-    _m setMarkerColor "ColorWEST";
-    _m setMarkerText format ["%1 motor pool - loadout zone", _names select _ri];
-    // vehicles
-    private _r = CQ_rayFirst;
+    private _s0 = CQ_rayStarts param [_ri, [0, _hd + 8] call _at];
+    _s0 = [_s0 select 0, _s0 select 1, 0];
+    private _at2 = { params ["_r"]; private _p = _s0 getPos [_r, _ang]; [_p select 0, _p select 1, 0] };
+    private _lbl = createMarker [format ["cq_row_%1", _ri + 1], _s0];
+    _lbl setMarkerType "mil_start";
+    _lbl setMarkerColor "ColorWEST";
+    _lbl setMarkerSize [0.5, 0.5];
+    _lbl setMarkerDir _ang;
+    _lbl setMarkerText (_names select _ri);
+    private _r = 0;
     {
         _x params ["_cls", "_role", "_w", "_l", "", "_air"];
-        private _half = if (_air) then { (_w max _l) / 2 } else { _w / 2 };   // extent along the ray
+        private _half = if (_air) then { (_w max _l) / 2 } else { _w / 2 };   // extent along the row
         private _rad = ((_w max _l) / 2) + 1;
         private _p = [];
         private _tries = 0;
-        while { _p isEqualTo [] && { _tries < 60 } } do {
+        while { _p isEqualTo [] && { _tries < 40 } } do {
             private _c = [_r + _half] call _at2;
-            if ([_c, _rad] call _spotOk) then { _p = _c } else { _r = _r + 3; _tries = _tries + 1 };
+            if ([_c, _rad] call _spotOk) then { _p = _c } else { _r = _r + 2; _tries = _tries + 1 };
         };
-        if (_p isEqualTo []) then { ["Base ray %1: no spot for %2", [_ri + 1, _cls]] call CQ_fnc_log; continue };
+        if (_p isEqualTo []) then { ["Base row %1: no spot for %2", [_ri + 1, _cls]] call CQ_fnc_log; continue };
         [_p, _rad] call _clearSoft;
         if (_air) then { (createVehicle ["Land_HelipadSquare_F", _p, [], 0, "CAN_COLLIDE"]) setDir _vd };
         CQ_baseSpots set [_role, (CQ_baseSpots getOrDefault [_role, []]) + [[_p, _vd]]];
-        private _mk = createMarker [format ["cq_park_%1_%2", _ri, _forEachIndex], _p];
-        _mk setMarkerType (["mil_dot", "c_air"] select _air);
-        _mk setMarkerColor "ColorWEST";
-        _mk setMarkerSize [0.4, 0.4];
         _r = _r + 2 * _half + CQ_raySpacing;
     } forEach _ray;
-    // repair station at the end of the ray
-    private _rp = [];
-    private _tries = 0;
-    while { _rp isEqualTo [] && { _tries < 30 } } do {
-        private _c = [_r + 6] call _at2;
-        if ([_c, 6] call _spotOk) then { _rp = _c } else { _r = _r + 3; _tries = _tries + 1 };
+    // crate dispenser + loadout zone at the end of the row (drawn spot, or further if the
+    // row is longer)
+    private _dp = CQ_dispensers param [_ri, []];
+    private _dDist = if (_dp isEqualTo []) then { 0 } else { (_s0 distance2D _dp) };
+    _dDist = _dDist max (_r + CQ_loadZoneRadius);
+    private _lz = [_dDist] call _at2;
+    [_lz, CQ_loadZoneRadius + 5] call _clearSoft;
+    CQ_loadZones pushBack _lz;
+    { (createVehicle ["RoadCone_L_F", _lz getPos [CQ_loadZoneRadius - 1, _ang + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
+    for "_k" from 0 to CQ_dispenserCrates - 1 do {
+        private _cp = (_lz getPos [CQ_loadZoneRadius + 2.5, _ang]) getPos [(_k - (CQ_dispenserCrates - 1) / 2) * 3, _vd];
+        CQ_crateSpots pushBack [_cp select 0, _cp select 1, 0];
     };
-    if (_rp isNotEqualTo []) then {
-        [_rp, 7] call _clearSoft;
-        private _st = [["B_Slingload_01_Repair_F", "Land_Cargo20_military_green_F"]] call _pick;
-        if (_st != "") then {
-            private _s = createVehicle [_st, _rp getPos [4, _ang], [], 0, "CAN_COLLIDE"];
-            _s setDir _vd;
-            _s allowDamage false;
-            _s lock 2;
-        };
-        { (createVehicle ["RoadCone_L_F", _rp getPos [CQ_repairRadius - 2, _ang + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [0, 90, 180, 270];
-        CQ_repairPoints pushBack _rp;
-        private _rm = createMarker [format ["cq_repair_%1", _ri + 1], _rp];
-        _rm setMarkerType "loc_repair";
-        _rm setMarkerColor "ColorWEST";
-        _rm setMarkerText "Repair";
-    } else { ["Base ray %1: no room for the repair station", [_ri + 1]] call CQ_fnc_log };
-    ["Base ray %1 (%2 deg): %3", [_ri + 1, round (_ang % 360), (_ray apply { _x select 0 }) joinString " < "]] call CQ_fnc_log;
+    ["Base row %1: %2 m, %3, dispenser at %4 m", [_ri + 1, round _r, (_ray apply { _x select 0 }) joinString " < ", round _dDist]] call CQ_fnc_log;
 } forEach _rays;
+private _dm = createMarker ["cq_crates", (CQ_loadZones select 0)];
+_dm setMarkerType "loc_rearm";
+_dm setMarkerColor "ColorWEST";
+_dm setMarkerText "Crates & loadout";
 publicVariable "CQ_loadZones";
+
+// repair stations
+CQ_repairPoints = [];
+{
+    private _rp = [_x select 0, _x select 1, 0];
+    [_rp, 8] call _clearSoft;
+    private _st = [["B_Slingload_01_Repair_F", "Land_Cargo20_military_green_F"]] call _pick;
+    if (_st != "") then {
+        private _s = createVehicle [_st, _rp getPos [CQ_repairRadius - 3, _ang], [], 0, "CAN_COLLIDE"];
+        _s setDir _vd;
+        _s allowDamage false;
+        _s lock 2;
+    };
+    { (createVehicle ["RoadCone_L_F", _rp getPos [CQ_repairRadius - 1, _ang + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
+    CQ_repairPoints pushBack _rp;
+    private _rm = createMarker [format ["cq_repair_%1", _forEachIndex + 1], _rp];
+    _rm setMarkerType "loc_repair";
+    _rm setMarkerColor "ColorWEST";
+} forEach CQ_repairSpots;
 publicVariable "CQ_repairPoints";
 
 // ---------------------------------------------------------------- 3. defences, respawn, markers
@@ -343,5 +329,5 @@ _zone setMarkerSize [CQ_baseRadius, CQ_baseRadius];
 _zone setMarkerBrush "Border";
 _zone setMarkerColor "ColorWEST";
 
-["Base built at %1 (front %2 deg): %3 pieces, %4 terrain objects hidden, %5 rays, %6 repair stations",
+["Base built at %1 (front %2 deg): %3 pieces, %4 terrain objects hidden, %5 rows, %6 repair stations",
     [mapGridPosition _o, round _d, _placed, _hidden, _nRays, count CQ_repairPoints]] call CQ_fnc_log;

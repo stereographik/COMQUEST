@@ -11,11 +11,11 @@ CQ_debugCards = false;                   // debug phase messages as orange cards
 CQ_tickSeconds = 5;                      // one server tick every 5 s
 
 // --- Player base (Altis International Airport) -----------------------------
-CQ_basePos = [14182, 16282, 0];         // base camp centre (where the squads were placed in Eden)
+CQ_basePos = [14267, 16099, 0];         // base compound centre (HQ zone drawn on the map)
 CQ_baseRadius = 300;                     // base zone drawn on the map
 CQ_baseNoSpawnRadius = 2500;             // no enemy site closer than this (milestone 2)
 
-CQ_baseDir = 45;                         // camp front (heli line) compass direction: turn it to fit the airfield
+CQ_baseDir = 38;                         // compound front and vehicle rows compass direction
 // --- Base vehicles (fixed numbers, each respawns when destroyed or abandoned) ----
 // [classname, parking role in the camp (CQ_fnc_baseSetup), count]
 CQ_baseVehicles = [
@@ -28,11 +28,15 @@ CQ_baseVehicles = [
     ["B_Heli_Transport_01_F",     "blackhawk",  1]    // the "blackhawk": a 3rd UH-80 Ghost Hawk
 ];
 CQ_baseVehPadding = 25;                  // metres between base vehicles (fallback search)
-// Base layout (CQ_fnc_baseSetup): walled compound + 4 "sun rays" of parked vehicles
-CQ_compoundSize = [100, 72];             // inner compound width x depth (m)
-CQ_rayAngles = [-36, -12, 12, 36];       // the 4 vehicle rays, degrees from the compound front
-CQ_rayLoadZone = 58;                     // distance from the base centre: loadout zone of each ray
-CQ_rayFirst = 72;                        // ...first parked vehicle
+// Base layout (CQ_fnc_baseSetup), from the zones drawn on the map:
+//   HQ compound at CQ_basePos facing CQ_baseDir; 4 parallel vehicle rows in the vehicle zone
+//   (start point next to the HQ, running along CQ_baseDir); a crate dispenser + loadout zone
+//   at the far end of each row; 2 repair stations east of the vehicle zone
+CQ_compoundSize = [80, 60];              // inner compound width x depth (m)
+CQ_rayStarts = [[14255, 16151, 0], [14282, 16143, 0], [14304, 16130, 0], [14330, 16116, 0]];
+CQ_dispensers = [[14293, 16200, 0], [14310, 16189, 0], [14339, 16175, 0], [14364, 16166, 0]];   // pushed further out if a row is longer
+CQ_repairSpots = [[14409, 16135, 0], [14380, 16102, 0]];
+CQ_dispenserCrates = 2;                  // ready-filled crates per dispenser
 CQ_raySpacing = 5;                       // safety gap between two vehicles (on top of their own size)
 CQ_repairRadius = 12;                    // repair station service radius (repair, refuel, rearm)
 // Base parking area: the zone marked on the map (SW end of the runway, next to the camp).
