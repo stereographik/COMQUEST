@@ -33,7 +33,7 @@ private _cat = {
 
 // ---- drones: spawn, loss, fuel
 // Darters take off together from their pads in the UAV field. Fixed-wing drones come one at a
-// time at the very start of the runway (SW threshold), facing down it: cleared at once with a
+// time at their Eden-placed spot (CQ_magFixedSpawns), facing the placed direction: cleared at once with a
 // waypoint down the runway and a 70 km/h rolling start (otherwise the AI taxis away to its own
 // start point); the next one spawns once it is airborne (> 30 m). A lost drone comes back after
 // CQ_magRespawn s.
@@ -56,13 +56,17 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         if (_quad) then { _sp = CQ_magPads select (_m get "pad") } else {
             // fixed wing: one at a time, at the very start of the runway; the next one only
             // spawns once the previous one is airborne
-            if ((CQ_mag findIf { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) in ["waiting", "rolling"] } }) > -1) then { _sp = [] } else { _sp = _rp };
+            if ((CQ_mag findIf { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) in ["waiting", "rolling"] } }) > -1) then { _sp = [] } else {
+                private _fs = CQ_magFixedSpawns getOrDefault [_m get "name", [_rp, _hdg]];
+                _sp = _fs select 0;
+                _m set ["hdg", _fs select 1];
+            };
         };
         if (_sp isEqualTo []) then { continue };
         _sp = [_sp select 0, _sp select 1, 0];
         if (((nearestObjects [_sp, ["LandVehicle", "Air"], 4]) select { alive _x }) isNotEqualTo []) exitWith {};   // place busy
         private _nv = createVehicle [_m get "cls", _sp, [], 0, "CAN_COLLIDE"];
-        _nv setDir ([_hdg, CQ_baseDir] select _quad);
+        _nv setDir ([_m getOrDefault ["hdg", _hdg], CQ_baseDir] select _quad);
         _nv setPosATL [_sp select 0, _sp select 1, 0.3];
         createVehicleCrew _nv;
         { _nv setPylonLoadout [_forEachIndex + 1, ""] } forEach (getPylonMagazines _nv);
@@ -115,14 +119,15 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
 if ((CQ_mag findIf { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) == "rolling" } }) == -1) then {
     private _line = CQ_mag select { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) == "waiting" } };
     if (_line isNotEqualTo []) then {
-        private _m = ([_line, [], { (_x get "veh") distance2D _rp }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+        private _m = _line select 0;
         private _v = _m get "veh";
+        private _h = _m getOrDefault ["hdg", _hdg];
         private _g = group effectiveCommander _v;
         [_g] call CQ_fnc_clearWaypoints;
-        private _wp = _g addWaypoint [_rp getPos [3000, _hdg], 0];
+        private _wp = _g addWaypoint [_v getPos [3000, _h], 0];
         _wp setWaypointType "MOVE";
         _g setCurrentWaypoint _wp;
-        _v setDir _hdg;
+        _v setDir _h;
         _v setVelocityModelSpace [0, 20, 0];       // already rolling down the runway: the AI takes off instead of taxiing away
         _m set ["phase", "rolling"];
         _m set ["rollT", time];

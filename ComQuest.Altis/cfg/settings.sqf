@@ -395,6 +395,11 @@ CQ_magAoRange = 2500;                    // a contact belongs to the nearest kno
 CQ_tigrisClass = "O_APC_Tracked_02_AA_F";
 CQ_tigrisPerInsertion = 1;
 CQ_tigrisRadar = 6000;                   // m: any MAGPIE drone in line of sight within this range is locked and engaged
+// fixed-wing spawn spots placed in Eden by hand: name -> [[x, y], direction]
+CQ_magFixedSpawns = createHashMapFromArray [
+    ["Greyhawk", [[14305.65, 15841.31], 39.09]],
+    ["Reaper",   [[14287.53, 15824.28], 39.09]]
+];
 CQ_magRunwayIn = 15;                     // m past the runway threshold (SW end): where the fixed-wing drones spawn
 CQ_magRunwayFlip = false;                // true if the drones spawn facing off the runway end
 CQ_runwayLength = 3200;                  // m cleared ahead of the drones' take-off spot (whole runway)
