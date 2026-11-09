@@ -231,6 +231,9 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
     } forEach [["inf", "infantry", "infantry"], ["light", "light vehicle", "light vehicles"], ["armour", "armoured vehicle", "armoured vehicles"],
         ["air", "aircraft", "aircraft"], ["static", "static weapon", "static weapons"]];
     CQ_magNewSince = count _dots;
+    // three empty reports in a row: she says so once
+    CQ_magEmpty = if (_dots isEqualTo []) then { (missionNamespace getVariable ["CQ_magEmpty", 0]) + 1 } else { 0 };
+    if (CQ_magEmpty == 3 && { ((CQ_mag select { alive (_x get "veh") }) isNotEqualTo []) }) then { ["magQuiet", []] call CQ_fnc_say };
     if (_dots isNotEqualTo []) then {
         private _txt = "";
         if (_parts isNotEqualTo []) then { _txt = format ["New identifications: %1.", _parts joinString ", "] };

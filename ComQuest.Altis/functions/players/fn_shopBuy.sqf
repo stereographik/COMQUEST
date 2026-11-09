@@ -33,3 +33,4 @@ _g setVariable ["CQ_sqBought", _owned + [_v], true];
 private _msg = format ["%1 bought a %2 for the squad (%3 points left)", name _p, _name, _pts - _cost];
 [_msg] remoteExec ["systemChat", units _g select { isPlayer _x }];
 ["Shop: %1 (%2) bought %3 for %4 points", [name _p, groupId _g, _cls, _cost]] call CQ_fnc_log;
+["shopBuy", [groupId _g, _name]] call CQ_fnc_say;

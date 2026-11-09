@@ -32,6 +32,7 @@ while { _q isNotEqualTo [] } do {
 };
 {
     private _id = _x get "id";
+    _x set ["revealed", true];
     private _m = createMarker [format ["cq_intel_%1_%2", _id, floor time], _x get "pos"];
     _m setMarkerType "o_hq";
     _m setMarkerColor "ColorOPFOR";

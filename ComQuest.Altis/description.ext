@@ -91,6 +91,7 @@ class CfgFunctions
             class storyUi {};
             class enemyCount {};
             class enemyInfantry {};
+            class actTick {};
             class clearWaypoints {};
             class aliveCount {};
             class debugMap {};

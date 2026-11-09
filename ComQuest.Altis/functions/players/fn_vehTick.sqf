@@ -16,6 +16,10 @@ if (isNil "CQ_vehEntries") exitWith {};
         if ((_entry get "deadSince") < 0) then {
             _entry set ["deadSince", serverTime];
             ["%1 destroyed, back in %2 s", [_entry get "class", CQ_vehRespawnDelay]] call CQ_fnc_log;
+            if (!isNull _veh && { time - (missionNamespace getVariable ["CQ_baseVehLostT", -1e6]) > 300 }) then {
+                CQ_baseVehLostT = time;
+                ["baseVehLost", [getText (configFile >> "CfgVehicles" >> (_entry get "class") >> "displayName")]] call CQ_fnc_say;
+            };
         };
 
         if (serverTime - (_entry get "deadSince") >= CQ_vehRespawnDelay) then {

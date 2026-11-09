@@ -19,7 +19,18 @@ addMissionEventHandler ["EntityKilled", {
     if (!(_unit isKindOf "CAManBase") && { !(_side in [east, west, resistance]) }) then {
         _side = [east, west, resistance, civilian] param [getNumber (configOf _unit >> "side"), civilian];
     };
-    if (isPlayer _unit) then { [_unit, [["deaths", 1]]] call CQ_fnc_statsAdd };
+    if (isPlayer _unit) then {
+        [_unit, [["deaths", 1]]] call CQ_fnc_statsAdd;
+        // storytelling: friendly losses (SITREP) and death streaks
+        CQ_deathTimes = ((missionNamespace getVariable ["CQ_deathTimes", []]) select { time - _x < CQ_sitrepEvery }) + [time];
+        CQ_lastFightT = time;
+        if (({ time - _x < CQ_lossStreakWindow } count CQ_deathTimes) >= CQ_lossStreakCount
+            && { time - (missionNamespace getVariable ["CQ_lossStreakT", -1e6]) > 600 }) then {
+            CQ_lossStreakT = time;
+            ["lossStreak", []] call CQ_fnc_say;
+        };
+    };
+    if (!isNull _inst && { isPlayer _inst }) then { CQ_lastFightT = time };
     if (isNull _inst || { !isPlayer _inst } || { _inst == _unit }) exitWith {};
     if (_unit isKindOf "CAManBase") then {
         if (_side == west) then {
