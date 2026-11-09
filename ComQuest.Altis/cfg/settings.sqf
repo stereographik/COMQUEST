@@ -395,6 +395,8 @@ CQ_magAoRange = 2500;                    // a contact belongs to the nearest kno
 CQ_tigrisClass = "O_APC_Tracked_02_AA_F";
 CQ_tigrisPerInsertion = 1;
 CQ_tigrisRadar = 6000;                   // m: any MAGPIE drone in line of sight within this range is locked and engaged
+CQ_tigrisMissileRange = 4500;            // m (slant): the Tigris launches a guided Titan at a drone in line of sight within this
+CQ_tigrisSalvo = 12;                     // s between two launches of one Tigris
 // fixed-wing spawn spots placed in Eden by hand: name -> [[x, y], direction]
 CQ_magFixedSpawns = createHashMapFromArray [
     ["Greyhawk", [[14305.65, 15841.31], 39.09]],

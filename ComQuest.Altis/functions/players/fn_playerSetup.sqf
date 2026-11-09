@@ -35,21 +35,20 @@ player addAction ["<t color='#FFD27F'>Auto-fill vehicle (squad resupply)</t>",
 player addAction ["<t color='#FFD27F'>Empty vehicle inventory</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["clear", _v, player] remoteExec ["CQ_fnc_vehAutoFill", 2] }, nil, 0.5, false, true, "", _zoneVeh];
 
-// Squad management (U) and leaderboard: scroll menu entries (re-added on every respawn) + U key
-player addAction ["<t color='#9FD3FF'>Squad management (U)</t>", { ["squads"] spawn CQ_fnc_squadUi }, nil, 0.6, false, true, "", "true"];
-player addAction ["<t color='#9FD3FF'>Stats & ranking</t>", { ["board"] spawn CQ_fnc_squadUi }, nil, 0.59, false, true, "", "true"];
+// Hub menu (squads, class, stats, shop, debug): U key + one scroll menu entry (re-added on every respawn)
+player addAction ["<t color='#9FD3FF'>Menu (U)</t>", { [] spawn CQ_fnc_menuUi }, nil, 0.6, false, true, "", "_this == _target"];
 if (isNil "CQ_squadKeyBound") then {
     CQ_squadKeyBound = true;
     [] spawn {
         waitUntil { sleep 0.5; !isNull (findDisplay 46) };
         (findDisplay 46) displayAddEventHandler ["KeyDown", {
             params ["", "_key", "_shift", "_ctrl", "_alt"];
-            if (_key == 22 && { !_shift && !_ctrl && !_alt }) then { ["squads"] spawn CQ_fnc_squadUi; true } else { false };   // 22 = U
+            if (_key == 22 && { !_shift && !_ctrl && !_alt }) then { [] spawn CQ_fnc_menuUi; true } else { false };   // 22 = U: the hub menu
         }];
     };
 };
 
-// Debug panel: F3, plus a scroll action, for debug missions, the host and logged-in admins
+// Debug panel: F3 (also in the U menu), for debug missions, the host and logged-in admins
 if (isNil "CQ_debugKeyBound") then {
     CQ_debugKeyBound = true;
     [] spawn {
@@ -60,8 +59,6 @@ if (isNil "CQ_debugKeyBound") then {
         }];
     };
 };
-player addAction ["<t color='#FFA040'>Debug panel</t>", { [] spawn CQ_fnc_debugUi }, nil, -10, false, true, "",
-    "_this == _target && { CQ_debug || { isServer } || { (call BIS_fnc_admin) > 0 } }"];
 
 // Once per client: arsenal action + save the loadout when the arsenal closes
 if (isNil "CQ_arsenalReady") then {
