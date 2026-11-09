@@ -328,3 +328,20 @@ CQ_statKeys = ["killsInf", "vehLight", "vehArmor", "vehAir", "vehStatic", "death
 // score = sum of stat x weight (objPoints are already points)
 CQ_statWeights = [["killsInf", 10], ["vehLight", 20], ["vehArmor", 40], ["vehAir", 50], ["vehStatic", 10],
     ["objPoints", 1], ["heals", 5], ["teamkills", -50]];
+
+// Vehicle shop (squad leaders spend their SQUAD combat points)
+// squad points: members' combat actions, worth (stat x weight); team kills cost points
+CQ_squadPointWeights = [["killsInf", 10], ["vehLight", 20], ["vehArmor", 40], ["vehAir", 50], ["vehStatic", 10],
+    ["objPoints", 1], ["teamkills", -50]];
+// [class, cost, name, short description]  - base game only (a DLC class is hidden automatically)
+CQ_shopCatalog = [
+    ["B_G_Offroad_01_AT_F",              120, "Offroad AT",      "Pickup with an SPG-9 recoilless rifle. Fast, fragile."],
+    ["B_MRAP_01_hmg_F",                  150, "Hunter HMG",      "MRAP, .50 cal turret. Good all-rounder."],
+    ["I_MRAP_03_hmg_F",                  170, "Strider HMG",     "MRAP, .50 cal turret, better armour."],
+    ["B_MRAP_01_gmg_F",                  220, "Hunter GMG",      "MRAP, 40 mm grenade machine gun."],
+    ["B_APC_Tracked_01_rcws_F",          400, "IFV-6c Panther",  "Tracked APC, HMG + GMG, carries a squad."],
+    ["B_APC_Wheeled_01_cannon_F",        550, "AMV-7 Marshall",  "Wheeled IFV, 40 mm cannon, carries a squad."],
+    ["B_Heli_Light_01_dynamicLoadout_F", 600, "AH-9 Pawnee",     "Light attack helicopter, guns + rockets. Needs a pilot."]
+];
+CQ_shopMaxPerSquad = 1;                  // bought vehicles alive at the same time per squad
+CQ_shopRange = 6;                        // metres from the shop terminal to use it

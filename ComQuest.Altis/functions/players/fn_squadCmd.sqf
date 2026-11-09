@@ -26,6 +26,7 @@ private _toSolo = {
     private _u = leader _grp;
     _grp setGroupIdGlobal [format ["Unassigned %1 %2", name _u, floor random 1000]];
     _grp setVariable ["CQ_solo", true, true];
+    _grp setVariable ["CQ_sqPts", 0, true];          // squad points are lost when the squad ends
 };
 switch (_cmd) do {
     case "join": {
@@ -59,6 +60,8 @@ switch (_cmd) do {
         private _name = CQ_squadNames param [CQ_squadNames findIf { !(_x in _used) }, format ["Squad %1", floor random 100]];
         _g setGroupIdGlobal [_name];
         _g setVariable ["CQ_solo", false, true];
+        _g setVariable ["CQ_sqPts", 0, true];
+        _g setVariable ["CQ_sqBought", [], true];
         ["Squads: %1 created squad %2", [name _p, _name]] call CQ_fnc_log;
     };
     case "invite": {

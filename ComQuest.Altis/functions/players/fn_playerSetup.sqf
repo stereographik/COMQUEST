@@ -81,5 +81,7 @@ if (isNil "CQ_arsenalReady") then {
                 nil, 6, true, true, "", "true", 6
             ];
         } forEach CQ_arsenalBoxes;
+        waitUntil { sleep 0.5; !isNil "CQ_shopTerminal" };
+        CQ_shopTerminal addAction ["<t color='#FFD27F'>Vehicle shop (squad points)</t>", { [] spawn CQ_fnc_shopUi }, nil, 6, true, true, "", "true", CQ_shopRange];
     };
 };

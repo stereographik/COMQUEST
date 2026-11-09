@@ -305,6 +305,38 @@ CQ_repairPoints = [];
 } forEach CQ_repairSpots;
 publicVariable "CQ_repairPoints";
 
+// ---------------------------------------------------------------- vehicle shop
+// LZ + terminal west of the compound (CQ_shopPos in the settings overrides the LZ spot)
+private _lzWant = if (isNil "CQ_shopPos") then { [-_hw - 30, 8] call _at } else { [CQ_shopPos select 0, CQ_shopPos select 1, 0] };
+CQ_shopLZ = [_lzWant, 9, 40] call CQ_fnc_clearPos;
+if (CQ_shopLZ isEqualTo []) then { CQ_shopLZ = _lzWant };
+CQ_shopLZ = [CQ_shopLZ select 0, CQ_shopLZ select 1, 0];
+[CQ_shopLZ, 11] call _clearSoft;
+CQ_shopDir = _d;
+(createVehicle ["Land_HelipadCircle_F", CQ_shopLZ, [], 0, "CAN_COLLIDE"]) setDir _d;
+{ (createVehicle ["RoadCone_L_F", CQ_shopLZ getPos [10, _d + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [0, 90, 180, 270];
+private _tp = CQ_shopLZ getPos [14, (_o getDir CQ_shopLZ) + 180];
+_tp = [_tp select 0, _tp select 1, 0];
+private _tblCls = [["Land_CampingTable_F"]] call _pick;
+if (_tblCls != "") then {
+    private _tb = createVehicle [_tblCls, _tp, [], 0, "CAN_COLLIDE"];
+    _tb setDir (_tp getDir CQ_shopLZ);
+    _tb allowDamage false;
+};
+private _termCls = [["Land_DataTerminal_01_F", "Land_Laptop_unfolded_F", "Land_SatellitePhone_F"]] call _pick;
+CQ_shopTerminal = createVehicle [_termCls, _tp, [], 0, "CAN_COLLIDE"];
+CQ_shopTerminal setDir ((_tp getDir CQ_shopLZ) + 180);
+if (_termCls != "Land_DataTerminal_01_F" && { _tblCls != "" }) then { CQ_shopTerminal setPosATL [_tp select 0, _tp select 1, 0.82] };
+CQ_shopTerminal allowDamage false;
+CQ_shopTerminal enableSimulationGlobal false;
+publicVariable "CQ_shopTerminal";
+publicVariable "CQ_shopLZ";
+private _shm = createMarker ["cq_shop", CQ_shopLZ];
+_shm setMarkerType "c_car";
+_shm setMarkerColor "ColorWEST";
+_shm setMarkerText "Vehicle shop";
+["Vehicle shop at %1 (terminal %2)", [mapGridPosition CQ_shopLZ, _termCls]] call CQ_fnc_log;
+
 // ---------------------------------------------------------------- 3. defences, respawn, markers
 CQ_baseDefs = [];
 {

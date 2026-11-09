@@ -233,7 +233,7 @@ while { !isNull _d } do {
         private _slots = playableSlotsNumber west;
         _info ctrlSetStructuredText parseText format [
             "<t size='0.85' color='#c8e07a'>%1 players</t><t size='0.85' color='#d0d0c0'>   |   %2 squads   |   %3 unassigned   |   %4 free slots   |   you: %5</t>",
-            count _players, count _squads, count _solos, (_slots - count _players) max 0, ["in " + groupId group player, "unassigned"] select ((group player) getVariable ["CQ_solo", false])];
+            count _players, count _squads, count _solos, (_slots - count _players) max 0, [format ["in %1 (%2 squad pts)", groupId group player, (group player) getVariable ["CQ_sqPts", 0]], "unassigned"] select ((group player) getVariable ["CQ_solo", false])];
         private _sel = lbCurSel _grpList;
         private _old = uiNamespace getVariable ["CQ_sqGroups", []];
         private _selG = if (_sel >= 0) then { _old param [_grpList lbValue _sel, grpNull] } else { group player };
@@ -245,6 +245,7 @@ while { !isNull _d } do {
             private _g = _x;
             private _np = { isPlayer _x } count units _g;
             private _i = _grpList lbAdd format ["%1   (%2/%3)", groupId _g, _np, count units _g];
+            _grpList lbSetTextRight [_i, format ["%1 pts", _g getVariable ["CQ_sqPts", 0]]];
             _grpList lbSetValue [_i, _all find _g];
             if (_g isEqualTo group player) then { _grpList lbSetColor [_i, [0.55, 0.9, 0.45, 1]] };
         } forEach _squads;
