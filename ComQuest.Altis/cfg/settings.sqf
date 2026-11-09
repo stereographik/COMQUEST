@@ -206,7 +206,7 @@ CQ_classes = [
     ["Pilot",           "B_Helipilot_F",    [],                                  4]
 ];
 CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
-CQ_classChangeRange = 300;               // classes are changed within this distance of the camp
+CQ_classChangeRange = 2;                 // classes are changed inside the HQ compound walls (+ this margin, m)
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads
 // Contact / heavy support
 CQ_helpRadius = 700;                     // patrolling squads this close to a contact join in

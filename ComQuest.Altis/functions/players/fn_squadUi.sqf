@@ -201,7 +201,7 @@ while { !isNull _d } do {
         private _i = lbCurSel _classList;
         private _mine = player getVariable ["CQ_class", "Rifleman"];
         private _cls = if (_i >= 0) then { (CQ_classes select _i) select 1 } else { "" };
-        private _near = player distance2D CQ_basePos <= CQ_classChangeRange;
+        private _near = player inArea [CQ_basePos, (CQ_compoundSize select 0) / 2 + CQ_classChangeRange, (CQ_compoundSize select 1) / 2 + CQ_classChangeRange, CQ_baseDir, true];
         _classInfo ctrlSetStructuredText parseText format [
             "<t size='0.9' color='#c8e07a'>Your class: %1</t><br/><t size='0.7' color='#9a9a9a'>Right column: players in that class / limit</t><br/><br/><t size='0.8' color='#d0d0c0'>%2</t><br/><br/><t size='0.75' color='#9a9a9a'>%3</t>",
             _mine,
@@ -209,7 +209,7 @@ while { !isNull _d } do {
                 private _w = getArray (configFile >> "CfgVehicles" >> _cls >> "weapons") select { !(_x in ["Throw", "Put"]) };
                 format ["%1<br/>Weapons: %2", getText (configFile >> "CfgVehicles" >> _cls >> "displayName"), (_w apply { getText (configFile >> "CfgWeapons" >> _x >> "displayName") }) joinString ", "]
             },
-            ["You must be at the base to change class.", "Your loadout and traits change at once; the arsenal can customise it after."] select _near];
+            ["You must be inside the HQ compound to change class.", "Your loadout and traits change at once; the arsenal can customise it after."] select _near];
         // slots per class: used / limit
         {
             _x params ["_lbl", "", "", ["_max", 99]];
