@@ -35,7 +35,7 @@ private _cat = {
 // one spawns once the previous one has left the ground (> 30 m) and the spot is clear.
 // A lost drone is reported and comes back after CQ_magRespawn s.
 CQ_magRunway params ["_rp", "_hdg"];
-private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "rolling" } }) > -1;
+private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "rolling" } && { !((_x get "veh") isKindOf "Helicopter") } }) > -1;
 {
     private _m = _x;
     private _v = _m get "veh";
@@ -48,11 +48,15 @@ private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault 
         ["magDown", [_m get "name"]] call CQ_fnc_say;
         ["MAGPIE: %1 lost at %2, replacement in %3 s", [_m get "name", mapGridPosition _v, CQ_magRespawn]] call CQ_fnc_log;
     };
-    if ((isNull _v || { !alive _v }) && { time >= (_m get "due") } && { !_onRunway }) then {
-        if (((nearestObjects [_rp, ["LandVehicle", "Air"], 30]) select { alive _x }) isNotEqualTo []) exitWith {};   // spot busy
-        private _nv = createVehicle [_m get "cls", _rp, [], 0, "CAN_COLLIDE"];
-        _nv setDir _hdg;
-        _nv setPosATL [_rp select 0, _rp select 1, 0.3];
+    // Darters (quadcopters) take off together from their own pad in the UAV field; the others
+    // use the runway, one at a time
+    private _quad = (_m get "cls") == "B_UAV_01_F" && { (_m getOrDefault ["pad", -1]) > -1 };
+    if ((isNull _v || { !alive _v }) && { time >= (_m get "due") } && { _quad || { !_onRunway } }) then {
+        private _sp = if (_quad) then { CQ_magPads select (_m get "pad") } else { _rp };
+        if (((nearestObjects [_sp, ["LandVehicle", "Air"], [30, 5] select _quad]) select { alive _x }) isNotEqualTo []) exitWith {};   // spot busy
+        private _nv = createVehicle [_m get "cls", _sp, [], 0, "CAN_COLLIDE"];
+        _nv setDir ([_hdg, CQ_baseDir] select _quad);
+        _nv setPosATL [_sp select 0, _sp select 1, 0.3];
         createVehicleCrew _nv;
         { _nv setPylonLoadout [_forEachIndex + 1, ""] } forEach (getPylonMagazines _nv);
         private _g = group effectiveCommander _nv;
@@ -61,7 +65,7 @@ private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault 
         _g setCombatMode "BLUE";
         _nv flyInHeight (_m get "alt");
         _nv engineOn true;
-        private _wp = _g addWaypoint [_rp getPos [3000, _hdg], 0];
+        private _wp = _g addWaypoint [[_rp getPos [3000, _hdg], _sp getPos [1500, CQ_baseDir]] select _quad, 0];
         _wp setWaypointType "MOVE";
         _nv setVariable ["CQ_magpie", true, true];
         _nv setVariable ["CQ_magName", _m get "name", true];
@@ -70,15 +74,15 @@ private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault 
         _m set ["phase", "rolling"];
         _m set ["rollT", time];
         _m set ["planT", time];
-        _onRunway = true;
+        if (!_quad) then { _onRunway = true };
         CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
         publicVariable "CQ_magVehs";
-        ["MAGPIE: %1 (%2) on the runway, take-off heading %3", [_m get "name", _m get "cls", round _hdg]] call CQ_fnc_log;
+        ["MAGPIE: %1 (%2) %3", [_m get "name", _m get "cls", ["on the runway", format ["on pad %1 of the UAV field", _m get "pad"]] select _quad]] call CQ_fnc_log;
     };
     if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 };
     // anti-stuck: on the ground and not moving for CQ_magStuckTime s -> a gentle push forward and a
     // fresh waypoint straight ahead (it may roll on the grass, that's fine)
-    if (alive _v && { (_m getOrDefault ["phase", ""]) == "rolling" } && { ((getPosATL _v) select 2) < 5 }) then {
+    if (alive _v && { (_m getOrDefault ["phase", ""]) == "rolling" } && { !(_v isKindOf "Helicopter") } && { ((getPosATL _v) select 2) < 5 }) then {
         if (speed _v > 3) then { _m set ["moveT", time] };
         if (time - (_m getOrDefault ["moveT", _m get "rollT"]) > CQ_magStuckTime) then {
             _m set ["moveT", time];

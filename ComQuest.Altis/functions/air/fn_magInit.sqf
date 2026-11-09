@@ -46,6 +46,29 @@ private _roads = _mid nearRoads _rad;
 } forEach (nearestObjects [_mid, ["All"], _rad]);
 ["MAGPIE: runway cleared (%1 terrain objects hidden, %2 mission objects removed)", [_hiddenT, _deleted]] call CQ_fnc_log;
 
+// Darter field: a flat open spot behind the compound, cleared, with a grid of pads (4 per row)
+private _nDarters = ({ (_x select 1) find "B_UAV_01_F" > -1 } count CQ_magDrones) + CQ_magChainCount;
+private _rows = ceil (_nDarters / 4);
+private _half = (4 max _rows) * CQ_magPadGap / 2 + 6;
+private _want = CQ_basePos getPos [CQ_magPadDist, CQ_baseDir + 180];
+private _pad = [_want, _half, 400] call CQ_fnc_clearPos;
+if (_pad isEqualTo []) then { _pad = _want };
+_pad = [_pad select 0, _pad select 1, 0];
+{ hideObjectGlobal _x } forEach (nearestTerrainObjects [_pad, ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "FENCE", "WALL", "HIDE", "STACK"], _half + 4, false, true]);
+CQ_magPads = [];
+for "_k" from 0 to _nDarters - 1 do {
+    private _c = _k mod 4; private _r = floor (_k / 4);
+    private _p = (_pad getPos [(_c - 1.5) * CQ_magPadGap, CQ_baseDir + 90]) getPos [(_r - (_rows - 1) / 2) * CQ_magPadGap, CQ_baseDir];
+    _p = [_p select 0, _p select 1, 0];
+    CQ_magPads pushBack _p;
+    (createVehicle ["Land_HelipadSquare_F", _p, [], 0, "CAN_COLLIDE"]) setDir CQ_baseDir;
+};
+private _pm = createMarker ["cq_magpads", _pad];
+_pm setMarkerType "b_uav";
+_pm setMarkerColor "ColorWEST";
+_pm setMarkerText "UAV field";
+["MAGPIE: Darter field at %1 (%2 pads)", [mapGridPosition _pad, count CQ_magPads]] call CQ_fnc_log;
+
 CQ_magEastOk = {
     params ["_p"];
     !surfaceIsWater _p && {
@@ -90,6 +113,9 @@ for "_j" from 0 to CQ_magChainCount - 1 do {
         ["planT", 0], ["explore", false], ["target", []], ["lost", false], ["role", "chain"], ["slot", _j]
     ];
 };
+// each Darter gets its own pad
+private _pi = 0;
+{ if ((_x get "cls") == "B_UAV_01_F") then { _x set ["pad", _pi]; _pi = _pi + 1 } } forEach CQ_mag;
 CQ_magChainX = (CQ_basePos select 0) + 1000;      // the line starts just east of the base
 CQ_magChainT = time;
 CQ_magChainSlots = [];
