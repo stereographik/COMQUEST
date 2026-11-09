@@ -87,6 +87,7 @@ private _bdCtrls = [_clsList, _board];
 private _role = {
     params ["_u"];
     private _r = roleDescription _u;
+    if (_r find "@" > -1) then { _r = (_r splitString "@") select 0 };
     if (_r find " - " > -1) then { _r = (_r splitString "-") select (count (_r splitString "-") - 1); _r = _r trim [" ", 0] };
     if (_r == "") then { _r = getText (configOf _u >> "displayName") };
     _r

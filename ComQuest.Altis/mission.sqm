@@ -8,7 +8,7 @@ class EditorData
 	toggles=1;
 	class ItemIDProvider
 	{
-		nextID=31;
+		nextID=17;
 	};
 	class Camera
 	{
@@ -65,26 +65,26 @@ class Mission
 	};
 	class Entities
 	{
-		items=5;
+		items=1;
 		class Item0
 		{
 			dataType="Group";
 			side="West";
 			class Entities
 			{
-				items=6;
+				items=16;
 				class Item0
 				{
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14172.00,19.50,16290.00};
+						position[]={14177.18,19.495277,16290.401};
 					};
 					side="West";
 					flags=7;
 					class Attributes
 					{
-						description="Alpha - Squad Leader";
+						description="Squad Leader@Unassigned";
 						isPlayable=1;
 						isPlayer=1;
 					};
@@ -96,13 +96,13 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14174.50,19.50,16290.00};
+						position[]={14179.18,19.484613,16290.401};
 					};
 					side="West";
 					flags=5;
 					class Attributes
 					{
-						description="Alpha - Medic";
+						description="Medic@Unassigned";
 						isPlayable=1;
 					};
 					id=2;
@@ -113,13 +113,13 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14177.00,19.50,16290.00};
+						position[]={14181.18,19.473944,16290.401};
 					};
 					side="West";
 					flags=5;
 					class Attributes
 					{
-						description="Alpha - Autorifleman";
+						description="Autorifleman@Unassigned";
 						isPlayable=1;
 					};
 					id=3;
@@ -130,13 +130,13 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14179.50,19.50,16290.00};
+						position[]={14183.18,19.460211,16290.401};
 					};
 					side="West";
 					flags=5;
 					class Attributes
 					{
-						description="Alpha - Rifleman AT";
+						description="Rifleman AT@Unassigned";
 						isPlayable=1;
 					};
 					id=4;
@@ -147,13 +147,13 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14182.00,19.50,16290.00};
+						position[]={14185.18,19.430872,16290.401};
 					};
 					side="West";
 					flags=5;
 					class Attributes
 					{
-						description="Alpha - Engineer";
+						description="Engineer@Unassigned";
 						isPlayable=1;
 					};
 					id=5;
@@ -164,415 +164,193 @@ class Mission
 					dataType="Object";
 					class PositionInfo
 					{
-						position[]={14184.50,19.50,16290.00};
+						position[]={14187.18,19.401546,16290.401};
 					};
 					side="West";
 					flags=5;
 					class Attributes
 					{
-						description="Alpha - Rifleman";
+						description="Rifleman@Unassigned";
 						isPlayable=1;
 					};
 					id=6;
 					type="B_Soldier_F";
+				};
+				class Item6
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14177.18,19.545755,16286.401};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Squad Leader@Unassigned";
+						isPlayable=1;
+					};
+					id=7;
+					type="B_Soldier_SL_F";
+				};
+				class Item7
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14179.18,19.542913,16286.401};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Medic@Unassigned";
+						isPlayable=1;
+					};
+					id=8;
+					type="B_medic_F";
+				};
+				class Item8
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14181.18,19.532244,16286.401};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Autorifleman@Unassigned";
+						isPlayable=1;
+					};
+					id=9;
+					type="B_soldier_AR_F";
+				};
+				class Item9
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14183.18,19.52158,16286.401};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Rifleman AT@Unassigned";
+						isPlayable=1;
+					};
+					id=10;
+					type="B_soldier_LAT_F";
+				};
+				class Item10
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14185.18,19.510912,16286.401};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Engineer@Unassigned";
+						isPlayable=1;
+					};
+					id=11;
+					type="B_engineer_F";
+				};
+				class Item11
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14188.4,19.319561,16293.296};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Rifleman@Unassigned";
+						isPlayable=1;
+					};
+					id=12;
+					type="B_Soldier_F";
+				};
+				class Item12
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14177.18,19.571835,16282.401};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Engineer Lead@Unassigned";
+						isPlayable=1;
+					};
+					id=13;
+					type="B_engineer_F";
+				};
+				class Item13
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14179.18,19.571835,16282.401};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Engineer@Unassigned";
+						isPlayable=1;
+					};
+					id=14;
+					type="B_engineer_F";
+				};
+				class Item14
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14177.18,19.579876,16278.401};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Pilot@Unassigned";
+						isPlayable=1;
+					};
+					id=15;
+					type="B_Helipilot_F";
+				};
+				class Item15
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={14179.18,19.582499,16278.401};
+					};
+					side="West";
+					flags=5;
+					class Attributes
+					{
+						description="Pilot@Unassigned";
+						isPlayable=1;
+					};
+					id=16;
+					type="B_Helipilot_F";
 				};
 			};
 			class Attributes
 			{
 			};
 			id=0;
-		};
-		class Item1
-		{
-			dataType="Group";
-			side="West";
-			class Entities
-			{
-				items=6;
-				class Item0
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14172.00,19.50,16287.00};
-					};
-					side="West";
-					flags=7;
-					class Attributes
-					{
-						description="Bravo - Squad Leader";
-						isPlayable=1;
-					};
-					id=8;
-					type="B_Soldier_SL_F";
-				};
-				class Item1
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14174.50,19.50,16287.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Bravo - Medic";
-						isPlayable=1;
-					};
-					id=9;
-					type="B_medic_F";
-				};
-				class Item2
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14177.00,19.50,16287.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Bravo - Autorifleman";
-						isPlayable=1;
-					};
-					id=10;
-					type="B_soldier_AR_F";
-				};
-				class Item3
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14179.50,19.50,16287.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Bravo - Rifleman AT";
-						isPlayable=1;
-					};
-					id=11;
-					type="B_soldier_LAT_F";
-				};
-				class Item4
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14182.00,19.50,16287.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Bravo - Engineer";
-						isPlayable=1;
-					};
-					id=12;
-					type="B_engineer_F";
-				};
-				class Item5
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14184.50,19.50,16287.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Bravo - Rifleman";
-						isPlayable=1;
-					};
-					id=13;
-					type="B_Soldier_F";
-				};
-			};
-			class Attributes
-			{
-			};
-			id=7;
-		};
-		class Item2
-		{
-			dataType="Group";
-			side="West";
-			class Entities
-			{
-				items=6;
-				class Item0
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14172.00,19.50,16284.00};
-					};
-					side="West";
-					flags=7;
-					class Attributes
-					{
-						description="Charlie - Squad Leader";
-						isPlayable=1;
-					};
-					id=15;
-					type="B_Soldier_SL_F";
-				};
-				class Item1
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14174.50,19.50,16284.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Charlie - Medic";
-						isPlayable=1;
-					};
-					id=16;
-					type="B_medic_F";
-				};
-				class Item2
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14177.00,19.50,16284.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Charlie - Autorifleman";
-						isPlayable=1;
-					};
-					id=17;
-					type="B_soldier_AR_F";
-				};
-				class Item3
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14179.50,19.50,16284.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Charlie - Rifleman AT";
-						isPlayable=1;
-					};
-					id=18;
-					type="B_soldier_LAT_F";
-				};
-				class Item4
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14182.00,19.50,16284.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Charlie - Engineer";
-						isPlayable=1;
-					};
-					id=19;
-					type="B_engineer_F";
-				};
-				class Item5
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14184.50,19.50,16284.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Charlie - Rifleman";
-						isPlayable=1;
-					};
-					id=20;
-					type="B_Soldier_F";
-				};
-			};
-			class Attributes
-			{
-			};
-			id=14;
-		};
-		class Item3
-		{
-			dataType="Group";
-			side="West";
-			class Entities
-			{
-				items=6;
-				class Item0
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14172.00,19.50,16281.00};
-					};
-					side="West";
-					flags=7;
-					class Attributes
-					{
-						description="Delta - Squad Leader";
-						isPlayable=1;
-					};
-					id=22;
-					type="B_Soldier_SL_F";
-				};
-				class Item1
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14174.50,19.50,16281.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Delta - Medic";
-						isPlayable=1;
-					};
-					id=23;
-					type="B_medic_F";
-				};
-				class Item2
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14177.00,19.50,16281.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Delta - Autorifleman";
-						isPlayable=1;
-					};
-					id=24;
-					type="B_soldier_AR_F";
-				};
-				class Item3
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14179.50,19.50,16281.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Delta - Rifleman AT";
-						isPlayable=1;
-					};
-					id=25;
-					type="B_soldier_LAT_F";
-				};
-				class Item4
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14182.00,19.50,16281.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Delta - Engineer";
-						isPlayable=1;
-					};
-					id=26;
-					type="B_engineer_F";
-				};
-				class Item5
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14184.50,19.50,16281.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Delta - Rifleman";
-						isPlayable=1;
-					};
-					id=27;
-					type="B_Soldier_F";
-				};
-			};
-			class Attributes
-			{
-			};
-			id=21;
-		};
-		class Item4
-		{
-			dataType="Group";
-			side="West";
-			class Entities
-			{
-				items=2;
-				class Item0
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14172.00,19.50,16278.00};
-					};
-					side="West";
-					flags=7;
-					class Attributes
-					{
-						description="Raven - Pilot";
-						isPlayable=1;
-					};
-					id=29;
-					type="B_Helipilot_F";
-				};
-				class Item1
-				{
-					dataType="Object";
-					class PositionInfo
-					{
-						position[]={14174.50,19.50,16278.00};
-					};
-					side="West";
-					flags=5;
-					class Attributes
-					{
-						description="Raven - Pilot";
-						isPlayable=1;
-					};
-					id=30;
-					type="B_Helipilot_F";
-				};
-			};
-			class Attributes
-			{
-			};
-			id=28;
 		};
 	};
 };
