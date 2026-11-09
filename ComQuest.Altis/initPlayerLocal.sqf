@@ -11,6 +11,12 @@ if (!_didJIP || { player distance2D CQ_basePos < 200 }) then {
     player setDir CQ_baseDir;
 };
 call CQ_fnc_playerSetup;
+// Everyone starts unassigned: squads are chosen or created in the squad manager (U)
+if (isNil "CQ_unassignedDone") then {
+    CQ_unassignedDone = true;
+    ["unassign", player] remoteExec ["CQ_fnc_squadCmd", 2];
+    [] spawn { sleep 6; hint parseText "<t size='1.1' color='#9FD3FF'>You are unassigned.</t><br/>Press <t color='#c8e07a'>U</t> to join or create a squad."; };
+};
 [] spawn CQ_fnc_rdfClient;   // radio direction finder panel
 call CQ_fnc_debugMap;
 

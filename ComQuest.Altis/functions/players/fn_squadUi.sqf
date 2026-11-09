@@ -2,8 +2,8 @@
     CQ_fnc_squadUi  (client)   U key, or the scroll menu
     [_view] spawn CQ_fnc_squadUi;      _view: "squads" (default) or "board"
     One window, two views (tabs at the top):
-      SQUADS       all friendly squads with players + the ungrouped (Solo) players, free
-                   slots; members of the selected squad; Join / Ungroup / Disband
+      SQUADS       all friendly squads + the unassigned players (everyone starts unassigned),
+                   free slots; members of the selected squad; Join / Create / Leave / Disband
       LEADERBOARD  per class (Squad Leader, Medic, Autorifleman...) or All = MVP ranking:
                    kills, vehicles, objectives, deaths, score. Nothing is stored: a server
                    restart wipes it.
@@ -47,11 +47,16 @@ private _top = _Y + _L * 1.5;
 private _info = ["RscStructuredText", 7003, [_X + 0.01, _top, _W - 0.02, _L]] call _mk;
 private _grpList = ["RscListBox", 7001, [_X + 0.01, _top + _L * 1.1, _W * 0.48, _H - _L * 4.4]] call _mk;
 private _memList = ["RscListBox", 7002, [_X + 0.02 + _W * 0.48, _top + _L * 1.1, _W * 0.5 - 0.03, _H - _L * 4.4]] call _mk;
-private _bw = (_W - 0.04) / 3;
+private _bw = (_W - 0.05) / 4;
 private _by = _Y + _H - _L * 1.5;
-private _bJoin = ["RscButton", 7010, [_X + 0.01, _by, _bw, _L * 1.1], "JOIN SELECTED SQUAD"] call _mk;
-private _bUng = ["RscButton", 7011, [_X + 0.02 + _bw, _by, _bw, _L * 1.1], "UNGROUP (GO SOLO)"] call _mk;
-private _bDis = ["RscButton", 7012, [_X + 0.03 + 2 * _bw, _by, _bw, _L * 1.1], "DISBAND MY SQUAD"] call _mk;
+private _bJoin = ["RscButton", 7010, [_X + 0.01, _by, _bw, _L * 1.1], "JOIN SQUAD"] call _mk;
+private _bNew = ["RscButton", 7013, [_X + 0.02 + _bw, _by, _bw, _L * 1.1], "CREATE SQUAD"] call _mk;
+private _bUng = ["RscButton", 7011, [_X + 0.03 + 2 * _bw, _by, _bw, _L * 1.1], "LEAVE SQUAD"] call _mk;
+private _bDis = ["RscButton", 7012, [_X + 0.04 + 3 * _bw, _by, _bw, _L * 1.1], "DISBAND SQUAD"] call _mk;
+_bNew ctrlAddEventHandler ["ButtonClick", {
+    if !((group player) getVariable ["CQ_solo", false]) exitWith { hint "Leave your squad first to create a new one" };
+    ["create", player] remoteExec ["CQ_fnc_squadCmd", 2];
+}];
 _bJoin ctrlAddEventHandler ["ButtonClick", {
     private _lb = (uiNamespace getVariable ["CQ_sqDisplay", displayNull]) displayCtrl 7001;
     private _i = lbCurSel _lb;
@@ -62,7 +67,7 @@ _bJoin ctrlAddEventHandler ["ButtonClick", {
     ["join", player, _g] remoteExec ["CQ_fnc_squadCmd", 2];
 }];
 _bUng ctrlAddEventHandler ["ButtonClick", {
-    if (count units group player <= 1) exitWith { hint "You are already on your own" };
+    if ((group player) getVariable ["CQ_solo", false]) exitWith { hint "You are not in a squad" };
     ["ungroup", player] remoteExec ["CQ_fnc_squadCmd", 2];
 }];
 _bDis ctrlAddEventHandler ["ButtonClick", {
@@ -70,7 +75,7 @@ _bDis ctrlAddEventHandler ["ButtonClick", {
     ["disband", player] remoteExec ["CQ_fnc_squadCmd", 2];
 }];
 _grpList ctrlAddEventHandler ["LBSelChanged", { uiNamespace setVariable ["CQ_sqRefreshMembers", true] }];
-private _sqCtrls = [_info, _grpList, _memList, _bJoin, _bUng, _bDis];
+private _sqCtrls = [_info, _grpList, _memList, _bJoin, _bNew, _bUng, _bDis];
 
 // --- leaderboard view
 private _clsList = ["RscListBox", 7102, [_X + 0.01, _top, _W * 0.22, _H - _L * 2]] call _mk;
@@ -102,12 +107,12 @@ while { !isNull _d } do {
 
     if (_view == "squads") then {
         private _groups = allGroups select { side _x == west && { (units _x) findIf { isPlayer _x } > -1 } };
-        private _squads = _groups select { !(_x getVariable ["CQ_solo", false]) && { count units _x > 1 || { (units _x) findIf { !isPlayer _x } > -1 } } };
+        private _squads = _groups select { !(_x getVariable ["CQ_solo", false]) };
         private _solos = _groups - _squads;
         private _slots = playableSlotsNumber west;
         _info ctrlSetStructuredText parseText format [
-            "<t size='0.85' color='#c8e07a'>%1 players</t><t size='0.85' color='#d0d0c0'>   |   %2 squads   |   %3 ungrouped   |   %4 free slots   |   you: %5</t>",
-            count _players, count _squads, count _solos, (_slots - count _players) max 0, groupId group player];
+            "<t size='0.85' color='#c8e07a'>%1 players</t><t size='0.85' color='#d0d0c0'>   |   %2 squads   |   %3 unassigned   |   %4 free slots   |   you: %5</t>",
+            count _players, count _squads, count _solos, (_slots - count _players) max 0, ["in " + groupId group player, "unassigned"] select ((group player) getVariable ["CQ_solo", false])];
         private _sel = lbCurSel _grpList;
         private _old = uiNamespace getVariable ["CQ_sqGroups", []];
         private _selG = if (_sel >= 0) then { _old param [_grpList lbValue _sel, grpNull] } else { group player };
@@ -123,7 +128,7 @@ while { !isNull _d } do {
             if (_g isEqualTo group player) then { _grpList lbSetColor [_i, [0.55, 0.9, 0.45, 1]] };
         } forEach _squads;
         if (_solos isNotEqualTo []) then {
-            private _h = _grpList lbAdd "--- UNGROUPED ---";
+            private _h = _grpList lbAdd "--- UNASSIGNED ---";
             _grpList lbSetColor [_h, [0.7, 0.7, 0.6, 1]];
             _grpList lbSetValue [_h, -1];
             { private _i = _grpList lbAdd format ["   %1", name leader _x]; _grpList lbSetValue [_i, _all find _x] } forEach _solos;
