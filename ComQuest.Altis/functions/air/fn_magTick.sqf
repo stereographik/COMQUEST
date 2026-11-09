@@ -38,7 +38,7 @@ private _cat = {
 CQ_magRunway params ["_rp", "_hdg"];
 private _waitPos = {
     params ["_k"];
-    private _p = (_rp getPos [30, _hdg + 90]) getPos [25 * _k, _hdg + 180];
+    private _p = (_rp getPos [30, _hdg + 90]) getPos [18 * _k, _hdg];
     [_p select 0, _p select 1, 0]
 };
 private _launch = {
@@ -131,9 +131,10 @@ private _launch = {
     };
 } forEach CQ_mag;
 // the queue: one drone on the runway at a time, in order
+private _next = CQ_mag select { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "waiting" } };
+private _gap = if (_next isNotEqualTo [] && { ((_next select 0) get "cls") == "B_UAV_01_F" }) then { CQ_magLaunchGapQuad } else { CQ_magLaunchGap };
 if ((CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "rolling" } }) == -1
-    && { time - (missionNamespace getVariable ["CQ_magLastLaunch", -1e6]) > CQ_magLaunchGap }) then {
-    private _next = CQ_mag select { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "waiting" } };
+    && { time - (missionNamespace getVariable ["CQ_magLastLaunch", -1e6]) > _gap }) then {
     if (_next isNotEqualTo []) then {
         private _busy = ((nearestObjects [_rp, ["LandVehicle", "Air"], 25]) select { alive _x && { !(_x getVariable ["CQ_magpie", false]) } }) isNotEqualTo [];
         if (_busy) exitWith { ["MAGPIE: take-off spot blocked by %1", [typeOf ((nearestObjects [_rp, ["LandVehicle", "Air"], 25]) select 0)]] call CQ_fnc_log };
@@ -219,9 +220,62 @@ private _aaPush = {
 private _known = [];
 { if (time - (_y select 2) < CQ_magMemory) then { _known pushBack (_y select 3) } } forEach CQ_magSeen;
 { if ((_x in CQ_magHqSeen) && { (_y get "state") in CQ_activeStates }) then { _known pushBack (_y get "pos") } } forEach CQ_hqs;
+// ---- scan chain: a north-south line of Darters moving east, spread over the land
+private _chain = _flying select { (_x getOrDefault ["role", ""]) == "chain" };
+if (_chain isNotEqualTo []) then {
+    // slots of the line at CQ_magChainX: land samples north-south, one slot per chain drone at
+    // evenly spaced land samples (sea skipped), clear of the east coast and known anti-air
+    private _slotsAt = {
+        params ["_x0"];
+        private _land = [];
+        for "_y" from 200 to worldSize - 200 step 150 do {
+            private _p = [_x0, _y, 0];
+            if (!surfaceIsWater _p && { [_p] call CQ_magEastOk } && { [_p] call _aaOk }) then { _land pushBack _p };
+        };
+        if (_land isEqualTo []) exitWith { [] };
+        private _n = CQ_magChainCount;
+        private _out = [];
+        for "_j" from 0 to _n - 1 do { _out pushBack (_land select (floor (((_j + 0.5) / _n) * count _land))) };
+        _out
+    };
+    if (CQ_magChainSlots isEqualTo []) then { CQ_magChainSlots = [CQ_magChainX] call _slotsAt };
+    // move on: 70 % of the chain in place, or the step timed out
+    private _inPlace = { private _s = CQ_magChainSlots param [_x get "slot", []]; _s isNotEqualTo [] && { (_x get "veh") distance2D _s < 300 } } count _chain;
+    if (_inPlace >= ceil (0.7 * count _chain) || { time - CQ_magChainT > CQ_magChainStepTime }) then {
+        private _tries = 0;
+        private _new = [];
+        while { _new isEqualTo [] && { _tries < 60 } } do {
+            CQ_magChainX = CQ_magChainX + CQ_magChainStep;
+            if (CQ_magChainX > (CQ_magArea select 2)) then { CQ_magChainX = (CQ_basePos select 0) + 1000 };   // back to the west edge
+            _new = [CQ_magChainX] call _slotsAt;
+            _tries = _tries + 1;
+        };
+        if (_new isNotEqualTo []) then { CQ_magChainSlots = _new };
+        CQ_magChainT = time;
+        { _x set ["planT", -1e6] } forEach _chain;
+        ["MAGPIE: scan chain moves to x %1 (%2 slots on land)", [round CQ_magChainX, count CQ_magChainSlots]] call CQ_fnc_log;
+    };
+    {
+        private _m = _x;
+        if (time - (_m get "planT") < 30) then { continue };
+        _m set ["planT", time];
+        private _s = CQ_magChainSlots param [_m get "slot", []];
+        if (_s isEqualTo []) then { continue };
+        private _v = _m get "veh";
+        private _g = group effectiveCommander _v;
+        while { (waypoints _g) isNotEqualTo [] } do { deleteWaypoint ((waypoints _g) select 0) };
+        _v flyInHeight (_m get "alt");
+        private _wp = _g addWaypoint [_s, 0];
+        _wp setWaypointType "MOVE";
+        _wp setWaypointCompletionRadius 150;
+        _m set ["target", _s];
+    } forEach _chain;
+};
+
 {
     private _m = _x;
     private _v = _m get "veh";
+    if ((_m getOrDefault ["role", ""]) == "chain") then { continue };
     if (((getPosATL _v) select 2) < 40 && { time - (_m get "planT") < 300 }) then { continue };
     private _tgt = _m get "target";
     private _arrived = (_m get "explore") && { _tgt isNotEqualTo [] } && { _v distance2D _tgt < 500 };

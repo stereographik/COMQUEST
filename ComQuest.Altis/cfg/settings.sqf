@@ -362,18 +362,25 @@ CQ_magDrones = [
 ];
 CQ_magFirstDelay = 5;                    // s after mission start: first take-off (the carrier arrives at start)
 CQ_magLaunchGap = 8;                     // s minimum between two take-offs (the next one rolls as soon as the runway is clear)
+CQ_magLaunchGapQuad = 3;                 // s between two quadcopter (Darter) take-offs
 CQ_magRollTimeout = 35;                  // s on the runway before a stalled take-off is retried
 CQ_magRespawn = 480;                     // s before a lost drone is replaced (8 min), on the runway
 CQ_magReportEvery = 120;                 // s between two MAGPIE reports (only if something is new)
 CQ_magMarkerTime = 10;                   // s the report dots stay on the map
-CQ_magDetectEvery = 10;                  // s between two detection passes
+CQ_magDetectEvery = 4;                   // s between two detection passes
 CQ_magPlanEvery = 90;                    // s between two flight plans of a drone
+// scan chain: CQ_magChainCount extra Darters fan out from the base to a north-south line and
+// sweep it east across the island, spread over the land at each step (no slot over the sea)
+CQ_magChainCount = 9;
+CQ_magChainAlt = 250;                    // m
+CQ_magChainStep = 600;                   // m the line moves east each step
+CQ_magChainStepTime = 90;                // s max per step (moves on earlier once 70 % of the chain is in place)
 CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (the carrier group)
 CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
-CQ_magSensor = [150, 0.6, 1200];         // sensor radius = 150 + altitude x 0.6, max 1200 m (Darter ~300, Greyhawk ~690, Reaper ~1050)
-CQ_magSpotChance = createHashMapFromArray [["inf", 0.25], ["light", 0.45], ["armour", 0.5], ["air", 0.6], ["static", 0.35]];   // chance per pass to identify a new contact in sight
+CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2, max 2400 m (Darter ~600, Greyhawk ~1380, Reaper ~2100)
+CQ_magSpotChance = createHashMapFromArray [["inf", 0.6], ["static", 0.7], ["light", 0.8], ["armour", 0.85], ["air", 0.9]];   // chance per pass to identify a new contact in sight
 CQ_magAaClasses = ["O_APC_Tracked_02_AA_F", "O_static_AA_F", "O_SAM_System_04_F"];   // anti-air MAGPIE keeps away from once identified
 CQ_magAaAvoid = 3500;                    // m kept from known anti-air
 CQ_magAoRange = 2500;                    // a contact belongs to the nearest known AO within this range

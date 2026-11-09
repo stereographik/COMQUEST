@@ -82,6 +82,17 @@ CQ_mag = [];
         ["planT", 0], ["explore", false], ["target", []], ["lost", false]
     ];
 } forEach CQ_magDrones;
+// the scan chain: Darters with a slot on the moving north-south line
+for "_j" from 0 to CQ_magChainCount - 1 do {
+    CQ_mag pushBack createHashMapFromArray [
+        ["i", count CQ_mag], ["name", format ["Chain %1", _j + 1]], ["cls", "B_UAV_01_F"], ["alt", CQ_magChainAlt], ["scale", 1],
+        ["veh", objNull], ["due", time + CQ_magFirstDelay], ["phase", "none"], ["tries", 0], ["rollT", 0],
+        ["planT", 0], ["explore", false], ["target", []], ["lost", false], ["role", "chain"], ["slot", _j]
+    ];
+};
+CQ_magChainX = (CQ_basePos select 0) + 1000;      // the line starts just east of the base
+CQ_magChainT = time;
+CQ_magChainSlots = [];
 CQ_magNext = 0;
 ["MAGPIE: %1 drones (%2), runway %3 heading %4, %5 search cells", [count CQ_mag, (CQ_mag apply { _x get "cls" }) joinString ", ",
     mapGridPosition (CQ_magRunway select 0), round (CQ_magRunway select 1), count CQ_magCells]] call CQ_fnc_log;
