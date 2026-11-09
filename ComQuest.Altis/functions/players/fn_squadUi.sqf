@@ -4,6 +4,7 @@
     One window, two views (tabs at the top):
       SQUADS       all friendly squads + the unassigned players (everyone starts unassigned),
                    free slots; members of the selected squad; Join / Create / Leave / Disband
+      CLASS        every lobby slot is a Rifleman: take your class here (at the base)
       LEADERBOARD  per class (Squad Leader, Medic, Autorifleman...) or All = MVP ranking:
                    kills, vehicles, objectives, deaths, score. Nothing is stored: a server
                    restart wipes it.
@@ -36,7 +37,9 @@ private _mk = {
 (["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0.03, 0.04, 0.03, 0.88];
 (["RscText", -1, [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor [0.12, 0.16, 0.1, 0.95];
 private _tabS = ["RscButton", 7090, [_X + 0.01, _Y + 0.004, _W * 0.18, _L], "SQUADS"] call _mk;
-private _tabB = ["RscButton", 7091, [_X + 0.02 + _W * 0.18, _Y + 0.004, _W * 0.22, _L], "LEADERBOARD"] call _mk;
+private _tabC = ["RscButton", 7093, [_X + 0.02 + _W * 0.18, _Y + 0.004, _W * 0.16, _L], "CLASS"] call _mk;
+private _tabB = ["RscButton", 7091, [_X + 0.03 + _W * 0.34, _Y + 0.004, _W * 0.22, _L], "LEADERBOARD"] call _mk;
+_tabC ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "class"] }];
 private _close = ["RscButton", 7092, [_X + _W - 0.05, _Y + 0.004, 0.04, _L], "X"] call _mk;
 _tabS ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "squads"] }];
 _tabB ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "board"] }];
@@ -84,9 +87,24 @@ _board lnbSetColumnsPos [0, 0.06, 0.38, 0.55, 0.66, 0.77, 0.86, 0.93];
 _clsList ctrlAddEventHandler ["LBSelChanged", { uiNamespace setVariable ["CQ_sqBoardDirty", true] }];
 private _bdCtrls = [_clsList, _board];
 
+// --- class view
+private _classList = ["RscListBox", 7201, [_X + 0.01, _top, _W * 0.35, _H - _L * 3.2]] call _mk;
+private _classInfo = ["RscStructuredText", 7203, [_X + 0.02 + _W * 0.35, _top, _W * 0.65 - 0.03, _H - _L * 3.2]] call _mk;
+private _bTake = ["RscButton", 7202, [_X + 0.01, _Y + _H - _L * 1.5, _W * 0.35, _L * 1.1], "TAKE THIS CLASS"] call _mk;
+{ _classList lbAdd (_x select 0) } forEach CQ_classes;
+_bTake ctrlAddEventHandler ["ButtonClick", {
+    private _lb = (uiNamespace getVariable ["CQ_sqDisplay", displayNull]) displayCtrl 7201;
+    private _i = lbCurSel _lb;
+    if (_i < 0) exitWith { hint "Select a class first" };
+    [_lb lbText _i] call CQ_fnc_setClass;
+}];
+private _clCtrls = [_classList, _classInfo, _bTake];
+
 private _role = {
     params ["_u"];
     private _r = roleDescription _u;
+    private _c = _u getVariable ["CQ_class", ""];
+    if (_c != "") exitWith { _c };
     if (_r find "@" > -1) then { _r = (_r splitString "@") select 0 };
     if (_r find " - " > -1) then { _r = (_r splitString "-") select (count (_r splitString "-") - 1); _r = _r trim [" ", 0] };
     if (_r == "") then { _r = getText (configOf _u >> "displayName") };
@@ -100,12 +118,29 @@ while { !isNull _d } do {
     if (_view != _lastView) then {
         { _x ctrlShow (_view == "squads") } forEach _sqCtrls;
         { _x ctrlShow (_view == "board") } forEach _bdCtrls;
+        { _x ctrlShow (_view == "class") } forEach _clCtrls;
+        _tabC ctrlSetBackgroundColor ([[0.2, 0.2, 0.2, 0.8], [0.35, 0.5, 0.25, 1]] select (_view == "class"));
         _tabS ctrlSetBackgroundColor ([[0.2, 0.2, 0.2, 0.8], [0.35, 0.5, 0.25, 1]] select (_view == "squads"));
         _tabB ctrlSetBackgroundColor ([[0.2, 0.2, 0.2, 0.8], [0.35, 0.5, 0.25, 1]] select (_view == "board"));
         _lastView = _view;
     };
     private _players = allPlayers select { side group _x == west };
 
+    if (_view == "class") then {
+        private _i = lbCurSel _classList;
+        private _mine = player getVariable ["CQ_class", "Rifleman"];
+        private _cls = if (_i >= 0) then { (CQ_classes select _i) select 1 } else { "" };
+        private _near = player distance2D CQ_basePos <= CQ_classChangeRange;
+        _classInfo ctrlSetStructuredText parseText format [
+            "<t size='0.9' color='#c8e07a'>Your class: %1</t><br/><br/><t size='0.8' color='#d0d0c0'>%2</t><br/><br/><t size='0.75' color='#9a9a9a'>%3</t>",
+            _mine,
+            if (_cls == "") then { "Pick a class on the left." } else {
+                private _w = getArray (configFile >> "CfgVehicles" >> _cls >> "weapons") select { !(_x in ["Throw", "Put"]) };
+                format ["%1<br/>Weapons: %2", getText (configFile >> "CfgVehicles" >> _cls >> "displayName"), (_w apply { getText (configFile >> "CfgWeapons" >> _x >> "displayName") }) joinString ", "]
+            },
+            ["You must be at the base to change class.", "Your loadout and traits change at once; the arsenal can customise it after."] select _near];
+        _bTake ctrlEnable _near;
+    };
     if (_view == "squads") then {
         private _groups = allGroups select { side _x == west && { (units _x) findIf { isPlayer _x } > -1 } };
         private _squads = _groups select { !(_x getVariable ["CQ_solo", false]) };

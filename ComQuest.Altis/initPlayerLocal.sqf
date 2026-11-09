@@ -10,6 +10,8 @@ if (!_didJIP || { player distance2D CQ_basePos < 200 }) then {
     player setPosATL (CQ_musterPos getPos [2 + random 8, random 360]);
     player setDir CQ_baseDir;
 };
+// Every slot is a Rifleman: the class is taken in game (U -> CLASS)
+if (isNil "CQ_myClass") then { CQ_myClass = "Rifleman"; player setVariable ["CQ_class", "Rifleman", true] };
 call CQ_fnc_playerSetup;
 // Everyone starts unassigned: squads are chosen or created in the squad manager (U)
 if (isNil "CQ_unassignedDone") then {

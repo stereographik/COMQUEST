@@ -10,7 +10,7 @@ class Header
 {
     gameType = "Coop";
     minPlayers = 1;
-    maxPlayers = 16;
+    maxPlayers = 26;
 };
 
 // --- Respawn: at the airport base -----------------------------------------
@@ -188,6 +188,8 @@ class CfgFunctions
             class squadCmd {};
             class scoreAdd {};
             class squadUi {};
+            class setClass {};
+            class applyTraits {};
             class vehAutoFill {};
             class baseDefBuild {};
             class baseDefTick {};

@@ -179,6 +179,18 @@ CQ_crateWeapons = [["launch_RPG32_F", 1], ["launch_O_Titan_short_F", 1]];   // b
 CQ_crateItems = [["FirstAidKit", 24], ["Medikit", 2], ["ToolKit", 2], ["MineDetector", 1]];
 CQ_loadZoneCount = 4;                    // loadout zones in the base parking area (auto-fill vehicles)
 CQ_loadZoneRadius = 9;
+// Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
+CQ_classes = [
+    ["Rifleman",     "B_Soldier_F",      []],
+    ["Squad Leader", "B_Soldier_SL_F",   []],
+    ["Medic",        "B_medic_F",        ["Medic"]],
+    ["Autorifleman", "B_soldier_AR_F",   []],
+    ["Rifleman AT",  "B_soldier_LAT_F",  []],
+    ["Engineer",     "B_engineer_F",     ["Engineer", "explosiveSpecialist"]],
+    ["Marksman",     "B_soldier_M_F",    []],
+    ["Pilot",        "B_Helipilot_F",    []]
+];
+CQ_classChangeRange = 300;               // classes are changed within this distance of the camp
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads
 // Contact / heavy support
 CQ_helpRadius = 700;                     // patrolling squads this close to a contact join in
