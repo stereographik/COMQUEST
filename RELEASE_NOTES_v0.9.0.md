@@ -31,4 +31,4 @@ First tagged build of **ComQuest.Altis**, a vanilla Arma 3 co-op scenario (only 
 - A crate dispenser and a loadout zone at the end of each row.
 - Two repair depots facing the runway, and AA/HMG defence positions.
 
-Settings: `cfg/settings.sqf` and `cfg/story.sqf`. Showcase page: `showcase/index.html`.
+Settings: `cfg/settings.sqf` and `cfg/story.sqf`. Showcase page: https://stereographik.github.io/COMQUEST/
