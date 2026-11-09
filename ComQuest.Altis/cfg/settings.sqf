@@ -146,7 +146,7 @@ CQ_specialRange = 6000;                  // how far a team drives for a job
 CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get treated
 // Radio direction finder (players with a radio): signal from enemy HQ radios
 CQ_rdfRange = 6000;                      // no signal beyond this
-CQ_rdfBottom = 200;                      // signal panel: px from the bottom of the screen (centred)
+CQ_rdfTop = 40;                          // signal panel: px from the top of the screen (centred)
 CQ_playerMapMarkers = false;             // true = enemy HQ areas and the carrier shown on the players' map
 // Base defence spots (AA + HMG, NATO gunners), around the camp, off the runway
 CQ_baseDefAngles = [45, 135, 225, 315];  // relative to the camp front
@@ -180,15 +180,16 @@ CQ_crateItems = [["FirstAidKit", 24], ["Medikit", 2], ["ToolKit", 2], ["MineDete
 CQ_loadZoneCount = 4;                    // loadout zones in the base parking area (auto-fill vehicles)
 CQ_loadZoneRadius = 9;
 // Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
+// [label, unit class (loadout), traits, max players in that class]
 CQ_classes = [
-    ["Rifleman",     "B_Soldier_F",      []],
-    ["Squad Leader", "B_Soldier_SL_F",   []],
-    ["Medic",        "B_medic_F",        ["Medic"]],
-    ["Autorifleman", "B_soldier_AR_F",   []],
-    ["Rifleman AT",  "B_soldier_LAT_F",  []],
-    ["Engineer",     "B_engineer_F",     ["Engineer", "explosiveSpecialist"]],
-    ["Marksman",     "B_soldier_M_F",    []],
-    ["Pilot",        "B_Helipilot_F",    []]
+    ["Rifleman",     "B_Soldier_F",      [],                                  26],
+    ["Squad Leader", "B_Soldier_SL_F",   [],                                  4],
+    ["Medic",        "B_medic_F",        ["Medic"],                           4],
+    ["Autorifleman", "B_soldier_AR_F",   [],                                  4],
+    ["Rifleman AT",  "B_soldier_LAT_F",  [],                                  4],
+    ["Engineer",     "B_engineer_F",     ["Engineer", "explosiveSpecialist"], 4],
+    ["Marksman",     "B_soldier_M_F",    [],                                  2],
+    ["Pilot",        "B_Helipilot_F",    [],                                  4]
 ];
 CQ_classChangeRange = 300;               // classes are changed within this distance of the camp
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads

@@ -1,7 +1,7 @@
 /*
     CQ_fnc_rdfClient  (client, spawned once from initPlayerLocal)
-    Radio direction finder: a compact signal panel, centred at the bottom of the screen
-    (CQ_rdfBottom px above the bottom edge), shown to any player carrying a radio.
+    Radio direction finder: a compact signal panel, centred at the top of the screen
+    (CQ_rdfTop px below the top edge), shown to any player carrying a radio.
 
     It listens to the CLOSEST active emitter only (CQ_rdfSources: fully built HQs with their
     radio tower standing). None within CQ_rdfRange -> "NO SIGNAL".
@@ -20,7 +20,7 @@ private _W = 240;
 private _H = 44;
 private _pad = 12;
 private _x0 = safezoneX + (safezoneW - _W * _pw) / 2;
-private _y0 = safezoneY + safezoneH - (CQ_rdfBottom + _H) * _ph;
+private _y0 = safezoneY + CQ_rdfTop * _ph;
 
 private _mk = {
     params ["_cls", "_rx", "_ry", "_rw", "_rh"];

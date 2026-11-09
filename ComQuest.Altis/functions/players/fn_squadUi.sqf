@@ -133,13 +133,27 @@ while { !isNull _d } do {
         private _cls = if (_i >= 0) then { (CQ_classes select _i) select 1 } else { "" };
         private _near = player distance2D CQ_basePos <= CQ_classChangeRange;
         _classInfo ctrlSetStructuredText parseText format [
-            "<t size='0.9' color='#c8e07a'>Your class: %1</t><br/><br/><t size='0.8' color='#d0d0c0'>%2</t><br/><br/><t size='0.75' color='#9a9a9a'>%3</t>",
+            "<t size='0.9' color='#c8e07a'>Your class: %1</t><br/><t size='0.7' color='#9a9a9a'>Right column: free slots / limit</t><br/><br/><t size='0.8' color='#d0d0c0'>%2</t><br/><br/><t size='0.75' color='#9a9a9a'>%3</t>",
             _mine,
             if (_cls == "") then { "Pick a class on the left." } else {
                 private _w = getArray (configFile >> "CfgVehicles" >> _cls >> "weapons") select { !(_x in ["Throw", "Put"]) };
                 format ["%1<br/>Weapons: %2", getText (configFile >> "CfgVehicles" >> _cls >> "displayName"), (_w apply { getText (configFile >> "CfgWeapons" >> _x >> "displayName") }) joinString ", "]
             },
             ["You must be at the base to change class.", "Your loadout and traits change at once; the arsenal can customise it after."] select _near];
+        // slots per class: available / limit
+        {
+            _x params ["_lbl", "", "", ["_max", 99]];
+            private _used = { (_x getVariable ["CQ_class", "Rifleman"]) == _lbl } count _players;
+            private _free = (_max - _used) max 0;
+            _classList lbSetTextRight [_forEachIndex, format ["%1 / %2", _free, _max]];
+            private _col = switch (true) do {
+                case (_lbl == _mine): { [0.78, 0.88, 0.48, 1] };
+                case (_free == 0):    { [0.6, 0.35, 0.35, 1] };
+                default               { [1, 1, 1, 1] };
+            };
+            _classList lbSetColor [_forEachIndex, _col];
+            _classList lbSetColorRight [_forEachIndex, _col];
+        } forEach CQ_classes;
         _bTake ctrlEnable _near;
     };
     if (_view == "squads") then {
