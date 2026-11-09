@@ -93,6 +93,10 @@ for "_j" from 0 to CQ_magChainCount - 1 do {
 CQ_magChainX = (CQ_basePos select 0) + 1000;      // the line starts just east of the base
 CQ_magChainT = time;
 CQ_magChainSlots = [];
+CQ_magFocus = [];             // encirclement focus (first contact)
+CQ_magFocusT = 0;
+CQ_magFocusNew = 0;
+CQ_magRingR = CQ_magRingStart;
 CQ_magNext = 0;
 ["MAGPIE: %1 drones (%2), runway %3 heading %4, %5 search cells", [count CQ_mag, (CQ_mag apply { _x get "cls" }) joinString ", ",
     mapGridPosition (CQ_magRunway select 0), round (CQ_magRunway select 1), count CQ_magCells]] call CQ_fnc_log;

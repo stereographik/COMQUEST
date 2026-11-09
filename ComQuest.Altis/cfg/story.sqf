@@ -319,6 +319,12 @@ CQ_story = createHashMapFromArray [
         [["MAGPIE", "Updated picture. Not much left to find.%1"]],
         [["MAGPIE", "Leftovers.%1"]]
     ]],
+    // [] - first contact / new focus: every drone encircles it
+    ["magFocus", [
+        [["MAGPIE", "Contact. Pulling every bird in around it."]],
+        [["MAGPIE", "Got something. All drones, circle and tighten."]],
+        [["MAGPIE", "New focus. I'm ringing it from every side."]]
+    ]],
     // [] - a drone found an anti-air vehicle
     ["magAa", [
         [["MAGPIE", "Tigris on the ground. I'm keeping my birds out of its reach. Expect thinner coverage there."]],

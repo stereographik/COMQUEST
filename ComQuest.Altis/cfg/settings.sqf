@@ -373,6 +373,13 @@ CQ_magChainCount = 9;
 CQ_magChainAlt = 250;                    // m
 CQ_magChainStep = 600;                   // m the line moves east each step
 CQ_magChainStepTime = 90;                // s max per step (moves on earlier once 70 % of the chain is in place)
+// encirclement: the first identified contact becomes the focus; every airborne drone takes a
+// sector of a ring around it, the ring turns slowly and tightens (risking the Tigris)
+CQ_magRingStart = 3000;                  // m ring radius at first contact
+CQ_magRingMin = 700;                     // m tightest ring
+CQ_magRingShrink = 120;                  // m per minute the ring tightens
+CQ_magRingTurn = 0.5;                    // deg per second the ring turns (a full turn in 12 min)
+CQ_magFocusQuiet = 300;                  // s without a new contact in the ring (once tight) -> next focus
 CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (the carrier group)
 CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
 CQ_magCell = 1000;                       // search grid cell (m)

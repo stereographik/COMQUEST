@@ -132,6 +132,15 @@ if (time >= CQ_magDetectT) then {
                 private _c = [_o] call _cat;
                 if (random 1 > (CQ_magSpotChance getOrDefault [_c, 0.3])) then { continue };   // not identified this pass
                 CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false]];
+                private _fp = missionNamespace getVariable ["CQ_magFocus", []];
+                if (_fp isEqualTo []) then {
+                    CQ_magFocus = getPosATL _o; CQ_magFocusT = time; CQ_magFocusNew = time;
+                    { _x set ["planT", -1e6] } forEach CQ_mag;      // everyone re-routes now
+                    ["magFocus", []] call CQ_fnc_say;
+                    ["MAGPIE: first contact (%1) at %2, every drone encircles it", [typeOf _o, mapGridPosition _o]] call CQ_fnc_log;
+                } else {
+                    if (_o distance2D _fp < (missionNamespace getVariable ["CQ_magRingR", CQ_magRingStart]) + 500) then { CQ_magFocusNew = time };
+                };
                 if ((typeOf _o) in CQ_magAaClasses) then { ["magAa", []] call CQ_fnc_say; ["MAGPIE: anti-air identified (%1) at %2", [typeOf _o, mapGridPosition _o]] call CQ_fnc_log };
             } else {
                 _rec set [2, time];
@@ -178,9 +187,67 @@ private _aaPush = {
 private _known = [];
 { if (time - (_y select 2) < CQ_magMemory) then { _known pushBack (_y select 3) } } forEach CQ_magSeen;
 { if ((_x in CQ_magHqSeen) && { (_y get "state") in CQ_activeStates }) then { _known pushBack (_y get "pos") } } forEach CQ_hqs;
+// ---- encirclement: after the first contact, every airborne drone takes a sector of a ring around
+// the focus; the ring turns (CQ_magRingTurn) so every sector is covered, and tightens from
+// CQ_magRingStart to CQ_magRingMin. Known Tigris positions push the ring points out to
+// CQ_magAaAvoid only (inside its missile range: a risk taken on purpose). Once tight and quiet for
+// CQ_magFocusQuiet s, the focus jumps to the newest contact elsewhere, or is released.
+private _focus = missionNamespace getVariable ["CQ_magFocus", []];
+if (_focus isNotEqualTo [] && { CQ_magRingR <= CQ_magRingMin } && { time - CQ_magFocusNew > CQ_magFocusQuiet }) then {
+    private _cand = (values CQ_magSeen) select { time - (_x select 1) < CQ_magFocusQuiet * 2 && { (_x select 3) distance2D _focus > CQ_magRingStart } };
+    if (_cand isEqualTo []) then {
+        CQ_magFocus = []; _focus = [];
+        ["MAGPIE: focus area quiet, back to the sweep"] call CQ_fnc_log;
+    } else {
+        private _n = ([_cand, [], { _x select 1 }, "DESCEND"] call BIS_fnc_sortBy) select 0;
+        CQ_magFocus = _n select 3; _focus = CQ_magFocus; CQ_magFocusT = time; CQ_magFocusNew = time;
+        { _x set ["planT", -1e6] } forEach CQ_mag;
+        ["magFocus", []] call CQ_fnc_say;
+        ["MAGPIE: focus moves to the newest contact at %1", [mapGridPosition _focus]] call CQ_fnc_log;
+    };
+};
+private _focusOn = _focus isNotEqualTo [];
+if (_focusOn) then {
+    _focus = [_focus select 0, _focus select 1, 0];
+    CQ_magRingR = (CQ_magRingStart - CQ_magRingShrink * (time - CQ_magFocusT) / 60) max CQ_magRingMin;
+    private _ring = [_flying, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;
+    private _n = count _ring;
+    private _step = 360 / (_n max 1);
+    private _rot = (time - CQ_magFocusT) * CQ_magRingTurn;
+    {
+        private _m = _x;
+        if (time - (_m get "planT") < 30) then { continue };
+        _m set ["planT", time];
+        private _v = _m get "veh";
+        private _r = CQ_magRingR * ((_m get "scale") max 1);
+        private _a0 = _rot + _forEachIndex * _step;
+        private _pts = [];
+        {
+            private _p = _focus getPos [_r, _a0 + _x * _step];
+            _p = [_p select 0, _p select 1, 0];
+            private _t = 0;
+            while { !([_p] call CQ_magEastOk) && { _t < 6 } } do { _p = _p vectorAdd ((_focus vectorDiff _p) vectorMultiply 0.2); _t = _t + 1 };
+            _p = [_p] call _aaPush;
+            if ([_p] call CQ_magEastOk) then { _pts pushBack _p };
+        } forEach [0, 0.5, 1];
+        if (_pts isEqualTo []) then { continue };
+        private _g = group effectiveCommander _v;
+        [_g] call CQ_fnc_clearWaypoints;
+        _v flyInHeight (_m get "alt");
+        private _first = -1;
+        { private _wp = _g addWaypoint [_x, 0]; _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 200; if (_first < 0) then { _first = _wp select 1 } } forEach _pts;
+        _g setCurrentWaypoint [_g, _first];
+        _m set ["target", _pts select 0];
+    } forEach _ring;
+    if (time - (missionNamespace getVariable ["CQ_magRingLogT", -1e6]) > 60) then {
+        CQ_magRingLogT = time;
+        ["MAGPIE: %1 drones encircle %2, ring %3 m, %4 known Tigris", [_n, mapGridPosition _focus, round CQ_magRingR, count _aa]] call CQ_fnc_log;
+    };
+};
+
 // ---- scan chain: a north-south line of Darters moving east, spread over the land
 private _chain = _flying select { (_x getOrDefault ["role", ""]) == "chain" };
-if (_chain isNotEqualTo []) then {
+if (_chain isNotEqualTo [] && { !_focusOn }) then {
     // slots of the line at CQ_magChainX: land samples north-south, one slot per chain drone at
     // evenly spaced land samples (sea skipped), clear of the east coast and known anti-air
     private _slotsAt = {
@@ -234,7 +301,7 @@ if (_chain isNotEqualTo []) then {
 {
     private _m = _x;
     private _v = _m get "veh";
-    if ((_m getOrDefault ["role", ""]) == "chain") then { continue };
+    if (_focusOn || { (_m getOrDefault ["role", ""]) == "chain" }) then { continue };
     if (((getPosATL _v) select 2) < 40 && { time - (_m get "planT") < 300 }) then { continue };
     private _tgt = _m get "target";
     private _arrived = (_m get "explore") && { _tgt isNotEqualTo [] } && { _v distance2D _tgt < 500 };
