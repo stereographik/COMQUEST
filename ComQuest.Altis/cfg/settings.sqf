@@ -146,7 +146,7 @@ CQ_specialRange = 6000;                  // how far a team drives for a job
 CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get treated
 // Radio direction finder (players with a radio): signal from enemy HQ radios
 CQ_rdfRange = 6000;                      // no signal beyond this
-CQ_rdfFieldPower = 0.45;                 // HQ still being set up: field radios only, weaker
+CQ_rdfBottom = 200;                      // signal panel: px from the bottom of the screen (centred)
 CQ_playerMapMarkers = false;             // true = enemy HQ areas and the carrier shown on the players' map
 // Base defence spots (AA + HMG, NATO gunners), around the camp, off the runway
 CQ_baseDefAngles = [45, 135, 225, 315];  // relative to the camp front

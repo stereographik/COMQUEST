@@ -1,75 +1,108 @@
 /*
     CQ_fnc_rdfClient  (client, spawned once from initPlayerLocal)
-    Radio direction finder: a small signal-strength panel (right side of the screen) for any
-    player carrying a radio. It shows the strongest enemy emitter (CQ_rdfSources):
-      strength = power x range falloff (CQ_rdfRange) x direction factor
-    The antenna is directional: the signal peaks when you LOOK toward the emitter, so
-    sweeping your view finds the bearing; walking toward it raises the level.
-    No map position is ever given.
+    Radio direction finder: a compact signal panel, centred at the bottom of the screen
+    (CQ_rdfBottom px above the bottom edge), shown to any player carrying a radio.
+
+    It listens to the CLOSEST active emitter only (CQ_rdfSources: fully built HQs with their
+    radio tower standing). None within CQ_rdfRange -> "NO SIGNAL".
+      signal = range falloff x direction factor, shown 0-100 %
+    The antenna is directional: the signal peaks when you LOOK toward the HQ, so sweeping
+    your view finds the bearing; walking toward it raises the level. No map position is given.
 */
 if (!hasInterface) exitWith {};
 waitUntil { sleep 0.5; !isNull findDisplay 46 };
 private _d = findDisplay 46;
 
-private _w = 0.13 * safezoneW;
-private _px = safezoneX + safezoneW - _w - 0.012 * safezoneW;
-private _py = safezoneY + 0.6 * safezoneH;
-private _h = 0.075 * safezoneH;
+// --- layout, in pixels
+private _pw = pixelW;
+private _ph = pixelH;
+private _W = 240;
+private _H = 44;
+private _pad = 12;
+private _x0 = safezoneX + (safezoneW - _W * _pw) / 2;
+private _y0 = safezoneY + safezoneH - (CQ_rdfBottom + _H) * _ph;
 
-private _bg = _d ctrlCreate ["RscText", -1];
-_bg ctrlSetPosition [_px, _py, _w, _h];
-_bg ctrlSetBackgroundColor [0.02, 0.03, 0.02, 0.6];
-_bg ctrlCommit 0;
-private _lbl = _d ctrlCreate ["RscStructuredText", -1];
-_lbl ctrlSetPosition [_px + 0.004 * safezoneW, _py + 0.003 * safezoneH, _w, 0.03 * safezoneH];
-_lbl ctrlCommit 0;
+private _mk = {
+    params ["_cls", "_rx", "_ry", "_rw", "_rh"];
+    private _c = _d ctrlCreate [_cls, -1];
+    _c ctrlSetPosition [_x0 + _rx * _pw, _y0 + _ry * _ph, _rw * _pw, _rh * _ph];
+    _c ctrlCommit 0;
+    _c
+};
+
+private _bg = ["RscText", 0, 0, _W, _H] call _mk;
+_bg ctrlSetBackgroundColor [0.05, 0.05, 0.05, 0.72];
+private _edge = ["RscText", 0, 0, 3, _H] call _mk;
+_edge ctrlSetBackgroundColor [1, 1, 1, 0.9];
+
+private _lbl = ["RscText", _pad - 2, 3, 120, 20] call _mk;
+_lbl ctrlSetFont "PuristaMedium";
+_lbl ctrlSetFontHeight (15 * _ph);
+_lbl ctrlSetTextColor [0.75, 0.75, 0.75, 1];
+
+private _pct = ["RscStructuredText", _W - 110, 3, 110 - _pad + 4, 22] call _mk;
+
+// segmented meter
+private _segs = 20;
+private _gap = 2;
+private _segW = (_W - 2 * _pad - (_segs - 1) * _gap) / _segs;
 private _bars = [];
-private _bw = (_w - 0.012 * safezoneW) / 10;
-for "_i" from 0 to 9 do {
-    private _b = _d ctrlCreate ["RscText", -1];
-    private _bh = (0.012 + 0.0028 * _i) * safezoneH;
-    _b ctrlSetPosition [_px + 0.006 * safezoneW + _i * _bw, _py + _h - 0.008 * safezoneH - _bh, _bw * 0.7, _bh];
-    _b ctrlSetBackgroundColor [0.3, 0.3, 0.3, 0.5];
-    _b ctrlCommit 0;
+for "_i" from 0 to _segs - 1 do {
+    private _b = ["RscText", _pad + _i * (_segW + _gap), _H - 14, _segW, 6] call _mk;
     _bars pushBack _b;
 };
-private _all = [_bg, _lbl] + _bars;
+private _all = [_bg, _edge, _lbl, _pct] + _bars;
 
 private _shown = -1;
+private _disp = 0;
+private _offColor = [0.28, 0.28, 0.28, 0.6];
 while { true } do {
-    sleep 0.25;
+    sleep 0.2;
     private _has = alive player && { "ItemRadio" in assignedItems player || { (assignedItems player) findIf { "radio" in toLower _x } > -1 } };
-    private _on = _has && { !visibleMap } && { isNull curatorCamera };
+    private _on = _has && { !visibleMap } && { isNull curatorCamera } && { isNull findDisplay 49 };
     if (_on != (_shown == 1)) then {
         { _x ctrlShow _on } forEach _all;
         _shown = [0, 1] select _on;
     };
     if (!_on) then { continue };
 
-    private _view = getCameraViewDirection player;
-    private _look = (_view select 0) atan2 (_view select 1);
-    private _best = 0;
+    // closest active emitter
+    private _src = [];
+    private _bestD = 1e10;
     {
-        _x params ["_pos", "_pow"];
-        private _dist = player distance2D _pos;
-        if (_dist > CQ_rdfRange) then { continue };
-        private _fall = (1 - _dist / CQ_rdfRange) ^ 1.6;
-        private _brg = player getDir _pos;
-        private _off = abs (((_brg - _look) + 540) % 360 - 180);
-        private _dir = 0.25 + 0.75 * ((cos _off) max 0) ^ 2;
-        _best = _best max (_pow * _fall * _dir);
+        private _dd = player distance2D (_x select 0);
+        if (_dd < _bestD) then { _bestD = _dd; _src = _x };
     } forEach (missionNamespace getVariable ["CQ_rdfSources", []]);
-    // receiver noise
-    private _s = ((_best + (random 0.04) - 0.02) max 0) min 1;
-    private _n = round (_s * 10);
-    {
-        private _c = if (_forEachIndex < _n) then {
-            [[0.9, 0.35, 0.2, 0.95], [0.95, 0.75, 0.3, 0.95], [0.45, 0.85, 0.4, 0.95]] select (floor (_forEachIndex / 3.4))
-        } else { [0.3, 0.3, 0.3, 0.45] };
-        _x ctrlSetBackgroundColor _c;
-    } forEach _bars;
-    _lbl ctrlSetStructuredText parseText format [
-        "<t font='EtelkaMonospaceProBold' size='0.75' color='#e3cf7a'>RDF</t><t font='EtelkaMonospacePro' size='0.7' color='#d0d0c0'>  %1</t>",
-        if (_s < 0.03) then { "no signal" } else { format ["%1%%", round (_s * 100)] }
-    ];
+
+    private _target = -1;          // -1 = no signal
+    if (_src isNotEqualTo [] && { _bestD <= CQ_rdfRange }) then {
+        _src params ["_pos", "_pow"];
+        private _view = getCameraViewDirection player;
+        private _look = (_view select 0) atan2 (_view select 1);
+        private _fall = (1 - _bestD / CQ_rdfRange) ^ 1.6;
+        private _off = abs ((((player getDir _pos) - _look) + 540) % 360 - 180);
+        private _dir = 0.25 + 0.75 * ((cos _off) max 0) ^ 2;
+        _target = ((_pow * _fall * _dir + (random 0.03) - 0.015) max 0) min 1;
+    };
+
+    if (_target < 0) then {
+        _disp = 0;
+        _lbl ctrlSetText "NO SIGNAL";
+        _lbl ctrlSetTextColor [0.55, 0.55, 0.55, 1];
+        _edge ctrlSetBackgroundColor [0.4, 0.4, 0.4, 0.9];
+        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='1.05' color='#6e6e6e'>--</t>";
+        { _x ctrlSetBackgroundColor _offColor } forEach _bars;
+    } else {
+        _disp = _disp + (_target - _disp) * 0.4;          // smooth the needle
+        private _v = round (_disp * 100);
+        _lbl ctrlSetText "SIGNAL";
+        _lbl ctrlSetTextColor [0.75, 0.75, 0.75, 1];
+        _edge ctrlSetBackgroundColor [1, 1, 1, 0.9];
+        _pct ctrlSetStructuredText parseText format [
+            "<t align='right'><t font='PuristaSemibold' size='1.25' color='#ffffff'>%1</t><t font='PuristaLight' size='0.85' color='#a0a0a0'> %%</t></t>", _v];
+        private _n = round (_disp * _segs);
+        {
+            _x ctrlSetBackgroundColor ([_offColor, [1, 1, 1, 0.55 + 0.45 * (_forEachIndex / _segs)]] select (_forEachIndex < _n));
+        } forEach _bars;
+    };
 };
