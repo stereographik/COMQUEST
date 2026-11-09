@@ -84,12 +84,12 @@ class Mission
 					flags=7;
 					class Attributes
 					{
-						description="Squad Leader@Unassigned";
+						description="Rifleman@Unassigned";
 						isPlayable=1;
 						isPlayer=1;
 					};
-					id=1;
-					type="B_Soldier_SL_F";
+					id=21;
+					type="B_Soldier_F";
 				};
 				class Item1
 				{
@@ -102,11 +102,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Squad Leader@Unassigned";
+						description="Rifleman@Unassigned";
 						isPlayable=1;
 					};
-					id=2;
-					type="B_Soldier_SL_F";
+					id=22;
+					type="B_Soldier_F";
 				};
 				class Item2
 				{
@@ -119,11 +119,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Squad Leader@Unassigned";
+						description="Rifleman@Unassigned";
 						isPlayable=1;
 					};
-					id=3;
-					type="B_Soldier_SL_F";
+					id=23;
+					type="B_Soldier_F";
 				};
 				class Item3
 				{
@@ -136,11 +136,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Squad Leader@Unassigned";
+						description="Rifleman@Unassigned";
 						isPlayable=1;
 					};
-					id=4;
-					type="B_Soldier_SL_F";
+					id=24;
+					type="B_Soldier_F";
 				};
 				class Item4
 				{
@@ -153,11 +153,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Medic@Unassigned";
+						description="Squad Leader@Unassigned";
 						isPlayable=1;
 					};
-					id=5;
-					type="B_medic_F";
+					id=1;
+					type="B_Soldier_SL_F";
 				};
 				class Item5
 				{
@@ -170,11 +170,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Medic@Unassigned";
+						description="Squad Leader@Unassigned";
 						isPlayable=1;
 					};
-					id=6;
-					type="B_medic_F";
+					id=2;
+					type="B_Soldier_SL_F";
 				};
 				class Item6
 				{
@@ -187,11 +187,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Medic@Unassigned";
+						description="Squad Leader@Unassigned";
 						isPlayable=1;
 					};
-					id=7;
-					type="B_medic_F";
+					id=3;
+					type="B_Soldier_SL_F";
 				};
 				class Item7
 				{
@@ -204,11 +204,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Medic@Unassigned";
+						description="Squad Leader@Unassigned";
 						isPlayable=1;
 					};
-					id=8;
-					type="B_medic_F";
+					id=4;
+					type="B_Soldier_SL_F";
 				};
 				class Item8
 				{
@@ -221,11 +221,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Autorifleman@Unassigned";
+						description="Medic@Unassigned";
 						isPlayable=1;
 					};
-					id=9;
-					type="B_soldier_AR_F";
+					id=5;
+					type="B_medic_F";
 				};
 				class Item9
 				{
@@ -238,11 +238,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Autorifleman@Unassigned";
+						description="Medic@Unassigned";
 						isPlayable=1;
 					};
-					id=10;
-					type="B_soldier_AR_F";
+					id=6;
+					type="B_medic_F";
 				};
 				class Item10
 				{
@@ -255,11 +255,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Autorifleman@Unassigned";
+						description="Medic@Unassigned";
 						isPlayable=1;
 					};
-					id=11;
-					type="B_soldier_AR_F";
+					id=7;
+					type="B_medic_F";
 				};
 				class Item11
 				{
@@ -272,11 +272,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Autorifleman@Unassigned";
+						description="Medic@Unassigned";
 						isPlayable=1;
 					};
-					id=12;
-					type="B_soldier_AR_F";
+					id=8;
+					type="B_medic_F";
 				};
 				class Item12
 				{
@@ -289,11 +289,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Rifleman AT@Unassigned";
+						description="Autorifleman@Unassigned";
 						isPlayable=1;
 					};
-					id=13;
-					type="B_soldier_LAT_F";
+					id=9;
+					type="B_soldier_AR_F";
 				};
 				class Item13
 				{
@@ -306,11 +306,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Rifleman AT@Unassigned";
+						description="Autorifleman@Unassigned";
 						isPlayable=1;
 					};
-					id=14;
-					type="B_soldier_LAT_F";
+					id=10;
+					type="B_soldier_AR_F";
 				};
 				class Item14
 				{
@@ -323,11 +323,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Rifleman AT@Unassigned";
+						description="Autorifleman@Unassigned";
 						isPlayable=1;
 					};
-					id=15;
-					type="B_soldier_LAT_F";
+					id=11;
+					type="B_soldier_AR_F";
 				};
 				class Item15
 				{
@@ -340,11 +340,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Rifleman AT@Unassigned";
+						description="Autorifleman@Unassigned";
 						isPlayable=1;
 					};
-					id=16;
-					type="B_soldier_LAT_F";
+					id=12;
+					type="B_soldier_AR_F";
 				};
 				class Item16
 				{
@@ -357,11 +357,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Engineer@Unassigned";
+						description="Rifleman AT@Unassigned";
 						isPlayable=1;
 					};
-					id=17;
-					type="B_engineer_F";
+					id=13;
+					type="B_soldier_LAT_F";
 				};
 				class Item17
 				{
@@ -374,11 +374,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Engineer@Unassigned";
+						description="Rifleman AT@Unassigned";
 						isPlayable=1;
 					};
-					id=18;
-					type="B_engineer_F";
+					id=14;
+					type="B_soldier_LAT_F";
 				};
 				class Item18
 				{
@@ -391,11 +391,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Engineer@Unassigned";
+						description="Rifleman AT@Unassigned";
 						isPlayable=1;
 					};
-					id=19;
-					type="B_engineer_F";
+					id=15;
+					type="B_soldier_LAT_F";
 				};
 				class Item19
 				{
@@ -408,11 +408,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Engineer@Unassigned";
+						description="Rifleman AT@Unassigned";
 						isPlayable=1;
 					};
-					id=20;
-					type="B_engineer_F";
+					id=16;
+					type="B_soldier_LAT_F";
 				};
 				class Item20
 				{
@@ -425,11 +425,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Rifleman@Unassigned";
+						description="Engineer@Unassigned";
 						isPlayable=1;
 					};
-					id=21;
-					type="B_Soldier_F";
+					id=17;
+					type="B_engineer_F";
 				};
 				class Item21
 				{
@@ -442,11 +442,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Rifleman@Unassigned";
+						description="Engineer@Unassigned";
 						isPlayable=1;
 					};
-					id=22;
-					type="B_Soldier_F";
+					id=18;
+					type="B_engineer_F";
 				};
 				class Item22
 				{
@@ -459,11 +459,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Rifleman@Unassigned";
+						description="Engineer@Unassigned";
 						isPlayable=1;
 					};
-					id=23;
-					type="B_Soldier_F";
+					id=19;
+					type="B_engineer_F";
 				};
 				class Item23
 				{
@@ -476,11 +476,11 @@ class Mission
 					flags=5;
 					class Attributes
 					{
-						description="Rifleman@Unassigned";
+						description="Engineer@Unassigned";
 						isPlayable=1;
 					};
-					id=24;
-					type="B_Soldier_F";
+					id=20;
+					type="B_engineer_F";
 				};
 				class Item24
 				{

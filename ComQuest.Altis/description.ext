@@ -14,6 +14,7 @@ class Header
 };
 
 // --- Respawn: at the airport base -----------------------------------------
+joinUnassigned = 0;             // joining players are put on the first free slot (Rifleman first): they only click OK
 respawn = 3;                    // BASE (marker "respawn_west", created by script)
 respawnDelay = 15;              // keep in sync with CQ_respawnDelay in cfg\settings.sqf
 respawnOnStart = -1;            // start on the Eden slot, no respawn at mission start
