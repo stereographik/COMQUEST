@@ -100,7 +100,7 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "Last position has fallen. The CSAT landing on Altis is broken. Mission accomplished. Bring them home."]]
     ]]
 ];
-CQ_uiCardWidth = 340;                     // notification card width in pixels
+CQ_uiCardWidth = 620;                     // notification card width in pixels (message text block ~560 px)
 CQ_uiCardMax = 5;                         // cards on screen at once (more wait in line)
 CQ_storyLineGap = 4;          // seconds between two lines of the same message
 CQ_storyCooldown = 20;        // the same message about the same objective at most every 20 s
