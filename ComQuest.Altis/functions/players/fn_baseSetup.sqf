@@ -377,6 +377,15 @@ CQ_baseDefs = [];
     };
     private _p = [_want, 7, 40] call CQ_fnc_clearPos;
     if (_p isEqualTo []) then { continue };
+    if (count _ils >= 2 && { count _ilsDir >= 3 }) then {
+        private _h2 = (_ilsDir select 0) atan2 (_ilsDir select 2);
+        private _rel2 = _p vectorDiff [_ils select 0, _ils select 1, 0];
+        if (abs ((_rel2 select 0) * cos _h2 - (_rel2 select 1) * sin _h2) < CQ_runwayClear) then {
+            ["Base defence spot %1 skipped: still too close to the runway", [_forEachIndex + 1]] call CQ_fnc_log;
+            _p = [];
+        };
+    };
+    if (_p isEqualTo []) then { continue };
     CQ_baseDefs pushBack createHashMapFromArray [["pos", _p], ["dir", _ang], ["objs", []], ["lostT", -1]];
 } forEach CQ_baseDefAngles;
 { [_x] call CQ_fnc_baseDefBuild } forEach CQ_baseDefs;

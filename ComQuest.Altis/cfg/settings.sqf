@@ -371,4 +371,6 @@ CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (t
 CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
-CQ_magRunwayFlip = false;                // true if the drones spawn facing off the runway end
+CQ_magRunwayFlip = false;
+CQ_runwayLength = 2600;                  // take-off strip cleared ahead of the drone spawn point (m)
+CQ_runwayHalfWidth = 40;                 // ... this far either side of the centre line                // true if the drones spawn facing off the runway end

@@ -18,6 +18,34 @@ if (count _ils >= 2 && { count _ilsDir >= 3 }) then {
 } else {
     CQ_magRunway = [CQ_basePos getPos [150, CQ_baseDir], CQ_baseDir];
 };
+// clear the take-off strip: everything on the runway goes (terrain objects hidden, mission
+// objects deleted), from 150 m behind the spawn point to CQ_runwayLength ahead, CQ_runwayHalfWidth
+// either side of the centre line. Vehicles and people are left alone.
+CQ_magRunway params ["_rp0", "_hdg0"];
+private _hiddenT = 0; private _deleted = 0;
+private _inStrip = {
+    params ["_o"];
+    private _rel = (getPosATL _o) vectorDiff _rp0;
+    private _along = (_rel select 0) * sin _hdg0 + (_rel select 1) * cos _hdg0;
+    private _side = (_rel select 0) * cos _hdg0 - (_rel select 1) * sin _hdg0;
+    _along > -150 && { _along < CQ_runwayLength } && { abs _side < CQ_runwayHalfWidth }
+};
+private _mid = _rp0 getPos [CQ_runwayLength / 2 - 75, _hdg0];
+private _rad = CQ_runwayLength / 2 + 100;
+private _roads = _mid nearRoads _rad;
+{
+    if (!(_x in _roads) && { [_x] call _inStrip }) then { hideObjectGlobal _x; _hiddenT = _hiddenT + 1 };
+} forEach (nearestTerrainObjects [_mid, [], _rad, false, true]);
+{
+    if (!(_x isKindOf "CAManBase") && { !(_x isKindOf "LandVehicle") || { _x isKindOf "StaticWeapon" } } && { !(_x isKindOf "Air") }
+        && { !(_x isKindOf "Logic") } && { [_x] call _inStrip }) then {
+        { deleteVehicle _x } forEach (crew _x);
+        deleteVehicle _x;
+        _deleted = _deleted + 1;
+    };
+} forEach (nearestObjects [_mid, ["All"], _rad]);
+["MAGPIE: runway cleared (%1 terrain objects hidden, %2 mission objects removed)", [_hiddenT, _deleted]] call CQ_fnc_log;
+
 CQ_magEastOk = {
     params ["_p"];
     !surfaceIsWater _p && {

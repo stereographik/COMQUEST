@@ -127,6 +127,7 @@ private _known = [];
     if (((getPosATL _v) select 2) < 40 && { time - (_m get "planT") < 300 }) then { continue };
     private _tgt = _m get "target";
     private _arrived = (_m get "explore") && { _tgt isNotEqualTo [] } && { _v distance2D _tgt < 500 };
+    if (_arrived) then { { if ((_x select 0) isEqualTo _tgt) then { _x set [1, true] } } forEach CQ_magCells };
     if (time - (_m get "planT") < CQ_magPlanEvery && { !_arrived }) then { continue };
     _m set ["planT", time];
     private _i = _m get "i";
