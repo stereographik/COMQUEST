@@ -164,7 +164,7 @@ CQ_rdfRange = 6000;                      // no signal beyond this
 CQ_rdfTop = 40;                          // signal panel: px from the top of the screen (centred)
 CQ_playerMapMarkers = false;             // true = enemy HQ areas and the carrier shown on the players' map
 // Base defence spots (AA + HMG, NATO gunners), around the camp, off the runway
-CQ_baseDefAngles = [45, 135, 225, 315];  // relative to the camp front
+CQ_baseDefAngles = [45, 225, 315];       // relative to the camp front (135 removed: it sat on the taxiway the drones use)
 CQ_baseDefRadius = 230;
 CQ_runwayClear = 80;                     // defence spots stay this far from the runway centre line
 CQ_baseDefRespawn = 600;                 // a lost spot is rebuilt 10 min later

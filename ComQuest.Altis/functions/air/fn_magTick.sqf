@@ -32,12 +32,13 @@ private _cat = {
 };
 
 // ---- drones: spawn, loss, fuel
-// Vanilla take-off: a due drone spawns on the take-off spot (engine on, a waypoint down the
-// runway) and the game AI flies it from there; nothing is forced. One drone at a time: the next
-// one spawns once the previous one has left the ground (> 30 m) and the spot is clear.
-// A lost drone is reported and comes back after CQ_magRespawn s.
+// Darters take off together from their pads in the UAV field. Fixed-wing drones line up on the
+// runway: the first 5 m behind the take-off spot, the next ones 10 m apart behind it, facing
+// down the runway. They have no orders while waiting; the front one gets its take-off order
+// (a waypoint down the runway: the game AI flies the take-off) as soon as the runway is clear,
+// i.e. the previous one is airborne (> 30 m). A lost drone comes back after CQ_magRespawn s.
 CQ_magRunway params ["_rp", "_hdg"];
-private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "rolling" } && { !((_x get "veh") isKindOf "Helicopter") } }) > -1;
+private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault ["pad", -1]) > -1 }) };
 {
     private _m = _x;
     private _v = _m get "veh";
@@ -50,12 +51,17 @@ private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault 
         ["magDown", [_m get "name"]] call CQ_fnc_say;
         ["MAGPIE: %1 lost at %2, replacement in %3 s", [_m get "name", mapGridPosition _v, CQ_magRespawn]] call CQ_fnc_log;
     };
-    // Darters (quadcopters) take off together from their own pad in the UAV field; the others
-    // use the runway, one at a time
-    private _quad = (_m get "cls") == "B_UAV_01_F" && { (_m getOrDefault ["pad", -1]) > -1 };
-    if ((isNull _v || { !alive _v }) && { time >= (_m get "due") } && { _quad || { !_onRunway } }) then {
-        private _sp = if (_quad) then { CQ_magPads select (_m get "pad") } else { _rp };
-        if (((nearestObjects [_sp, ["LandVehicle", "Air"], [30, 5] select _quad]) select { alive _x }) isNotEqualTo []) exitWith {};   // spot busy
+    if ((isNull _v || { !alive _v }) && { time >= (_m get "due") }) then {
+        private _quad = !(_m call _fixed);
+        private _sp = [];
+        if (_quad) then { _sp = CQ_magPads select (_m get "pad") } else {
+            // next free place in the line behind the take-off spot
+            private _line = { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) == "waiting" } } count CQ_mag;
+            private _rolling = (CQ_mag findIf { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) == "rolling" } }) > -1;
+            _sp = _rp getPos [-(5 + 10 * (_line + ([0, 1] select _rolling))), _hdg];
+        };
+        _sp = [_sp select 0, _sp select 1, 0];
+        if (((nearestObjects [_sp, ["LandVehicle", "Air"], 4]) select { alive _x }) isNotEqualTo []) exitWith {};   // place busy
         private _nv = createVehicle [_m get "cls", _sp, [], 0, "CAN_COLLIDE"];
         _nv setDir ([_hdg, CQ_baseDir] select _quad);
         _nv setPosATL [_sp select 0, _sp select 1, 0.3];
@@ -67,19 +73,21 @@ private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault 
         _g setCombatMode "BLUE";
         _nv flyInHeight (_m get "alt");
         _nv engineOn true;
-        private _wp = _g addWaypoint [[_rp getPos [3000, _hdg], _sp getPos [1500, CQ_baseDir]] select _quad, 0];
-        _wp setWaypointType "MOVE";
         _nv setVariable ["CQ_magpie", true, true];
         _nv setVariable ["CQ_magName", _m get "name", true];
         _m set ["veh", _nv];
         _m set ["lost", false];
-        _m set ["phase", "rolling"];
-        _m set ["rollT", time];
         _m set ["planT", time];
-        if (!_quad) then { _onRunway = true };
+        if (_quad) then {
+            (_g addWaypoint [_sp getPos [1500, CQ_baseDir], 0]) setWaypointType "MOVE";
+            _m set ["phase", "rolling"];
+            _m set ["rollT", time];
+        } else {
+            _m set ["phase", "waiting"];               // no orders until cleared for take-off
+        };
         CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
         publicVariable "CQ_magVehs";
-        ["MAGPIE: %1 (%2) %3", [_m get "name", _m get "cls", ["on the runway", format ["on pad %1 of the UAV field", _m get "pad"]] select _quad]] call CQ_fnc_log;
+        ["MAGPIE: %1 (%2) %3", [_m get "name", _m get "cls", if (_quad) then { format ["on pad %1 of the UAV field", _m get "pad"] } else { format ["lined up %1 m behind the take-off spot", round (_sp distance2D _rp)] }]] call CQ_fnc_log;
     };
     if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 };
     // anti-stuck: on the ground and not moving for CQ_magStuckTime s -> a gentle push forward and a
@@ -105,6 +113,23 @@ private _onRunway = (CQ_mag findIf { alive (_x get "veh") && { (_x getOrDefault 
         ["MAGPIE: %1 airborne after %2 s", [_m get "name", round (time - (_m get "rollT"))]] call CQ_fnc_log;
     };
 } forEach CQ_mag;
+// take-off clearance: the waiting drone nearest the take-off spot, once nobody is rolling
+if ((CQ_mag findIf { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) == "rolling" } }) == -1) then {
+    private _line = CQ_mag select { (_x call _fixed) && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) == "waiting" } };
+    if (_line isNotEqualTo []) then {
+        private _m = ([_line, [], { (_x get "veh") distance2D _rp }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+        private _v = _m get "veh";
+        private _g = group effectiveCommander _v;
+        [_g] call CQ_fnc_clearWaypoints;
+        private _wp = _g addWaypoint [_rp getPos [3000, _hdg], 0];
+        _wp setWaypointType "MOVE";
+        _g setCurrentWaypoint _wp;
+        _m set ["phase", "rolling"];
+        _m set ["rollT", time];
+        _m set ["moveT", time];
+        ["MAGPIE: %1 cleared for take-off", [_m get "name"]] call CQ_fnc_log;
+    };
+};
 
 private _flying = CQ_mag select { alive (_x get "veh") && { (_x getOrDefault ["phase", ""]) == "air" } };
 
