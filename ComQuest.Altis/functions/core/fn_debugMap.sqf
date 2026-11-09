@@ -1,16 +1,25 @@
 /*
-    CQ_fnc_debugMap  (client, DEBUG only)
-    Draws every unit and crewed vehicle on the map, coloured by side:
-    CSAT red, NATO blue, AAF green, civilians purple. Group leaders show their callsign;
-    CSAT groups and vehicles also show role and ammo % (published by the server in debug).
+    CQ_fnc_debugMap  (client, debug panel users: debug mission, host or logged-in admin)
+    Map overlay, switched from the debug panel (all off by default outside CQ_debug):
+      CQ_dbgShowEnemy   every enemy unit and crewed vehicle (CSAT red, guerillas green)
+      CQ_dbgShowFriend  every friendly unit and crewed vehicle (blue), civilians purple
+      CQ_dbgShowHq      every enemy HQ site with its number and state (list sent by the server
+                        with each panel refresh, CQ_dbgHqList)
+    Group leaders show their callsign; CSAT groups and vehicles also show role and ammo %.
 */
-if (!hasInterface || { !CQ_debug }) exitWith {};
+if (!hasInterface) exitWith {};
+if (isNil "CQ_dbgShowEnemy") then { CQ_dbgShowEnemy = CQ_debug };
+if (isNil "CQ_dbgShowFriend") then { CQ_dbgShowFriend = false };
+if (isNil "CQ_dbgShowHq") then { CQ_dbgShowHq = false };
+if (!isNil "CQ_dbgMapHooked") exitWith {};
+CQ_dbgMapHooked = true;
 
 [] spawn {
     disableSerialization;
     waitUntil { sleep 0.5; !isNull ((findDisplay 12) displayCtrl 51) };
     ((findDisplay 12) displayCtrl 51) ctrlAddEventHandler ["Draw", {
         params ["_map"];
+        if (!CQ_dbgShowEnemy && { !CQ_dbgShowFriend } && { !CQ_dbgShowHq }) exitWith {};
         private _col = {
             switch (_this) do {
                 case east: { [0.9, 0.15, 0.15, 1] };
@@ -19,29 +28,42 @@ if (!hasInterface || { !CQ_debug }) exitWith {};
                 default { [0.7, 0.3, 0.9, 1] };
             }
         };
+        private _want = { private _s = _this; [CQ_dbgShowFriend, CQ_dbgShowEnemy] select (_s in [east, independent]) };
         private _icon = {
             private _i = getText (configOf _this >> "icon");
             private _p = getText (configFile >> "CfgVehicleIcons" >> _i);
             [_p, _i] select (_p == "")
         };
-
-        // Crewed vehicles (one icon for the vehicle and everyone inside)
-        {
-            if (alive _x && { (crew _x) isNotEqualTo [] }) then {
-                private _g = group effectiveCommander _x;
-                private _txt = format ["%1 %2", groupId _g, _x getVariable ["CQ_dbg", ""]];
-                _map drawIcon [_x call _icon, (side _g) call _col, getPosASLVisual _x, 24, 24, getDirVisual _x, _txt, 1, 0.035, "PuristaMedium", "right"];
-            };
-        } forEach vehicles;
-
-        // Soldiers on foot
-        {
-            if (vehicle _x == _x) then {
-                private _g = group _x;
-                private _txt = ["", format ["%1 %2", groupId _g, _g getVariable ["CQ_dbg", ""]]] select (leader _g == _x);
-                _map drawIcon [_x call _icon, (side _g) call _col, getPosASLVisual _x, 16, 16, getDirVisual _x, _txt, 1, 0.03, "PuristaMedium", "right"];
-            };
-        } forEach allUnits;
+        if (CQ_dbgShowEnemy || CQ_dbgShowFriend) then {
+            // crewed vehicles (one icon for the vehicle and everyone inside)
+            {
+                if (alive _x && { (crew _x) isNotEqualTo [] }) then {
+                    private _g = group effectiveCommander _x;
+                    if ((side _g) call _want) then {
+                        _map drawIcon [_x call _icon, (side _g) call _col, getPosASLVisual _x, 24, 24, getDirVisual _x,
+                            format ["%1 %2", groupId _g, _x getVariable ["CQ_dbg", ""]], 1, 0.035, "PuristaMedium", "right"];
+                    };
+                };
+            } forEach vehicles;
+            // soldiers on foot
+            {
+                if (vehicle _x == _x && { alive _x }) then {
+                    private _g = group _x;
+                    if ((side _g) call _want) then {
+                        private _txt = ["", format ["%1 %2", groupId _g, _g getVariable ["CQ_dbg", ""]]] select (leader _g == _x);
+                        _map drawIcon [_x call _icon, (side _g) call _col, getPosASLVisual _x, 16, 16, getDirVisual _x, _txt, 1, 0.03, "PuristaMedium", "right"];
+                    };
+                };
+            } forEach allUnits;
+        };
+        if (CQ_dbgShowHq) then {
+            {
+                _x params ["_id", "_txt", "_pos"];
+                if (_pos isEqualTo []) then { continue };
+                _map drawIcon ["\A3\ui_f\data\map\markers\military\objective_CA.paa", [0.95, 0.2, 0.2, 1], _pos, 30, 30, 0,
+                    format ["HQ #%1", _id], 2, 0.045, "PuristaBold", "right"];
+                _map drawEllipse [_pos, 300, 300, 0, [0.95, 0.2, 0.2, 0.6], ""];
+            } forEach (missionNamespace getVariable ["CQ_dbgHqList", []]);
+        };
     }];
-    systemChat "[CQ] Debug map on: every unit is drawn on the map";
 };

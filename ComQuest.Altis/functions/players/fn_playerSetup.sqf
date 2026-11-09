@@ -49,19 +49,19 @@ if (isNil "CQ_squadKeyBound") then {
     };
 };
 
-// Debug panel: F3 only (no scroll menu entry), debug missions only
-if (CQ_debug) then {
-    if (isNil "CQ_debugKeyBound") then {
-        CQ_debugKeyBound = true;
-        [] spawn {
-            waitUntil { sleep 0.5; !isNull (findDisplay 46) };
-            (findDisplay 46) displayAddEventHandler ["KeyDown", {
-                params ["", "_key"];
-                if (_key == 61) then { [] spawn CQ_fnc_debugUi; true } else { false };   // 61 = F3
-            }];
-        };
+// Debug panel: F3, plus a scroll action, for debug missions, the host and logged-in admins
+if (isNil "CQ_debugKeyBound") then {
+    CQ_debugKeyBound = true;
+    [] spawn {
+        waitUntil { sleep 0.5; !isNull (findDisplay 46) };
+        (findDisplay 46) displayAddEventHandler ["KeyDown", {
+            params ["", "_key"];
+            if (_key == 61 && { CQ_debug || { isServer } || { (call BIS_fnc_admin) > 0 } }) then { [] spawn CQ_fnc_debugUi; true } else { false };   // 61 = F3
+        }];
     };
 };
+player addAction ["<t color='#FFA040'>Debug panel</t>", { [] spawn CQ_fnc_debugUi }, nil, -10, false, true, "",
+    "_this == _target && { CQ_debug || { isServer } || { (call BIS_fnc_admin) > 0 } }"];
 
 // Once per client: arsenal action + save the loadout when the arsenal closes
 if (isNil "CQ_arsenalReady") then {

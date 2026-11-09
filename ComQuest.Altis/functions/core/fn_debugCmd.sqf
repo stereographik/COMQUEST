@@ -1,22 +1,23 @@
 /*
-    CQ_fnc_debugCmd  (server, DEBUG only, called from the debug panel)
+    CQ_fnc_debugCmd  (server, from the debug panel CQ_fnc_debugUi)
     [_cmd, _hqId] remoteExec ["CQ_fnc_debugCmd", 2];
-      "next"    advance the selected HQ to its next phase
-      "ammo"    +200 ammo in the selected HQ's depot
-      "fuel"    +200 fuel in the selected HQ's tanker
-      "destroy" kill the commander and blow the depot (before the build: kill its troops)
-      "root"    launch the next root insertion now
-      "flight"  launch the ammo flight to the main HQ now
-      "list"    just refresh
+    Allowed for debug missions, the host and logged-in admins.
+    Enemy HQ (selected):  next, ammo, fuel, killCmd, capture, tower, depot, destroy, wave
+    Carrier and forces:   root, flight, carrierMinus, carrierFull, killAll
+    Story:                actNext, sitrep, storyReset
+    MAGPIE:               magReport, magLaunch, magKill
+    Player (the caller):  heal, tpBase, tpHq, points, vehFix
+    Base and world:       vehReset, defRebuild, time1, noon, night, clearWx
+    list                  just refresh
     Answers the caller with the HQ list (CQ_fnc_debugUiFill).
 */
 params [["_cmd", "list"], ["_id", -1]];
-if (!CQ_debug) exitWith {};
-
 private _caller = remoteExecutedOwner;
+if !(CQ_debug || { _caller == 2 } || { (admin _caller) > 0 }) exitWith {};
+private _p = (allPlayers select { owner _x == _caller }) param [0, objNull];
 private _hq = CQ_hqs getOrDefault [_id, createHashMap];
 private _msg = "";
-private _needHq = _cmd in ["next", "ammo", "fuel", "destroy"];
+private _needHq = _cmd in ["next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq"];
 
 if (_needHq && { count _hq == 0 }) then {
     _msg = "Select an HQ in the list first";
@@ -73,6 +74,102 @@ if (_needHq && { count _hq == 0 }) then {
                 _msg = "all root insertions already used";
             };
         };
+        case "killCmd": {
+            private _c = _hq get "commander";
+            if (alive _c) then { _c setDamage 1; _msg = format ["HQ #%1: commander killed", _id] } else { _msg = format ["HQ #%1 has no living commander", _id] };
+        };
+        case "capture": {
+            private _c = _hq get "commander";
+            if (alive _c && { !isNull _p }) then { ["capture", _c, _p] call CQ_fnc_cmdCapture; _msg = format ["HQ #%1: commander captured", _id] }
+            else { _msg = format ["HQ #%1 has no living commander", _id] };
+        };
+        case "tower": {
+            private _r = _hq getOrDefault ["radio", objNull];
+            if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: radio tower destroyed", _id] } else { _msg = format ["HQ #%1 has no tower", _id] };
+        };
+        case "depot": {
+            private _r = _hq getOrDefault ["depot", objNull];
+            if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: depot destroyed", _id] } else { _msg = format ["HQ #%1 has no depot", _id] };
+        };
+        case "wave": { _hq set ["nextWaveT", time]; _msg = format ["HQ #%1: reinforcement wave requested (state %2)", _id, _hq get "state"] };
+        case "carrierMinus": {
+            CQ_carrierLeft = ((missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs]) - 1) max 0;
+            call CQ_fnc_carrierMarker; CQ_actNext = 0;
+            _msg = format ["carrier: supplies for %1 more HQ(s)", CQ_carrierLeft];
+        };
+        case "carrierFull": { CQ_carrierLeft = CQ_carrierHqs; call CQ_fnc_carrierMarker; _msg = "carrier refilled" };
+        case "killAll": {
+            private _n = 0;
+            { if (alive _x && { side group _x in [east, independent] }) then { _x setDamage 1; _n = _n + 1 } } forEach allUnits;
+            _msg = format ["%1 enemies killed", _n];
+        };
+        case "actNext": {
+            CQ_act = ((missionNamespace getVariable ["CQ_act", 1]) + 1) min 4;
+            publicVariable "CQ_act";
+            [format ["act%1", CQ_act], []] call CQ_fnc_say;
+            _msg = format ["act %1", CQ_act];
+        };
+        case "sitrep": { CQ_sitrepT = -1e6; CQ_storyQuietUntil = -1; CQ_actNext = 0; _msg = "SITREP on the next story tick" };
+        case "storyReset": { CQ_storyCrossroadT = -1e6; CQ_storyQuietUntil = -1; CQ_storyLast = createHashMap; _msg = "speech budget, silence and cooldowns reset" };
+        case "magReport": { CQ_magReportT = -1e6; CQ_magNext = 0; _msg = "MAGPIE report on the next tick (only if something is new)" };
+        case "magLaunch": {
+            { if (!alive (_x get "veh")) then { _x set ["due", time] } } forEach CQ_mag;
+            CQ_magNext = 0; _msg = "missing drones launch now";
+        };
+        case "magKill": {
+            private _n = 0;
+            { if (alive (_x get "veh")) then { (_x get "veh") setDamage 1; _n = _n + 1 } } forEach CQ_mag;
+            _msg = format ["%1 drone(s) shot down", _n];
+        };
+        case "heal": { if (!isNull _p) then { _p setDamage 0; _msg = "healed" } };
+        case "tpBase": {
+            if (!isNull _p) then {
+                [_p] remoteExec ["moveOut", _p];
+                [_p] spawn { params ["_p"]; sleep 0.5; _p setPosATL CQ_musterPos };
+                _msg = "teleported to the base";
+            };
+        };
+        case "tpHq": {
+            if (!isNull _p) then {
+                private _t = (_hq get "pos") getPos [250, random 360];
+                if (vehicle _p != _p) then { (vehicle _p) setPosATL [_t select 0, _t select 1, 0] } else { _p setPosATL [_t select 0, _t select 1, 0] };
+                _msg = format ["teleported 250 m from HQ #%1", _id];
+            };
+        };
+        case "points": {
+            private _g = group _p;
+            if (isNull _p || { _g getVariable ["CQ_solo", true] }) then { _msg = "join or create a squad first" } else {
+                _g setVariable ["CQ_sqPts", (_g getVariable ["CQ_sqPts", 0]) + 500, true];
+                _msg = format ["%1 now has %2 squad points", groupId _g, _g getVariable ["CQ_sqPts", 0]];
+            };
+        };
+        case "vehFix": {
+            private _v = vehicle _p;
+            if (isNull _p || { _v == _p }) then { _msg = "get in a vehicle first" } else {
+                _v setDamage 0; [_v, 1] remoteExec ["setFuel", _v]; [_v, 1] remoteExec ["setVehicleAmmo", _v];
+                _msg = format ["%1 repaired, refuelled, rearmed", typeOf _v];
+            };
+        };
+        case "vehReset": {
+            private _n = 0;
+            {
+                private _v = _x get "veh";
+                if (isNull _v || { !alive _v } || { ({ alive _x } count crew _v) == 0 }) then {
+                    if (!isNull _v) then { deleteVehicle _v };
+                    [_x] call CQ_fnc_vehSpawn;
+                    _n = _n + 1;
+                };
+            } forEach CQ_vehEntries;
+            _msg = format ["%1 base vehicles respawned on their spots", _n];
+        };
+        case "defRebuild": {
+            { [_x] call CQ_fnc_baseDefBuild; _x set ["lostT", -1] } forEach CQ_baseDefs;
+            _msg = format ["%1 base defence spots rebuilt", count CQ_baseDefs];
+        };
+        case "time1": { skipTime 1; _msg = "+1 hour" };
+        case "noon": { skipTime ((12 - daytime + 24) % 24); _msg = "noon" };
+        case "night": { skipTime ((23 - daytime + 24) % 24); _msg = "23:00" };
+        case "clearWx": { 0 setOvercast 0; 0 setRain 0; 0 setFog 0; forceWeatherChange; _msg = "clear weather" };
         case "flight": {
             if (CQ_hubId < 0) then { _msg = "no main HQ yet" } else {
                 if (CQ_ammoFlightActive) then { _msg = "an ammo flight is already in the air" } else {
@@ -96,12 +193,22 @@ private _rows = [];
         round (_h get "stock"), _h get "cap", _inf,
         ["", format ["  |  child of #%1", _h get "parent"]] select ((_h get "parent") > -1),
         ["", format ["  |  site tolerance %1", _h get "siteLevel"]] select ((_h get "siteLevel") > 0),
-        round (_h get "fuel")]];
+        round (_h get "fuel")], _h get "pos"];
 } forEach CQ_hqs;
 _rows sort true;
 
-private _status = format ["Roots %1/%2 (next in %3 s)  |  main HQ %4  |  trucks %5  |  aircraft %6  |  enemy AI %7  |  carrier %8",
+private _left = missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs];
+private _drones = (missionNamespace getVariable ["CQ_mag", []]) apply {
+    format ["%1 %2", _x get "name", if (alive (_x get "veh")) then { format ["%1 m", round ((getPosATL (_x get "veh")) select 2)] } else { format ["in %1 s", round (((_x get "due") - time) max 0)] }]
+};
+private _status = format ["<t size='0.85'>Act <t color='#ffb060'>%1</t>   |   carrier <t color='#ffb060'>%2%%</t> (%3 HQ left)   |   insertions %4/%5, next in %6 s<br/>Enemy infantry <t color='#ffb060'>%7/%8</t>   |   all AI %9/%10   |   main HQ %11   |   trucks %12   |   aircraft %13<br/>MAGPIE: %14<br/>Medics %15, engineers %16 respawns left   |   time %17   |   %18 players</t>",
+    missionNamespace getVariable ["CQ_act", 1], round (100 * (_left max 0) / CQ_carrierHqs), _left max 0,
     CQ_rootsLaunched, CQ_maxRoots, round ((CQ_nextRootTime - serverTime) max 0),
-    ["none", format ["#%1", CQ_hubId]] select (CQ_hubId > -1), CQ_trucksActive, count CQ_air, call CQ_fnc_enemyCount, if (isNil "CQ_carrierPos") then { "-" } else { mapGridPosition CQ_carrierPos }];
+    call CQ_fnc_enemyInfantry, CQ_maxInfantry, call CQ_fnc_enemyCount, CQ_maxAI,
+    ["none", format ["#%1", CQ_hubId]] select (CQ_hubId > -1), CQ_trucksActive, count CQ_air,
+    if (_drones isEqualTo []) then { "-" } else { _drones joinString "   " },
+    (missionNamespace getVariable ["CQ_specialLeft", createHashMap]) getOrDefault ["medic", "-"],
+    (missionNamespace getVariable ["CQ_specialLeft", createHashMap]) getOrDefault ["engineer", "-"],
+    [daytime, "HH:MM"] call BIS_fnc_timeToString, count allPlayers];
 
 [_rows, _msg, _status] remoteExec ["CQ_fnc_debugUiFill", _caller];

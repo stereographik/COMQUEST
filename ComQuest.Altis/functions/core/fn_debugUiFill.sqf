@@ -7,6 +7,7 @@ disableSerialization;
 
 if (_msg != "") then { systemChat format ["[CQ debug] %1", _msg] };
 
+CQ_dbgHqList = _rows;     // HQ sites for the map overlay (CQ_fnc_debugMap)
 private _d = uiNamespace getVariable ["CQ_dbgDisplay", displayNull];
 if (isNull _d) exitWith {};
 
@@ -21,4 +22,4 @@ lbClear _lb;
 } forEach _rows;
 if (_rows isEqualTo []) then { _lb lbAdd "No HQ yet - press 'Landing now'" };
 
-(_d displayCtrl 9001) ctrlSetText _status;
+(_d displayCtrl 9001) ctrlSetStructuredText parseText _status;
