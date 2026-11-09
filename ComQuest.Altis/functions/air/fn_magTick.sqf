@@ -17,6 +17,8 @@
 */
 if (time < CQ_magNext) exitWith {};
 CQ_magNext = time + 5;
+// keep the runway clear of anything placed after the start
+if (time > (missionNamespace getVariable ["CQ_runwayClearT", 0])) then { CQ_runwayClearT = time + 60; false call CQ_fnc_runwayClear };
 
 private _cat = {
     params ["_o"];

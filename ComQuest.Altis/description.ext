@@ -157,6 +157,7 @@ class CfgFunctions
             class magMarks {};
             class magMapClient {};
             class tigrisTick {};
+            class runwayClear {};
             class airLoadout {};
             class airParkSpot {};
             class hqAirPad {};
