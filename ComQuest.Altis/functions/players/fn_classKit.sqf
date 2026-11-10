@@ -2,7 +2,7 @@
     CQ_fnc_classKit  (client)
     [_label] call CQ_fnc_classKit;
     Tops up the player's current (vanilla class) loadout so every class leaves the base
-    fully kitted (CQ_classKit): backpack if he has none, primary mags, launcher rounds,
+    fully kitted (CQ_classKit): the kit's backpack (replaces the vanilla one), primary mags, launcher rounds,
     grenades / role items, a sidearm with mags, then the CQ_basicKit items.
     Only base-game items (no DLC).
 */
@@ -10,9 +10,12 @@ params [["_label", "Rifleman"]];
 private _k = CQ_classKit getOrDefault [_label, [8, 0, [], ""]];
 _k params ["_priMags", "_rounds", "_items", "_pack"];
 
-// Room first
-if (backpack player == "" && { _pack != "" }) then { player addBackpack _pack };
-if (_pack != "" && { backpack player != "" }) then { clearAllItemsFromBackpack player };   // vanilla backpack refilled below
+// Room first: the kit's backpack always replaces the vanilla one (often smaller), so the
+// launcher rounds and role items really fit; emptied, then refilled below
+if (_pack != "") then {
+    if (backpack player != _pack) then { removeBackpack player; player addBackpack _pack };
+    clearAllItemsFromBackpack player;
+};
 
 // Same magazine as the weapon uses, else its first compatible one
 private _magOf = {

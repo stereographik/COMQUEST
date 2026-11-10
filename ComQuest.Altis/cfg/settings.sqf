@@ -295,17 +295,17 @@ CQ_classes = [
 // [primary mags carried, launcher rounds total (loaded + carried), [[item, count], ...], backpack if none ("" = none)]
 // Everyone also gets a P07 with 3 mags and the CQ_basicKit items.
 CQ_classKit = createHashMapFromArray [
-    ["Rifleman",        [9, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_AssaultPack_mcamo"]],
-    ["Squad Leader",    [8, 0, [["HandGrenade", 2], ["SmokeShell", 4], ["SmokeShellGreen", 2], ["SmokeShellRed", 2], ["1Rnd_HE_Grenade_shell", 6], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
-    ["Medic",           [7, 0, [["Medikit", 1], ["FirstAidKit", 10], ["SmokeShell", 4]], "B_Kitbag_mcamo"]],
-    ["Grenadier",       [8, 0, [["1Rnd_HE_Grenade_shell", 14], ["1Rnd_Smoke_Grenade_shell", 4], ["HandGrenade", 1], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
-    ["Autorifleman",    [5, 0, [["HandGrenade", 1], ["SmokeShell", 1], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
-    ["Light Anti-Tank", [6, 3, [["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
-    ["Heavy Anti-Tank", [6, 3, [["SmokeShell", 1], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
-    ["Anti-Air",        [6, 3, [["SmokeShell", 1], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
-    ["Engineer",        [7, 0, [["ToolKit", 1], ["MineDetector", 1], ["DemoCharge_Remote_Mag", 3], ["SatchelCharge_Remote_Mag", 1], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
-    ["Marksman",        [10, 0, [["SmokeShell", 2], ["FirstAidKit", 2]], "B_AssaultPack_mcamo"]],
-    ["Sniper",          [9, 0, [["SmokeShell", 2], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
+    ["Rifleman",        [10, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_AssaultPack_mcamo"]],
+    ["Squad Leader",    [10, 0, [["HandGrenade", 2], ["SmokeShell", 4], ["SmokeShellBlue", 2], ["SmokeShellGreen", 2], ["SmokeShellRed", 1], ["1Rnd_HE_Grenade_shell", 6], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
+    ["Medic",           [10, 0, [["Medikit", 1], ["FirstAidKit", 18], ["SmokeShell", 6], ["HandGrenade", 2]], "B_Kitbag_mcamo"]],
+    ["Grenadier",       [10, 0, [["1Rnd_HE_Grenade_shell", 14], ["1Rnd_Smoke_Grenade_shell", 4], ["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
+    ["Autorifleman",    [6, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
+    ["Light Anti-Tank", [8, 3, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
+    ["Heavy Anti-Tank", [8, 3, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
+    ["Anti-Air",        [8, 3, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
+    ["Engineer",        [10, 0, [["ToolKit", 1], ["MineDetector", 1], ["DemoCharge_Remote_Mag", 3], ["SatchelCharge_Remote_Mag", 1], ["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
+    ["Marksman",        [10, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
+    ["Sniper",          [9, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
     ["Pilot",           [5, 0, [["SmokeShellBlue", 2], ["FirstAidKit", 2], ["ToolKit", 1]], ""]]
 ];
 CQ_classSidearm = ["hgun_P07_F", "16Rnd_9x21_Mag", 3];
