@@ -6,8 +6,8 @@
       0 BLACK      time and date, then the place (CQ_introPlace), typed small, then a fade
       1 SATELLITE  Altis from very high, almost still, a slow drift
       2 COAST      low and wide on a quiet east-coast village, calm sea, slow pan
-      3 SQUAD      three guerilla fighters moving tactically on a hilltop, sea behind, the leader
-                   signalling and the men answering (local soldiers driven by animations)
+      3 SQUAD      three guerilla fighters on a hilltop, sea behind, each one picking random
+                   animations (orders, crouch, run, prone, stances, emotes; local soldiers)
       4 LANDING    an MH-9 Hummingbird settling at the muster area, seen from behind
       5 BLACK      fade out
       6 EYES       the player's own view opens in two blinks, a blur clearing: control
@@ -200,8 +200,8 @@ call {
     [_tCoast] call _nap;
     if (CQ_introSkip) exitWith {};
 
-    // ---- 3 SQUAD: three guerilla fighters moving tactically along a hilltop, sea behind them.
-    // The leader signals, the men answer: they go from a careful walk to a crouch, then on.
+    // ---- 3 SQUAD: three guerilla fighters on a hilltop, sea behind them, each one doing his own
+    // thing at random (orders, crouch, run, prone, stances, emotes).
     // Local, brainless soldiers driven by animations (only on your screen), deleted at the end.
     call _dip;
     if (CQ_introSkip) exitWith {};
@@ -239,25 +239,44 @@ call {
     _bl cutText ["", "BLACK IN", CQ_introFade];
     _cam camSetPos (([_cp select 0, _cp select 1, 0] getPos [6, _walkDir]) vectorAdd [0, 0, 1.8]);
     _cam camCommit _tFlight;                                    // slow drift with them
+    // every man lives his own life: each 1.5-3 s he picks something at random (giving an
+    // order, crouch, crouched walk, short run, prone, standing, careful walk, a vanilla emote),
+    // never the same thing twice in a row
+    private _acts = [
+        ["move", "AmovPercMstpSrasWrflDnon", "gestureAdvance"],     // order: move up
+        ["move", "AmovPercMstpSrasWrflDnon", "gestureFreeze"],      // order: freeze
+        ["move", "AmovPercMstpSrasWrflDnon", "gestureCover"],       // order: take cover
+        ["move", "AmovPercMstpSrasWrflDnon", "gesturePoint"],       // order: over there
+        ["move", "AmovPknlMstpSrasWrflDnon", ""],                   // crouch
+        ["move", "AmovPknlMwlkSrasWrflDf", ""],                     // crouched walk
+        ["move", "AmovPercMrunSrasWrflDf", ""],                     // short run
+        ["move", "AmovPpneMstpSrasWrflDnon", ""],                   // prone
+        ["move", "AmovPercMstpSrasWrflDnon", ""],                   // standing, weapon up
+        ["move", "AmovPercMwlkSrasWrflDf", ""],                     // careful walk
+        ["emote", "", "gestureHi"],
+        ["emote", "", "gestureNod"],
+        ["emote", "", "gestureYes"],
+        ["emote", "", "gestureNo"],
+        ["emote", "", "gestureCeaseFire"],
+        ["emote", "", "gestureFollow"]
+    ];
+    { _x setVariable ["CQ_introNext", time + random 1.2]; _x setVariable ["CQ_introLast", -1] } forEach _men;
     private _tq = time;
-    private _phase = 0;
     while { time - _tq < _tFlight && { !CQ_introSkip } } do {
-        private _e = time - _tq;
-        if (_phase == 0 && { _e > _tFlight * 0.35 }) then {
-            _phase = 1;                                         // the leader stops and signals
-            (_men select 0) switchMove "AmovPercMstpSrasWrflDnon";
-            (_men select 0) playActionNow "gestureFreeze";
-        };
-        if (_phase == 1 && { _e > _tFlight * 0.45 }) then {
-            _phase = 2;                                         // the team takes a knee
-            { _x switchMove "AmovPknlMstpSrasWrflDnon" } forEach (_men select [1, 2]);
-        };
-        if (_phase == 2 && { _e > _tFlight * 0.7 }) then {
-            _phase = 3;                                         // "move up": on again, crouched
-            (_men select 0) playActionNow "gestureAdvance";
-            (_men select 0) switchMove "AmovPercMwlkSrasWrflDf";
-            { _x playMove "AmovPknlMwlkSrasWrflDf" } forEach (_men select [1, 2]);
-        };
+        {
+            private _u = _x;
+            if (time < (_u getVariable "CQ_introNext")) then { continue };
+            private _i = floor random count _acts;
+            if (_i == (_u getVariable "CQ_introLast")) then { _i = (_i + 1) mod count _acts };
+            _u setVariable ["CQ_introLast", _i];
+            (_acts select _i) params ["_kind", "_move", "_gest"];
+            // emotes are played standing (a man lying down gets up first)
+            if (_kind == "emote" && { stance _u != "STAND" }) then { _move = "AmovPercMstpSrasWrflDnon" };
+            if (_move != "") then { _u playMoveNow _move };
+            if (_gest != "") then { _u playActionNow _gest };
+            // a run is kept short so nobody leaves the frame
+            _u setVariable ["CQ_introNext", time + ([1.5 + random 1.5, 1 + random 0.8] select (_move == "AmovPercMrunSrasWrflDf"))];
+        } forEach _men;
         uiSleep 0.05;
     };
     if (CQ_introSkip) exitWith {};
