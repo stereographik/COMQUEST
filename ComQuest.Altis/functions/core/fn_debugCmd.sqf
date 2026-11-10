@@ -152,16 +152,13 @@ if (_needHq && { count _hq == 0 }) then {
             };
         };
         case "vehReset": {
-            private _n = 0;
-            {
-                private _v = _x get "veh";
-                if (isNull _v || { !alive _v } || { ({ alive _x } count crew _v) == 0 }) then {
-                    if (!isNull _v) then { deleteVehicle _v };
-                    [_x] call CQ_fnc_vehSpawn;
-                    _n = _n + 1;
-                };
-            } forEach CQ_vehEntries;
-            _msg = format ["%1 base vehicles respawned on their spots", _n];
+            private _gone = CQ_depotVehs select { !alive _x || { ({ alive _x } count crew _x) == 0 } };
+            { deleteVehicle _x } forEach (_gone select { !isNull _x });
+            CQ_depotVehs = CQ_depotVehs - _gone;
+            publicVariable "CQ_depotVehs";
+            CQ_depotReady = createHashMap;
+            publicVariable "CQ_depotReady";
+            _msg = format ["%1 empty depot vehicles back in stock, cooldowns cleared", count _gone];
         };
         case "defRebuild": {
             { [_x] call CQ_fnc_baseDefBuild; _x set ["lostT", -1] } forEach CQ_baseDefs;

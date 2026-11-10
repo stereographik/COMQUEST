@@ -235,7 +235,6 @@ class CfgFunctions
         {
             file = "functions\players";
             class baseSetup {};
-            class vehRegister {};
             class rdfTick {};
             class rdfClient {};
             class crateFill {};
@@ -265,8 +264,10 @@ class CfgFunctions
             class baseRepairTick {};
             class safeZoneTick {};
             class safeZoneFired {};
-            class vehSpawn {};
-            class vehTick {};
+            class depotSpawn {};
+            class depotReturn {};
+            class depotTick {};
+            class depotUi {};
             class pilotGuard {};
             class playerSetup {};
         };

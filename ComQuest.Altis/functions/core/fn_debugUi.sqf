@@ -76,7 +76,7 @@ private _cats = [
         ["Repair / refuel my vehicle", "vehFix"]
     ]],
     ["BASE & WORLD", [
-        ["Respawn empty base vehicles", "vehReset"], ["Rebuild base defences", "defRebuild"], ["+1 hour", "time1"],
+        ["Depot: stock + cooldowns reset", "vehReset"], ["Rebuild base defences", "defRebuild"], ["+1 hour", "time1"],
         ["Noon", "noon"], ["Night", "night"], ["Clear weather", "clearWx"]
     ]],
     ["MAP OVERLAY & VIEW", [

@@ -7,13 +7,13 @@
          courtyard    radar + watchtower, flag, medical post, 4 squad equipment boxes aligned
                       in the centre (arsenal + squad resupply)
        Terrain objects inside the compound are hidden.
-    2. Vehicle zone: 4 parallel rows starting at CQ_rayStarts and running along CQ_baseDir.
-       Vehicles parked side by side, PERPENDICULAR to the row, from the smallest to the
-       largest (gap = footprint from the bounding box + CQ_raySpacing), helicopters on pads.
-       Vehicles are shared out so every row gets a similar mix.
+    2. Vehicle zone: 4 parallel rows starting at CQ_rayStarts and running along CQ_baseDir,
+       laid out as if the quota vehicles (CQ_baseVehicles) were parked there (no vehicle is
+       placed any more: they come from the vehicle depots), only to place the dispensers.
     3. At the far end of each row a crate dispenser (CQ_dispensers, pushed further if the row
        is longer): CQ_dispenserCrates ready-filled loadable crates + a loadout zone.
-    4. Repair stations at CQ_repairSpots (CQ_fnc_baseRepairTick).
+    4. Repair stations at CQ_repairSpots (CQ_fnc_baseRepairTick), each one also a vehicle
+       depot with its own helipad behind it (CQ_depots, CQ_fnc_depotUi / CQ_fnc_depotSpawn).
     5. Defence spots around the perimeter, respawn, a few map markers.
     Every class is checked (exists, no DLC); a missing one falls back or is skipped and logged.
 */
@@ -253,7 +253,6 @@ _rays = _rays apply { [_x, [], { _x select 4 }, "ASCEND"] call BIS_fnc_sortBy };
 CQ_baseSpots = createHashMap;
 CQ_loadZones = [];
 CQ_crateSpots = [];
-private _names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"];
 private _ang = _d;                               // rows run along the base axis
 private _vd = _ang + 90;                         // vehicles parked perpendicular to the row
 {
@@ -262,12 +261,6 @@ private _vd = _ang + 90;                         // vehicles parked perpendicula
     private _s0 = CQ_rayStarts param [_ri, [0, _hd + 8] call _at];
     _s0 = [_s0 select 0, _s0 select 1, 0];
     private _at2 = { params ["_r"]; private _p = _s0 getPos [_r, _ang]; [_p select 0, _p select 1, 0] };
-    private _lbl = createMarker [format ["cq_row_%1", _ri + 1], _s0];
-    _lbl setMarkerType "mil_start";
-    _lbl setMarkerColor "ColorWEST";
-    _lbl setMarkerSize [0.5, 0.5];
-    _lbl setMarkerDir _ang;
-    _lbl setMarkerText (_names select _ri);
     private _r = 0;
     {
         _x params ["_cls", "_role", "_w", "_l", "", "_air"];
@@ -281,7 +274,6 @@ private _vd = _ang + 90;                         // vehicles parked perpendicula
         };
         if (_p isEqualTo []) then { ["Base row %1: no spot for %2", [_ri + 1, _cls]] call CQ_fnc_log; continue };
         [_p, _rad] call _clearSoft;
-        if (_air) then { (createVehicle ["Land_HelipadSquare_F", _p, [], 0, "CAN_COLLIDE"]) setDir _vd };
         CQ_baseSpots set [_role, (CQ_baseSpots getOrDefault [_role, []]) + [[_p, _vd]]];
         _r = _r + 2 * _half + CQ_raySpacing;
     } forEach _ray;
@@ -308,6 +300,7 @@ publicVariable "CQ_loadZones";
 
 // repair stations
 CQ_repairPoints = [];
+CQ_depots = [];
 {
     private _rp = [_x select 0, _x select 1, 0];
     [_rp, 8] call _clearSoft;
@@ -335,14 +328,26 @@ CQ_repairPoints = [];
         _s setVectorUp surfaceNormal _sp;
         _s allowDamage false;
         ["Repair station %1: %2 facing %3 deg", [_forEachIndex + 1, _st, round _face]] call CQ_fnc_log;
+        // vehicle depot: the station furniture is the terminal, its helipad stands behind it
+        // (away from the runway); depot vehicles spawn there
+        private _pw = _rp getPos [CQ_depotPadGap, _face + 180];
+        private _pad = [[_pw select 0, _pw select 1, 0], 9, 30, [_s]] call CQ_fnc_clearPos;
+        if (_pad isEqualTo []) then { _pad = _pw };
+        _pad = [_pad select 0, _pad select 1, 0];
+        [_pad, 11] call _clearSoft;
+        (createVehicle ["Land_HelipadSquare_F", _pad, [], 0, "CAN_COLLIDE"]) setDir _face;
+        CQ_depots pushBack [_s, _pad, _face];
+        ["Vehicle depot %1: pad at %2", [_forEachIndex + 1, mapGridPosition _pad]] call CQ_fnc_log;
     };
     { (createVehicle ["RoadCone_L_F", _rp getPos [CQ_repairRadius - 1, _ang + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
     CQ_repairPoints pushBack _rp;
     private _rm = createMarker [format ["cq_repair_%1", _forEachIndex + 1], _rp];
     _rm setMarkerType "loc_repair";
     _rm setMarkerColor "ColorWEST";
+    _rm setMarkerText "Repair & vehicle depot";
 } forEach CQ_repairSpots;
 publicVariable "CQ_repairPoints";
+publicVariable "CQ_depots";
 
 // ---------------------------------------------------------------- vehicle shop
 // LZ + terminal west of the compound (CQ_shopPos in the settings overrides the LZ spot)

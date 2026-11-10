@@ -8,11 +8,11 @@ enableDynamicSimulationSystem true;   // AI far from players stops simulating (u
 call CQ_fnc_baseSetup;
 call CQ_fnc_carrierSetup;           // CSAT carrier off the east coast: every insertion starts there
 
-{
-    _x params ["_class", "_role", ["_n", 1]];
-    private _spots = CQ_baseSpots getOrDefault [_role, []];
-    for "_i" from 0 to _n - 1 do { [_class, _spots param [_i, []], CQ_baseDir] call CQ_fnc_vehRegister };
-} forEach CQ_baseVehicles;
+// Vehicle depots: no vehicle at start, players request them (CQ_fnc_depotSpawn)
+CQ_depotVehs = [];
+publicVariable "CQ_depotVehs";
+CQ_depotReady = createHashMap;     // player UID -> serverTime of his next allowed request
+publicVariable "CQ_depotReady";
 
 CQ_hqs = createHashMap;            // exists from the start (radio lines may look at it)
 
@@ -58,7 +58,7 @@ addMissionEventHandler ["EntityKilled", {
     CQ_logiNext = 0;
     CQ_logiReportT = 0;
 
-    ["vehicles", CQ_fnc_vehTick] call CQ_fnc_directorAddTask;
+    ["depot", CQ_fnc_depotTick] call CQ_fnc_directorAddTask;
     ["roots", CQ_fnc_rootTick] call CQ_fnc_directorAddTask;
     ["hqs", CQ_fnc_hqTick] call CQ_fnc_directorAddTask;
     ["logistics", CQ_fnc_logiTick] call CQ_fnc_directorAddTask;

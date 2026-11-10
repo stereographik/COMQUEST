@@ -20,8 +20,8 @@ CQ_safeZoneHold = 30;                    // ...unless an enemy is inside (and fo
 CQ_baseNoSpawnRadius = 2500;             // no enemy site closer than this (milestone 2)
 
 CQ_baseDir = 38;                         // compound front and vehicle rows compass direction
-// --- Base vehicles (fixed numbers, each respawns when destroyed or abandoned) ----
-// [classname, parking role in the camp (CQ_fnc_baseSetup), count]
+// --- Vehicle depot quotas: free vehicles requested at the depots (repair stations) --
+// [classname, role (only lays out the vehicle zone rows), max out at the same time]
 CQ_baseVehicles = [
     ["B_MRAP_01_F",               "hunter",     4],   // Hunter, unarmed
     ["I_MRAP_03_F",               "strider",    4],   // Strider, unarmed
@@ -52,9 +52,13 @@ CQ_parkGrid = 25;                        // base parking grid: one vehicle per c
 CQ_parkClear = 10;                       // a cell needs no object / rock / building / tree within this
 CQ_parkMaxGradient = 0.1;                // ...and flat ground
 CQ_parkSearch = 450;                     // grid searched this far around the park point behind the camp
-CQ_vehRespawnDelay = 60;                 // seconds after destruction
-CQ_vehAbandonDelay = 900;                // seconds empty and still away from its spot before it respawns there (15 min)
-CQ_vehAbandonDistance = 30;              // ...away from its parking spot
+CQ_vehAbandonDelay = 900;                // depot vehicle empty and still this long, no player within 200 m: back in stock (15 min)
+CQ_depotMaxPerSquad = 2;                 // depot vehicles out at the same time per squad
+CQ_depotCooldown = [["light", 120], ["truck", 180], ["air", 300]];   // s before the same player can request again, by type taken
+CQ_depotUnused = 120;                    // a requested vehicle nobody boards within this is put back in stock
+CQ_depotRange = 10;                      // metres from the depot furniture to use it
+CQ_depotReturnRange = 30;                // a vehicle this close to a depot (or its pad) can be returned
+CQ_depotPadGap = 24;                     // depot helipad distance behind the repair point (away from the runway)
 
 // --- Enemy origin: a carrier off the east coast -------------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)

@@ -58,6 +58,11 @@ player addAction ["<t color='#918C3B'>Auto-fill vehicle (squad resupply)</t>",
 player addAction ["<t color='#918C3B'>Empty vehicle inventory</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["clear", _v, player] remoteExec ["CQ_fnc_vehAutoFill", 2] }, nil, 0.5, false, true, "", _zoneVeh];
 
+// Vehicle depot: give back the depot vehicle you sit in or look at, next to a depot
+player addAction ["<t color='#918C3B'>Return vehicle to the depot</t>",
+    { private _v = [cursorObject, vehicle player] select (vehicle player != player); [player, _v] remoteExec ["CQ_fnc_depotReturn", 2] }, nil, 4.8, false, true, "",
+    "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); _v in (missionNamespace getVariable ['CQ_depotVehs', []]) && { alive _v } && { _this distance _v < 10 } && { speed _v < 3 } && { (missionNamespace getVariable ['CQ_depots', []]) findIf { _v distance2D (_x select 0) < CQ_depotReturnRange || { _v distance2D (_x select 1) < CQ_depotReturnRange } } > -1 }"];
+
 // Hub menu (squads, class, stats, shop, debug): U key + one scroll menu entry (re-added on every respawn)
 player addAction ["<t color='#918C3B'>Menu (U)</t>", { [] spawn CQ_fnc_menuUi }, nil, 0.6, false, true, "", "_this == _target"];
 if (isNil "CQ_squadKeyBound") then {
@@ -103,5 +108,7 @@ if (isNil "CQ_arsenalReady") then {
         } forEach CQ_arsenalBoxes;
         waitUntil { sleep 0.5; !isNil "CQ_shopTerminal" };
         CQ_shopTerminal addAction ["<t color='#918C3B'>Vehicle shop (squad points)</t>", { [] spawn CQ_fnc_shopUi }, nil, 6, true, true, "", "true", CQ_shopRange];
+        waitUntil { sleep 0.5; !isNil "CQ_depots" };
+        { (_x select 0) addAction ["<t color='#918C3B'>Vehicle depot (free stock)</t>", { [] spawn CQ_fnc_depotUi }, nil, 6, true, true, "", "true", CQ_depotRange] } forEach CQ_depots;
     };
 };
