@@ -31,7 +31,7 @@ private _Y = safeZoneY + (safeZoneH - _H) / 2;
 private _L = 0.042;
 private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
-    private _c = _d ctrlCreate [_cls, _idc];
+    private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), _idc];
     [_c, _cls] call CQ_fnc_uiStyle;
     _c ctrlSetPosition _pos;
     if (_txt != "") then { _c ctrlSetText _txt };
@@ -191,9 +191,9 @@ while { !isNull _d } do {
         { _x ctrlShow (_view == "squads") } forEach _sqCtrls;
         { _x ctrlShow (_view == "board") } forEach _bdCtrls;
         { _x ctrlShow (_view == "class") } forEach _clCtrls;
-        _tabC ctrlSetBackgroundColor ([CQ_ui get "button", CQ_ui get "buttonOn"] select (_view == "class"));
-        _tabS ctrlSetBackgroundColor ([CQ_ui get "button", CQ_ui get "buttonOn"] select (_view == "squads"));
-        _tabB ctrlSetBackgroundColor ([CQ_ui get "button", CQ_ui get "buttonOn"] select (_view == "board"));
+        [_tabC, _view == "class"] call CQ_fnc_uiSel;
+        [_tabS, _view == "squads"] call CQ_fnc_uiSel;
+        [_tabB, _view == "board"] call CQ_fnc_uiSel;
         _lastView = _view;
     };
     private _players = allPlayers select { side group _x == west };
@@ -218,9 +218,9 @@ while { !isNull _d } do {
             private _free = (_max - _used) max 0;
             _classList lbSetTextRight [_forEachIndex, format ["%1 / %2", _used, _max]];
             private _col = switch (true) do {
-                case (_lbl == _mine): { [0.78, 0.88, 0.48, 1] };
-                case (_free == 0):    { [0.6, 0.35, 0.35, 1] };
-                default               { [1, 1, 1, 1] };
+                case (_lbl == _mine): { [0.729, 0.224, 0.173, 1] };
+                case (_free == 0):    { [0.54, 0.53, 0.44, 1] };
+                default               { (CQ_ui get "text") };
             };
             _classList lbSetColor [_forEachIndex, _col];
             _classList lbSetColorRight [_forEachIndex, _col];
@@ -248,9 +248,9 @@ while { !isNull _d } do {
             private _i = _grpList lbAdd format ["%1   (%2/%3)", groupId _g, _np, count units _g];
             _grpList lbSetTextRight [_i, format ["%1 pts", _g getVariable ["CQ_sqPts", 0]]];
             _grpList lbSetValue [_i, _all find _g];
-            if (_g isEqualTo group player) then { _grpList lbSetColor [_i, [0.55, 0.9, 0.45, 1]] };
+            if (_g isEqualTo group player) then { _grpList lbSetColor [_i, [0.729, 0.224, 0.173, 1]] };
         } forEach _squads;
-        if (_squads isEqualTo []) then { _grpList lbSetValue [_grpList lbAdd "(no squad yet)", -1]; _grpList lbSetColor [0, [0.5, 0.5, 0.5, 1]] };
+        if (_squads isEqualTo []) then { _grpList lbSetValue [_grpList lbAdd "(no squad yet)", -1]; _grpList lbSetColor [0, (CQ_ui get "dim")] };
 
         // unassigned players, always listed
         private _solP = (_solos apply { leader _x }) select { isPlayer _x };
@@ -262,10 +262,10 @@ while { !isNull _d } do {
         {
             private _i = _solList lbAdd format ["%1  -  %2", name _x, [_x] call _role];
             _solList lbSetValue [_i, _forEachIndex];
-            if (_x == player) then { _solList lbSetColor [_i, [0.55, 0.9, 0.45, 1]] };
+            if (_x == player) then { _solList lbSetColor [_i, [0.729, 0.224, 0.173, 1]] };
             if (_x isEqualTo _solPick) then { _solList lbSetCurSel _i };
         } forEach _solP;
-        if (_solP isEqualTo []) then { _solList lbSetValue [_solList lbAdd "(nobody)", -1]; _solList lbSetColor [0, [0.5, 0.5, 0.5, 1]] };
+        if (_solP isEqualTo []) then { _solList lbSetValue [_solList lbAdd "(nobody)", -1]; _solList lbSetColor [0, (CQ_ui get "dim")] };
         _bInv ctrlEnable (!((group player) getVariable ["CQ_solo", false]) && { leader group player == player });
         private _want = _all find _selG;
         for "_i" from 0 to (lbSize _grpList) - 1 do { if ((_grpList lbValue _i) == _want && { _want > -1 }) exitWith { _grpList lbSetCurSel _i } };
@@ -274,8 +274,8 @@ while { !isNull _d } do {
         if (!isNull _sg) then {
             {
                 private _i = _memList lbAdd format ["%1%2  -  %3%4", ["", "* "] select (leader _sg == _x), name _x, [_x] call _role, ["  (AI)", ""] select (isPlayer _x)];
-                if (_x == player) then { _memList lbSetColor [_i, [0.55, 0.9, 0.45, 1]] };
-                if (!alive _x) then { _memList lbSetColor [_i, [0.6, 0.3, 0.3, 1]] };
+                if (_x == player) then { _memList lbSetColor [_i, [0.729, 0.224, 0.173, 1]] };
+                if (!alive _x) then { _memList lbSetColor [_i, (CQ_ui get "dim")] };
             } forEach units _sg;
         };
     };
@@ -347,7 +347,7 @@ while { !isNull _d } do {
         private _selUid = uiNamespace getVariable ["CQ_sqStatSel", getPlayerUID player];
         lnbClear _board;
         _board lnbAddRow ["#", "NAME", "CLASS", (CQ_sqSorts select _sortI) select 1, "K", "D", "SCORE"];
-        for "_c" from 0 to 6 do { _board lnbSetColor [[0, _c], [0.6, 0.6, 0.6, 1]] };
+        for "_c" from 0 to 6 do { _board lnbSetColor [[0, _c], (CQ_ui get "muted")] };
         private _selRow = -1;
         {
             _x params ["_v", "_uid"];
@@ -356,9 +356,9 @@ while { !isNull _d } do {
                 [_v] call _fmt, str ([_m, "killsInf"] call _g), str ([_m, "deaths"] call _g), str round ([_m] call _score)];
             _board lnbSetData [[_row, 0], _uid];
             private _col = switch (true) do {
-                case (_uid == getPlayerUID player): { [0.55, 0.9, 0.45, 1] };
-                case (!_on): { [0.5, 0.5, 0.5, 1] };
-                default { [1, 1, 1, 1] };
+                case (_uid == getPlayerUID player): { [0.729, 0.224, 0.173, 1] };
+                case (!_on): { (CQ_ui get "dim") };
+                default { (CQ_ui get "text") };
             };
             for "_cc" from 0 to 6 do { _board lnbSetColor [[_row, _cc], _col] };
             if (_uid == _selUid) then { _selRow = _row };

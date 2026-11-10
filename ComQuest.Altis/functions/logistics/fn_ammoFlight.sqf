@@ -16,6 +16,7 @@ private _heading = _start getDir _dest;
 ([CQ_ammoFlightClass, [_start select 0, _start select 1, 0], _heading, true, CQ_heightTroops] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
 private _escorts = [_start, _heading, _dest] call CQ_fnc_spawnEscorts;
 private _pad = [_hub] call CQ_fnc_hqAirPad;
+_heli setVariable ["CQ_supply", "flight"];   // OPERATION briefing
 _heli doMove (getPosATL _pad);
 
 ["Enemy supply flight inbound", format ["A Taru with an ammo pod and 3 escorts is heading for main HQ #%1 (ammo + fuel)", _hid]] call CQ_fnc_announce;

@@ -30,7 +30,7 @@ _this spawn {
     private _y0 = safezoneY + (safezoneH - _H * _ph) / 2;
     private _mk = {
         params ["_cls", "_rx", "_ry", "_rw", "_rh", ["_txt", ""]];
-        private _c = _d ctrlCreate [_cls, -1];
+        private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), -1];
         [_c, _cls] call CQ_fnc_uiStyle;
         _c ctrlSetPosition [_x0 + _rx * _pw, _y0 + _ry * _ph, _rw * _pw, _rh * _ph];
         if (_txt != "") then { _c ctrlSetText _txt };
@@ -51,7 +51,7 @@ _this spawn {
     _timer ctrlSetTextColor (CQ_ui get "dim");
     private _bNo = ["RscButton", _W - 266, _H - 44, 120, 32, "DECLINE"] call _mk;
     private _bYes = ["RscButton", _W - 136, _H - 44, 120, 32, "ACCEPT"] call _mk;
-    _bYes ctrlSetBackgroundColor (CQ_ui get "buttonOn");
+    [_bYes, true] call CQ_fnc_uiSel;
     _bYes ctrlSetTextColor (CQ_ui get "text");
     _bNo ctrlSetBackgroundColor (CQ_ui get "button");
     _bYes ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_invAnswer", 1]; (uiNamespace getVariable ["CQ_invDisplay", displayNull]) closeDisplay 1 }];

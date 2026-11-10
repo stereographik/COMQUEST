@@ -13,4 +13,10 @@ if (!isNil "CQ_myClass") then {
     if (_i > -1) then { [(CQ_classes select _i) select 2] call CQ_fnc_applyTraits };
     _newUnit setVariable ["CQ_class", CQ_myClass, true];
 };
+// respawned at the base: on a free spot outside next to the muster point (not stacked on the
+// marker or inside a building)
+if (!isNil "CQ_musterPos" && { _newUnit distance2D CQ_musterPos < 30 }) then {
+    private _sp = CQ_musterPos findEmptyPosition [0, 8, "B_Soldier_F"];
+    if (_sp isNotEqualTo []) then { _newUnit setPosATL [_sp select 0, _sp select 1, 0] };
+};
 call CQ_fnc_playerSetup;

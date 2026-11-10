@@ -11,7 +11,24 @@ if (typeOf player in CQ_engineerClasses) then {
 };
 
 // Every preset carries binoculars and a GPS (class loadouts get them in CQ_fnc_setClass)
-if (isNil "CQ_savedLoadout") then { call CQ_fnc_basicKit };
+if (isNil "CQ_savedLoadout") then { ["Rifleman"] call CQ_fnc_classKit };
+
+// Player feed: what last hit him (the enemy's class, or its vehicle), told to everyone when he
+// goes down (CQ_fnc_adrenalineSurge) or dies outright (initServer.sqf)
+player addEventHandler ["HandleDamage", {
+    params ["_u", "", "_dmg", "_src", "", "", "_inst"];
+    private _w = [_inst, _src] select (isNull _inst);
+    if (!isNull _w && { _w != _u } && { _dmg > 0.05 }) then {
+        private _o = [vehicle _w, _w] select (vehicle _w == _w);
+        private _nm = getText (configOf _o >> "displayName");
+        if (_nm == "") then { _nm = typeOf _o };
+        if (_nm != (_u getVariable ["CQ_lastHit", ""])) then { _u setVariable ["CQ_lastHit", _nm, true] };
+    };
+    nil
+}];
+
+// Weapons-safe perimeter around the base (CQ_fnc_safeZoneFired)
+player addEventHandler ["FiredMan", { _this call CQ_fnc_safeZoneFired }];
 
 // adrenalineSurge: a downed medic may get back up on his own (one watcher per life)
 [] spawn CQ_fnc_adrenalineSurge;
@@ -40,6 +57,24 @@ player addAction ["<t color='#918C3B'>Auto-fill vehicle (squad resupply)</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["fill", _v, player] remoteExec ["CQ_fnc_vehAutoFill", 2] }, nil, 4.9, true, true, "", _zoneVeh];
 player addAction ["<t color='#918C3B'>Empty vehicle inventory</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["clear", _v, player] remoteExec ["CQ_fnc_vehAutoFill", 2] }, nil, 0.5, false, true, "", _zoneVeh];
+
+// Vehicle depot: give back the depot vehicle you sit in or look at, next to a depot
+player addAction ["<t color='#918C3B'>Return vehicle to the depot</t>",
+    { private _v = [cursorObject, vehicle player] select (vehicle player != player); [player, _v] remoteExec ["CQ_fnc_depotReturn", 2] }, nil, 4.8, false, true, "",
+    "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); _v in (missionNamespace getVariable ['CQ_depotVehs', []]) && { alive _v } && { _this distance _v < 10 } && { speed _v < 3 } && { (missionNamespace getVariable ['CQ_depots', []]) findIf { _v distance2D (_x select 0) < CQ_depotReturnRange || { _v distance2D (_x select 1) < CQ_depotReturnRange } } > -1 }"];
+
+// Squad respawn vehicle (CQ_fnc_rspVeh): the leader locks / unlocks the vehicle he sits in or
+// looks at; members at the base teleport into it (one credit per teleport)
+private _rspTgt = "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); !isNull _v && { alive _v } && { _v isKindOf 'LandVehicle' || { _v isKindOf 'Air' } } && { _this distance _v < 10 } && { leader group _this == _this } && { !(group _this getVariable ['CQ_solo', false]) }";
+player addAction ["<t color='#918C3B'>Lock as squad respawn vehicle</t>",
+    { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["lock", player, _v] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 1, false, true, "",
+    _rspTgt + " && { (group _this getVariable ['CQ_rspVeh', objNull]) != _v } && { (_v getVariable ['CQ_rspLeft', CQ_rspCredits]) > 0 }"];
+player addAction ["<t color='#BA392C'>Unlock squad respawn vehicle</t>",
+    { ["unlock", player] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 0.9, false, true, "",
+    _rspTgt + " && { (group _this getVariable ['CQ_rspVeh', objNull]) == _v }"];
+player addAction ["<t color='#918C3B'>Teleport to the squad respawn vehicle</t>",
+    { ["use", player] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 5.5, true, true, "",
+    "vehicle _this == _this && { _this distance2D CQ_musterPos < CQ_rspBaseRange } && { private _rv = group _this getVariable ['CQ_rspVeh', objNull]; alive _rv && { (_rv getVariable ['CQ_rspLeft', 0]) > 0 } }"];
 
 // Hub menu (squads, class, stats, shop, debug): U key + one scroll menu entry (re-added on every respawn)
 player addAction ["<t color='#918C3B'>Menu (U)</t>", { [] spawn CQ_fnc_menuUi }, nil, 0.6, false, true, "", "_this == _target"];
@@ -86,5 +121,7 @@ if (isNil "CQ_arsenalReady") then {
         } forEach CQ_arsenalBoxes;
         waitUntil { sleep 0.5; !isNil "CQ_shopTerminal" };
         CQ_shopTerminal addAction ["<t color='#918C3B'>Vehicle shop (squad points)</t>", { [] spawn CQ_fnc_shopUi }, nil, 6, true, true, "", "true", CQ_shopRange];
+        waitUntil { sleep 0.5; !isNil "CQ_depots" };
+        { (_x select 0) addAction ["<t color='#918C3B'>Vehicle depot (free stock)</t>", { [] spawn CQ_fnc_depotUi }, nil, 6, true, true, "", "true", CQ_depotRange] } forEach CQ_depots;
     };
 };

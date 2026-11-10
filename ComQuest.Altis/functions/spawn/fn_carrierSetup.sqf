@@ -21,6 +21,8 @@ while { getTerrainHeightASL _sea > -25 && { _guard < 30 } } do { _sea = _sea vec
 
 CQ_coastPoint = _coast;
 CQ_carrierPos = [_sea select 0, _sea select 1, 0];
+publicVariable "CQ_carrierPos";      // clients: intro camera
+publicVariable "CQ_coastPoint";
 
 isNil {
     private _carrier = createVehicle [CQ_carrierClass, CQ_carrierPos, [], 0, "NONE"];
@@ -49,4 +51,4 @@ call CQ_fnc_carrierMarker;
 
 ["CSAT carrier spotted", format ["An enemy carrier group is holding off the east coast (grid %1). Expect landings on the east coast.",
     mapGridPosition CQ_carrierPos]] call CQ_fnc_announce;
-[] spawn { sleep 15; ["carrier", []] call CQ_fnc_say };   // let the players load in first
+[] spawn { waitUntil { sleep 1; !isNil "CQ_missionStarted" }; sleep 1; ["carrier", []] call CQ_fnc_say };   // once the mission has started (after the intro)

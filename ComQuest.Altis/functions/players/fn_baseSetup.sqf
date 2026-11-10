@@ -2,18 +2,18 @@
     CQ_fnc_baseSetup  (server)
     Builds the player base from the zones drawn on the map (cfg/settings.sqf):
     1. HQ compound at CQ_basePos, front toward CQ_baseDir (CQ_compoundSize), H-barrier walls,
-       vehicle gate flanked by two H-barrier towers, guard towers in the corners, tank traps:
-         back row     warehouse | HQ offices (friendly commander inside) | cargo HQ
+       vehicle gate flanked by two H-barrier towers, guard towers in the corners:
+         back row     cargo HQ (friendly commander inside) | HQ offices | cargo HQ
          courtyard    radar + watchtower, flag, medical post, 4 squad equipment boxes aligned
                       in the centre (arsenal + squad resupply)
        Terrain objects inside the compound are hidden.
-    2. Vehicle zone: 4 parallel rows starting at CQ_rayStarts and running along CQ_baseDir.
-       Vehicles parked side by side, PERPENDICULAR to the row, from the smallest to the
-       largest (gap = footprint from the bounding box + CQ_raySpacing), helicopters on pads.
-       Vehicles are shared out so every row gets a similar mix.
+    2. Vehicle zone: 4 parallel rows starting at CQ_rayStarts and running along CQ_baseDir,
+       laid out as if the quota vehicles (CQ_baseVehicles) were parked there (no vehicle is
+       placed any more: they come from the vehicle depots), only to place the dispensers.
     3. At the far end of each row a crate dispenser (CQ_dispensers, pushed further if the row
        is longer): CQ_dispenserCrates ready-filled loadable crates + a loadout zone.
-    4. Repair stations at CQ_repairSpots (CQ_fnc_baseRepairTick).
+    4. Repair stations at CQ_repairSpots (CQ_fnc_baseRepairTick), each one also a vehicle
+       depot with its own helipad behind it (CQ_depots, CQ_fnc_depotUi / CQ_fnc_depotSpawn).
     5. Defence spots around the perimeter, respawn, a few map markers.
     Every class is checked (exists, no DLC); a missing one falls back or is skipped and logged.
 */
@@ -116,13 +116,10 @@ private _gate = 9;                                  // half width of the vehicle
 [["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], _gate + 10, _hd + 9, -15] call _put;
 // guard towers in the corners
 { [["Land_Cargo_Patrol_V1_F", "Land_BagBunker_Tower_F"], (_x select 0) * (_hw - 5), (_x select 1) * (_hd - 5), [180, 0] select ((_x select 1) > 0), true] call _put } forEach [[-1, -1], [1, -1], [-1, 1], [1, 1]];
-// tank traps outside the front corners
-{ [["Land_CzechHedgehog_01_F", "Land_CzechHedgehog_01_new_F", "Land_CncBarrier_F"], _x select 0, _x select 1, random 90] call _put }
-    forEach [[-_hw - 8, _hd + 4], [-_hw - 13, _hd + 8], [-_hw - 6, _hd + 11], [_hw + 8, _hd + 4], [_hw + 13, _hd + 8], [_hw + 6, _hd + 11]];
 
 // back row of buildings, packed from the left, their back 4 m from the back wall
 private _row = [
-    ["Land_i_Shed_Ind_F", "Land_Shed_Big_F"],
+    ["Land_Cargo_HQ_V1_F", "Land_MilOffices_V1_F"],    // command post: the friendly commander's building
     ["Land_MilOffices_V1_F", "Land_Cargo_HQ_V1_F"],
     ["Land_Cargo_HQ_V1_F", "Land_Cargo_House_V1_F"]
 ];
@@ -138,17 +135,14 @@ private _ops = objNull;
 {
     ([_x] call _dims) params ["_bw", "_bl"];
     private _b = [[_x], _cx + _bw / 2, -_hd + 4 + _bl / 2, 0, true] call _put;
-    if (_x find "Offices" > -1 || { isNull _ops && { _forEachIndex == 1 } }) then { _ops = _b };
+    if (_forEachIndex == 0) then { _ops = _b };
     _cx = _cx + _bw + 5;
 } forEach _rowCls;
 
-// friendly commander in the HQ offices: if he dies, the mission is lost
+// friendly commander in the command post (first building of the row), standing in the middle
+// of its floor: if he dies, the mission is lost. Only enemy fire can hurt him.
 private _fg = createGroup [west, true];
 private _fp = [0, -_hd + 10] call _at;
-if (!isNull _ops) then {
-    private _bp = _ops buildingPos -1;
-    if (_bp isNotEqualTo []) then { _fp = _bp select 0 };
-};
 CQ_friendlyCmd = _fg createUnit ["B_officer_F", _fp, [], 0, "CAN_COLLIDE"];
 CQ_friendlyCmd setPosATL _fp;
 CQ_friendlyCmd setDir (_d + 180);
@@ -157,6 +151,32 @@ CQ_friendlyCmd setUnitPos "UP";
 CQ_friendlyCmd setName "Colonel Harlan";
 _fg setGroupIdGlobal ["CROSSROAD Actual"];
 publicVariable "CQ_friendlyCmd";
+// floor height = lowest building position (the roof ones are higher), then snapped onto the
+// floor surface right under the building's centre. Done a moment later, once the building's
+// geometry is ready.
+if (!isNull _ops) then {
+    [_ops, _d] spawn {
+        params ["_b", "_d"];
+        sleep 1;
+        private _bps = (_b buildingPos -1) apply { AGLToASL _x };
+        private _c = _b modelToWorldWorld [0, 0, 0];
+        private _z = if (_bps isEqualTo []) then { (_c select 2) + 1 } else { selectMin (_bps apply { _x select 2 }) };
+        private _hits = lineIntersectsSurfaces [[_c select 0, _c select 1, _z + 1.2], [_c select 0, _c select 1, _z - 1.5], CQ_friendlyCmd, objNull, true, 1, "GEOM", "FIRE"];
+        if (_hits isNotEqualTo []) then { _z = ((_hits select 0) select 0) select 2 };
+        CQ_friendlyCmd setPosASL [_c select 0, _c select 1, _z + 0.05];
+        CQ_friendlyCmd setDir (_d + 180);
+        ["Friendly commander in %1 at %2 (floor %3 m above ground)", [typeOf _b, mapGridPosition _b, ((ASLToATL [_c select 0, _c select 1, _z]) select 2) toFixed 2]] call CQ_fnc_log;
+    };
+};
+// friendly fire, crashes, falls, collapsing walls: no damage. Only an enemy can kill him.
+CQ_friendlyCmd addEventHandler ["HandleDamage", {
+    params ["_u", "_sel", "_dmg", "_src", "", "_idx", "_inst"];
+    private _who = [_inst, _src] select (isNull _inst);
+    if (!isNull _who && { !(_who isKindOf "CAManBase") }) then { _who = effectiveCommander _who };
+    if (isNull _who || { (side group _who) getFriend west >= 0.6 }) then {
+        if (_sel == "") then { damage _u } else { _u getHitIndex _idx }
+    } else { _dmg }
+}];
 CQ_friendlyCmd addEventHandler ["Killed", {
     if (!isNil "CQ_victory" || { !isNil "CQ_defeat" }) exitWith {};
     CQ_defeat = true;
@@ -233,7 +253,6 @@ _rays = _rays apply { [_x, [], { _x select 4 }, "ASCEND"] call BIS_fnc_sortBy };
 CQ_baseSpots = createHashMap;
 CQ_loadZones = [];
 CQ_crateSpots = [];
-private _names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"];
 private _ang = _d;                               // rows run along the base axis
 private _vd = _ang + 90;                         // vehicles parked perpendicular to the row
 {
@@ -242,12 +261,6 @@ private _vd = _ang + 90;                         // vehicles parked perpendicula
     private _s0 = CQ_rayStarts param [_ri, [0, _hd + 8] call _at];
     _s0 = [_s0 select 0, _s0 select 1, 0];
     private _at2 = { params ["_r"]; private _p = _s0 getPos [_r, _ang]; [_p select 0, _p select 1, 0] };
-    private _lbl = createMarker [format ["cq_row_%1", _ri + 1], _s0];
-    _lbl setMarkerType "mil_start";
-    _lbl setMarkerColor "ColorWEST";
-    _lbl setMarkerSize [0.5, 0.5];
-    _lbl setMarkerDir _ang;
-    _lbl setMarkerText (_names select _ri);
     private _r = 0;
     {
         _x params ["_cls", "_role", "_w", "_l", "", "_air"];
@@ -261,7 +274,6 @@ private _vd = _ang + 90;                         // vehicles parked perpendicula
         };
         if (_p isEqualTo []) then { ["Base row %1: no spot for %2", [_ri + 1, _cls]] call CQ_fnc_log; continue };
         [_p, _rad] call _clearSoft;
-        if (_air) then { (createVehicle ["Land_HelipadSquare_F", _p, [], 0, "CAN_COLLIDE"]) setDir _vd };
         CQ_baseSpots set [_role, (CQ_baseSpots getOrDefault [_role, []]) + [[_p, _vd]]];
         _r = _r + 2 * _half + CQ_raySpacing;
     } forEach _ray;
@@ -288,6 +300,7 @@ publicVariable "CQ_loadZones";
 
 // repair stations
 CQ_repairPoints = [];
+CQ_depots = [];
 {
     private _rp = [_x select 0, _x select 1, 0];
     [_rp, 8] call _clearSoft;
@@ -315,14 +328,26 @@ CQ_repairPoints = [];
         _s setVectorUp surfaceNormal _sp;
         _s allowDamage false;
         ["Repair station %1: %2 facing %3 deg", [_forEachIndex + 1, _st, round _face]] call CQ_fnc_log;
+        // vehicle depot: the station furniture is the terminal, its helipad stands behind it
+        // (away from the runway); depot vehicles spawn there
+        private _pw = _rp getPos [CQ_depotPadGap, _face + 180];
+        private _pad = [[_pw select 0, _pw select 1, 0], 9, 30, [_s]] call CQ_fnc_clearPos;
+        if (_pad isEqualTo []) then { _pad = _pw };
+        _pad = [_pad select 0, _pad select 1, 0];
+        [_pad, 11] call _clearSoft;
+        (createVehicle ["Land_HelipadSquare_F", _pad, [], 0, "CAN_COLLIDE"]) setDir _face;
+        CQ_depots pushBack [_s, _pad, _face];
+        ["Vehicle depot %1: pad at %2", [_forEachIndex + 1, mapGridPosition _pad]] call CQ_fnc_log;
     };
     { (createVehicle ["RoadCone_L_F", _rp getPos [CQ_repairRadius - 1, _ang + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
     CQ_repairPoints pushBack _rp;
     private _rm = createMarker [format ["cq_repair_%1", _forEachIndex + 1], _rp];
     _rm setMarkerType "loc_repair";
     _rm setMarkerColor "ColorWEST";
+    _rm setMarkerText "Repair & vehicle depot";
 } forEach CQ_repairSpots;
 publicVariable "CQ_repairPoints";
+publicVariable "CQ_depots";
 
 // ---------------------------------------------------------------- vehicle shop
 // LZ + terminal west of the compound (CQ_shopPos in the settings overrides the LZ spot)
@@ -350,6 +375,7 @@ CQ_shopTerminal allowDamage false;
 CQ_shopTerminal enableSimulationGlobal false;
 publicVariable "CQ_shopTerminal";
 publicVariable "CQ_shopLZ";
+publicVariable "CQ_shopDir";
 private _shm = createMarker ["cq_shop", CQ_shopLZ];
 _shm setMarkerType "c_car";
 _shm setMarkerColor "ColorWEST";
@@ -386,7 +412,31 @@ CQ_baseDefs = [];
 } forEach CQ_baseDefAngles;
 { [_x] call CQ_fnc_baseDefBuild } forEach CQ_baseDefs;
 
-CQ_musterPos = [0, -6] call _at;
+// billboard with the mission visual, against the front wall just right of the gate (along the
+// H-barriers), picture facing the courtyard
+private _bbP = [_gate + 12, _hd - 3] call _at;
+_bbP = [_bbP select 0, _bbP select 1, 0];
+// a billboard model whose picture can be replaced (hiddenSelections), else a plain 10 m user
+// texture panel standing upright
+private _bbC = [["Land_Billboard_F", "Land_Billboard_02_blank_F"]] call _pick;
+if (_bbC != "" && { (getArray (configFile >> "CfgVehicles" >> _bbC >> "hiddenSelections")) isEqualTo [] }) then { _bbC = "UserTexture10m_F" };
+if (_bbC != "") then {
+    { _x hideObjectGlobal true } forEach (nearestTerrainObjects [_bbP, ["TREE", "SMALL TREE", "BUSH", "ROCK", "HIDE", "FENCE", "WALL"], 5, false, true]);
+    private _bb = createVehicle [_bbC, _bbP, [], 0, "CAN_COLLIDE"];
+    _bb setDir (_d + ([0, 180] select CQ_billboardFlip));
+    _bb setPosATL _bbP;
+    _bb allowDamage false;
+    _bb setObjectTextureGlobal [0, "media\billboard.jpg"];
+    ["Billboard (%1) at %2", [_bbC, mapGridPosition _bb]] call CQ_fnc_log;
+};
+
+// muster point (start + respawn): open ground in the front half of the courtyard, right of the
+// flag, never inside or against a building (nearest clear spot if something stands there)
+private _mw = [8, 16] call _at;
+CQ_musterPos = [_mw, 4, 24] call CQ_fnc_clearPos;
+if (CQ_musterPos isEqualTo []) then { CQ_musterPos = _mw };
+CQ_musterPos = [CQ_musterPos select 0, CQ_musterPos select 1, 0];
+["Muster point (start + respawn) %1 m from the wanted spot", [round (CQ_musterPos distance2D _mw)]] call CQ_fnc_log;
 publicVariable "CQ_musterPos";
 private _respawn = createMarker ["respawn_west", CQ_musterPos];
 _respawn setMarkerType "Empty";
@@ -402,3 +452,31 @@ _zone setMarkerColor "ColorWEST";
 
 ["Base built at %1 (front %2 deg): %3 pieces, %4 terrain objects hidden, %5 rows, %6 repair stations",
     [mapGridPosition _o, round _d, _placed, _hidden, _nRays, count CQ_repairPoints]] call CQ_fnc_log;
+
+// Map footprints: buildings created by script are not drawn on the map (only the terrain's own
+// buildings are), so every base building and wall gets a filled rectangle marker of its real
+// footprint, like the map's own buildings. Done once, a few seconds after the base is placed.
+[] spawn {
+    sleep 5;
+    private _n = 0;
+    {
+        private _o = _x;
+        if (getObjectType _o != 8) then { continue };                             // mission objects only
+        if (!(_o isKindOf "Building") && { !(_o isKindOf "House") } && { !(_o isKindOf "Strategic") }) then { continue };
+        if (_o isKindOf "AllVehicles" || { _o isKindOf "ReammoBox_F" } || { "helipad" in toLower typeOf _o } || { "light" in toLower typeOf _o }) then { continue };
+        (boundingBoxReal _o) params ["_a", "_b"];
+        private _w = ((_b select 0) - (_a select 0)) / 2;
+        private _l = ((_b select 1) - (_a select 1)) / 2;
+        if (_w < 0.6 && { _l < 0.6 }) then { continue };                          // signs, props
+        if ((_b select 2) - (_a select 2) < 0.8) then { continue };              // flat things
+        private _m = createMarker [format ["cq_bld_%1", _n], getPosATL _o];
+        _m setMarkerShape "RECTANGLE";
+        _m setMarkerSize [_w, _l];
+        _m setMarkerDir getDir _o;
+        _m setMarkerBrush "SolidFull";
+        _m setMarkerColor "ColorBlack";
+        _m setMarkerAlpha 0.55;
+        _n = _n + 1;
+    } forEach (CQ_basePos nearObjects ["All", CQ_baseRadius + 150]);
+    ["Base map footprints: %1 buildings and walls drawn", [_n]] call CQ_fnc_log;
+};

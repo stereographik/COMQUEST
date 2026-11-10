@@ -28,9 +28,9 @@ CQ_story = createHashMapFromArray [
     // ================================================================ campaign
     // [] - mission start (act 1 opening)
     ["carrier", [
-        [["CROSSROAD", "CROSSROAD to all stations. CSAT has parked a carrier group offshore. They didn't come for the beaches."]],
-        [["CROSSROAD", "CROSSROAD to all stations. Enemy carrier group off the east coast. They intend to stay. We intend otherwise."]],
-        [["CROSSROAD", "Good morning, all stations. CSAT has brought a carrier and a great deal of confidence. Let's relieve them of both."]]
+        [["CROSSROAD", "CROSSROAD to all stations. CSAT has parked a carrier group offshore. They didn't come for the beaches."], ["CROSSROAD", "Get your stuff up fast, soldiers. Pick your class and kit at the base, grab a ride, and find out where they intend to land."]],
+        [["CROSSROAD", "CROSSROAD to all stations. Enemy carrier group off the east coast. They intend to stay. We intend otherwise."], ["CROSSROAD", "Get your stuff up fast, soldiers. Pick your class and kit at the base, grab a ride, and find out where they intend to land."]],
+        [["CROSSROAD", "Good morning, all stations. CSAT has brought a carrier and a great deal of confidence. Let's relieve them of both."], ["CROSSROAD", "Get your stuff up fast, soldiers. Pick your class and kit at the base, grab a ride, and find out where they intend to land."]]
     ]],
     // [] - act openings
     ["act2", [

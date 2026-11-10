@@ -7,7 +7,10 @@ waitUntil { !isNull player };
 // Start on the muster area of the base camp
 if (!_didJIP || { player distance2D CQ_basePos < 200 }) then {
     waitUntil { !isNil "CQ_musterPos" };
-    player setPosATL (CQ_musterPos getPos [2 + random 8, random 360]);
+    // a free spot outside, close to the muster point (never in a building or on another player)
+    private _sp = CQ_musterPos findEmptyPosition [0, 8, "B_Soldier_F"];
+    if (_sp isEqualTo []) then { _sp = CQ_musterPos };
+    player setPosATL [_sp select 0, _sp select 1, 0];
     player setDir CQ_baseDir;
 };
 // Every slot is a Rifleman: the class is taken in game (U -> CLASS)
@@ -19,6 +22,12 @@ if (isNil "CQ_unassignedDone") then {
     ["unassign", player] remoteExec ["CQ_fnc_squadCmd", 2];
     [] spawn { sleep 6; hint parseText "<t size='1.1' color='#F2F1DF'>You are unassigned.</t><br/>Press <t color='#918C3B'>U</t> to join or create a squad."; };
 };
+call CQ_fnc_grassCut;      // no grass around the base (local objects)
+[] spawn CQ_fnc_opClient;   // map: Operation (progress checklist) - first section of the briefing
+[] spawn CQ_fnc_intro;   // 5 s cinematic intro
+player createDiarySubject ["CQ_op", "Operation"];     // first in the map's briefing panel
+// Briefing tab: the opening orders
+player createDiaryRecord ["Diary", ["Orders", "<font face='PuristaSemibold' size='16' color='#F2F1DF'>GET YOUR STUFF UP FAST, SOLDIERS</font><br/><br/>CSAT has a carrier group offshore and will start landing troops on Altis within minutes.<br/><br/><font color='#918C3B'>1.</font> Press <font color='#F2F1DF'>U</font>: join or create a squad, pick your class inside the HQ compound. Every class comes fully kitted.<br/><font color='#918C3B'>2.</font> Grab a ride at the shop pad.<br/><font color='#918C3B'>3.</font> Find where they ground, then cut the network: HQs, radio towers, supply lines.<br/><br/><font color='#A6A381'>Progress is tracked in the Operation tab.</font>"]];
 // Credits (map diary)
 player createDiarySubject ["CQ_credits", "Credits"];
 player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [

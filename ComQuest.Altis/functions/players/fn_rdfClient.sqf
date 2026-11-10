@@ -24,7 +24,7 @@ private _y0 = safezoneY + CQ_rdfTop * _ph;
 
 private _mk = {
     params ["_cls", "_rx", "_ry", "_rw", "_rh"];
-    private _c = _d ctrlCreate [_cls, -1];
+    private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), -1];
     [_c, _cls] call CQ_fnc_uiStyle;
     _c ctrlSetPosition [_x0 + _rx * _pw, _y0 + _ry * _ph, _rw * _pw, _rh * _ph];
     _c ctrlCommit 0;
@@ -32,7 +32,7 @@ private _mk = {
 };
 
 private _bg = ["RscText", 0, 0, _W, _H] call _mk;
-_bg ctrlSetBackgroundColor [0, 0.153, 0.169, 0.75];
+_bg ctrlSetBackgroundColor [0.098, 0.094, 0.07, 0.75];
 private _edge = ["RscText", 0, 0, 3, _H] call _mk;
 _edge ctrlSetBackgroundColor (CQ_ui get "accent");
 
@@ -56,7 +56,8 @@ private _all = [_bg, _edge, _lbl, _pct] + _bars;
 
 private _shown = -1;
 private _disp = 0;
-private _offColor = [0.035, 0.2, 0.215, 0.7];
+private _offColor = [0.2, 0.192, 0.122, 0.7];
+private _lastV = -2;
 while { true } do {
     sleep 0.2;
     private _has = alive player && { "ItemRadio" in assignedItems player || { (assignedItems player) findIf { "radio" in toLower _x } > -1 } };
@@ -64,6 +65,7 @@ while { true } do {
     if (_on != (_shown == 1)) then {
         { _x ctrlShow _on } forEach _all;
         _shown = [0, 1] select _on;
+        _lastV = -2;                                       // redraw once shown again
     };
     if (!_on) then { continue };
 
@@ -87,6 +89,8 @@ while { true } do {
     };
 
     if (_target < 0) then {
+        if (_lastV == -1) then { continue };               // already showing NO SIGNAL
+        _lastV = -1;
         _disp = 0;
         _lbl ctrlSetText "NO SIGNAL";
         _lbl ctrlSetTextColor (CQ_ui get "dim");
@@ -96,6 +100,8 @@ while { true } do {
     } else {
         _disp = _disp + (_target - _disp) * 0.4;          // smooth the needle
         private _v = round (_disp * 100);
+        if (_v == _lastV) then { continue };               // nothing to redraw
+        _lastV = _v;
         _lbl ctrlSetText "SIGNAL";
         _lbl ctrlSetTextColor (CQ_ui get "muted");
         _edge ctrlSetBackgroundColor (CQ_ui get "accent");
@@ -103,7 +109,7 @@ while { true } do {
             "<t align='right'><t font='PuristaSemibold' size='1.25' color='#F2F1DF'>%1</t><t font='PuristaLight' size='0.85' color='#A6A381'> %%</t></t>", _v];
         private _n = round (_disp * _segs);
         {
-            _x ctrlSetBackgroundColor ([_offColor, [0.569, 0.549, 0.231, 0.55 + 0.45 * (_forEachIndex / _segs)]] select (_forEachIndex < _n));
+            _x ctrlSetBackgroundColor ([_offColor, [0.949, 0.945, 0.875, 0.55 + 0.45 * (_forEachIndex / _segs)]] select (_forEachIndex < _n));
         } forEach _bars;
     };
 };

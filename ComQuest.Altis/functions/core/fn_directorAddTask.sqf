@@ -1,6 +1,6 @@
 /*
     CQ_fnc_directorAddTask  (server)
-    ["vehicles", CQ_fnc_vehTick] call CQ_fnc_directorAddTask;
+    ["depot", CQ_fnc_depotTick] call CQ_fnc_directorAddTask;
     Registers code the director runs every tick, in registration order.
 */
 params [["_name", "", [""]], ["_code", {}, [{}]]];

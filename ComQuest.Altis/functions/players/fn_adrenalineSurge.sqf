@@ -52,6 +52,8 @@ private _p = 1 - ((1 - CQ_surgeChance) ^ (1 / _n));
 while { alive _u && { _u == player } } do {
     waitUntil { sleep 1; !alive _u || { lifeState _u == "INCAPACITATED" } };
     if (!alive _u) exitWith {};
+    _u setVariable ["CQ_downFed", true, true];
+    [format ["%1 down  ·  %2", name _u, _u getVariable ["CQ_lastHit", "unknown"]]] remoteExec ["CQ_fnc_feed", 0];
     private _t0 = time;
     while { alive _u && { lifeState _u == "INCAPACITATED" } && { time - _t0 < CQ_bleedOut } } do {
         sleep CQ_surgeEvery;

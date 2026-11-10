@@ -9,31 +9,37 @@ CQ_playerView = true;                    // final player view by default: no deb
 CQ_debugCards = false;                   // debug phase messages as orange cards too (story lines use the cards)
 
 // --- Director -------------------------------------------------------------
+CQ_logVerbose = false;                   // true: also log every drone route / ring / Tigris lock (chatty .rpt)
 CQ_tickSeconds = 5;                      // one server tick every 5 s
 
 // --- Player base (Altis International Airport) -----------------------------
 CQ_basePos = [14267, 16099, 0];         // base compound centre (HQ zone drawn on the map)
 CQ_baseRadius = 300;                     // base zone drawn on the map
+CQ_safeZoneRadius = 800;                 // weapons-safe perimeter: players cannot fire inside it...
+CQ_safeZoneHold = 30;                    // ...unless an enemy is inside (and for 30 s after the last one left)
 CQ_baseNoSpawnRadius = 2500;             // no enemy site closer than this (milestone 2)
 
 CQ_baseDir = 38;                         // compound front and vehicle rows compass direction
-// --- Base vehicles (fixed numbers, each respawns when destroyed or abandoned) ----
-// [classname, parking role in the camp (CQ_fnc_baseSetup), count]
+// --- Vehicle depot quotas: free vehicles requested at the depots (repair stations) --
+// [classname, role (only lays out the vehicle zone rows), max out at the same time]
 CQ_baseVehicles = [
     ["B_MRAP_01_F",               "hunter",     4],   // Hunter, unarmed
     ["I_MRAP_03_F",               "strider",    4],   // Strider, unarmed
     ["B_G_Offroad_01_armed_F",    "pickup",     4],   // Offroad HMG
     ["B_Truck_01_transport_F",    "hemtt",      2],   // HEMTT troop transport
-    ["B_Heli_Light_01_F",         "littlebird", 2],   // MH-6 Little Bird
-    ["B_Heli_Transport_01_F",     "ghosthawk",  2],   // UH-80 Ghost Hawk
-    ["B_Heli_Transport_01_F",     "blackhawk",  1]    // the "blackhawk": a 3rd UH-80 Ghost Hawk
+    ["B_Heli_Light_01_F",         "littlebird", 6],   // MH-6 Little Bird
+    ["B_Heli_Transport_01_F",     "ghosthawk",  4]    // UH-80 Ghost Hawk (one line per class: the quota is read from the first match)
 ];
 CQ_baseVehPadding = 25;                  // metres between base vehicles (fallback search)
 // Base layout (CQ_fnc_baseSetup), from the zones drawn on the map:
 //   HQ compound at CQ_basePos facing CQ_baseDir; 4 parallel vehicle rows in the vehicle zone
 //   (start point next to the HQ, running along CQ_baseDir); a crate dispenser + loadout zone
 //   at the far end of each row; 2 repair stations east of the vehicle zone
+CQ_billboardFlip = false;                // true if the base billboard (front wall, right of the gate) shows its back to the courtyard
 CQ_compoundSize = [80, 60];              // inner compound width x depth (m)
+CQ_grassCut = true;                      // false: no grass cutting at all (test switch)
+CQ_grassCutRadius = 100;                 // no grass this far around the base centre (m)...
+CQ_grassCutSpacing = 10;                 // ...normal-size clutter cutters this far apart (lower it if grass shows between them)
 CQ_rayStarts = [[14255, 16151, 0], [14282, 16143, 0], [14304, 16130, 0], [14330, 16116, 0]];
 CQ_dispensers = [[14293, 16200, 0], [14310, 16189, 0], [14339, 16175, 0], [14364, 16166, 0]];   // pushed further out if a row is longer
 CQ_repairSpots = [[14409, 16135, 0], [14380, 16102, 0]];
@@ -48,9 +54,15 @@ CQ_parkGrid = 25;                        // base parking grid: one vehicle per c
 CQ_parkClear = 10;                       // a cell needs no object / rock / building / tree within this
 CQ_parkMaxGradient = 0.1;                // ...and flat ground
 CQ_parkSearch = 450;                     // grid searched this far around the park point behind the camp
-CQ_vehRespawnDelay = 60;                 // seconds after destruction
-CQ_vehAbandonDelay = 900;                // seconds empty and still away from its spot before it respawns there (15 min)
-CQ_vehAbandonDistance = 30;              // ...away from its parking spot
+CQ_vehAbandonDelay = 900;                // depot vehicle empty and still this long, no player within 200 m: back in stock (15 min)
+CQ_opNotifyGap = 20;                     // "Objectives updated, check map": at most one notification every 20 s
+CQ_rspCredits = 10;                      // squad respawn vehicle: teleports a vehicle gives before it stops being a respawn point
+CQ_rspBaseRange = 150;                   // ...teleports leave from within this of the base muster point
+CQ_depotMaxPerSquad = 2;                 // depot vehicles out at the same time per squad
+CQ_depotCooldown = [["light", 120], ["truck", 180], ["air", 300]];   // s before the same player can request again, by type taken
+CQ_depotRange = 10;                      // metres from the depot furniture to use it
+CQ_depotReturnRange = 30;                // a vehicle this close to a depot (or its pad) can be returned
+CQ_depotPadGap = 24;                     // depot helipad distance behind the repair point (away from the runway)
 
 // --- Enemy origin: a carrier off the east coast -------------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
@@ -228,17 +240,37 @@ CQ_loadZoneCount = 4;                    // loadout zones in the base parking ar
 CQ_loadZoneRadius = 9;
 // Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
 // [label, unit class (loadout), traits, max players in that class]
-// UI design: one look for every window, from the project colour chart
-//   #00272B deep teal   #918C3B olive   #A6A381 khaki   #F2F1DF cream   #BA392C red
+// UI design: dark theme from the project colour chart (no dark green): charcoal-olive panels,
+// cream text. Buttons (class CQ_Button, description.ext): dark, olive on hover AND when active
+// (focused/pressed: the same colour, no mismatch), red when selected (CQ_fnc_uiSel).
+//   chart: #918C3B olive   #A6A381 light brown   #F2F1DF cream   #BA392C red
 CQ_ui = createHashMapFromArray [
     ["font", "PuristaMedium"], ["fontHead", "PuristaSemibold"], ["fontLight", "PuristaLight"],
-    ["panel", [0, 0.153, 0.169, 0.93]], ["header", [0, 0.11, 0.122, 0.97]], ["inset", [0, 0.08, 0.09, 0.6]],
-    ["button", [0.569, 0.549, 0.231, 0.85]], ["buttonOn", [0.729, 0.224, 0.173, 1]], ["buttonActive", [0.949, 0.945, 0.875, 1]],
+    ["panel", [0.07, 0.068, 0.05, 0.97]], ["header", [0.15, 0.146, 0.098, 1]], ["inset", [0, 0, 0, 0.55]],
+    ["button", [0.2, 0.192, 0.122, 1]], ["buttonHover", [0.569, 0.549, 0.231, 1]], ["buttonOn", [0.729, 0.224, 0.173, 1]],
+    ["buttonActive", [0.949, 0.945, 0.875, 1]], ["textOn", [0.949, 0.945, 0.875, 1]],
     ["text", [0.949, 0.945, 0.875, 1]], ["muted", [0.651, 0.639, 0.506, 1]], ["dim", [0.45, 0.44, 0.35, 1]],
     ["accent", [0.569, 0.549, 0.231, 1]], ["alert", [0.729, 0.224, 0.173, 1]], ["warn", [0.651, 0.639, 0.506, 1]]
-];   // hex: text #F2F1DF, muted #A6A381, accent #918C3B, alert #BA392C
+];   // hex on dark backgrounds: text #F2F1DF, muted #A6A381, accent #918C3B, dim #7A7860, alert #BA392C
+CQ_splashEnabled = false;                 // POC splash before the intro: black, picture centred, text under it
+CQ_splashWidth = 0.8;                    // picture width, share of the screen width
+CQ_splashTime = 4;                       // s (Space ends it)
+CQ_introEnabled = false;                 // cinematic at join: black + typed time/place, satellite, coast, flight, landing, eyes (CQ_fnc_intro)
+CQ_introShots = [8, 8, 8, 8];            // s per shot: satellite, coast, squad on a hilltop, landing (on the shop pad)
+CQ_introScene = -1;                      // squad shot: -1 random, or 0 attack, 1 retreat, 2 report, 3 sneak, 4 ambush
+CQ_introFade = 1;                        // s per fade (out, and in) between shots; the end is a blink
+CQ_introSatAlt = 1300;                   // m: satellite shot altitude (under the clouds)
+CQ_introViewDist = 7000;                 // m: view distance during the satellite shot only
+CQ_introHoverTop = 7;                    // landing shot: the Hummingbird descends from this height...
+CQ_introPrewarm = 3.5;                   // s: the landing (movement + engine sound) starts this long before the picture opens
+CQ_introLoadPause = 1;                   // s on black after the loading screen, before the typing starts
+CQ_introHoverLow = 2.1;                  // ...to this (about 1 m above the pad), never touching
+CQ_introMaxTime = 90;                    // s: watchdog, the intro is cleaned up whatever happens
+CQ_startAfterIntro = 5;                  // s after the FIRST player's intro: the mission starts
+CQ_introPlace = "ALTIS  ·  AEGEAN SEA  ·  AAC AIRFIELD";   // typed on black before the shots, under the time and date
+CQ_introTypeDelay = 0.06;               // s per typed letter
 CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
-CQ_menuScreen = [0.4072, 0.4023, 0.7100, 0.5479];   // its blue screen zone in the picture (fractions)
+CQ_menuScreen = [0.4053, 0.4023, 0.7100, 0.5479];   // its blue screen zone in the picture (fractions)
 CQ_bleedOut = 300;                       // s a downed player waits for a medic (ReviveBleedOutDelay in description.ext)
 CQ_surgeChance = 0.10;                   // adrenalineSurge: chance for a downed medic to get up on his own over the whole wait
 CQ_bleedMedicRange = 500;                // BLEEDOUT (give up and respawn) only allowed with no medic this close
@@ -259,6 +291,24 @@ CQ_classes = [
     ["Sniper",          "B_sniper_F",       [],                                  2],
     ["Pilot",           "B_Helipilot_F",    [],                                  4]
 ];
+// Class kits, topped up over the vanilla loadout of each class (CQ_fnc_classKit):
+// [primary mags carried, launcher rounds total (loaded + carried), [[item, count], ...], backpack if none ("" = none)]
+// Everyone also gets a P07 with 3 mags and the CQ_basicKit items.
+CQ_classKit = createHashMapFromArray [
+    ["Rifleman",        [9, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_AssaultPack_mcamo"]],
+    ["Squad Leader",    [8, 0, [["HandGrenade", 2], ["SmokeShell", 4], ["SmokeShellGreen", 2], ["SmokeShellRed", 2], ["1Rnd_HE_Grenade_shell", 6], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
+    ["Medic",           [7, 0, [["Medikit", 1], ["FirstAidKit", 10], ["SmokeShell", 4]], "B_Kitbag_mcamo"]],
+    ["Grenadier",       [8, 0, [["1Rnd_HE_Grenade_shell", 14], ["1Rnd_Smoke_Grenade_shell", 4], ["HandGrenade", 1], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
+    ["Autorifleman",    [5, 0, [["HandGrenade", 1], ["SmokeShell", 1], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
+    ["Light Anti-Tank", [6, 3, [["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
+    ["Heavy Anti-Tank", [6, 3, [["SmokeShell", 1], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
+    ["Anti-Air",        [6, 3, [["SmokeShell", 1], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
+    ["Engineer",        [7, 0, [["ToolKit", 1], ["MineDetector", 1], ["DemoCharge_Remote_Mag", 3], ["SatchelCharge_Remote_Mag", 1], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
+    ["Marksman",        [10, 0, [["SmokeShell", 2], ["FirstAidKit", 2]], "B_AssaultPack_mcamo"]],
+    ["Sniper",          [9, 0, [["SmokeShell", 2], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
+    ["Pilot",           [5, 0, [["SmokeShellBlue", 2], ["FirstAidKit", 2], ["ToolKit", 1]], ""]]
+];
+CQ_classSidearm = ["hgun_P07_F", "16Rnd_9x21_Mag", 3];
 CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
 CQ_classChangeRange = 2;                 // classes are changed inside the HQ compound walls (+ this margin, m)
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads
@@ -431,6 +481,7 @@ CQ_magRingMin = 700;                     // m tightest ring
 CQ_magRingShrink = 120;                  // m per minute the ring tightens
 CQ_magRingTurn = 0.5;                    // deg per second the ring turns (a full turn in 12 min)
 CQ_magOsc = [0.3, 240];                  // Greyhawk / Reaper loiter radius around a contact: +/- 30 %, one swing every 240 s
+CQ_magChecksPerPass = 30;                // line-of-sight checks per drone and detection pass (was 60)
 CQ_magFocusQuiet = 300;                  // s without a new contact in the ring (once tight) -> next focus
 CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (the carrier group)
 CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
@@ -460,12 +511,12 @@ CQ_heatEvery = 5;                        // s between two server updates
 CQ_heatPubEvery = 10;                    // s between two broadcasts to the players
 CQ_heatWeights = createHashMapFromArray [["inf", 0.15], ["static", 0.3], ["light", 0.35], ["armour", 0.6], ["air", 0.6]];   // heat per seen unit (summed per cell, max 1)
 CQ_heatEnabled = true;                   // false: no heatmap overlay on the map (the server grid still runs)
-CQ_heatFine = 100;                       // m: drawn tile size (the field is sampled this fine)
+CQ_heatFine = 120;                       // m: drawn tile size (the field is sampled this fine)
 CQ_heatSigma = 260;                      // m: spread of one contact cell (gaussian)
 CQ_heatTerrain = 0.35;                   // heightmap mask: how much local relief bends the contours
 CQ_heatBands = 7;                        // colour bands (stepped contours, blue -> red)
 CQ_heatAlpha = 0.10;                     // final opacity of the overlay
-CQ_heatMaxTiles = 1800;                  // drawn tiles at most (strongest first, on screen only)
+CQ_heatMaxTiles = 1200;                  // drawn tiles at most (strongest first, on screen only)
 // fixed-wing spawn spots placed in Eden by hand: name -> [[x, y], direction]
 CQ_magFixedSpawns = createHashMapFromArray [
     ["Greyhawk", [[14305.65, 15841.31], 39.09]],

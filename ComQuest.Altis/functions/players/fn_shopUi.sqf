@@ -23,7 +23,7 @@ private _Y = safeZoneY + (safeZoneH - _H) / 2;
 private _L = 0.042;
 private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
-    private _c = _d ctrlCreate [_cls, _idc];
+    private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), _idc];
     [_c, _cls] call CQ_fnc_uiStyle;
     _c ctrlSetPosition _pos;
     if (_txt != "") then { _c ctrlSetText _txt };
@@ -41,7 +41,7 @@ private _list = ["RscListBox", 7301, [_X + 0.015, _Y + _L * 2.5, _W * 0.45, _H -
 private _info = ["RscStructuredText", -1, [_X + 0.025 + _W * 0.45, _Y + _L * 2.5, _W * 0.55 - 0.04, _H - _L * 4.2]] call _mk;
 _info ctrlSetBackgroundColor (CQ_ui get "inset");
 private _buy = ["RscButton", 7302, [_X + _W - 0.015 - _W * 0.3, _Y + _H - _L * 1.4, _W * 0.3, _L * 1.1], "BUY"] call _mk;
-_buy ctrlSetBackgroundColor (CQ_ui get "buttonOn");
+[_buy, true] call CQ_fnc_uiSel;
 _buy ctrlSetTextColor (CQ_ui get "text");
 {
     private _i = _list lbAdd (_x select 2);
@@ -80,7 +80,7 @@ while { !isNull _d } do {
             default { "" };
         };
         _info ctrlSetStructuredText parseText format [
-            "<t size='1.05' font='PuristaSemibold' color='#F2F1DF'>%1</t><br/><t size='0.8' color='#A6A381'>%2</t><br/><br/><t size='0.85' color='#CFCDB3'>%3</t><br/><br/><t size='0.8' color='#A6A381'>Seats: </t><t size='0.8' color='#F2F1DF'>%4</t><br/><t size='0.8' color='#A6A381'>Cost: </t><t size='0.8' color='#F2F1DF'>%5 squad points</t><br/><br/><t size='0.8' color='#D45A4C'>%6</t><br/><br/><t size='0.7' color='#7A7860'>Squad points come from your squad's kills, destroyed vehicles and objectives. Bought vehicles spawn on the shop pad and do not respawn.</t>",
+            "<t size='1.05' font='PuristaSemibold' color='#F2F1DF'>%1</t><br/><t size='0.8' color='#A6A381'>%2</t><br/><br/><t size='0.85' color='#CFCDB3'>%3</t><br/><br/><t size='0.8' color='#A6A381'>Seats: </t><t size='0.8' color='#F2F1DF'>%4</t><br/><t size='0.8' color='#A6A381'>Cost: </t><t size='0.8' color='#F2F1DF'>%5 squad points</t><br/><br/><t size='0.8' color='#BA392C'>%6</t><br/><br/><t size='0.7' color='#7A7860'>Squad points come from your squad's kills, destroyed vehicles and objectives. Bought vehicles spawn on the shop pad and do not respawn.</t>",
             _name, getText (_cfg >> "displayName"), _desc, ([_cls, true] call BIS_fnc_crewCount), _cost, _why];
     };
     _buy ctrlEnable (_it isNotEqualTo [] && { _why == "" });

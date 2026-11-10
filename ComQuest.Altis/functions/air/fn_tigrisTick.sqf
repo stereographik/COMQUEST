@@ -80,6 +80,6 @@ if (_drones isEqualTo []) exitWith {};
     };
     if (time - (_t getVariable ["CQ_lockLogT", -1e6]) > 30) then {
         _t setVariable ["CQ_lockLogT", time];
-        ["Tigris at %1 locked MAGPIE %2 (%3 m)", [mapGridPosition _t, _tgt getVariable ["CQ_magName", typeOf _tgt], round (_tgt distance _t)]] call CQ_fnc_log;
+        if (CQ_logVerbose) then { ["Tigris at %1 locked MAGPIE %2 (%3 m)", [mapGridPosition _t, _tgt getVariable ["CQ_magName", typeOf _tgt], round (_tgt distance _t)]] call CQ_fnc_log };
     };
 } forEach CQ_tigrises;
