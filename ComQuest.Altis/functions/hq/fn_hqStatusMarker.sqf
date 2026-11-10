@@ -2,7 +2,7 @@
     CQ_fnc_hqStatusMarker  (server)
     [_hq] call CQ_fnc_hqStatusMarker;
     Status marker of a fully built HQ, seen by every player:
-        [ROLLING THUNDER (HQ#1)][alive][1/7 objectives]
+        [ROLLING THUNDER (root)][alive][1/7 objectives]     (rank: root, P1, P2... see CQ_fnc_objName)
     commander: alive / captured / killed; objectives = installations destroyed / total (depot,
     radio tower, fuel tanker, AA pits, HMG tower). Created when the HQ finishes building,
     updated by CQ_fnc_hqTick (text only rewritten when it changes); a fallen HQ keeps a grey

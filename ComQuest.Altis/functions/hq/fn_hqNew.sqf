@@ -9,10 +9,12 @@ params ["_pos", ["_parent", -1]];
 private _id = CQ_hqNextId;
 CQ_hqNextId = CQ_hqNextId + 1;
 
-// codename: next one of CQ_hqNames (numbered again if the list runs out: "OVERLORD 2")
-private _nn = count CQ_hqNames;
-private _name = CQ_hqNames select ((_id - 1) mod _nn);
-if (_id > _nn) then { _name = format ["%1 %2", _name, floor ((_id - 1) / _nn) + 1] };
+// codename: a random one of CQ_hqNames not used yet in this game, kept for the whole game
+// (numbered if the list ever runs out: "OVERLORD 2")
+if (isNil "CQ_hqNamesUsed") then { CQ_hqNamesUsed = [] };
+private _free = CQ_hqNames - CQ_hqNamesUsed;
+private _name = if (_free isNotEqualTo []) then { selectRandom _free } else { format ["%1 %2", selectRandom CQ_hqNames, floor (count CQ_hqNamesUsed / count CQ_hqNames) + 1] };
+CQ_hqNamesUsed pushBack _name;
 
 private _hq = createHashMapFromArray [
     ["id", _id],
