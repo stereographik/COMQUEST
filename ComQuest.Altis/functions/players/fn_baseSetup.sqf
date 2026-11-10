@@ -116,6 +116,7 @@ private _gate = 9;                                  // half width of the vehicle
 [["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], _gate + 10, _hd + 9, -15] call _put;
 // guard towers in the corners
 { [["Land_Cargo_Patrol_V1_F", "Land_BagBunker_Tower_F"], (_x select 0) * (_hw - 5), (_x select 1) * (_hd - 5), [180, 0] select ((_x select 1) > 0), true] call _put } forEach [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+
 // back row of buildings, packed from the left, their back 4 m from the back wall
 private _row = [
     ["Land_Cargo_HQ_V1_F", "Land_MilOffices_V1_F"],    // command post: the friendly commander's building
