@@ -63,9 +63,9 @@ _hint ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size
 CQ_introSkip = false;
 private _skipEh = (findDisplay 46) displayAddEventHandler ["KeyDown", { params ["", "_k"]; if (_k == 57) then { CQ_introSkip = true; true } else { false } }];
 private _nap = { params ["_t"]; private _e = time + _t; waitUntil { uiSleep 0.02; CQ_introSkip || { time >= _e } } };
-private _dip = {     // slow dip to black between two shots
-    _bl cutText ["", "BLACK OUT", 0.4];
-    [0.4] call _nap;
+private _dip = {     // dip to black between two shots: CQ_introFade out, CQ_introFade in
+    _bl cutText ["", "BLACK OUT", CQ_introFade];
+    [CQ_introFade] call _nap;
 };
 private _local = {   // a local, unsimulated vehicle
     params ["_cls", "_pos", "_dir"];
@@ -78,6 +78,23 @@ private _local = {   // a local, unsimulated vehicle
     _locals pushBack _v;
     _v
 };
+
+// the landing Hummingbird is made now, hidden, engine running: its rotors are at full speed by
+// shot 4. It hangs on a local helper moved by script (no crew, nobody can see it but you).
+private _lz = missionNamespace getVariable ["CQ_shopLZ", _muster getPos [35, CQ_baseDir + 90]];
+private _lzDir = missionNamespace getVariable ["CQ_shopDir", CQ_baseDir];
+private _gz = getTerrainHeightASL _lz;
+private _hook = "Land_HelipadEmpty_F" createVehicleLocal [0, 0, 0];
+_hook setPosASL [_lz select 0, _lz select 1, _gz + 23];
+_hook setDir _lzDir;
+_locals pushBack _hook;
+private _hb = createVehicleLocal ["B_Heli_Light_01_F", [0, 0, 1000], [], 0, "CAN_COLLIDE"];
+_hb setVariable ["CQ_introVeh", true];
+_hb allowDamage false;
+_hb attachTo [_hook, [0, 0, 0]];
+_hb hideObject true;
+_hb engineOn true;
+_locals pushBack _hb;
 
 call {
     // ---- 0 BLACK: time and place typed out
@@ -106,7 +123,7 @@ call {
     _cam camSetTarget _mid;
     _cam camSetFov 0.6;
     _cam camCommit 0;
-    _bl cutText ["", "BLACK IN", 0.6];
+    _bl cutText ["", "BLACK IN", CQ_introFade];
     _cam camSetPos (_mid vectorAdd [150, -60, 4300]);
     _cam camSetFov 0.55;
     _cam camCommit (_tSat + 1.5);
@@ -125,7 +142,7 @@ call {
     _cam camSetTarget (_vp getPos [80, _seaDir + 25]);
     _cam camSetFov 0.42;
     _cam camCommit 0;
-    _bl cutText ["", "BLACK IN", 0.5];
+    _bl cutText ["", "BLACK IN", CQ_introFade];
     _cam camSetTarget (_vp getPos [80, _seaDir - 25]);          // slow pan along the shore
     _cam camCommit (_tCoast + 0.8);
     [_tCoast] call _nap;
@@ -147,7 +164,7 @@ call {
     _cam camSetTarget [_from select 0, _from select 1, 30];
     _cam camSetFov 0.55;
     _cam camCommit 0;
-    _bl cutText ["", "BLACK IN", 0.5];
+    _bl cutText ["", "BLACK IN", CQ_introFade];
     private _tS = time;
     private _dir = [sin _hdg, cos _hdg, 0];
     while { time - _tS < _tFlight && { !CQ_introSkip } } do {
@@ -167,30 +184,26 @@ call {
     // ---- 4 LANDING: an empty Hummingbird settling at the muster area, seen from behind
     call _dip;
     if (CQ_introSkip) exitWith {};
-    private _lz = _muster getPos [35, CQ_baseDir + 90];
-    private _fe = _lz findEmptyPosition [0, 40, "B_Heli_Light_01_F"];
-    if (_fe isNotEqualTo []) then { _lz = _fe };
-    private _gz = getTerrainHeightASL _lz;
-    private _hb = ["B_Heli_Light_01_F", [_lz select 0, _lz select 1, _gz + 22], CQ_baseDir] call _local;
-    private _behind = _lz getPos [20, CQ_baseDir + 180];
+    private _behind = _lz getPos [20, _lzDir + 180];
     _cam camSetPos [_behind select 0, _behind select 1, 7];
     _cam camSetTarget [_lz select 0, _lz select 1, 1.5];
     _cam camSetFov 0.6;
     _cam camCommit 0;
-    _bl cutText ["", "BLACK IN", 0.5];
+    _hb hideObject false;
+    _bl cutText ["", "BLACK IN", CQ_introFade];
     private _tL = time;
     while { time - _tL < _tLand && { !CQ_introSkip } } do {
         private _k = ((time - _tL) / (_tLand * 0.85)) min 1;
         private _ease = 1 - (1 - _k) ^ 2;                        // slows down as it settles
-        _hb setPosASL [_lz select 0, _lz select 1, _gz + 22 * (1 - _ease) + 0.05];
-        _hb setVectorDirAndUp [[sin CQ_baseDir, cos CQ_baseDir, 0.04 * (1 - _ease)], [0, 0, 1]];
+        _hook setPosASL [_lz select 0, _lz select 1, _gz + 22 * (1 - _ease) + 1.1];
+        _hook setVectorDirAndUp [[sin _lzDir, cos _lzDir, 0.04 * (1 - _ease)], [0, 0, 1]];
         uiSleep 0.02;
     };
 };
 
 // ---- 5 BLACK, then 6 EYES: the player's own view opens in two blinks, a blur clearing
-_bl cutText ["", "BLACK OUT", 0.8];
-uiSleep 0.8;
+_bl cutText ["", "BLACK OUT", CQ_introFade];
+uiSleep CQ_introFade;
 (findDisplay 46) displayRemoveEventHandler ["KeyDown", _skipEh];
 _tl cutText ["", "PLAIN"];
 { deleteVehicle _x } forEach _locals;

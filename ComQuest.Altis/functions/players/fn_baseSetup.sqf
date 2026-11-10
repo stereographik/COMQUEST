@@ -350,6 +350,7 @@ CQ_shopTerminal allowDamage false;
 CQ_shopTerminal enableSimulationGlobal false;
 publicVariable "CQ_shopTerminal";
 publicVariable "CQ_shopLZ";
+publicVariable "CQ_shopDir";
 private _shm = createMarker ["cq_shop", CQ_shopLZ];
 _shm setMarkerType "c_car";
 _shm setMarkerColor "ColorWEST";
