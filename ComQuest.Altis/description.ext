@@ -234,6 +234,7 @@ class CfgFunctions
             class setClass {};
             class basicKit {};
             class adrenalineSurge {};
+            class intro {};
             class applyTraits {};
             class vehAutoFill {};
             class baseDefBuild {};

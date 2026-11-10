@@ -21,6 +21,7 @@ while { getTerrainHeightASL _sea > -25 && { _guard < 30 } } do { _sea = _sea vec
 
 CQ_coastPoint = _coast;
 CQ_carrierPos = [_sea select 0, _sea select 1, 0];
+publicVariable "CQ_carrierPos";      // clients: intro camera
 
 isNil {
     private _carrier = createVehicle [CQ_carrierClass, CQ_carrierPos, [], 0, "NONE"];
