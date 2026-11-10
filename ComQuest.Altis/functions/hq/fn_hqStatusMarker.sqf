@@ -14,12 +14,29 @@ params ["_hq"];
 if !(_hq get "buildDone") exitWith {};
 private _id = _hq get "id";
 private _m = format ["cq_st_%1", _id];
+// AO: a small dot carrying the text, inside a 1000 m red circle hatched in black (CQ_aoRadius)
+// that disappears when the HQ falls
+private _ma = format ["cq_ao_%1", _id];
+private _mh = format ["cq_aoh_%1", _id];
 if (markerType _m == "") then {
     createMarker [_m, _hq get "pos"];
-    _m setMarkerType "o_hq";
+    _m setMarkerType "mil_dot";
+    _m setMarkerSize [0.6, 0.6];
     _m setMarkerColor "ColorOPFOR";
+    createMarker [_mh, _hq get "pos"];
+    _mh setMarkerShape "ELLIPSE";
+    _mh setMarkerSize [CQ_aoRadius, CQ_aoRadius];
+    _mh setMarkerBrush "FDiagonal";
+    _mh setMarkerColor "ColorBlack";
+    _mh setMarkerAlpha 0.5;
+    createMarker [_ma, _hq get "pos"];
+    _ma setMarkerShape "ELLIPSE";
+    _ma setMarkerSize [CQ_aoRadius, CQ_aoRadius];
+    _ma setMarkerBrush "Border";
+    _ma setMarkerColor "ColorRed";
 };
 private _txt = if ((_hq get "state") == "Destroyed") then {
+    if (markerShape _ma != "") then { deleteMarker _ma; deleteMarker _mh };
     _m setMarkerColor "ColorGrey";
     format ["[%1][destroyed]", [_id] call CQ_fnc_objName]
 } else {

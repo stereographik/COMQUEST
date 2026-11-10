@@ -175,6 +175,7 @@ CQ_objMinGap = 300;                      // HQ objectives (depot, radio tower, f
 CQ_objRing = [360, 650];                 // ...placed on a ring this far around the command building (widens until they fit)
 // Enemy HQ codenames (famous real operation names), one picked at random per HQ, never twice in a
 // game; messages and markers show "NAME (root)", "NAME (P1)"... (rank in the network, CQ_fnc_objName)
+CQ_aoRadius = 1000;                      // m: red circle hatched in black around every built enemy HQ (gone when it falls)
 CQ_hqNames = ["ROLLING THUNDER", "URGENT FURY", "OVERLORD", "AVALANCHE", "RED DAWN", "KILLER",
     "MASHER", "JUNIPER COBRA", "HERCULES", "CARTHAGE", "EAGLE CLAW", "BEASTMASTER"];
 // Enemy squad callsigns (real aviator callsigns, aggressive ones), given in this order to every
