@@ -51,6 +51,7 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
         publicVariable "CQ_magVehs";
         ["MAGPIE: %1 lost at %2, replacement in %3 s", [_m get "name", mapGridPosition _v, CQ_magRespawn]] call CQ_fnc_log;
+        if ((_m get "name") find "Sentinel" == 0) then { ["magDown", [(_m get "name") splitString "_" joinString " ", round (CQ_magRespawn / 60)]] call CQ_fnc_say };
     };
     if ((isNull _v || { !alive _v }) && { time >= (_m get "due") }) then {
         private _quad = !(_m call _fixed);
@@ -115,6 +116,7 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         _m set ["phase", "air"];
         _m set ["planT", -1e6];                             // first route right away
         ["MAGPIE: %1 airborne after %2 s", [_m get "name", round (time - (_m get "rollT"))]] call CQ_fnc_log;
+        if ((_m get "name") find "Sentinel" == 0) then { ["magLaunch", [(_m get "name") splitString "_" joinString " "]] call CQ_fnc_say };
     };
 } forEach CQ_mag;
 // take-off clearance: the waiting drone nearest the take-off spot, once nobody is rolling

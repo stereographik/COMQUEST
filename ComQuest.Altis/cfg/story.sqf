@@ -352,18 +352,19 @@ CQ_story = createHashMapFromArray [
         [["MAGPIE", "Anti-air spotted. I'm not feeding it drones. That area goes dark for me."]],
         [["MAGPIE", "I've found their Tigris. Lovely radar. I'll stay well clear, which means you'll see less."]]
     ]],
-    // [airframe]
+    // [airframe] - a Sentinel airborne
     ["magLaunch", [
         [["MAGPIE", "%1 is up. Try not to hide from it, it's on your side."]],
         [["MAGPIE", "%1 is airborne. Eyes up shortly."]],
         [["MAGPIE", "%1 off the runway. I'll tell you what I see. Try to look at it."]],
         [["MAGPIE", "%1 climbing out. Keep your heads down, I'm working."]]
     ]],
+    // [airframe, minutes to the replacement] - a Sentinel shot down
     ["magDown", [
-        [["MAGPIE", "Lost the %1. Replacement airframe in eight minutes."]],
-        [["MAGPIE", "%1 is down. That's the second one. I'm starting to take it personally."]],
-        [["MAGPIE", "%1 shot down. Their AA is awake. Another one on the runway in eight."]],
-        [["MAGPIE", "Lost the %1. I'll have another one up in eight. Do something useful meanwhile."]]
+        [["MAGPIE", "Lost %1. Replacement airframe in %2 minutes."]],
+        [["MAGPIE", "%1 is down. I'm starting to take it personally. Another one in %2."]],
+        [["MAGPIE", "%1 shot down. Their AA is awake. Next one on the runway in %2 minutes."]],
+        [["MAGPIE", "Lost %1. I'll have another one up in %2. Do something useful meanwhile."]]
     ]],
     // [] - three empty reports in a row
     ["magQuiet", [

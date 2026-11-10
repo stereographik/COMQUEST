@@ -6,8 +6,10 @@
       state 2  done      destroyed / neutralised (time + squad when known)
       state 1  active    standing, en route, hunting
       state 0  greyed    not available yet (team in reserve, nothing seen yet)
-    Sections: Find where they land, Hostile HQs, Radio towers, Supply convoys, Supply
-    flights, Special forces, Carrier, Victory.
+    Sections: Find where they land, Hostile HQs, then one per sub-objective type (AA pits, HMG
+    towers, Radio towers, Supply depots, Fuel tankers: a line per object once it is built, under
+    "Not found" until its HQ is complete), Supply convoys, Supply flights, Special forces,
+    Carrier, Victory.
     CQ_opPub = [[done, title, summary, [[state, text], ...], icon], ...]
     A section whose lines are all greyed (nothing available yet) is hidden by the client.
 */
@@ -67,17 +69,50 @@ private _sub = _built apply {
 
 private _when = { params ["_t", "_sq"]; format ["%1%2", [_t] call _clock, ["", "  ·  " + _sq] select (_sq != "")] };
 
-// ---- 3 radio towers: one line per built HQ that got its tower
-private _towers = _built select { !isNull (_x getOrDefault ["radio", objNull]) || { (_x getOrDefault ["opTower", []]) isNotEqualTo [] } };
-private _tRows = _towers apply {
+// ---- 3 sub-objectives: one section per type that can be disabled (destroyed or sabotaged),
+//      one line per object as soon as it is built. Its HQ is "Not found" until the whole HQ is
+//      built (then its name). Each object's type and death are cached per HQ ("opObj": index ->
+//      [type, deadT, squad]) because a wreck may be deleted later.
+private _objTypes = [
+    ["AA", "AA pits", "\A3\ui_f\data\igui\cfg\simpleTasks\types\plane_ca.paa"],
+    ["HMG tower", "HMG towers", "\A3\ui_f\data\igui\cfg\simpleTasks\types\rifle_ca.paa"],
+    ["Radio tower", "Radio towers", "\A3\ui_f\data\igui\cfg\simpleTasks\types\radio_ca.paa"],
+    ["Depot", "Supply depots", "\A3\ui_f\data\igui\cfg\simpleTasks\types\rearm_ca.paa"],
+    ["Fuel tanker", "Fuel tankers", "\A3\ui_f\data\igui\cfg\simpleTasks\types\refuel_ca.paa"]
+];
+private _objRows = createHashMap;          // type -> rows
+private _withObj = [_hqs select { (_x get "installations") isNotEqualTo [] }, [], { _x get "id" }] call BIS_fnc_sortBy;
+{
     private _h = _x;
-    if (alive (_h get "radio")) then { [1, format ["%1  ·  tower standing", [_h get "id"] call CQ_fnc_objName]] } else {
-        if (_h getOrDefault ["opTower", []] isEqualTo []) then { _h set ["opTower", [time, [_h getOrDefault ["lastKiller", objNull]] call _squad]] };
-        [2, format ["%1  ·  tower down %2", [_h get "id"] call CQ_fnc_objName, (_h get "opTower") call _when]]
-    }
+    private _name = if (_h getOrDefault ["buildDone", false]) then { [_h get "id"] call CQ_fnc_objName } else { "Not found" };
+    private _cache = _h getOrDefault ["opObj", createHashMap];
+    _h set ["opObj", _cache];
+    private _n = createHashMap;            // type -> count so far in this HQ
+    {
+        private _o = _x;
+        private _c = _cache getOrDefault [_forEachIndex, []];
+        if (_c isEqualTo []) then { _c = [_o getVariable ["CQ_objType", ""], -1, ""]; _cache set [_forEachIndex, _c] };
+        if ((_c select 1) < 0 && { !alive _o }) then { _c set [1, time]; _c set [2, [_h getOrDefault ["lastKiller", objNull]] call _squad] };
+        private _type = _c select 0;
+        if (_type == "") then { continue };
+        private _k = (_n getOrDefault [_type, 0]) + 1;
+        _n set [_type, _k];
+        private _total = { (_x getVariable ["CQ_objType", ""]) == _type } count (_h get "installations");
+        private _label = if (_total > 1 || { _type == "AA" }) then { format ["%1  #%2", _name, _k] } else { _name };
+        private _rows = _objRows getOrDefault [_type, []];
+        _rows pushBack (if ((_c select 1) < 0) then { [1, format ["%1  ·  standing", _label]] }
+            else { [2, format ["%1  ·  %2 %3", _label, ["destroyed", "down"] select (_type == "Radio tower"), [_c select 1, _c select 2] call _when]] });
+        _objRows set [_type, _rows];
+    } forEach (_h get "installations");
+} forEach _withObj;
+private _objSteps = _objTypes apply {
+    _x params ["_type", "_title", "_icon"];
+    private _rows = _objRows getOrDefault [_type, []];
+    private _down = { (_x select 0) == 2 } count _rows;
+    private _cnt = count _rows;
+    if (_rows isEqualTo []) then { _rows = [[0, "none found yet"]] };
+    [_cnt > 0 && { _down == _cnt }, _title, format ["%1 / %2 destroyed", _down, _cnt], _rows, _icon]
 };
-private _tDown = { (_x select 0) == 2 } count _tRows;
-if (_tRows isEqualTo []) then { _tRows = [[0, "no tower built yet"]] };
 
 // ---- 4 / 5 supply convoys and flights: every one destroyed + the ones on their way now
 private _supRows = {
@@ -115,13 +150,13 @@ private _steps = [
         if (_loc isEqualTo []) then { "Their beachhead will be due west of the carrier, within 2 km of the shore." }
         else { format ["%1  ·  %2  (%3)", [_loc select 0] call _clock, _loc select 1, [_loc select 2] call CQ_fnc_objName] }, [], "\A3\ui_f\data\igui\cfg\simpleTasks\types\search_ca.paa"],
     [_won, "Hostile HQs", format ["%1 / %2 destroyed", _dead, count _built], _hqRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\destroy_ca.paa"],
-    [_towers isNotEqualTo [] && { _tDown == count _towers }, "Radio towers", format ["%1 / %2 down", _tDown, count _towers], _tRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\radio_ca.paa"],
     [_cvDone > 0, "Supply convoys", format ["%1 destroyed", _cvDone], _cvRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\truck_ca.paa"],
     [_flDone > 0, "Supply flights", format ["%1 destroyed", _flDone], _flRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\heli_ca.paa"],
     [(count _spList) >= CQ_huntTeams, "Special forces", format ["%1 / %2 teams neutralised", count _spList, CQ_huntTeams], _spRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\kill_ca.paa"],
     [_pct <= 0, "Carrier empty", format ["carrier at %1 %%", _pct], [], "\A3\ui_f\data\igui\cfg\simpleTasks\types\boat_ca.paa"],
     [_won, "Last HQ destroyed", ["VICTORY when the carrier is empty and no HQ stands", "VICTORY"] select _won, [], "\A3\ui_f\data\igui\cfg\simpleTasks\types\attack_ca.paa"]
 ];
+_steps = (_steps select [0, 2]) + _objSteps + (_steps select [2, count _steps]);
 if !(_steps isEqualTo (missionNamespace getVariable ["CQ_opPub", []])) then {
     CQ_opPub = _steps;
     publicVariable "CQ_opPub";
