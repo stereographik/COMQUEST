@@ -8,7 +8,8 @@
       state 0  greyed    not available yet (team in reserve, nothing seen yet)
     Sections: Find where they land, Hostile HQs, Radio towers, Supply convoys, Supply
     flights, Special forces, Carrier, Victory.
-    CQ_opPub = [[done, title, summary, [[state, text], ...]], ...]
+    CQ_opPub = [[done, title, summary, [[state, text], ...], icon], ...]
+    A section whose lines are all greyed (nothing available yet) is hidden by the client.
 */
 if (time < (missionNamespace getVariable ["CQ_opNext", 0])) exitWith {};
 CQ_opNext = time + 10;
@@ -112,14 +113,14 @@ if (_hqRows isEqualTo []) then { _hqRows = [[0, "no HQ built yet"]] };
 private _steps = [
     [_loc isNotEqualTo [], "Find where they land",
         if (_loc isEqualTo []) then { "Their beachhead will be due west of the carrier, within 2 km of the shore." }
-        else { format ["%1  ·  %2  (%3)", [_loc select 0] call _clock, _loc select 1, [_loc select 2] call CQ_fnc_objName] }, []],
-    [_won, "Hostile HQs", format ["%1 / %2 destroyed", _dead, count _built], _hqRows],
-    [_towers isNotEqualTo [] && { _tDown == count _towers }, "Radio towers", format ["%1 / %2 down", _tDown, count _towers], _tRows],
-    [_cvDone > 0, "Supply convoys", format ["%1 destroyed", _cvDone], _cvRows],
-    [_flDone > 0, "Supply flights", format ["%1 destroyed", _flDone], _flRows],
-    [(count _spList) >= CQ_huntTeams, "Special forces", format ["%1 / %2 teams neutralised", count _spList, CQ_huntTeams], _spRows],
-    [_pct <= 0, "Carrier empty", format ["carrier at %1 %%", _pct], []],
-    [_won, "Last HQ destroyed", ["VICTORY when the carrier is empty and no HQ stands", "VICTORY"] select _won, []]
+        else { format ["%1  ·  %2  (%3)", [_loc select 0] call _clock, _loc select 1, [_loc select 2] call CQ_fnc_objName] }, [], "\A3\ui_f\data\igui\cfg\simpleTasks\types\search_ca.paa"],
+    [_won, "Hostile HQs", format ["%1 / %2 destroyed", _dead, count _built], _hqRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\destroy_ca.paa"],
+    [_towers isNotEqualTo [] && { _tDown == count _towers }, "Radio towers", format ["%1 / %2 down", _tDown, count _towers], _tRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\radio_ca.paa"],
+    [_cvDone > 0, "Supply convoys", format ["%1 destroyed", _cvDone], _cvRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\truck_ca.paa"],
+    [_flDone > 0, "Supply flights", format ["%1 destroyed", _flDone], _flRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\heli_ca.paa"],
+    [(count _spList) >= CQ_huntTeams, "Special forces", format ["%1 / %2 teams neutralised", count _spList, CQ_huntTeams], _spRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\kill_ca.paa"],
+    [_pct <= 0, "Carrier empty", format ["carrier at %1 %%", _pct], [], "\A3\ui_f\data\igui\cfg\simpleTasks\types\boat_ca.paa"],
+    [_won, "Last HQ destroyed", ["VICTORY when the carrier is empty and no HQ stands", "VICTORY"] select _won, [], "\A3\ui_f\data\igui\cfg\simpleTasks\types\attack_ca.paa"]
 ];
 if !(_steps isEqualTo (missionNamespace getVariable ["CQ_opPub", []])) then {
     CQ_opPub = _steps;

@@ -1,8 +1,9 @@
 /*
     CQ_fnc_opClient  (client, spawned once from initPlayerLocal)
     Shows the OPERATION briefing (CQ_opPub, CQ_fnc_opTick) in the map's "Operation" section:
-    one section per objective type, one line per object, always the same list (done lines
-    struck in red, active lines in cream, lines not available yet greyed out).
+    one section per objective type with its icon, one line per object, always the same list
+    (done lines in red, active lines in cream, lines not available yet greyed out). A section
+    stays hidden until its first objective is available.
     A single "Progress" record is kept and rewritten (never one more per respawn). When the
     content changes, a notification "Objectives updated, check map" (at most every
     CQ_opNotifyGap s; changes in between are announced together).
@@ -12,16 +13,18 @@ private _render = {
     private _steps = missionNamespace getVariable ["CQ_opPub", []];
     private _txt = "<font face='PuristaSemibold' size='16' color='#F2F1DF'>OPERATION  ·  PROGRESS</font><br/><br/>";
     if (_steps isEqualTo []) then { _txt = _txt + "<font color='#A6A381'>Waiting for the operation to start.</font>" };
+    // a category stays hidden until its first objective is available (a line not greyed)
+    private _shown = _steps select { (_x select 3) isEqualTo [] || { ((_x select 3) findIf { (_x select 0) > 0 }) > -1 } };
     {
-        _x params ["_done", "_title", "_detail", "_rows"];
-        _txt = _txt + format ["<font color='%1'>%2</font>  <font face='PuristaSemibold' color='#F2F1DF'>%3. %4</font><br/><font color='#A6A381'>      %5</font><br/>",
-            ["#918C3B", "#BA392C"] select _done, ["[  ]", "[x]"] select _done, _forEachIndex + 1, _title, _detail];
+        _x params ["_done", "_title", "_detail", "_rows", ["_icon", ""]];
+        _txt = _txt + format ["<img image='%6' width='18' height='18'/>  <font color='%1'>%2</font>  <font face='PuristaSemibold' color='#F2F1DF'>%3. %4</font><br/><font color='#A6A381'>             %5</font><br/>",
+            ["#918C3B", "#BA392C"] select _done, ["[  ]", "[x]"] select _done, _forEachIndex + 1, _title, _detail, _icon];
         {
             _x params ["_st", "_l"];
-            _txt = _txt + format ["<font color='%1'>        %2  %3</font><br/>", ["#55534A", "#F2F1DF", "#BA392C"] select _st, ["-", "·", "x"] select _st, _l];
+            _txt = _txt + format ["<font color='%1'>             %2  %3</font><br/>", ["#55534A", "#F2F1DF", "#BA392C"] select _st, ["-", "·", "x"] select _st, _l];
         } forEach _rows;
         _txt = _txt + "<br/>";
-    } forEach _steps;
+    } forEach _shown;
     if !(player diarySubjectExists "CQ_op") then { player createDiarySubject ["CQ_op", "Operation"] };
     // the existing record (it survives respawns): rewrite it, drop any duplicate
     private _recs = (player allDiaryRecords "CQ_op") select { (_x select 1) == "Progress" };
