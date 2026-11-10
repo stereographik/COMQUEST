@@ -113,6 +113,7 @@ class CfgFunctions
             class debugCmd {};
             class debugUi {};
             class uiStyle {};
+            class introDone {};
             class debugUiFill {};
         };
 

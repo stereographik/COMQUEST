@@ -237,8 +237,10 @@ CQ_ui = createHashMapFromArray [
     ["text", [0.949, 0.945, 0.875, 1]], ["muted", [0.651, 0.639, 0.506, 1]], ["dim", [0.45, 0.44, 0.35, 1]],
     ["accent", [0.569, 0.549, 0.231, 1]], ["alert", [0.729, 0.224, 0.173, 1]], ["warn", [0.651, 0.639, 0.506, 1]]
 ];   // hex: text #F2F1DF, muted #A6A381, accent #918C3B, alert #BA392C
-CQ_introEnabled = true;                  // cinematic at join: black + typed time/place, satellite, carrier (CQ_fnc_intro)
-CQ_introShots = [2.6, 3.4];              // s per shot: satellite, carrier (long holds, slow dip to black)
+CQ_introEnabled = true;                  // cinematic at join: black + typed time/place, satellite, coast, flight, landing, eyes (CQ_fnc_intro)
+CQ_introShots = [2, 2, 2, 2];            // s per shot: satellite, coast, flight over the sea, landing
+CQ_introMaxTime = 40;                    // s: watchdog, the intro is cleaned up whatever happens
+CQ_startAfterIntro = 5;                  // s after the FIRST player's intro: the mission starts
 CQ_introPlace = "ALTIS  ·  AEGEAN SEA  ·  AAC AIRFIELD";   // typed on black before the shots, under the time and date
 CQ_introTypeDelay = 0.06;               // s per typed letter
 CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
