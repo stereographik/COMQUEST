@@ -1,11 +1,12 @@
 /*
     CQ_fnc_intro  (client, spawned once at join from initPlayerLocal)
     Opens on black: time and place typed out in small letters (CQ_introPlace), then a fade.
-    5 s cinematic intro, three shots joined by quick cuts (CQ_introShots, seconds each):
-      1 SATELLITE  straight down on Altis from very high, slowly sinking and zooming in
-      2 COCKPIT    from the pilot seat of a helicopter flying low over the east coast,
-                   toward the sea (a local, unsimulated Ghost Hawk moved by script)
-      3 CARRIER    a slow dolly along the CSAT carrier group at sea level, title on screen
+    Contemplative cinematic, three long, slow shots joined by soft dips to black (CQ_introShots):
+      1 SATELLITE  Altis from very high, almost still, a slow drift
+      2 COCKPIT    pilot seat of a helicopter cruising slowly over the east coast, eyes on the
+                   horizon (a local, unsimulated Ghost Hawk moved by script)
+      3 CARRIER    far and low over the water, the carrier small on the horizon, the title
+                   fading in late
     Then back to the player. Local only (nothing is created on the network). Skipped when
     CQ_introEnabled is false. Silent. Space skips it. Every player at join (late joiners too).
 */
@@ -57,14 +58,15 @@ call {
     if (CQ_introSkip) exitWith {};
     // ---- 1 SATELLITE: high above the middle of the island, looking straight down
     private _mid = [worldSize * 0.5, worldSize * 0.5, 0];
-    _cam camSetPos (_mid vectorAdd [0, -60, 5200]);
+    // contemplative: almost still, a slow drift and a barely noticeable push
+    _cam camSetPos (_mid vectorAdd [-150, -120, 4600]);
     _cam camSetTarget _mid;
-    _cam camSetFov 0.75;
+    _cam camSetFov 0.6;
     _cam camCommit 0;
-    _cam camSetPos (_mid vectorAdd [0, -60, 3400]);
-    _cam camSetFov 0.45;
-    _cam camCommit _t1;
-    [_t1 - 0.1] call _nap;
+    _cam camSetPos (_mid vectorAdd [150, -60, 4300]);
+    _cam camSetFov 0.55;
+    _cam camCommit (_t1 + 1.5);
+    [_t1] call _nap;
 
     if (CQ_introSkip) exitWith {};
     // ---- 2 COCKPIT: pilot seat of a Ghost Hawk, low over the coast, heading for the carrier
@@ -74,52 +76,54 @@ call {
     _h enableSimulation false;
     _h allowDamage false;
     _h setDir _hdg;
-    private _alt = 70;
+    private _alt = 140;
     _h setPosASL [_start select 0, _start select 1, ((getTerrainHeightASL _start) max 0) + _alt];
     // pilot eye: a memory point named like the pilot view, else a measured fallback
     private _eye = [0.55, 3.55, -0.35];
     private _mp = (selectionNames [_h, "Memory"]) select { "pilot" in toLower _x && { "view" in toLower _x || { toLower _x == "pilot" } } };
     if (_mp isNotEqualTo []) then { private _p = _h selectionPosition [_mp select 0, "Memory"]; if (_p isNotEqualTo [0, 0, 0]) then { _eye = _p } };
-    private _speed = 60;   // m/s
-    private _tS = time + 0.08;
+    private _speed = 28;   // m/s: an unhurried flight
+    private _tS = time + 0.5;
     private _end = _tS + _t2;
     private _dir = [sin _hdg, cos _hdg, 0];
-    _bl cutText ["", "BLACK OUT", 0.08]; [0.08] call _nap;
+    _bl cutText ["", "BLACK OUT", 0.5]; [0.5] call _nap;   // slow dip between shots
     private _first = true;
     while { time < _end && { !CQ_introSkip } } do {
         private _p = ([_start select 0, _start select 1, 0]) vectorAdd (_dir vectorMultiply (_speed * ((time - _tS) max 0)));
         _p set [2, ((getTerrainHeightASL _p) max 0) + _alt];
         _h setPosASL _p;
-        _h setVectorDirAndUp [[sin _hdg, cos _hdg, -0.08], [0, 0, 1]];
+        _h setVectorDirAndUp [[sin _hdg, cos _hdg, -0.03], [0, 0, 1]];
         _cam camSetPos (_h modelToWorldVisual _eye);
-        _cam camSetTarget (_h modelToWorldVisual (_eye vectorAdd [0, 100, -12]));
-        _cam camSetFov 0.85;
+        _cam camSetTarget (_h modelToWorldVisual (_eye vectorAdd [-8, 100, -3]));   // the horizon
+        _cam camSetFov 0.75;
         _cam camCommit 0;
-        if (_first) then { _first = false; _bl cutText ["", "BLACK IN", 0.12] };
+        if (_first) then { _first = false; _bl cutText ["", "BLACK IN", 0.6] };
         uiSleep 0.02;
     };
     deleteVehicle _h;
 
     if (CQ_introSkip) exitWith {};
     // ---- 3 CARRIER: slow dolly along the ship at sea level, title
-    _bl cutText ["", "BLACK OUT", 0.08]; [0.08] call _nap;
-    private _from = _car vectorAdd [-420, -260, 14];
-    private _to = _car vectorAdd [-420, 120, 18];
+    _bl cutText ["", "BLACK OUT", 0.5]; [0.5] call _nap;
+    // far and low over the water, the ship small on the horizon, the camera barely moving
+    private _from = _car vectorAdd [-1300, -500, 6];
+    private _to = _car vectorAdd [-1250, -420, 7];
     _cam camSetPos _from;
-    _cam camSetTarget (_car vectorAdd [0, 40, 12]);
-    _cam camSetFov 0.5;
+    _cam camSetTarget (_car vectorAdd [0, 0, 20]);
+    _cam camSetFov 0.32;
     _cam camCommit 0;
-    _bl cutText ["", "BLACK IN", 0.12];
+    _bl cutText ["", "BLACK IN", 0.8];
     _cam camSetPos _to;
-    _cam camSetTarget (_car vectorAdd [0, 80, 12]);
-    _cam camCommit (_t3 + 1);
-    titleText ["<t font='PuristaSemibold' size='2.2' color='#F2F1DF'>COMQUEST</t><br/><t font='PuristaMedium' size='1' color='#A6A381'>CSAT CARRIER GROUP  ·  OFF ALTIS</t>", "PLAIN DOWN", 0.4, true, true];
-    [_t3 - 0.35] call _nap;
+    _cam camSetFov 0.28;
+    _cam camCommit (_t3 + 2);
+    [_t3 * 0.4] call _nap;
+    titleText ["<t font='PuristaLight' size='1.6' color='#F2F1DF'>COMQUEST</t><br/><t font='PuristaLight' size='0.8' color='#A6A381'>CSAT CARRIER GROUP  ·  OFF ALTIS</t>", "PLAIN DOWN", 1.2, true, true];
+    [_t3 * 0.6] call _nap;
 };
 // ---- back to the player
 (findDisplay 46) displayRemoveEventHandler ["KeyDown", _skipEh];
-_bl cutText ["", "BLACK OUT", 0.3];
-uiSleep 0.3;
+_bl cutText ["", "BLACK OUT", 0.8];
+uiSleep 0.8;
 titleText ["", "PLAIN"];
 ("CQ_introType" call BIS_fnc_rscLayer) cutText ["", "PLAIN"];
 if (!isNil "_h" && { !isNull _h }) then { deleteVehicle _h };
