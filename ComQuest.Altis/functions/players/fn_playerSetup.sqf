@@ -10,6 +10,9 @@ if (typeOf player in CQ_engineerClasses) then {
     player setUnitTrait ["explosiveSpecialist", true];
 };
 
+// Every preset carries binoculars and a GPS (class loadouts get them in CQ_fnc_setClass)
+if (isNil "CQ_savedLoadout") then { call CQ_fnc_basicKit };
+
 // Pilot seats
 player addEventHandler ["GetInMan", {
     params ["_unit", "", "_veh"];

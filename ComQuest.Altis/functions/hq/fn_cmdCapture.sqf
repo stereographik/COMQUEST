@@ -36,7 +36,7 @@ while { _q isNotEqualTo [] } do {
     private _m = createMarker [format ["cq_intel_%1_%2", _id, floor time], _x get "pos"];
     _m setMarkerType "o_hq";
     _m setMarkerColor "ColorOPFOR";
-    _m setMarkerText format ["Objective %1 (intel)", [_id] call CQ_fnc_objName];
+    _m setMarkerText format ["%1 (intel)", [_id] call CQ_fnc_objName];
     (_x get "markers") pushBack _m;
 } forEach _seen;
 ["Commander captured", format ["%1 captured the commander of HQ #%2: %3 HQ positions revealed", name _p, _hq get "id", count _seen]] call CQ_fnc_announce;

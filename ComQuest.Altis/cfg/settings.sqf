@@ -216,6 +216,7 @@ CQ_loadZoneCount = 4;                    // loadout zones in the base parking ar
 CQ_loadZoneRadius = 9;
 // Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
 // [label, unit class (loadout), traits, max players in that class]
+CQ_basicKit = ["ItemGPS", "ItemMap", "ItemCompass", "ItemRadio"];   // linked on every preset, plus binoculars (CQ_fnc_basicKit)
 CQ_classes = [
     ["Rifleman",        "B_Soldier_F",      [],                                  26],
     ["Squad Leader",    "B_Soldier_SL_F",   [],                                  4],
@@ -400,6 +401,7 @@ CQ_magRingStart = 3000;                  // m ring radius at first contact
 CQ_magRingMin = 700;                     // m tightest ring
 CQ_magRingShrink = 120;                  // m per minute the ring tightens
 CQ_magRingTurn = 0.5;                    // deg per second the ring turns (a full turn in 12 min)
+CQ_magOsc = [0.3, 240];                  // Greyhawk / Reaper loiter radius around a contact: +/- 30 %, one swing every 240 s
 CQ_magFocusQuiet = 300;                  // s without a new contact in the ring (once tight) -> next focus
 CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (the carrier group)
 CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]

@@ -216,6 +216,7 @@ class CfgFunctions
             class squadUi {};
             class menuUi {};
             class setClass {};
+            class basicKit {};
             class applyTraits {};
             class vehAutoFill {};
             class baseDefBuild {};
