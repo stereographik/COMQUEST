@@ -6,8 +6,8 @@
     commander: alive / captured / killed; objectives = installations destroyed / total (depot,
     radio tower, fuel tanker, AA pits, HMG tower). Created when the HQ finishes building,
     updated by CQ_fnc_hqTick (text only rewritten when it changes); the dot and the AO circle
-    appear only when the HQ is fully built (last objective ready); a fallen HQ keeps a grey
-    [HQ#1][destroyed] marker.
+    appear only when the HQ is fully built (last objective ready); a fallen HQ loses its circle
+    and keeps a black [NAME (rank)][destroyed] dot.
     Every objective gets its own marker as soon as it is set up during the construction (called
     every tick by CQ_fnc_hqTick, building included), orange [Depot][active], removed as soon as
     the objective is destroyed.
@@ -15,12 +15,16 @@
 params ["_hq"];
 private _id = _hq get "id";
 
-// one marker per objective while it stands: [type][active], orange; removed when destroyed
+// one marker per objective, orange "[type][active]", from the moment it is set up until it is
+// destroyed (then removed; CQ_objMarkDone keeps a destroyed one from coming back)
+if (isNil "CQ_objMarkDone") then { CQ_objMarkDone = [] };
 {
     private _o = _x;
     private _om = format ["cq_obj_%1_%2", _id, _forEachIndex];
+    if (_om in CQ_objMarkDone) then { continue };
     if (!alive _o) then {
-        if (markerType _om != "") then { deleteMarker _om };
+        deleteMarker _om;
+        CQ_objMarkDone pushBack _om;
         continue;
     };
     if (markerType _om == "") then {
@@ -59,7 +63,7 @@ if (markerType _m == "") then {
 };
 private _txt = if ((_hq get "state") == "Destroyed") then {
     if (markerShape _ma != "") then { deleteMarker _ma; deleteMarker _mh };
-    _m setMarkerColor "ColorGrey";
+    _m setMarkerColor "ColorBlack";
     format ["[%1][destroyed]", [_id] call CQ_fnc_objName]
 } else {
     private _cmd = switch (true) do {
