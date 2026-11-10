@@ -37,6 +37,7 @@ CQ_baseVehPadding = 25;                  // metres between base vehicles (fallba
 //   at the far end of each row; 2 repair stations east of the vehicle zone
 CQ_billboardFlip = false;                // true if the base billboard (front wall, right of the gate) shows its back to the courtyard
 CQ_compoundSize = [80, 60];              // inner compound width x depth (m)
+CQ_grassCut = true;                      // false: no grass cutting at all (test switch)
 CQ_grassCutRadius = 100;                 // no grass this far around the base centre (m)...
 CQ_grassCutMax = 50;                     // ...with at most this many big clutter cutter "splats"
 CQ_grassCutScale = 2.5;                  // ...each one enlarged this much (raise it if grass shows between them)
@@ -255,7 +256,7 @@ CQ_ui = createHashMapFromArray [
 CQ_splashEnabled = false;                 // POC splash before the intro: black, picture centred, text under it
 CQ_splashWidth = 0.8;                    // picture width, share of the screen width
 CQ_splashTime = 4;                       // s (Space ends it)
-CQ_introEnabled = true;                  // cinematic at join: black + typed time/place, satellite, coast, flight, landing, eyes (CQ_fnc_intro)
+CQ_introEnabled = false;                 // cinematic at join: black + typed time/place, satellite, coast, flight, landing, eyes (CQ_fnc_intro)
 CQ_introShots = [8, 8, 8, 8];            // s per shot: satellite, coast, squad on a hilltop, landing (on the shop pad)
 CQ_introScene = -1;                      // squad shot: -1 random, or 0 attack, 1 retreat, 2 report, 3 sneak, 4 ambush
 CQ_introFade = 1;                        // s per fade (out, and in) between shots; the end is a blink

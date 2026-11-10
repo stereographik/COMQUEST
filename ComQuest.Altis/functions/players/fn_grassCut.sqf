@@ -5,7 +5,7 @@
     CQ_grassCutScale times. Object scaling only works on local simple objects, so every
     player builds his own set (grass is drawn locally anyway).
 */
-if (!hasInterface || { !isNil "CQ_grassCutDone" }) exitWith {};
+if (!hasInterface || { !CQ_grassCut } || { !isNil "CQ_grassCutDone" }) exitWith {};
 CQ_grassCutDone = true;
 private _r = CQ_grassCutRadius;
 // spacing: the tightest hexagonal grid that fits in CQ_grassCutMax points
