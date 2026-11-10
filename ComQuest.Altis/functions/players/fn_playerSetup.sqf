@@ -63,6 +63,19 @@ player addAction ["<t color='#918C3B'>Return vehicle to the depot</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); [player, _v] remoteExec ["CQ_fnc_depotReturn", 2] }, nil, 4.8, false, true, "",
     "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); _v in (missionNamespace getVariable ['CQ_depotVehs', []]) && { alive _v } && { _this distance _v < 10 } && { speed _v < 3 } && { (missionNamespace getVariable ['CQ_depots', []]) findIf { _v distance2D (_x select 0) < CQ_depotReturnRange || { _v distance2D (_x select 1) < CQ_depotReturnRange } } > -1 }"];
 
+// Squad respawn vehicle (CQ_fnc_rspVeh): the leader locks / unlocks the vehicle he sits in or
+// looks at; members at the base teleport into it (one credit per teleport)
+private _rspTgt = "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); !isNull _v && { alive _v } && { _v isKindOf 'LandVehicle' || { _v isKindOf 'Air' } } && { _this distance _v < 10 } && { leader group _this == _this } && { !(group _this getVariable ['CQ_solo', false]) }";
+player addAction ["<t color='#918C3B'>Lock as squad respawn vehicle</t>",
+    { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["lock", player, _v] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 1, false, true, "",
+    _rspTgt + " && { (group _this getVariable ['CQ_rspVeh', objNull]) != _v } && { (_v getVariable ['CQ_rspLeft', CQ_rspCredits]) > 0 }"];
+player addAction ["<t color='#BA392C'>Unlock squad respawn vehicle</t>",
+    { ["unlock", player] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 0.9, false, true, "",
+    _rspTgt + " && { (group _this getVariable ['CQ_rspVeh', objNull]) == _v }"];
+player addAction ["<t color='#918C3B'>Teleport to the squad respawn vehicle</t>",
+    { ["use", player] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 5.5, true, true, "",
+    "vehicle _this == _this && { _this distance2D CQ_musterPos < CQ_rspBaseRange } && { private _rv = group _this getVariable ['CQ_rspVeh', objNull]; alive _rv && { (_rv getVariable ['CQ_rspLeft', 0]) > 0 } }"];
+
 // Hub menu (squads, class, stats, shop, debug): U key + one scroll menu entry (re-added on every respawn)
 player addAction ["<t color='#918C3B'>Menu (U)</t>", { [] spawn CQ_fnc_menuUi }, nil, 0.6, false, true, "", "_this == _target"];
 if (isNil "CQ_squadKeyBound") then {
