@@ -78,5 +78,5 @@ if (time >= (missionNamespace getVariable ["CQ_heatPubNext", 0])) then {
 };
 if (time - (missionNamespace getVariable ["CQ_heatLogT", -1e6]) > 120) then {
     CQ_heatLogT = time;
-    ["Heatmap: %1 cells (%2 hot)", [count CQ_heat, { (_y select 1) > 0.05 } count CQ_heat]] call CQ_fnc_log;
+    ["Heatmap: %1 cells (%2 hot)", [count CQ_heat, count ((values CQ_heat) select { (_x select 1) > 0.05 })]] call CQ_fnc_log;
 };
