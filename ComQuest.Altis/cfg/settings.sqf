@@ -178,8 +178,11 @@ CQ_walkMaxDist = 1000;                   // closer than this, squads walk betwee
 CQ_transportPickRange = 200;             // a squad that must move takes a truck or a parked Taru only if one is this close, else it walks
 CQ_heliPreferDist = 3000;                // farther than this, a helicopter is tried before a truck
 CQ_watchIdle = 180;                      // a patrolling squad standing still 3 min outside combat gets a new patrol
-CQ_objMinGap = 300;                      // HQ objectives (depot, radio tower, fuel tanker, 3 AA, HMG tower): at least this far from each other and from the command building
-CQ_objRing = [360, 650];                 // ...placed on a ring this far around the command building (widens until they fit)
+CQ_objMinGap = 300;                      // HQ objectives (depot, radio tower, fuel tanker, 3 AA, HMG tower): at least this far from each other (relaxed if 7 never fit)
+CQ_objMinR = 250;                        // ...anywhere between this far from the command building
+CQ_objMaxR = 900;                        // ...and this far (inside the 1000 m AO circle)
+CQ_objClearR = 12;                       // ...on a spot with no tree, bush, rock, building or object within this radius
+CQ_objMaxSlope = 0.2;                    // ...and flat: max height difference ratio over that radius (isFlatEmpty gradient)
 // Enemy HQ codenames (famous real operation names), one picked at random per HQ, never twice in a
 // game; messages and markers show "NAME (root)", "NAME (P1)"... (rank in the network, CQ_fnc_objName)
 CQ_aoRadius = 1000;                      // m: red circle hatched in black around every built enemy HQ (gone when it falls)

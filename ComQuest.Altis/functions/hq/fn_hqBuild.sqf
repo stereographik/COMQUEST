@@ -7,8 +7,9 @@
       4 supply depot + field supply truck   5 fuel tanker
       6 helipad + parked QRF helicopter, command building, sandbag ring (gaps front and back)
     The 7 objectives (depot, radio tower, fuel tanker, 3 AA pits, HMG tower) each stand on their
-    own site, at least CQ_objMinGap m from each other and from the command building, on a ring
-    CQ_objRing m around it (the HMG tower takes the site closest to CQ_hmgTowerDir).
+    own site anywhere CQ_objMinR..CQ_objMaxR m from the command building, at least CQ_objMinGap m
+    apart, on flat open ground (no trees, rocks or buildings) so players can reach them (the HMG
+    tower takes the site closest to CQ_hmgTowerDir).
     CQ_fnc_hqGarrison puts a small guard team on each site.
     At the end the squads are recalled to garrison the HQ and "buildDone" is set.
 */
@@ -60,32 +61,47 @@ private _place = {
     params ["_cls", "_ox", "_oy", ["_rot", 0], ["_essential", false]];
     [_cls, [_ox, _oy] call _at, _rot, _essential] call _placeAt
 };
-// Objective sites: 7 spots on a ring around the command building, every one at least
-// CQ_objMinGap m from the others and from the centre (the ring widens and turns until it fits;
-// if it never fits, the best spacing found is used and logged)
+// Objective sites: 7 spots anywhere in the HQ's area, between CQ_objMinR and CQ_objMaxR m from the
+// command building, every one at least CQ_objMinGap m from the others. Each spot must be usable
+// by players: dry, flat (CQ_objMaxSlope over its footprint), and no tree, bush, rock, building,
+// wall or placed object within CQ_objClearR m. Random picks over the whole area; if 7 never fit,
+// the gap is relaxed step by step (logged). The HMG tower takes the spot closest to CQ_hmgTowerDir.
 private _sitesFor = {
-    CQ_objRing params ["_r0", "_r1"];
-    private _best = []; private _bestGap = -1;
-    for "_try" from 0 to 59 do {
-        private _r = _r0 + (_r1 - _r0) * (_try / 59) + random 30;
-        private _a0 = random 360;
-        private _pts = [];
-        for "_i" from 0 to 6 do {
-            private _p = [_c getPos [_r, _a0 + _i * (360 / 7) + random 16 - 8], 10, 80] call CQ_fnc_clearPos;
-            if (_p isEqualTo []) exitWith {};
-            _pts pushBack [_p select 0, _p select 1, 0];
-        };
-        if (count _pts < 7) then { continue };
-        private _gap = 1e6;
-        { private _a = _x; { _gap = _gap min (_a distance2D _x) } forEach ((_pts + [_c]) - [_a]) } forEach _pts;
-        if (_gap > _bestGap) then { _bestGap = _gap; _best = _pts };
-        if (_gap >= CQ_objMinGap) exitWith {};
+    private _okSpot = {
+        params ["_p"];
+        !surfaceIsWater _p
+        && { (_p isFlatEmpty [-1, -1, CQ_objMaxSlope, CQ_objClearR, 0, false, objNull]) isNotEqualTo [] }
+        && { [_p, CQ_objClearR] call CQ_fnc_isClear }
     };
-    if (_best isEqualTo []) exitWith {
+    // spots that pass the terrain test, spread uniformly over the area
+    private _pool = [];
+    for "_i" from 1 to 500 do {
+        private _r = sqrt ((CQ_objMinR ^ 2) + random ((CQ_objMaxR ^ 2) - (CQ_objMinR ^ 2)));
+        private _p = _c getPos [_r, random 360];
+        _p = [_p select 0, _p select 1, 0];
+        if ([_p] call _okSpot) then { _pool pushBack _p };
+        if (count _pool >= 120) exitWith {};
+    };
+    private _gap = CQ_objMinGap;
+    private _best = [];
+    while { count _best < 7 && { _gap >= 60 } } do {
+        for "_try" from 1 to 25 do {
+            private _pts = [];
+            {
+                private _p = _x;
+                if ((_pts findIf { _x distance2D _p < _gap }) == -1) then { _pts pushBack _p };
+                if (count _pts >= 7) exitWith {};
+            } forEach (_pool call BIS_fnc_arrayShuffle);
+            if (count _pts > count _best) then { _best = _pts };
+            if (count _best >= 7) exitWith {};
+        };
+        if (count _best < 7) then { _gap = _gap * 0.8 };
+    };
+    ["HQ #%1: %2 clear objective spots found in the area, %3 placed %4 m apart", [_id, count _pool, count _best, round _gap]] call CQ_fnc_log;
+    if (count _best < 7) exitWith {
         ["HQ #%1: no room for spread objectives, built around the command building", [_id]] call CQ_fnc_log;
         [[-24, 0], [0, 26], [18, -18], [-20, 22], [20, 22], [0, -26], [CQ_hmgTowerDist * sin (CQ_hmgTowerDir - _d), CQ_hmgTowerDist * cos (CQ_hmgTowerDir - _d)]] apply { _x call _at }
     };
-    if (_bestGap < CQ_objMinGap) then { ["HQ #%1: objectives only %2 m apart (wanted %3)", [_id, round _bestGap, CQ_objMinGap]] call CQ_fnc_log };
     // HMG tower on the site closest to CQ_hmgTowerDir, last in the list
     private _hi = 0; private _hd = 1e6;
     { private _dd = abs (((_c getDir _x) - CQ_hmgTowerDir + 540) % 360 - 180); if (_dd < _hd) then { _hd = _dd; _hi = _forEachIndex } } forEach _best;
