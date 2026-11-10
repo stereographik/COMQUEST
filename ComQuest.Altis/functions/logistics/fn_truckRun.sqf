@@ -16,6 +16,7 @@ private _p = [_from getPos [18, random 360], 6, 30] call CQ_fnc_clearPos;
 if (_p isEqualTo []) then { _p = _from getPos [25, random 360] };
 private _truck = createVehicle [CQ_truckClass, _p, [], 0, "NONE"];
 _truck setAmmoCargo 0;                      // players can't use it to rearm
+_truck setVariable ["CQ_supply", "convoy"];  // OPERATION briefing
 private _cg = [_truck] call CQ_fnc_crewVehicle;
 _cg setBehaviour "SAFE";
 _cg setSpeedMode "NORMAL";

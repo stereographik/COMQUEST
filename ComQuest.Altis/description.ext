@@ -131,6 +131,9 @@ class CfgFunctions
             class uiStyle {};
             class uiSel {};
             class feed {};
+            class opEvent {};
+            class opTick {};
+            class opClient {};
             class introDone {};
             class debugUiFill {};
         };

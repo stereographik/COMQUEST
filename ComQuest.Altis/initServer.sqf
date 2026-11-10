@@ -88,6 +88,8 @@ addMissionEventHandler ["EntityKilled", {
     CQ_act = 1;
     publicVariable "CQ_act";
     ["story", CQ_fnc_actTick] call CQ_fnc_directorAddTask;
+    CQ_opStartT = time;
+    ["operation", CQ_fnc_opTick] call CQ_fnc_directorAddTask;
     ["stats", CQ_fnc_statsTick] call CQ_fnc_directorAddTask;
     ["vehRoam", CQ_fnc_vehRoamTick] call CQ_fnc_directorAddTask;
 

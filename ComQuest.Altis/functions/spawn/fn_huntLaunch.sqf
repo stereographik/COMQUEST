@@ -75,6 +75,7 @@ while { surfaceIsWater _lz && { _t < 20 } } do { _lz = (getPosATL leader _tg) ge
         if (({ alive _x } count units group _u) > 0) exitWith {};
         ["HUNTERS: team wiped out (last one at grid %1)", [mapGridPosition _u]] call CQ_fnc_log;
         ["huntDown", []] call CQ_fnc_say;
+        ["spectre", _who] call CQ_fnc_opEvent;
         if (!isNull _who && { isPlayer _who }) then {
             private _pg = group _who;
             if !(_pg getVariable ["CQ_solo", true]) then { _pg setVariable ["CQ_sqPts", (_pg getVariable ["CQ_sqPts", 0]) + CQ_huntBounty, true] };
