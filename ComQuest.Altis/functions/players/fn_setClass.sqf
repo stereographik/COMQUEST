@@ -16,7 +16,7 @@ if (_label == (player getVariable ["CQ_class", "Rifleman"])) exitWith { hint for
 private _taken = { _x != player && { (_x getVariable ["CQ_class", "Rifleman"]) == _label } } count (allPlayers select { side group _x == west });
 if (_taken >= _max) exitWith { hint format ["%1: no slot left (%2 / %2 taken)", _label, _max] };
 player setUnitLoadout (getUnitLoadout _cls);
-call CQ_fnc_basicKit;
+[_label] call CQ_fnc_classKit;
 private _lo = getUnitLoadout player;
 CQ_savedLoadout = _lo;
 CQ_myClass = _label;

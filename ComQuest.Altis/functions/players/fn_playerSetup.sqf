@@ -11,7 +11,7 @@ if (typeOf player in CQ_engineerClasses) then {
 };
 
 // Every preset carries binoculars and a GPS (class loadouts get them in CQ_fnc_setClass)
-if (isNil "CQ_savedLoadout") then { call CQ_fnc_basicKit };
+if (isNil "CQ_savedLoadout") then { ["Rifleman"] call CQ_fnc_classKit };
 
 // Player feed: what last hit him (the enemy's class, or its vehicle), told to everyone when he
 // goes down (CQ_fnc_adrenalineSurge) or dies outright (initServer.sqf)

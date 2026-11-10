@@ -255,6 +255,7 @@ class CfgFunctions
             class menuUi {};
             class setClass {};
             class basicKit {};
+            class classKit {};
             class adrenalineSurge {};
             class intro {};
             class applyTraits {};

@@ -22,6 +22,8 @@ if (isNil "CQ_unassignedDone") then {
 [] spawn CQ_fnc_opClient;   // map: Operation (progress checklist) - first section of the briefing
 [] spawn CQ_fnc_intro;   // 5 s cinematic intro
 player createDiarySubject ["CQ_op", "Operation"];     // first in the map's briefing panel
+// Briefing tab: the opening orders
+player createDiaryRecord ["Diary", ["Orders", "<font face='PuristaSemibold' size='16' color='#F2F1DF'>GET YOUR STUFF UP FAST, SOLDIERS</font><br/><br/>CSAT has a carrier group offshore and will start landing troops on Altis within minutes.<br/><br/><font color='#918C3B'>1.</font> Press <font color='#F2F1DF'>U</font>: join or create a squad, pick your class inside the HQ compound. Every class comes fully kitted.<br/><font color='#918C3B'>2.</font> Grab a ride at the shop pad.<br/><font color='#918C3B'>3.</font> Find where they ground, then cut the network: HQs, radio towers, supply lines.<br/><br/><font color='#A6A381'>Progress is tracked in the Operation tab.</font>"]];
 // Credits (map diary)
 player createDiarySubject ["CQ_credits", "Credits"];
 player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [
