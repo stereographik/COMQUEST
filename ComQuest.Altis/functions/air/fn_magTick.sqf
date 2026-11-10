@@ -171,14 +171,16 @@ if (time >= CQ_magDetectT) then {
                 if (random 1 > ([CQ_magSpotChance getOrDefault [_c, 0.3], CQ_huntSpotChance] select (_o getVariable ["CQ_hunter", false]))) then { continue };   // not identified this pass
                 CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false]];
                 private _fp = missionNamespace getVariable ["CQ_magFocus", []];
-                if (_fp isEqualTo []) then {
+                // the focus (and the end of the Sentinels' search circuits) needs a contact on the
+                // ground: an insertion helicopter passing by is not a position to encircle
+                if (_fp isEqualTo [] && { !(_o isKindOf "Air") || { ((getPosATL _o) select 2) < 5 } }) then {
                     CQ_magFocus = getPosATL _o; CQ_magFocusT = time; CQ_magFocusNew = time;
                     CQ_magContactMade = true;                       // the Sentinels leave their search circuits for good
                     { _x set ["planT", -1e6] } forEach CQ_mag;      // everyone re-routes now
                     ["magFocus", []] call CQ_fnc_say;
                     ["MAGPIE: first contact (%1) at %2, every drone encircles it", [typeOf _o, mapGridPosition _o]] call CQ_fnc_log;
                 } else {
-                    if (_o distance2D _fp < (missionNamespace getVariable ["CQ_magRingR", CQ_magRingStart]) + 500) then { CQ_magFocusNew = time };
+                    if (_fp isNotEqualTo [] && { _o distance2D _fp < (missionNamespace getVariable ["CQ_magRingR", CQ_magRingStart]) + 500 }) then { CQ_magFocusNew = time };
                 };
                 if ((typeOf _o) in CQ_magAaClasses) then { ["magAa", []] call CQ_fnc_say; ["MAGPIE: anti-air identified (%1) at %2", [typeOf _o, mapGridPosition _o]] call CQ_fnc_log };
             } else {
@@ -275,6 +277,10 @@ if (_focusOn) then {
             _wp setWaypointLoiterRadius _R;
             _g setCurrentWaypoint _wp;
             _m set ["target", _focus];
+            if ((_m getOrDefault ["patrolVeh", objNull]) == _v && { !(_m getOrDefault ["patrolLeft", false]) }) then {
+                _m set ["patrolLeft", true];
+                ["MAGPIE: %1 leaves its search circuit, loiters around the contact at %2 (radius %3 m)", [_m get "name", mapGridPosition _focus, round _R]] call CQ_fnc_log;
+            };
             if (time - (_m getOrDefault ["loiterLogT", -1e6]) > 120) then {
                 _m set ["loiterLogT", time];
                 if (CQ_logVerbose) then { ["MAGPIE: %1 loiters around the contact at %2, radius %3 m", [_m get "name", mapGridPosition _focus, round _R]] call CQ_fnc_log };
