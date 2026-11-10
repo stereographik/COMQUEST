@@ -37,8 +37,8 @@ if (!hasInterface) exitWith {};
         private _px = (((_b select 0) - (_a select 0)) * (getResolution select 0) / safeZoneW) * CQ_heatIconK;
         if (_px < 1) exitWith {};
         private _fade = linearConversion [0.008, 0.05, ctrlMapScale _map, 0.35, 1, true];
-        private _tex = uiNamespace getVariable ["CQ_heatTex", ""];
-        if (_tex == "") then { _tex = getMissionPath "media\heat_blob_ca.paa"; uiNamespace setVariable ["CQ_heatTex", _tex] };
+        private _tex = missionNamespace getVariable ["CQ_heatTex", ""];
+        if (_tex == "") then { _tex = getMissionPath "media\heat_blob_ca.paa"; missionNamespace setVariable ["CQ_heatTex", _tex] };
         private _sc = _px * CQ_heatBlobCold;
         {
             _x params ["_p", "_s"];
