@@ -2,7 +2,7 @@
     CQ_fnc_baseSetup  (server)
     Builds the player base from the zones drawn on the map (cfg/settings.sqf):
     1. HQ compound at CQ_basePos, front toward CQ_baseDir (CQ_compoundSize), H-barrier walls,
-       vehicle gate flanked by two H-barrier towers, guard towers in the corners, tank traps:
+       vehicle gate flanked by two H-barrier towers, guard towers in the corners:
          back row     cargo HQ (friendly commander inside) | HQ offices | cargo HQ
          courtyard    radar + watchtower, flag, medical post, 4 squad equipment boxes aligned
                       in the centre (arsenal + squad resupply)
@@ -116,10 +116,6 @@ private _gate = 9;                                  // half width of the vehicle
 [["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], _gate + 10, _hd + 9, -15] call _put;
 // guard towers in the corners
 { [["Land_Cargo_Patrol_V1_F", "Land_BagBunker_Tower_F"], (_x select 0) * (_hw - 5), (_x select 1) * (_hd - 5), [180, 0] select ((_x select 1) > 0), true] call _put } forEach [[-1, -1], [1, -1], [-1, 1], [1, 1]];
-// tank traps outside the front corners
-{ [["Land_CzechHedgehog_01_F", "Land_CzechHedgehog_01_new_F", "Land_CncBarrier_F"], _x select 0, _x select 1, random 90] call _put }
-    forEach [[-_hw - 8, _hd + 4], [-_hw - 13, _hd + 8], [-_hw - 6, _hd + 11], [_hw + 8, _hd + 4], [_hw + 13, _hd + 8], [_hw + 6, _hd + 11]];
-
 // back row of buildings, packed from the left, their back 4 m from the back wall
 private _row = [
     ["Land_Cargo_HQ_V1_F", "Land_MilOffices_V1_F"],    // command post: the friendly commander's building
