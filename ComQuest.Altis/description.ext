@@ -263,6 +263,8 @@ class CfgFunctions
             class baseDefBuild {};
             class baseDefTick {};
             class baseRepairTick {};
+            class safeZoneTick {};
+            class safeZoneFired {};
             class vehSpawn {};
             class vehTick {};
             class pilotGuard {};

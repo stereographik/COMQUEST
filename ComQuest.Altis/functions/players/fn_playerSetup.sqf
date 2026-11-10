@@ -27,6 +27,9 @@ player addEventHandler ["HandleDamage", {
     nil
 }];
 
+// Weapons-safe perimeter around the base (CQ_fnc_safeZoneFired)
+player addEventHandler ["FiredMan", { _this call CQ_fnc_safeZoneFired }];
+
 // adrenalineSurge: a downed medic may get back up on his own (one watcher per life)
 [] spawn CQ_fnc_adrenalineSurge;
 

@@ -15,6 +15,8 @@ CQ_tickSeconds = 5;                      // one server tick every 5 s
 // --- Player base (Altis International Airport) -----------------------------
 CQ_basePos = [14267, 16099, 0];         // base compound centre (HQ zone drawn on the map)
 CQ_baseRadius = 300;                     // base zone drawn on the map
+CQ_safeZoneRadius = 800;                 // weapons-safe perimeter: players cannot fire inside it...
+CQ_safeZoneHold = 30;                    // ...unless an enemy is inside (and for 30 s after the last one left)
 CQ_baseNoSpawnRadius = 2500;             // no enemy site closer than this (milestone 2)
 
 CQ_baseDir = 38;                         // compound front and vehicle rows compass direction
