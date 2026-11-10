@@ -32,13 +32,14 @@ private _L = 0.042;
 private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
     private _c = _d ctrlCreate [_cls, _idc];
+    [_c, _cls] call CQ_fnc_uiStyle;
     _c ctrlSetPosition _pos;
     if (_txt != "") then { _c ctrlSetText _txt };
     _c ctrlCommit 0;
     _c
 };
-(["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0.03, 0.04, 0.03, 0.88];
-(["RscText", -1, [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor [0.12, 0.16, 0.1, 0.95];
+(["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor (CQ_ui get "panel");
+(["RscText", -1, [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
 private _tabS = ["RscButton", 7090, [_X + 0.01, _Y + 0.004, _W * 0.18, _L], "SQUADS"] call _mk;
 private _tabC = ["RscButton", 7093, [_X + 0.02 + _W * 0.18, _Y + 0.004, _W * 0.16, _L], "CLASS"] call _mk;
 private _tabB = ["RscButton", 7091, [_X + 0.03 + _W * 0.34, _Y + 0.004, _W * 0.22, _L], "STATS"] call _mk;
@@ -59,7 +60,7 @@ private _hdr = {
     params ["_x0", "_txt"];
     private _c = ["RscText", -1, [_x0, _hy, _cw, _L * 0.75], _txt] call _mk;
     _c ctrlSetFont "PuristaMedium";
-    _c ctrlSetTextColor [0.65, 0.65, 0.65, 1];
+    _c ctrlSetTextColor (CQ_ui get "muted");
     _c
 };
 private _h1 = [_X + 0.01, "SQUADS"] call _hdr;
@@ -119,7 +120,7 @@ private _hdrB = {
     params ["_x0", "_w", "_txt"];
     private _c = ["RscText", -1, [_x0, _top, _w, _L * 0.75], _txt] call _mk;
     _c ctrlSetFont "PuristaMedium";
-    _c ctrlSetTextColor [0.65, 0.65, 0.65, 1];
+    _c ctrlSetTextColor (CQ_ui get "muted");
     _c
 };
 private _bh1 = [_X + 0.01, _cfW, "CLASS"] call _hdrB;
@@ -129,7 +130,7 @@ private _clsList = ["RscListBox", 7102, [_X + 0.01, _top + _L * 0.85, _cfW, _H -
 private _sortCb = ["RscCombo", 7104, [_X + 0.02 + _cfW + _rkW * 0.36, _top, _rkW * 0.64, _L * 0.75]] call _mk;
 private _board = ["RscListNBox", 7103, [_X + 0.02 + _cfW, _top + _L * 0.85, _rkW, _H - _L * 2.9]] call _mk;
 private _detail = ["RscStructuredText", 7105, [_X + 0.03 + _cfW + _rkW, _top + _L * 0.85, _dtW, _H - _L * 2.9]] call _mk;
-_detail ctrlSetBackgroundColor [0, 0, 0, 0.35];
+_detail ctrlSetBackgroundColor (CQ_ui get "inset");
 _board lnbSetColumnsPos [0, 0.07, 0.36, 0.6, 0.72, 0.8, 0.88];
 // sort options: [label, column title, value code on a stats row]
 CQ_sqSorts = [
@@ -190,9 +191,9 @@ while { !isNull _d } do {
         { _x ctrlShow (_view == "squads") } forEach _sqCtrls;
         { _x ctrlShow (_view == "board") } forEach _bdCtrls;
         { _x ctrlShow (_view == "class") } forEach _clCtrls;
-        _tabC ctrlSetBackgroundColor ([[0.2, 0.2, 0.2, 0.8], [0.35, 0.5, 0.25, 1]] select (_view == "class"));
-        _tabS ctrlSetBackgroundColor ([[0.2, 0.2, 0.2, 0.8], [0.35, 0.5, 0.25, 1]] select (_view == "squads"));
-        _tabB ctrlSetBackgroundColor ([[0.2, 0.2, 0.2, 0.8], [0.35, 0.5, 0.25, 1]] select (_view == "board"));
+        _tabC ctrlSetBackgroundColor ([CQ_ui get "button", CQ_ui get "buttonOn"] select (_view == "class"));
+        _tabS ctrlSetBackgroundColor ([CQ_ui get "button", CQ_ui get "buttonOn"] select (_view == "squads"));
+        _tabB ctrlSetBackgroundColor ([CQ_ui get "button", CQ_ui get "buttonOn"] select (_view == "board"));
         _lastView = _view;
     };
     private _players = allPlayers select { side group _x == west };
@@ -203,7 +204,7 @@ while { !isNull _d } do {
         private _cls = if (_i >= 0) then { (CQ_classes select _i) select 1 } else { "" };
         private _near = player inArea [CQ_basePos, (CQ_compoundSize select 0) / 2 + CQ_classChangeRange, (CQ_compoundSize select 1) / 2 + CQ_classChangeRange, CQ_baseDir, true];
         _classInfo ctrlSetStructuredText parseText format [
-            "<t size='0.9' color='#c8e07a'>Your class: %1</t><br/><t size='0.7' color='#9a9a9a'>Right column: players in that class / limit</t><br/><br/><t size='0.8' color='#d0d0c0'>%2</t><br/><br/><t size='0.75' color='#9a9a9a'>%3</t>",
+            "<t size='0.9' color='#7FF2FF'>Your class: %1</t><br/><t size='0.7' color='#8CB7BD'>Right column: players in that class / limit</t><br/><br/><t size='0.8' color='#B8D6DB'>%2</t><br/><br/><t size='0.75' color='#8CB7BD'>%3</t>",
             _mine,
             if (_cls == "") then { "Pick a class on the left." } else {
                 private _w = getArray (configFile >> "CfgVehicles" >> _cls >> "weapons") select { !(_x in ["Throw", "Put"]) };
@@ -232,7 +233,7 @@ while { !isNull _d } do {
         private _solos = _groups - _squads;
         private _slots = playableSlotsNumber west;
         _info ctrlSetStructuredText parseText format [
-            "<t size='0.85' color='#c8e07a'>%1 players</t><t size='0.85' color='#d0d0c0'>   |   %2 squads   |   %3 unassigned   |   %4 free slots   |   you: %5</t>",
+            "<t size='0.85' color='#7FF2FF'>%1 players</t><t size='0.85' color='#B8D6DB'>   |   %2 squads   |   %3 unassigned   |   %4 free slots   |   you: %5</t>",
             count _players, count _squads, count _solos, (_slots - count _players) max 0, [format ["in %1 (%2 squad pts)", groupId group player, (group player) getVariable ["CQ_sqPts", 0]], "unassigned"] select ((group player) getVariable ["CQ_solo", false])];
         private _sel = lbCurSel _grpList;
         private _old = uiNamespace getVariable ["CQ_sqGroups", []];
@@ -367,16 +368,16 @@ while { !isNull _d } do {
         // details
         private _sel = _rows getOrDefault [_selUid, []];
         if (_sel isEqualTo []) then {
-            _detail ctrlSetStructuredText parseText "<t size='0.85' color='#9a9a9a'>Select a player in the ranking.</t>";
+            _detail ctrlSetStructuredText parseText "<t size='0.85' color='#8CB7BD'>Select a player in the ranking.</t>";
         } else {
             _sel params ["_n", "_c", "_on", "_m"];
             private _rank = 1 + ((([_rows] call {
                 params ["_rs"]; private _a = []; { _a pushBack [[_y select 3] call _score, _x] } forEach _rs; _a sort false; _a apply { _x select 1 }
             }) find _selUid) max 0);
             private _t = [_m, "timePlayed"] call _g;
-            private _line = { params ["_l", "_v"]; format ["<t size='0.8' color='#a0a0a0'>%1:  </t><t size='0.8' color='#ffffff'>%2</t><br/>", _l, _v] };
-            private _sec = { params ["_l"]; format ["<br/><t size='0.75' font='PuristaMedium' color='#707070'>%1</t><br/>", _l] };
-            private _txt = format ["<t size='1.05' font='PuristaSemibold' color='#ffffff'>%1</t><br/><t size='0.8' color='#a0a0a0'>%2  -  %3</t><br/><t size='0.95' color='#ffffff'>SCORE %4</t><t size='0.8' color='#a0a0a0'>   overall rank #%5</t><br/>",
+            private _line = { params ["_l", "_v"]; format ["<t size='0.8' color='#8CB7BD'>%1:  </t><t size='0.8' color='#D9F7FF'>%2</t><br/>", _l, _v] };
+            private _sec = { params ["_l"]; format ["<br/><t size='0.75' font='PuristaMedium' color='#5E7F84'>%1</t><br/>", _l] };
+            private _txt = format ["<t size='1.05' font='PuristaSemibold' color='#D9F7FF'>%1</t><br/><t size='0.8' color='#8CB7BD'>%2  -  %3</t><br/><t size='0.95' color='#D9F7FF'>SCORE %4</t><t size='0.8' color='#8CB7BD'>   overall rank #%5</t><br/>",
                 _n, _c, ["offline", "online"] select _on, round ([_m] call _score), _rank];
             _txt = _txt + (["COMBAT"] call _sec)
                 + (["Infantry kills", [_m, "killsInf"] call _g] call _line)

@@ -208,7 +208,7 @@ private _left = missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs];
 private _drones = (missionNamespace getVariable ["CQ_mag", []]) apply {
     format ["%1 %2", _x get "name", if (alive (_x get "veh")) then { format ["%1 %2 m", _x getOrDefault ["phase", ""], round ((getPosATL (_x get "veh")) select 2)] } else { format ["in %1 s", round (((_x get "due") - time) max 0)] }]
 };
-private _status = format ["<t size='0.85'>Act <t color='#ffb060'>%1</t>   |   carrier <t color='#ffb060'>%2%%</t> (%3 HQ left)   |   insertions %4/%5, next in %6 s<br/>Enemy infantry <t color='#ffb060'>%7/%8</t>   |   all AI %9/%10   |   main HQ %11   |   trucks %12   |   aircraft %13<br/>MAGPIE: %14<br/>Medics %15, engineers %16 respawns left   |   time %17   |   %18 players</t>",
+private _status = format ["<t size='0.85'>Act <t color='#FFD27F'>%1</t>   |   carrier <t color='#FFD27F'>%2%%</t> (%3 HQ left)   |   insertions %4/%5, next in %6 s<br/>Enemy infantry <t color='#FFD27F'>%7/%8</t>   |   all AI %9/%10   |   main HQ %11   |   trucks %12   |   aircraft %13<br/>MAGPIE: %14<br/>Medics %15, engineers %16 respawns left   |   time %17   |   %18 players</t>",
     missionNamespace getVariable ["CQ_act", 1], round (100 * (_left max 0) / CQ_carrierHqs), _left max 0,
     CQ_rootsLaunched, CQ_maxRoots, round ((CQ_nextRootTime - serverTime) max 0),
     call CQ_fnc_enemyInfantry, CQ_maxInfantry, call CQ_fnc_enemyCount, CQ_maxAI,

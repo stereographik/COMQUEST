@@ -55,15 +55,15 @@ CQ_uiLoop = true;
         while { (CQ_uiQueue isNotEqualTo []) && { count CQ_uiCards < CQ_uiCardMax } } do {
             (CQ_uiQueue deleteAt 0) params ["_who", "_txt"];
             private _bg = _d ctrlCreate ["RscText", -1];
-            _bg ctrlSetBackgroundColor [0.06, 0.06, 0.06, 0.82];
+            _bg ctrlSetBackgroundColor (CQ_ui get "panel");
             private _iconBg = _d ctrlCreate ["RscText", -1];
-            _iconBg ctrlSetBackgroundColor [0.16, 0.16, 0.16, 0.92];
+            _iconBg ctrlSetBackgroundColor (CQ_ui get "header");
             private _icon = _d ctrlCreate ["RscPicture", -1];
             _icon ctrlSetText (_icons getOrDefault [_who, _icons get "CROSSROAD"]);
-            _icon ctrlSetTextColor [0.92, 0.92, 0.92, 1];
+            _icon ctrlSetTextColor (CQ_ui get "text");
             private _txtC = _d ctrlCreate ["RscStructuredText", -1];
             _txtC ctrlSetStructuredText parseText format [
-                "<t font='PuristaSemibold' size='0.72' color='#9a9a9a'>%1</t><br/><t font='PuristaLight' size='0.88' color='#f2f2f2'>%2</t>",
+                "<t font='PuristaSemibold' size='0.72' color='#8CB7BD'>%1</t><br/><t font='PuristaLight' size='0.88' color='#D9F7FF'>%2</t>",
                 _who, if ((_txt select [0, 6]) == "<rich>") then { _txt select [6] } else { [_txt] call _esc }];
             // height from the wrapped text (min: the icon column)
             _txtC ctrlSetPosition [_x0 + _ic + _pad, -1, _w - _ic - 2 * _pad, 0.05];

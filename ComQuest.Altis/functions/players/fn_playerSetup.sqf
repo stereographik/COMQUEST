@@ -27,10 +27,10 @@ player addEventHandler ["SeatSwitchedMan", {
 }];
 
 // Supply crates: load into / unload from any vehicle (re-added on every respawn)
-player addAction ["<t color='#C8E07A'>Load supply crate into vehicle</t>",
+player addAction ["<t color='#7FF2FF'>Load supply crate into vehicle</t>",
     { [ "load", cursorObject, player ] remoteExec ["CQ_fnc_crateCargo", 2] }, nil, 5, true, true, "",
     "(cursorObject getVariable ['CQ_crate', false]) && { _this distance cursorObject < 4 } && { vehicle _this == _this }"];
-player addAction ["<t color='#C8E07A'>Unload supply crate</t>",
+player addAction ["<t color='#7FF2FF'>Unload supply crate</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); [ "unload", _v, player ] remoteExec ["CQ_fnc_crateCargo", 2] }, nil, 5, true, true, "",
     "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); count (_v getVariable ['CQ_crates', []]) > 0 && { _this distance _v < 8 }"];
 
@@ -42,7 +42,7 @@ player addAction ["<t color='#FFD27F'>Empty vehicle inventory</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["clear", _v, player] remoteExec ["CQ_fnc_vehAutoFill", 2] }, nil, 0.5, false, true, "", _zoneVeh];
 
 // Hub menu (squads, class, stats, shop, debug): U key + one scroll menu entry (re-added on every respawn)
-player addAction ["<t color='#9FD3FF'>Menu (U)</t>", { [] spawn CQ_fnc_menuUi }, nil, 0.6, false, true, "", "_this == _target"];
+player addAction ["<t color='#7FF2FF'>Menu (U)</t>", { [] spawn CQ_fnc_menuUi }, nil, 0.6, false, true, "", "_this == _target"];
 if (isNil "CQ_squadKeyBound") then {
     CQ_squadKeyBound = true;
     [] spawn {
@@ -79,7 +79,7 @@ if (isNil "CQ_arsenalReady") then {
         waitUntil { sleep 0.5; !isNil "CQ_arsenalBoxes" };
         {
             _x addAction [
-                format ["<t color='#7FD4FF'>Arsenal (%1 equipment)</t>", _x getVariable ["CQ_squadBox", ""]],
+                format ["<t color='#7FF2FF'>Arsenal (%1 equipment)</t>", _x getVariable ["CQ_squadBox", ""]],
                 { ["Open", true] spawn BIS_fnc_arsenal },
                 nil, 6, true, true, "", "true", 6
             ];

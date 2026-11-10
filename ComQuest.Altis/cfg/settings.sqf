@@ -228,6 +228,15 @@ CQ_loadZoneCount = 4;                    // loadout zones in the base parking ar
 CQ_loadZoneRadius = 9;
 // Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
 // [label, unit class (loadout), traits, max players in that class]
+// UI design: one look for every window (the field transceiver): Purista, deep teal panels,
+// teal buttons, pale cyan text. Structured text uses the matching hex colours.
+CQ_ui = createHashMapFromArray [
+    ["font", "PuristaMedium"], ["fontHead", "PuristaSemibold"], ["fontLight", "PuristaLight"],
+    ["panel", [0.02, 0.07, 0.08, 0.92]], ["header", [0.02, 0.16, 0.19, 0.95]], ["inset", [0, 0.03, 0.04, 0.5]],
+    ["button", [0.02, 0.16, 0.19, 0.85]], ["buttonOn", [0.13, 0.53, 0.6, 1]], ["buttonActive", [0.5, 0.95, 1, 1]],
+    ["text", [0.85, 0.97, 1, 1]], ["muted", [0.55, 0.75, 0.78, 1]], ["dim", [0.38, 0.5, 0.52, 1]],
+    ["accent", [0.5, 0.95, 1, 1]], ["alert", [1, 0.55, 0.48, 1]], ["warn", [1, 0.82, 0.5, 1]]
+];   // hex: text #D9F7FF, soft #B8D6DB, muted #8CB7BD, dim #5E7F84, accent #7FF2FF, alert #FF8C7A, warn #FFD27F
 CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
 CQ_menuScreen = [0.4072, 0.4023, 0.7100, 0.5479];   // its blue screen zone in the picture (fractions)
 CQ_bleedOut = 300;                       // s a downed player waits for a medic (ReviveBleedOutDelay in description.ext)

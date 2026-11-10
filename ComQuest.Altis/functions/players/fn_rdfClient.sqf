@@ -25,20 +25,21 @@ private _y0 = safezoneY + CQ_rdfTop * _ph;
 private _mk = {
     params ["_cls", "_rx", "_ry", "_rw", "_rh"];
     private _c = _d ctrlCreate [_cls, -1];
+    [_c, _cls] call CQ_fnc_uiStyle;
     _c ctrlSetPosition [_x0 + _rx * _pw, _y0 + _ry * _ph, _rw * _pw, _rh * _ph];
     _c ctrlCommit 0;
     _c
 };
 
 private _bg = ["RscText", 0, 0, _W, _H] call _mk;
-_bg ctrlSetBackgroundColor [0.05, 0.05, 0.05, 0.72];
+_bg ctrlSetBackgroundColor [0.02, 0.07, 0.08, 0.72];
 private _edge = ["RscText", 0, 0, 3, _H] call _mk;
-_edge ctrlSetBackgroundColor [1, 1, 1, 0.9];
+_edge ctrlSetBackgroundColor (CQ_ui get "accent");
 
 private _lbl = ["RscText", _pad - 2, 3, 120, 20] call _mk;
 _lbl ctrlSetFont "PuristaMedium";
 _lbl ctrlSetFontHeight (15 * _ph);
-_lbl ctrlSetTextColor [0.75, 0.75, 0.75, 1];
+_lbl ctrlSetTextColor (CQ_ui get "muted");
 
 private _pct = ["RscStructuredText", _W - 110, 3, 110 - _pad + 4, 22] call _mk;
 
@@ -55,7 +56,7 @@ private _all = [_bg, _edge, _lbl, _pct] + _bars;
 
 private _shown = -1;
 private _disp = 0;
-private _offColor = [0.28, 0.28, 0.28, 0.6];
+private _offColor = [0.1, 0.25, 0.28, 0.6];
 while { true } do {
     sleep 0.2;
     private _has = alive player && { "ItemRadio" in assignedItems player || { (assignedItems player) findIf { "radio" in toLower _x } > -1 } };
@@ -88,21 +89,21 @@ while { true } do {
     if (_target < 0) then {
         _disp = 0;
         _lbl ctrlSetText "NO SIGNAL";
-        _lbl ctrlSetTextColor [0.55, 0.55, 0.55, 1];
-        _edge ctrlSetBackgroundColor [0.4, 0.4, 0.4, 0.9];
-        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='1.05' color='#6e6e6e'>--</t>";
+        _lbl ctrlSetTextColor (CQ_ui get "dim");
+        _edge ctrlSetBackgroundColor [0.25, 0.35, 0.37, 0.9];
+        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='1.05' color='#5E7F84'>--</t>";
         { _x ctrlSetBackgroundColor _offColor } forEach _bars;
     } else {
         _disp = _disp + (_target - _disp) * 0.4;          // smooth the needle
         private _v = round (_disp * 100);
         _lbl ctrlSetText "SIGNAL";
-        _lbl ctrlSetTextColor [0.75, 0.75, 0.75, 1];
-        _edge ctrlSetBackgroundColor [1, 1, 1, 0.9];
+        _lbl ctrlSetTextColor (CQ_ui get "muted");
+        _edge ctrlSetBackgroundColor (CQ_ui get "accent");
         _pct ctrlSetStructuredText parseText format [
-            "<t align='right'><t font='PuristaSemibold' size='1.25' color='#ffffff'>%1</t><t font='PuristaLight' size='0.85' color='#a0a0a0'> %%</t></t>", _v];
+            "<t align='right'><t font='PuristaSemibold' size='1.25' color='#D9F7FF'>%1</t><t font='PuristaLight' size='0.85' color='#8CB7BD'> %%</t></t>", _v];
         private _n = round (_disp * _segs);
         {
-            _x ctrlSetBackgroundColor ([_offColor, [1, 1, 1, 0.55 + 0.45 * (_forEachIndex / _segs)]] select (_forEachIndex < _n));
+            _x ctrlSetBackgroundColor ([_offColor, [0.5, 0.95, 1, 0.55 + 0.45 * (_forEachIndex / _segs)]] select (_forEachIndex < _n));
         } forEach _bars;
     };
 };
