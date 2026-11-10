@@ -529,7 +529,7 @@ CQ_tigrisSalvo = 25;                     // s between two launches of one Tigris
 CQ_tigrisGuide = 0.5;                    // share of launches forced onto the drone (the others often miss)
 
 // Range map (fn_rangeMapClient): the ground each enemy MAGPIE sees right now can fire on (line of
-// sight through terrain + buildings + vegetation, within his weapon range), fire cone darker
+// sight through terrain + buildings, vegetation ignored, within his weapon range), fire cone darker
 CQ_rangeMap = true;
 CQ_rangeCell = 25;                       // m per cell
 CQ_rangeOf = createHashMapFromArray [["rifle", 400], ["mg", 700], ["launcher", 500], ["sniper", 900], ["vehicle", 1000], ["static", 1200]];   // m by weapon

@@ -3,8 +3,8 @@
     RANGE MAP: the ground every enemy MAGPIE sees right now (CQ_magVisible) can fire on.
     For each of them, the terrain within his weapon range (CQ_rangeOf) is cut into cells of
     CQ_rangeCell m; a cell is "in range" when a standing man in it (1.7 m) is in line of sight
-    of the enemy's eyes: terrain (terrainIntersectASL), then buildings, walls and vegetation
-    (lineIntersectsSurfaces, VIEW geometry). Cells inside +/- CQ_rangeCone degrees of where he
+    of the enemy's eyes: terrain (terrainIntersectASL), then buildings, walls and rocks
+    (lineIntersectsSurfaces, FIRE geometry). Trees and bushes are ignored (bullets go through). Cells inside +/- CQ_rangeCone degrees of where he
     faces form his fire cone (drawn darker).
     Cost control: an enemy is only recomputed when he moved more than CQ_rangeMove m (his cone
     only when he turned more than 20 degrees); line-of-sight checks run in the background,
@@ -43,8 +43,15 @@ private _apply = {
         if ((_a select 2) <= 0) then { CQ_rangeAgg deleteAt _k } else { CQ_rangeAgg set [_k, _a] };
     } forEach _cells;
 };
-[_rangeOf, _apply] spawn {
-    params ["_rangeOf", "_apply"];
+// vegetation (Arma model names start with t_ for trees, b_ for bushes): ignored, like ArmaFly
+private _isVeg = {
+    params ["_o"];
+    if (isNull _o) exitWith { false };
+    private _m = toLower ((getModelInfo _o) select 0);
+    (_m select [0, 2]) in ["t_", "b_"]
+};
+[_rangeOf, _apply, _isVeg] spawn {
+    params ["_rangeOf", "_apply", "_isVeg"];
     private _c = CQ_rangeCell;
     private _n = 0;
     while { true } do {
@@ -85,7 +92,9 @@ private _apply = {
                     _n = _n + 1;
                     if (_n mod CQ_rangeBudget == 0) then { uiSleep 0.01 };
                     if (terrainIntersectASL [_eye, _t]) then { continue };
-                    if ((lineIntersectsSurfaces [_eye, _t, _v, objNull, true, 1, "VIEW", "FIRE"]) isNotEqualTo []) then { continue };
+                    // buildings, walls, rocks block; trees and bushes don't (bullets go through)
+                    private _hits = lineIntersectsSurfaces [_eye, _t, _v, objNull, true, 4, "FIRE", "GEOM"];
+                    if ((_hits findIf { !([_x select 3] call _isVeg) }) > -1) then { continue };
                     _cells pushBack [format ["%1_%2", _ix, _iy], _cx, _cy, _pos getDir [_cx, _cy]];
                 };
             };
