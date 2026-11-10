@@ -30,7 +30,7 @@ _this spawn {
     private _y0 = safezoneY + (safezoneH - _H * _ph) / 2;
     private _mk = {
         params ["_cls", "_rx", "_ry", "_rw", "_rh", ["_txt", ""]];
-        private _c = _d ctrlCreate [_cls, -1];
+        private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), -1];
         [_c, _cls] call CQ_fnc_uiStyle;
         _c ctrlSetPosition [_x0 + _rx * _pw, _y0 + _ry * _ph, _rw * _pw, _rh * _ph];
         if (_txt != "") then { _c ctrlSetText _txt };
@@ -45,7 +45,7 @@ _this spawn {
     _title ctrlSetTextColor (CQ_ui get "muted");
     private _msg = ["RscStructuredText", 14, 38, _W - 28, 50] call _mk;
     _msg ctrlSetStructuredText parseText format [
-        "<t font='PuristaLight' size='1.1' color='#2B2A14'>%1</t><t font='PuristaLight' size='1.1' color='#6E6A2C'> invites you to join </t><t font='PuristaSemibold' size='1.1' color='#2B2A14'>%2</t>", _lname, _sname];
+        "<t font='PuristaLight' size='1.1' color='#F2F1DF'>%1</t><t font='PuristaLight' size='1.1' color='#A6A381'> invites you to join </t><t font='PuristaSemibold' size='1.1' color='#F2F1DF'>%2</t>", _lname, _sname];
     private _timer = ["RscText", 16, _H - 40, 150, 26] call _mk;
     _timer ctrlSetFont "PuristaLight";
     _timer ctrlSetTextColor (CQ_ui get "dim");

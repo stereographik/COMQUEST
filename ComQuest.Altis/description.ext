@@ -50,6 +50,22 @@ wreckRemovalMinTime = 300;
 wreckRemovalMaxTime = 900;
 minPlayerDistance = 300;
 
+// --- UI: the mission's button (dark theme, CQ_ui). Hover, focus and press share one colour.
+import RscButton;
+class CQ_Button: RscButton
+{
+    font = "PuristaMedium";
+    colorBackground[] = {0.2, 0.192, 0.122, 1};
+    colorBackgroundActive[] = {0.569, 0.549, 0.231, 1};
+    colorFocused[] = {0.569, 0.549, 0.231, 1};
+    colorBackgroundDisabled[] = {0.2, 0.192, 0.122, 0.5};
+    colorText[] = {0.949, 0.945, 0.875, 1};
+    colorDisabled[] = {0.651, 0.639, 0.506, 0.6};
+    colorShadow[] = {0, 0, 0, 0};
+    colorBorder[] = {0, 0, 0, 0};
+    offsetX = 0; offsetY = 0; offsetPressedX = 0; offsetPressedY = 0;
+};
+
 // --- On-screen phase messages ---------------------------------------------
 class CfgNotifications
 {

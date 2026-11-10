@@ -228,17 +228,18 @@ CQ_loadZoneCount = 4;                    // loadout zones in the base parking ar
 CQ_loadZoneRadius = 9;
 // Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
 // [label, unit class (loadout), traits, max players in that class]
-// UI design: light theme from the project colour chart (no dark green). Backgrounds are light
-// grey or light brown; buttons light grey, light brown on hover, red when selected.
-//   chart: #918C3B olive   #A6A381 light brown   #F2F1DF light grey   #BA392C red
+// UI design: dark theme from the project colour chart (no dark green): charcoal-olive panels,
+// cream text. Buttons (class CQ_Button, description.ext): dark, olive on hover AND when active
+// (focused/pressed: the same colour, no mismatch), red when selected (CQ_fnc_uiSel).
+//   chart: #918C3B olive   #A6A381 light brown   #F2F1DF cream   #BA392C red
 CQ_ui = createHashMapFromArray [
     ["font", "PuristaMedium"], ["fontHead", "PuristaSemibold"], ["fontLight", "PuristaLight"],
-    ["panel", [0.949, 0.945, 0.875, 0.95]], ["header", [0.651, 0.639, 0.506, 1]], ["inset", [0.651, 0.639, 0.506, 0.28]],
-    ["button", [0.871, 0.863, 0.776, 1]], ["buttonHover", [0.651, 0.639, 0.506, 1]], ["buttonOn", [0.729, 0.224, 0.173, 1]],
-    ["buttonActive", [0.169, 0.165, 0.078, 1]], ["textOn", [0.949, 0.945, 0.875, 1]],
-    ["text", [0.169, 0.165, 0.078, 1]], ["muted", [0.431, 0.416, 0.173, 1]], ["dim", [0.54, 0.53, 0.44, 1]],
-    ["accent", [0.569, 0.549, 0.231, 1]], ["alert", [0.729, 0.224, 0.173, 1]], ["warn", [0.431, 0.416, 0.173, 1]]
-];   // hex on light backgrounds: text #2B2A14, muted #6E6A2C, accent #5C5920, dim #8A8770, alert #BA392C
+    ["panel", [0.098, 0.094, 0.07, 0.94]], ["header", [0.169, 0.165, 0.11, 1]], ["inset", [0, 0, 0, 0.35]],
+    ["button", [0.2, 0.192, 0.122, 1]], ["buttonHover", [0.569, 0.549, 0.231, 1]], ["buttonOn", [0.729, 0.224, 0.173, 1]],
+    ["buttonActive", [0.949, 0.945, 0.875, 1]], ["textOn", [0.949, 0.945, 0.875, 1]],
+    ["text", [0.949, 0.945, 0.875, 1]], ["muted", [0.651, 0.639, 0.506, 1]], ["dim", [0.45, 0.44, 0.35, 1]],
+    ["accent", [0.569, 0.549, 0.231, 1]], ["alert", [0.729, 0.224, 0.173, 1]], ["warn", [0.651, 0.639, 0.506, 1]]
+];   // hex on dark backgrounds: text #F2F1DF, muted #A6A381, accent #918C3B, dim #7A7860, alert #BA392C
 CQ_splashEnabled = false;                 // POC splash before the intro: black, picture centred, text under it
 CQ_splashWidth = 0.8;                    // picture width, share of the screen width
 CQ_splashTime = 4;                       // s (Space ends it)

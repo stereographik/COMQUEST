@@ -31,7 +31,7 @@ private _Y = safeZoneY + (safeZoneH - _H) / 2;
 private _L = 0.042;
 private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
-    private _c = _d ctrlCreate [_cls, _idc];
+    private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), _idc];
     [_c, _cls] call CQ_fnc_uiStyle;
     _c ctrlSetPosition _pos;
     if (_txt != "") then { _c ctrlSetText _txt };
@@ -204,7 +204,7 @@ while { !isNull _d } do {
         private _cls = if (_i >= 0) then { (CQ_classes select _i) select 1 } else { "" };
         private _near = player inArea [CQ_basePos, (CQ_compoundSize select 0) / 2 + CQ_classChangeRange, (CQ_compoundSize select 1) / 2 + CQ_classChangeRange, CQ_baseDir, true];
         _classInfo ctrlSetStructuredText parseText format [
-            "<t size='0.9' color='#5C5920'>Your class: %1</t><br/><t size='0.7' color='#6E6A2C'>Right column: players in that class / limit</t><br/><br/><t size='0.8' color='#4A4830'>%2</t><br/><br/><t size='0.75' color='#6E6A2C'>%3</t>",
+            "<t size='0.9' color='#918C3B'>Your class: %1</t><br/><t size='0.7' color='#A6A381'>Right column: players in that class / limit</t><br/><br/><t size='0.8' color='#CFCDB3'>%2</t><br/><br/><t size='0.75' color='#A6A381'>%3</t>",
             _mine,
             if (_cls == "") then { "Pick a class on the left." } else {
                 private _w = getArray (configFile >> "CfgVehicles" >> _cls >> "weapons") select { !(_x in ["Throw", "Put"]) };
@@ -233,7 +233,7 @@ while { !isNull _d } do {
         private _solos = _groups - _squads;
         private _slots = playableSlotsNumber west;
         _info ctrlSetStructuredText parseText format [
-            "<t size='0.85' color='#5C5920'>%1 players</t><t size='0.85' color='#4A4830'>   |   %2 squads   |   %3 unassigned   |   %4 free slots   |   you: %5</t>",
+            "<t size='0.85' color='#918C3B'>%1 players</t><t size='0.85' color='#CFCDB3'>   |   %2 squads   |   %3 unassigned   |   %4 free slots   |   you: %5</t>",
             count _players, count _squads, count _solos, (_slots - count _players) max 0, [format ["in %1 (%2 squad pts)", groupId group player, (group player) getVariable ["CQ_sqPts", 0]], "unassigned"] select ((group player) getVariable ["CQ_solo", false])];
         private _sel = lbCurSel _grpList;
         private _old = uiNamespace getVariable ["CQ_sqGroups", []];
@@ -368,16 +368,16 @@ while { !isNull _d } do {
         // details
         private _sel = _rows getOrDefault [_selUid, []];
         if (_sel isEqualTo []) then {
-            _detail ctrlSetStructuredText parseText "<t size='0.85' color='#6E6A2C'>Select a player in the ranking.</t>";
+            _detail ctrlSetStructuredText parseText "<t size='0.85' color='#A6A381'>Select a player in the ranking.</t>";
         } else {
             _sel params ["_n", "_c", "_on", "_m"];
             private _rank = 1 + ((([_rows] call {
                 params ["_rs"]; private _a = []; { _a pushBack [[_y select 3] call _score, _x] } forEach _rs; _a sort false; _a apply { _x select 1 }
             }) find _selUid) max 0);
             private _t = [_m, "timePlayed"] call _g;
-            private _line = { params ["_l", "_v"]; format ["<t size='0.8' color='#6E6A2C'>%1:  </t><t size='0.8' color='#2B2A14'>%2</t><br/>", _l, _v] };
-            private _sec = { params ["_l"]; format ["<br/><t size='0.75' font='PuristaMedium' color='#8A8770'>%1</t><br/>", _l] };
-            private _txt = format ["<t size='1.05' font='PuristaSemibold' color='#2B2A14'>%1</t><br/><t size='0.8' color='#6E6A2C'>%2  -  %3</t><br/><t size='0.95' color='#2B2A14'>SCORE %4</t><t size='0.8' color='#6E6A2C'>   overall rank #%5</t><br/>",
+            private _line = { params ["_l", "_v"]; format ["<t size='0.8' color='#A6A381'>%1:  </t><t size='0.8' color='#F2F1DF'>%2</t><br/>", _l, _v] };
+            private _sec = { params ["_l"]; format ["<br/><t size='0.75' font='PuristaMedium' color='#7A7860'>%1</t><br/>", _l] };
+            private _txt = format ["<t size='1.05' font='PuristaSemibold' color='#F2F1DF'>%1</t><br/><t size='0.8' color='#A6A381'>%2  -  %3</t><br/><t size='0.95' color='#F2F1DF'>SCORE %4</t><t size='0.8' color='#A6A381'>   overall rank #%5</t><br/>",
                 _n, _c, ["offline", "online"] select _on, round ([_m] call _score), _rank];
             _txt = _txt + (["COMBAT"] call _sec)
                 + (["Infantry kills", [_m, "killsInf"] call _g] call _line)

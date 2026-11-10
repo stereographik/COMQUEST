@@ -24,7 +24,7 @@ private _Y = safeZoneY + (safeZoneH - _H) / 2;
 private _L = 0.036;                                     // line height
 private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
-    private _c = _d ctrlCreate [_cls, _idc];
+    private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), _idc];
     [_c, _cls] call CQ_fnc_uiStyle;
     _c ctrlSetPosition _pos;
     if (_txt != "") then { _c ctrlSetText _txt };
