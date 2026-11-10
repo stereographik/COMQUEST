@@ -39,6 +39,7 @@ CQ_introCam = _cam;
 [] spawn {
     uiSleep CQ_introMaxTime;
     if (isNil "CQ_introCam") exitWith {};
+    if (!isNil "CQ_introLandEh") then { removeMissionEventHandler ["EachFrame", CQ_introLandEh]; CQ_introLandEh = nil };
     { deleteVehicle _x } forEach (missionNamespace getVariable ["CQ_introLocals", []]);
     CQ_introLocals = [];
     CQ_introCam cameraEffect ["terminate", "back"]; camDestroy CQ_introCam; CQ_introCam = nil;
@@ -271,7 +272,7 @@ call {
     // Every frame the helicopter is given its next position through setVelocityTransformation:
     // the engine interpolates between frames, so the motion is perfectly smooth.
     CQ_introLand = [_hb, _lz, _gz, _lzDir, time, _tLand, time];
-    private _landEh = addMissionEventHandler ["EachFrame", {
+    CQ_introLandEh = addMissionEventHandler ["EachFrame", {
         CQ_introLand params ["_h", "_lz", "_gz", "_dir", "_t0", "_dur", "_tPrev"];
         private _f = {
             params ["_t"];
@@ -288,13 +289,13 @@ call {
     }];
     _bl cutText ["", "BLACK IN", CQ_introFade];
     [_tLand] call _nap;
-    removeMissionEventHandler ["EachFrame", _landEh];
-    CQ_introLand = nil;
+    // the handler keeps it hovering at its last height until the screen is black (removed below)
 };
 
 // ---- 5 BLACK, then 6 EYES: the player's own view opens in two blinks, a blur clearing
 _bl cutText ["", "BLACK OUT", CQ_introFade];
 uiSleep CQ_introFade;
+if (!isNil "CQ_introLandEh") then { removeMissionEventHandler ["EachFrame", CQ_introLandEh]; CQ_introLandEh = nil; CQ_introLand = nil };
 (findDisplay 46) displayRemoveEventHandler ["KeyDown", _skipEh];
 _tl cutText ["", "PLAIN"];
 { deleteVehicle _x } forEach _locals;
