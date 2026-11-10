@@ -230,6 +230,8 @@ CQ_loadZoneRadius = 9;
 // [label, unit class (loadout), traits, max players in that class]
 CQ_bleedOut = 300;                       // s a downed player waits for a medic (ReviveBleedOutDelay in description.ext)
 CQ_surgeChance = 0.10;                   // adrenalineSurge: chance for a downed medic to get up on his own over the whole wait
+CQ_bleedMedicRange = 500;                // BLEEDOUT (give up and respawn) only allowed with no medic this close
+CQ_bleedKey = 48;                        // B
 CQ_surgeEvery = 30;                      // s between two small rolls (1.05 % each for 10 % over 5 min)
 CQ_basicKit = ["ItemGPS", "ItemMap", "ItemCompass", "ItemRadio"];   // linked on every preset, plus binoculars (CQ_fnc_basicKit)
 CQ_classes = [

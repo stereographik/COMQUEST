@@ -6,9 +6,47 @@
     every CQ_surgeEvery s while he is down, sized so the chance over the whole bleed-out is
     CQ_surgeChance (10 %): p = 1 - (1 - 0.10) ^ (CQ_surgeEvery / CQ_bleedOut). No enemy
     proximity rule: it can happen under fire.
+    BLEEDOUT: a downed player may give up and respawn at the base (key CQ_bleedKey, B) only
+    while no conscious medic is within CQ_bleedMedicRange (500 m). The vanilla hold-to-respawn
+    is off (ReviveForceRespawnDelay).
 */
 if (!hasInterface) exitWith {};
 private _u = player;
+CQ_canBleed = false;
+if (isNil "CQ_bleedKeyBound") then {
+    CQ_bleedKeyBound = true;
+    [] spawn {
+        waitUntil { sleep 0.5; !isNull (findDisplay 46) };
+        (findDisplay 46) displayAddEventHandler ["KeyDown", {
+            params ["", "_k"];
+            if (_k == CQ_bleedKey && { CQ_canBleed } && { lifeState player == "INCAPACITATED" }) then {
+                CQ_canBleed = false;
+                hintSilent "";
+                player setDamage 1;
+                true
+            } else { false };
+        }];
+    };
+};
+// BLEEDOUT prompt while down: allowed only with no conscious medic within CQ_bleedMedicRange
+[_u] spawn {
+    params ["_u"];
+    while { alive _u && { _u == player } } do {
+        if (lifeState _u == "INCAPACITATED") then {
+            private _medic = (allPlayers select { _x != _u && { alive _x } && { side group _x == west } && { lifeState _x != "INCAPACITATED" } && { _x getUnitTrait "Medic" } && { _x distance _u < CQ_bleedMedicRange } }) isNotEqualTo [];
+            CQ_canBleed = !_medic;
+            hintSilent parseText (if (_medic) then {
+                format ["<t size='1.1' color='#9FD3FF'>A medic is within %1 m</t><br/>Hold on.", CQ_bleedMedicRange]
+            } else {
+                format ["<t size='1.1' color='#FF8C7A'>No medic within %1 m</t><br/>Press <t color='#FFFFFF'>%2</t> to BLEEDOUT and respawn at the base.", CQ_bleedMedicRange, keyName CQ_bleedKey]
+            });
+        } else {
+            if (CQ_canBleed) then { CQ_canBleed = false; hintSilent "" };
+        };
+        sleep 1;
+    };
+    hintSilent "";
+};
 private _n = CQ_bleedOut / CQ_surgeEvery;
 private _p = 1 - ((1 - CQ_surgeChance) ^ (1 / _n));
 while { alive _u && { _u == player } } do {
