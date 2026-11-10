@@ -17,8 +17,13 @@ call CQ_fnc_playerSetup;
 if (isNil "CQ_unassignedDone") then {
     CQ_unassignedDone = true;
     ["unassign", player] remoteExec ["CQ_fnc_squadCmd", 2];
-    [] spawn { sleep 6; hint parseText "<t size='1.1' color='#9FD3FF'>You are unassigned.</t><br/>Press <t color='#c8e07a'>U</t> to join or create a squad."; };
+    [] spawn { sleep 6; hint parseText "<t size='1.1' color='#F2F1DF'>You are unassigned.</t><br/>Press <t color='#918C3B'>U</t> to join or create a squad."; };
 };
+// Credits (map diary)
+player createDiarySubject ["CQ_credits", "Credits"];
+player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [
+    "<font face='PuristaSemibold' size='18' color='#F2F1DF'>COMQUEST</font><br/><font color='#A6A381'>Arma 3 multiplayer co-op on Altis</font><br/><br/>Mission by <font color='#F2F1DF'>Django aka stereographik</font><br/>Version <font color='#F2F1DF'>%1</font>, built %2<br/><br/><font color='#A6A381'>github.com/stereographik/COMQUEST</font>",
+    CQ_version, CQ_build]]];
 [] spawn CQ_fnc_rdfClient;   // radio direction finder panel
 [] spawn CQ_fnc_statsClient; // shots, heals, distances, time played
 call CQ_fnc_heatMapClient;   // MAGPIE heatmap under everything else
