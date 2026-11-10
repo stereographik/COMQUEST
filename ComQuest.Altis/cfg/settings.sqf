@@ -524,14 +524,18 @@ CQ_tigrisMissileRange = 3500;            // m (slant): the Tigris launches a Tit
 CQ_tigrisSalvo = 25;                     // s between two launches of one Tigris
 CQ_tigrisGuide = 0.5;                    // share of launches forced onto the drone (the others often miss)
 
-// MAGPIE heatmap (map overlay, every player, always on): contacts only, blue -> red
+// MAGPIE radar echoes on the map (fn_magMapClient): live filled circle + fading empty traces
+CQ_echoPx = 5;                           // circle size in screen pixels (same at every zoom)
+CQ_echoLife = 5;                         // s a trace circle stays (fading out)
+CQ_echoColor = [0.729, 0.224, 0.173];    // chart red #BA392C
+// MAGPIE heatmap (map overlay, every player; OFF by default since the radar echoes): contacts only, blue -> red
 // contour bands shaped by the terrain, fading (half-life) as the information gets old
 CQ_heatCell = 300;                       // m per cell
 CQ_heatHalfHeat = 60;                    // s: contact heat halves every minute
 CQ_heatEvery = 5;                        // s between two server updates
 CQ_heatPubEvery = 10;                    // s between two broadcasts to the players
 CQ_heatWeights = createHashMapFromArray [["inf", 0.15], ["static", 0.3], ["light", 0.35], ["armour", 0.6], ["air", 0.6]];   // heat per seen unit (summed per cell, max 1)
-CQ_heatEnabled = true;                   // false: no heatmap overlay on the map (the server grid still runs)
+CQ_heatEnabled = false;                   // false: no heatmap overlay on the map (the server grid still runs)
 CQ_heatFine = 120;                       // m: drawn tile size (the field is sampled this fine)
 CQ_heatSigma = 260;                      // m: spread of one contact cell (gaussian)
 CQ_heatTerrain = 0.35;                   // heightmap mask: how much local relief bends the contours
