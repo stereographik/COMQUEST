@@ -533,8 +533,8 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
             _news pushBack format ["New enemy position: %1.", [_x] call CQ_fnc_objName];
         } else {
             if (_st > _y) then {
-                _news pushBack (if (_st >= 4) then { format ["%1 is fully operational.", [_x] call CQ_fnc_objName] }
-                    else { format ["%1: construction, stage %2 of 4.", [_x] call CQ_fnc_objName, _st] });
+                _news pushBack (if (_st >= 6) then { format ["%1 is fully operational.", [_x] call CQ_fnc_objName] }
+                    else { format ["%1: construction, stage %2 of 6.", [_x] call CQ_fnc_objName, _st] });
             };
         };
         CQ_magHqSeen set [_x, _st];

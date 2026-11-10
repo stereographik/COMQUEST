@@ -1,11 +1,11 @@
 /*
     CQ_fnc_hqBuild  (server, spawned by CQ_fnc_hqTick when the perimeter is secured)
     [_hq] spawn CQ_fnc_hqBuild;
-    Builds the HQ composition in 4 stages, CQ_hqBuildStageTime seconds apart, announcing each.
+    Builds the HQ composition in 6 stages, CQ_hqBuildStageTime seconds apart, announcing each.
     Offsets are [right, forward] metres in the HQ's own frame (rotated by its "dir").
-      1 command building   2 sandbag ring (gaps front and back)
-      3 supply depot + radio tower + fuel tanker   4 helipad + parked QRF helicopter + 3 AA pits
-      then the HMG watchtower.
+      1 3 AA pits   2 HMG watchtower   3 radio tower (they can communicate)
+      4 supply depot + field supply truck   5 fuel tanker
+      6 helipad + parked QRF helicopter, command building, sandbag ring (gaps front and back)
     The 7 objectives (depot, radio tower, fuel tanker, 3 AA pits, HMG tower) each stand on their
     own site, at least CQ_objMinGap m from each other and from the command building, on a ring
     CQ_objRing m around it (the HMG tower takes the site closest to CQ_hmgTowerDir).
@@ -135,111 +135,17 @@ if ((_hq get "siteLevel") >= 3) then {
 private _stage = {
     params ["_n", "_what"];
     _hq set ["buildStage", _n];
-    ["Enemy HQ construction", format ["HQ #%1, stage %2/4: %3 (grid %4)", _id, _n, _what, mapGridPosition _c]] call CQ_fnc_announce;
-    private _sk = ["", "stage1", "", "stage3", "operational"] select _n;
+    ["Enemy HQ construction", format ["HQ #%1, stage %2/6: %3 (grid %4)", _id, _n, _what, mapGridPosition _c]] call CQ_fnc_announce;
+    private _sk = ["", "stage1", "", "stage3", "", "", "operational"] select _n;
     if (_sk != "") then { [_sk, [[_id] call CQ_fnc_objName], _hq] call CQ_fnc_say };
 };
 
-// Stage 1 - command building
-call _wait;
-private _bld = ["Land_Cargo_HQ_V1_F", 0, 0, 0, true] call _place;
-_hq set ["building", _bld];
-[1, "command building"] call _stage;
-
-// Stage 2 - sandbag ring, radius 13 m, gaps at the front (0) and back (180)
-call _wait;
-for "_a" from 15 to 345 step 15 do {
-    if (_a != 180) then {
-        ["Land_BagFence_Long_F", 13 * sin _a, 13 * cos _a, _a + 90] call _place;
-    };
-};
-[2, "sandbag perimeter"] call _stage;
-
-// Stage 3 - supply depot + ammo boxes, radio tower, fuel tanker, field resupply truck
-call _wait;
+// Objective sites first: every installation goes on its own spot of the ring
 private _sites = call _sitesFor;
 _hq set ["objSites", _sites];
-private _depot = ["Land_Cargo_House_V1_F", _sites select 0, 90, true] call _placeAt;
-if (!isNull _depot) then { { ["Box_East_Ammo_F", (getPosATL _depot) getPos [7, _d + 180 + _x]] call _placeAt } forEach [-25, 0, 25] };
-private _radio = ["Land_TTowerBig_2_F", _sites select 1, 0, true] call _placeAt;
-{ [_x] call _engineerOnly } forEach [_depot, _radio];
-_depot setVariable ["CQ_objType", "Depot"];
-_radio setVariable ["CQ_objType", "Radio tower"];
 
-_depot addEventHandler ["Killed", {
-    private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
-    if (isNil "_hq") exitWith {};
-    ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
-    ["killDepot", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
-    params ["", "_k", "_i"];
-    [[_i, _k] select (isNull _i), 50, "supply depot"] call CQ_fnc_scoreAdd;
-    _hq set ["stock", 0];
-}];
-
-// Fuel tanker: holds the HQ's fuel. Any weapon can destroy it.
-private _tanker = [CQ_tankerClass, _sites select 2, 90] call _placeAt;
-if (!isNull _tanker) then {
-    _tanker setFuelCargo 0;           // players can't refuel from it
-    _tanker lock 2;
-    _tanker setVariable ["CQ_hqId", _id];
-    _tanker addEventHandler ["Killed", {
-        private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
-        if (isNil "_hq") exitWith {};
-        ["Fuel tanker destroyed", format ["HQ #%1 lost its %2 fuel: no more refuelling there", _hq get "id", round (_hq get "fuel")]] call CQ_fnc_announce;
-        _hq set ["fuel", 0];
-    }];
-};
-_hq set ["tanker", _tanker];
-if (!isNull _tanker) then { _tanker setVariable ["CQ_objType", "Fuel tanker"] };
-
-// Field resupply truck: driven out to groups short of ammo (CQ_fnc_fieldResupply)
-private _ftruck = [CQ_fieldTruckClass, -18, -20, 90] call _place;
-if (!isNull _ftruck) then {
-    _ftruck setAmmoCargo 0;
-    _ftruck lock 2;
-    _ftruck setVariable ["CQ_hqId", _id];
-    _ftruck addEventHandler ["Killed", {
-        private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
-        if (isNil "_hq") exitWith {};
-        ["Field supply truck destroyed", format ["HQ #%1 can no longer resupply its squads in the field", _hq get "id"]] call CQ_fnc_announce;
-    }];
-    _hq set ["fieldTruckHome", getPosATL _ftruck];
-};
-_hq set ["fieldTruck", _ftruck];
-_radio addEventHandler ["Killed", {
-    private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
-    if (isNil "_hq") exitWith {};
-    ["Radio tower destroyed", format ["HQ #%1 is cut off from the network", _hq get "id"]] call CQ_fnc_announce;
-    ["killTower", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
-    params ["", "_k", "_i"];
-    [[_i, _k] select (isNull _i), 50, "radio tower"] call CQ_fnc_scoreAdd;
-}];
-_depot setVariable ["CQ_hqId", _id];
-_radio setVariable ["CQ_hqId", _id];
-_hq set ["depot", _depot];
-_hq set ["radio", _radio];
-(_hq get "installations") append ([_depot, _radio, _tanker] select { !isNull _x });
-_hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
-_hq set ["fuel", (_hq get "fuelInit") min (_hq get "cap")];
-if (isNull _tanker) then { _hq set ["fuel", 0] };
-[3, format ["supply depot (%1 ammo), fuel tanker (%2 fuel), field supply truck, radio tower", round (_hq get "stock"), round (_hq get "fuel")]] call _stage;
-
-// Stage 4 - helipad with the QRF helicopter parked on it + 3 AA pits
+// Stage 1 - 3 AA pits (air cover before anything else)
 call _wait;
-private _pad = ["Land_HelipadSquare_F", 26, 0, 0, true] call _place;
-_hq set ["pad", _pad];
-if (!isNull _pad) then {
-    private _heli = createVehicle [CQ_hqHeliClass, getPosATL _pad, [], 0, "CAN_COLLIDE"];
-    _heli setDir _d;
-    private _hg = [_heli] call CQ_fnc_crewVehicle;
-    _hg setBehaviour "SAFE";
-    _heli engineOn false;
-    [_heli] call CQ_fnc_airLoadout;
-    [_heli, 1] call CQ_fnc_vehAmmoInit;
-    [_heli, _hg, "armed", _id, _pad, [], true] call CQ_fnc_airRegister;
-    (_hq get "support") pushBack _hg;
-};
-
 private _aaGroup = createGroup [east, true];
 {
     private _sp = _x;
@@ -257,9 +163,10 @@ private _aaGroup = createGroup [east, true];
 _aaGroup setBehaviour "AWARE";
 _aaGroup setCombatMode "RED";
 (_hq get "support") pushBack _aaGroup;
-[4, "helipad with QRF helicopter, 3 AA pits"] call _stage;
+[1, "3 AA pits"] call _stage;
 
-// Construction finished: an HMG watchtower on the west side (facing the player's side of the island)
+// Stage 2 - HMG watchtower on the west side (facing the player's side of the island)
+call _wait;
 private _ta = CQ_hmgTowerDir - _d;
 private _tower = ["Land_Cargo_Patrol_V1_F", _sites select 6, _ta, true] call _placeAt;
 if (!isNull _tower) then {
@@ -281,6 +188,112 @@ if (!isNull _tower) then {
     (_hq get "support") pushBack _tg;
     ["HQ #%1: HMG watchtower up at grid %2 (west side)", [_id, mapGridPosition _tower]] call CQ_fnc_log;
 };
+
+[2, "HMG watchtower"] call _stage;
+
+// Stage 3 - radio tower, so the HQ can talk to the network
+call _wait;
+private _radio = ["Land_TTowerBig_2_F", _sites select 1, 0, true] call _placeAt;
+[_radio] call _engineerOnly;
+_radio setVariable ["CQ_objType", "Radio tower"];
+_radio setVariable ["CQ_hqId", _id];
+_hq set ["radio", _radio];
+_radio addEventHandler ["Killed", {
+    private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
+    if (isNil "_hq") exitWith {};
+    ["Radio tower destroyed", format ["HQ #%1 is cut off from the network", _hq get "id"]] call CQ_fnc_announce;
+    ["killTower", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
+    params ["", "_k", "_i"];
+    [[_i, _k] select (isNull _i), 50, "radio tower"] call CQ_fnc_scoreAdd;
+}];
+(_hq get "installations") pushBack _radio;
+[3, "radio tower"] call _stage;
+
+// Stage 4 - supply depot + ammo boxes, field resupply truck
+call _wait;
+private _depot = ["Land_Cargo_House_V1_F", _sites select 0, 90, true] call _placeAt;
+if (!isNull _depot) then { { ["Box_East_Ammo_F", (getPosATL _depot) getPos [7, _d + 180 + _x]] call _placeAt } forEach [-25, 0, 25] };
+[_depot] call _engineerOnly;
+_depot setVariable ["CQ_objType", "Depot"];
+_depot setVariable ["CQ_hqId", _id];
+_hq set ["depot", _depot];
+_depot addEventHandler ["Killed", {
+    private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
+    if (isNil "_hq") exitWith {};
+    ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
+    ["killDepot", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
+    params ["", "_k", "_i"];
+    [[_i, _k] select (isNull _i), 50, "supply depot"] call CQ_fnc_scoreAdd;
+    _hq set ["stock", 0];
+}];
+
+// Field resupply truck: driven out to groups short of ammo (CQ_fnc_fieldResupply)
+private _ftruck = [CQ_fieldTruckClass, -18, -20, 90] call _place;
+if (!isNull _ftruck) then {
+    _ftruck setAmmoCargo 0;
+    _ftruck lock 2;
+    _ftruck setVariable ["CQ_hqId", _id];
+    _ftruck addEventHandler ["Killed", {
+        private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
+        if (isNil "_hq") exitWith {};
+        ["Field supply truck destroyed", format ["HQ #%1 can no longer resupply its squads in the field", _hq get "id"]] call CQ_fnc_announce;
+    }];
+    _hq set ["fieldTruckHome", getPosATL _ftruck];
+};
+_hq set ["fieldTruck", _ftruck];
+if (!isNull _depot) then { (_hq get "installations") pushBack _depot };
+_hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
+[4, format ["supply depot (%1 ammo), field supply truck", round (_hq get "stock")]] call _stage;
+
+// Stage 5 - fuel tanker
+call _wait;
+// Fuel tanker: holds the HQ's fuel. Any weapon can destroy it.
+private _tanker = [CQ_tankerClass, _sites select 2, 90] call _placeAt;
+if (!isNull _tanker) then {
+    _tanker setFuelCargo 0;           // players can't refuel from it
+    _tanker lock 2;
+    _tanker setVariable ["CQ_hqId", _id];
+    _tanker addEventHandler ["Killed", {
+        private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
+        if (isNil "_hq") exitWith {};
+        ["Fuel tanker destroyed", format ["HQ #%1 lost its %2 fuel: no more refuelling there", _hq get "id", round (_hq get "fuel")]] call CQ_fnc_announce;
+        _hq set ["fuel", 0];
+    }];
+};
+_hq set ["tanker", _tanker];
+if (!isNull _tanker) then { _tanker setVariable ["CQ_objType", "Fuel tanker"] };
+
+if (!isNull _tanker) then { (_hq get "installations") pushBack _tanker };
+_hq set ["fuel", [(_hq get "fuelInit") min (_hq get "cap"), 0] select (isNull _tanker)];
+[5, format ["fuel tanker (%1 fuel)", round (_hq get "fuel")]] call _stage;
+
+// Stage 6 - helipad with the QRF helicopter, command building, sandbag ring
+call _wait;
+private _pad = ["Land_HelipadSquare_F", 26, 0, 0, true] call _place;
+_hq set ["pad", _pad];
+if (!isNull _pad) then {
+    private _heli = createVehicle [CQ_hqHeliClass, getPosATL _pad, [], 0, "CAN_COLLIDE"];
+    _heli setDir _d;
+    private _hg = [_heli] call CQ_fnc_crewVehicle;
+    _hg setBehaviour "SAFE";
+    _heli engineOn false;
+    [_heli] call CQ_fnc_airLoadout;
+    [_heli, 1] call CQ_fnc_vehAmmoInit;
+    [_heli, _hg, "armed", _id, _pad, [], true] call CQ_fnc_airRegister;
+    (_hq get "support") pushBack _hg;
+};
+
+private _bld = ["Land_Cargo_HQ_V1_F", 0, 0, 0, true] call _place;
+_hq set ["building", _bld];
+
+// sandbag ring, radius 13 m, gaps at the front (0) and back (180)
+for "_a" from 15 to 345 step 15 do {
+    if (_a != 180) then {
+        ["Land_BagFence_Long_F", 13 * sin _a, 13 * cos _a, _a + 90] call _place;
+    };
+};
+
+[6, "helipad with QRF helicopter, command building, sandbag ring"] call _stage;
 
 // Recall the perimeter squads and set the garrison
 [_hq] call CQ_fnc_hqGarrison;
