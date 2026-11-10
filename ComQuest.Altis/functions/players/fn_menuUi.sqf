@@ -25,11 +25,11 @@ private _items = [
 ];
 if (_admin) then { _items pushBack ["DEBUG PANEL", "Test commands (F3)", { [] spawn CQ_fnc_debugUi }] };
 
-private _L = 0.05;
-private _W = safeZoneW * 0.2;
-private _H = _L * (1.6 + 1.15 * count _items) + 0.02;
-private _X = safeZoneX + (safeZoneW - _W) / 2;
-private _Y = safeZoneY + (safeZoneH - _H) / 2;
+private _ml = 0.05;
+private _mw = safeZoneW * 0.2;
+private _mh = _ml * (1.6 + 1.15 * count _items) + 0.02;
+private _mx = safeZoneX + (safeZoneW - _mw) / 2;
+private _my = safeZoneY + (safeZoneH - _mh) / 2;
 private _mk = {
     params ["_cls", "_pos", ["_txt", ""]];
     private _c = _d ctrlCreate [_cls, -1];
@@ -38,15 +38,15 @@ private _mk = {
     _c ctrlCommit 0;
     _c
 };
-(["RscText", [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0.03, 0.04, 0.03, 0.9];
-(["RscText", [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor [0.12, 0.16, 0.1, 0.95];
-(["RscText", [_X + 0.01, _Y + 0.005, _W - 0.07, _L], "COMQUEST"] call _mk) ctrlSetTextColor [0.78, 0.88, 0.48, 1];
-private _xb = ["RscButton", [_X + _W - 0.05, _Y + 0.005, 0.04, _L], "X"] call _mk;
+(["RscText", [_mx, _my, _mw, _mh]] call _mk) ctrlSetBackgroundColor [0.03, 0.04, 0.03, 0.9];
+(["RscText", [_mx, _my, _mw, _ml * 1.1]] call _mk) ctrlSetBackgroundColor [0.12, 0.16, 0.1, 0.95];
+(["RscText", [_mx + 0.01, _my + 0.005, _mw - 0.07, _ml], "COMQUEST"] call _mk) ctrlSetTextColor [0.78, 0.88, 0.48, 1];
+private _xb = ["RscButton", [_mx + _mw - 0.05, _my + 0.005, 0.04, _ml], "X"] call _mk;
 _xb ctrlAddEventHandler ["ButtonClick", { (uiNamespace getVariable ["CQ_menuDisplay", displayNull]) closeDisplay 1 }];
 
 {
     _x params ["_label", "_tip", "_code"];
-    private _b = ["RscButton", [_X + 0.01, _Y + _L * (1.4 + 1.15 * _forEachIndex), _W - 0.02, _L], _label] call _mk;
+    private _b = ["RscButton", [_mx + 0.01, _my + _ml * (1.4 + 1.15 * _forEachIndex), _mw - 0.02, _ml], _label] call _mk;
     _b ctrlSetTooltip _tip;
     _b setVariable ["CQ_code", _code];
     _b ctrlAddEventHandler ["ButtonClick", {
