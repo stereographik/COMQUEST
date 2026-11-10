@@ -63,7 +63,7 @@ while { !isNull _d } do {
     private _owned = (_g getVariable ["CQ_sqBought", []]) select { alive _x };
     private _lead = !_solo && { leader _g == player };
     _head ctrlSetStructuredText parseText format [
-        "<t size='0.9' color='#8CB7BD'>%1   </t><t size='1' color='#D9F7FF'>%2</t><t size='0.9' color='#8CB7BD'> squad points   |   %3</t>",
+        "<t size='0.9' color='#A6A381'>%1   </t><t size='1' color='#F2F1DF'>%2</t><t size='0.9' color='#A6A381'> squad points   |   %3</t>",
         if (_solo) then { "No squad" } else { groupId _g }, _pts,
         if (_owned isEqualTo []) then { "no bought vehicle" } else { "bought vehicle in service: " + getText (configOf (_owned select 0) >> "displayName") }];
     private _i = lbCurSel _list;
@@ -80,7 +80,7 @@ while { !isNull _d } do {
             default { "" };
         };
         _info ctrlSetStructuredText parseText format [
-            "<t size='1.05' font='PuristaSemibold' color='#D9F7FF'>%1</t><br/><t size='0.8' color='#8CB7BD'>%2</t><br/><br/><t size='0.85' color='#B8D6DB'>%3</t><br/><br/><t size='0.8' color='#8CB7BD'>Seats: </t><t size='0.8' color='#D9F7FF'>%4</t><br/><t size='0.8' color='#8CB7BD'>Cost: </t><t size='0.8' color='#D9F7FF'>%5 squad points</t><br/><br/><t size='0.8' color='#FF8C7A'>%6</t><br/><br/><t size='0.7' color='#5E7F84'>Squad points come from your squad's kills, destroyed vehicles and objectives. Bought vehicles spawn on the shop pad and do not respawn.</t>",
+            "<t size='1.05' font='PuristaSemibold' color='#F2F1DF'>%1</t><br/><t size='0.8' color='#A6A381'>%2</t><br/><br/><t size='0.85' color='#CFCDB3'>%3</t><br/><br/><t size='0.8' color='#A6A381'>Seats: </t><t size='0.8' color='#F2F1DF'>%4</t><br/><t size='0.8' color='#A6A381'>Cost: </t><t size='0.8' color='#F2F1DF'>%5 squad points</t><br/><br/><t size='0.8' color='#D45A4C'>%6</t><br/><br/><t size='0.7' color='#7A7860'>Squad points come from your squad's kills, destroyed vehicles and objectives. Bought vehicles spawn on the shop pad and do not respawn.</t>",
             _name, getText (_cfg >> "displayName"), _desc, ([_cls, true] call BIS_fnc_crewCount), _cost, _why];
     };
     _buy ctrlEnable (_it isNotEqualTo [] && { _why == "" });

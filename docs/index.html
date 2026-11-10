@@ -8,17 +8,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Michroma&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* Layout idea: a field-ops dossier. Black sheet, huge wide display type, small mono labels,
+/* Colours: project chart #00272B #918C3B #A6A381 #F2F1DF #BA392C.
+   Layout idea: a field-ops dossier. Black sheet, huge wide display type, small mono labels,
    duotone teal imagery cut by rose blocks and HUD crosshairs, a ticker between chapters. */
 :root{
-  --ink:#0d0f10;          /* page */
-  --sheet:#151819;        /* panels */
-  --line:#2a3133;         /* rules and grid */
-  --paper:#eef1ef;        /* main text */
-  --mute:#8d9a99;         /* secondary text */
-  --teal:#7fb6b5;         /* friendly, scan, accent */
-  --teal-d:#28494b;
-  --rose:#f2c3cd;         /* enemy, heat, alarms */
+  --ink:#00272B;          /* page */
+  --sheet:#03333A;        /* panels */
+  --line:#1E4A4C;         /* rules and grid */
+  --paper:#F2F1DF;        /* main text */
+  --mute:#A6A381;         /* secondary text */
+  --teal:#918C3B;         /* friendly, scan, accent */
+  --teal-d:#5E5B28;
+  --rose:#BA392C;         /* enemy, heat, alarms */
   --display:"Michroma","Eurostile","Arial Black",sans-serif;
   --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
@@ -35,7 +36,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;text-transform:uppercase;tex
 h2{font-size:clamp(28px,4.6vw,56px);line-height:1.02;letter-spacing:-.01em}
 h3{font-size:15px;letter-spacing:.04em;line-height:1.3}
 p{margin:0;max-width:65ch}
-.lead{font-size:18px;color:#cfd6d4}
+.lead{font-size:18px;color:#E3E1C9}
 
 /* top bar */
 .bar{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 0;border-bottom:1px solid var(--line)}
@@ -48,7 +49,7 @@ p{margin:0;max-width:65ch}
 .hero-top .w:last-child{text-align:right}
 .hero-top .meta{text-align:center;line-height:1.5}
 .hero h1{font-size:clamp(64px,15.5vw,190px);line-height:.86;letter-spacing:-.02em;margin:8px 0 18px;white-space:nowrap}
-.plate{position:relative;border:1px solid var(--line);background:#0a1415;overflow:hidden}
+.plate{position:relative;border:1px solid var(--line);background:#001E21;overflow:hidden}
 .plate canvas{display:block;width:100%;height:auto}
 #plate{aspect-ratio:1180/520;height:auto}
 .plate .tag{position:absolute;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:rgba(13,15,16,.72);padding:4px 8px}
@@ -60,7 +61,7 @@ p{margin:0;max-width:65ch}
 
 /* ticker */
 .ticker{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;background:var(--ink)}
-.ticker div{display:inline-block;padding:10px 0;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5d6a69;animation:tick 60s linear infinite}
+.ticker div{display:inline-block;padding:10px 0;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#A6A381;animation:tick 60s linear infinite}
 .ticker i{font-style:normal;color:var(--teal);margin:0 18px}
 @keyframes tick{to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.ticker div{animation:none}}
@@ -76,7 +77,7 @@ section{padding:72px 0}
 .cell{background:var(--ink);padding:22px 20px;position:relative}
 .cell .mono{display:block;margin-bottom:8px}
 .cell h3{margin-bottom:8px}
-.cell p{color:#c4ccca;font-size:15px}
+.cell p{color:#D9D7C2;font-size:15px}
 .cell.hot .mono{color:var(--rose)}
 .cell.cool .mono{color:var(--teal)}
 .x::before,.x::after{content:"+";position:absolute;font-family:var(--mono);font-size:14px;color:var(--teal);line-height:1}
@@ -89,15 +90,15 @@ section{padding:72px 0}
 /* escalation */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
 .steps div{background:var(--ink);padding:22px 20px}
-.steps div:nth-child(1){box-shadow:inset 0 3px 0 #5f7a79}
-.steps div:nth-child(2){box-shadow:inset 0 3px 0 #d79aa7}
+.steps div:nth-child(1){box-shadow:inset 0 3px 0 #A6A381}
+.steps div:nth-child(2){box-shadow:inset 0 3px 0 #918C3B}
 .steps div:nth-child(3){box-shadow:inset 0 3px 0 var(--rose)}
 .steps b{font-family:var(--mono);font-size:12px;letter-spacing:.1em;display:block;margin-bottom:8px}
 
 /* tables */
 .tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl th{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
-.tbl td{padding:10px 12px;border-bottom:1px solid #1d2224}
+.tbl td{padding:10px 12px;border-bottom:1px solid #1E4A4C}
 .tbl td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
 .tbl th.n{text-align:right}
 .tblbox{overflow-x:auto;border:1px solid var(--line);background:var(--sheet)}
@@ -105,21 +106,21 @@ section{padding:72px 0}
 /* radio */
 .radio{display:grid;gap:10px}
 .msg{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:start;background:var(--sheet);border-left:3px solid var(--teal);padding:12px 14px}
-.msg.e{border-left-color:var(--rose)}.msg.u{border-left-color:#cfd6d4}
+.msg.e{border-left-color:var(--rose)}.msg.u{border-left-color:#E3E1C9}
 .msg .mono{color:var(--paper)}
-.msg p{font-family:var(--mono);font-size:13px;color:#cfd6d4}
+.msg p{font-family:var(--mono);font-size:13px;color:#E3E1C9}
 .mag{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}
 .mag span{font-family:var(--mono);font-size:12px;color:var(--paper)}
 .mag em{font-style:normal;color:var(--rose)}
 
 /* menu mock */
 .menu{background:var(--sheet);border:1px solid var(--line);max-width:300px}
-.menu .t{display:flex;justify-content:space-between;padding:10px 12px;background:#1d2a25;font-family:var(--display);font-size:13px;color:#cfe08c}
-.menu button{display:block;width:calc(100% - 20px);margin:8px 10px;padding:10px;background:#262b2c;border:0;color:var(--paper);font:500 13px var(--body);letter-spacing:.05em;text-align:left;cursor:default}
+.menu .t{display:flex;justify-content:space-between;padding:10px 12px;background:#00272B;font-family:var(--display);font-size:13px;color:#F2F1DF}
+.menu button{display:block;width:calc(100% - 20px);margin:8px 10px;padding:10px;background:#5E5B28;border:0;color:var(--paper);font:500 13px var(--body);letter-spacing:.05em;text-align:left;cursor:default}
 .menu button span{float:right;font-family:var(--mono);font-size:10px;color:var(--mute);text-transform:uppercase}
 .signal{display:inline-grid;grid-template-columns:auto auto;gap:4px 14px;align-items:center;background:rgba(13,15,16,.8);border:1px solid var(--line);padding:10px 14px;margin-top:18px}
 .signal b{font-family:var(--display);font-size:28px;font-weight:400}
-.meter{grid-column:1/-1;height:4px;background:#243032}.meter i{display:block;height:100%;width:65%;background:var(--teal)}
+.meter{grid-column:1/-1;height:4px;background:#1E4A4C}.meter i{display:block;height:100%;width:65%;background:var(--teal)}
 
 footer{border-top:1px solid var(--line);padding:28px 0 48px}
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -439,16 +440,16 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
     const coast=y=>0.82+0.05*Math.sin(y*7)+0.03*Math.sin(y*17);
     function draw(now){
       const tt=reduce?999:(now-t0)/1000, cyc=nodes.length*STEP+HOLD, t=reduce?999:tt%cyc;
-      ctx.fillStyle='#0f2427'; ctx.fillRect(0,0,W,H);                     // land
-      ctx.strokeStyle='rgba(127,182,181,.07)'; ctx.lineWidth=1;            // grid
+      ctx.fillStyle='#013238'; ctx.fillRect(0,0,W,H);                     // land
+      ctx.strokeStyle='rgba(145,140,59,.07)'; ctx.lineWidth=1;            // grid
       for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
       for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
-      ctx.fillStyle='#0a1415'; ctx.beginPath(); ctx.moveTo(W,0);           // sea
+      ctx.fillStyle='#001E21'; ctx.beginPath(); ctx.moveTo(W,0);           // sea
       for(let y=0;y<=1.0001;y+=0.02) ctx.lineTo(coast(y)*W,y*H);
       ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle='rgba(127,182,181,.45)'; ctx.beginPath();
+      ctx.strokeStyle='rgba(145,140,59,.45)'; ctx.beginPath();
       for(let y=0;y<=1.0001;y+=0.02) y?ctx.lineTo(coast(y)*W,y*H):ctx.moveTo(coast(y)*W,0); ctx.stroke();
-      ctx.strokeStyle='rgba(127,182,181,.13)';                             // contours
+      ctx.strokeStyle='rgba(145,140,59,.13)';                             // contours
       contours.forEach(c=>{ for(let j=1;j<=4;j++){ ctx.beginPath();
         for(let a=0;a<=Math.PI*2+0.01;a+=0.12){ const rr=c.r*j*0.42*(1+0.18*Math.sin(a*3+c.k)); const px=(c.cx+Math.cos(a)*rr)*W, py=(c.cy+Math.sin(a)*rr*0.8)*H; a===0?ctx.moveTo(px,py):ctx.lineTo(px,py) }
         ctx.stroke() } });
@@ -458,21 +459,21 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
       nodes.forEach((n,i)=>{
         const age=t-i*STEP; if(age<0) return;
         const from=n.p<0?car:pos(nodes[n.p]), to=pos(n), f=Math.min(1,age/1.2);
-        ctx.strokeStyle='rgba(242,195,205,.6)'; ctx.setLineDash([4,5]);
+        ctx.strokeStyle='rgba(186,57,44,.6)'; ctx.setLineDash([4,5]);
         ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(from.x+(to.x-from.x)*f,from.y+(to.y-from.y)*f); ctx.stroke(); ctx.setLineDash([]);
         if(f<1) return;
         planted++;
         const built=Math.min(4,Math.floor((age-1.2)/0.35)), s=7;
-        ctx.strokeStyle='#f2c3cd'; ctx.lineWidth=2; ctx.strokeRect(to.x-s,to.y-s,s*2,s*2);
-        ctx.fillStyle='#f2c3cd'; for(let k=0;k<built;k++) ctx.fillRect(to.x-s+2+k*3,to.y-s+2,2,s*2-4);
-        if(built>=4 && !reduce){ const pulse=(tt*0.6+i*0.3)%1; ctx.strokeStyle=`rgba(242,195,205,${0.4*(1-pulse)})`; ctx.beginPath(); ctx.arc(to.x,to.y,10+pulse*26,0,Math.PI*2); ctx.stroke() }
+        ctx.strokeStyle='#BA392C'; ctx.lineWidth=2; ctx.strokeRect(to.x-s,to.y-s,s*2,s*2);
+        ctx.fillStyle='#BA392C'; for(let k=0;k<built;k++) ctx.fillRect(to.x-s+2+k*3,to.y-s+2,2,s*2-4);
+        if(built>=4 && !reduce){ const pulse=(tt*0.6+i*0.3)%1; ctx.strokeStyle=`rgba(186,57,44,${0.4*(1-pulse)})`; ctx.beginPath(); ctx.arc(to.x,to.y,10+pulse*26,0,Math.PI*2); ctx.stroke() }
         ctx.lineWidth=1;
-        ctx.strokeStyle='rgba(238,241,239,.5)'; ctx.beginPath(); ctx.moveTo(to.x+12,to.y-14); ctx.lineTo(to.x+20,to.y-14); ctx.moveTo(to.x+16,to.y-18); ctx.lineTo(to.x+16,to.y-10); ctx.stroke();
-        ctx.fillStyle='rgba(238,241,239,.85)'; ctx.fillText(names[i]+'  '+built+'/4',to.x+12,to.y+4);
+        ctx.strokeStyle='rgba(242,241,223,.5)'; ctx.beginPath(); ctx.moveTo(to.x+12,to.y-14); ctx.lineTo(to.x+20,to.y-14); ctx.moveTo(to.x+16,to.y-18); ctx.lineTo(to.x+16,to.y-10); ctx.stroke();
+        ctx.fillStyle='rgba(242,241,223,.85)'; ctx.fillText(names[i]+'  '+built+'/4',to.x+12,to.y+4);
       });
-      ctx.fillStyle='#f2c3cd'; ctx.beginPath();                            // carrier
+      ctx.fillStyle='#BA392C'; ctx.beginPath();                            // carrier
       ctx.moveTo(car.x-22,car.y-4); ctx.lineTo(car.x+18,car.y-4); ctx.lineTo(car.x+24,car.y); ctx.lineTo(car.x+18,car.y+4); ctx.lineTo(car.x-22,car.y+4); ctx.closePath(); ctx.fill();
-      ctx.fillStyle='rgba(238,241,239,.85)';
+      ctx.fillStyle='rgba(242,241,223,.85)';
       ctx.textAlign='right'; ctx.fillText('CSAT CARRIER  '+Math.round(100*(1-planted/nodes.length))+'%',W-14,car.y+22); ctx.textAlign='left';
       if(!reduce) requestAnimationFrame(draw);
     }
@@ -481,16 +482,16 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
 
   // base plan
   const b=document.getElementById('base'), q=b.getContext('2d'), bw=b.width, bh=b.height;
-  q.fillStyle='#0a1415'; q.fillRect(0,0,bw,bh);
-  q.strokeStyle='rgba(127,182,181,.08)'; for(let x=0;x<bw;x+=30){q.beginPath();q.moveTo(x,0);q.lineTo(x,bh);q.stroke()} for(let y=0;y<bh;y+=30){q.beginPath();q.moveTo(0,y);q.lineTo(bw,y);q.stroke()}
+  q.fillStyle='#001E21'; q.fillRect(0,0,bw,bh);
+  q.strokeStyle='rgba(145,140,59,.08)'; for(let x=0;x<bw;x+=30){q.beginPath();q.moveTo(x,0);q.lineTo(x,bh);q.stroke()} for(let y=0;y<bh;y+=30){q.beginPath();q.moveTo(0,y);q.lineTo(bw,y);q.stroke()}
   q.save(); q.translate(bw*0.5,bh*0.5); q.rotate(-0.68);
-  q.fillStyle='#22292b'; q.fillRect(-380,-150,760,44); q.setLineDash([14,12]); q.strokeStyle='rgba(238,241,239,.5)'; q.beginPath(); q.moveTo(-370,-128); q.lineTo(370,-128); q.stroke(); q.setLineDash([]);
-  q.strokeStyle=T; q.lineWidth=2; q.strokeRect(-70,0,140,100); q.fillStyle='rgba(127,182,181,.12)'; q.fillRect(-70,0,140,100);
-  for(let i=0;i<4;i++){ for(let k=0;k<6;k++){ q.fillStyle='rgba(238,241,239,'+(0.35+k*0.08)+')'; q.fillRect(-60+i*34, -20-k*14-(k*k), 14+k*2, 8) } q.fillStyle=R; q.fillRect(-60+i*34,-100-10, 18, 6) }
+  q.fillStyle='#1E4A4C'; q.fillRect(-380,-150,760,44); q.setLineDash([14,12]); q.strokeStyle='rgba(242,241,223,.5)'; q.beginPath(); q.moveTo(-370,-128); q.lineTo(370,-128); q.stroke(); q.setLineDash([]);
+  q.strokeStyle=T; q.lineWidth=2; q.strokeRect(-70,0,140,100); q.fillStyle='rgba(145,140,59,.12)'; q.fillRect(-70,0,140,100);
+  for(let i=0;i<4;i++){ for(let k=0;k<6;k++){ q.fillStyle='rgba(242,241,223,'+(0.35+k*0.08)+')'; q.fillRect(-60+i*34, -20-k*14-(k*k), 14+k*2, 8) } q.fillStyle=R; q.fillRect(-60+i*34,-100-10, 18, 6) }
   q.fillStyle=R; q.fillRect(110,20,36,26);
-  for(let i=0;i<10;i++){ q.strokeStyle='rgba(127,182,181,.7)'; q.strokeRect(-200+(i%4)*24, 40+Math.floor(i/4)*24, 14, 14) }
+  for(let i=0;i<10;i++){ q.strokeStyle='rgba(145,140,59,.7)'; q.strokeRect(-200+(i%4)*24, 40+Math.floor(i/4)*24, 14, 14) }
   q.restore();
-  q.fillStyle='rgba(238,241,239,.85)'; q.font='11px "IBM Plex Mono",monospace';
+  q.fillStyle='rgba(242,241,223,.85)'; q.font='11px "IBM Plex Mono",monospace';
   [['RUNWAY',bw*0.08,bh*0.32],['HQ COMPOUND',bw*0.56,bh*0.68],['4 VEHICLE ROWS',bw*0.5,bh*0.2],['REPAIR',bw*0.66,bh*0.3],['SHOP',bw*0.72,bh*0.5],['UAV FIELD',bw*0.12,bh*0.72],['N ↑',bw-40,24]].forEach(t=>q.fillText(t[0],t[1],t[2]));
 })();
 </script>

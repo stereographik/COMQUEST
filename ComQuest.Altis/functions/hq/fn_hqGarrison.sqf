@@ -44,7 +44,7 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
     _cmd setVariable ["CQ_hqId", _id];
     _hq set ["commander", _cmd];
     // Capture: hold action for every player (JIP too), only once his guards are down
-    [_cmd, "<t color='#7FF2FF'>Capture the commander</t>",
+    [_cmd, "<t color='#918C3B'>Capture the commander</t>",
         "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_secure_ca.paa",
         "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_secure_ca.paa",
         "alive _target && { _this distance _target < 3 } && { !(_target getVariable ['CQ_captured', false]) } && { ({ alive _x && { side group _x == east } && { _x != _target } } count (_target nearEntities ['CAManBase', 15])) == 0 }",

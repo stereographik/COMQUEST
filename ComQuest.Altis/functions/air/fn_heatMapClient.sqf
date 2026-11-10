@@ -5,7 +5,7 @@
         sampled every CQ_heatFine m
       - heightmap mask: the local relief (terrain height against the ground 200 m around)
         bends the contours (CQ_heatTerrain), so the bands follow ridges and valleys
-      - quantised in CQ_heatBands stepped bands, blue -> cyan -> green -> yellow -> orange -> red
+      - quantised in CQ_heatBands stepped bands, chart colours cream -> sage -> olive -> red
       - one flat tile per sample, final opacity CQ_heatAlpha (10 %)
     Built once per packet (every 10 s), not per frame; only tiles on screen are drawn, at most
     CQ_heatMaxTiles, strongest first. The Draw handler is added first, so the other scripted
@@ -16,8 +16,8 @@ if (!hasInterface || { !CQ_heatEnabled }) exitWith {};
     disableSerialization;
     waitUntil { sleep 0.5; !isNull ((findDisplay 12) displayCtrl 51) };
     CQ_heatTiles = [];
-    // palette: band 0..1 -> colour (image look: blue, cyan, green, yellow, orange, red)
-    CQ_heatRamp = [[0, [0.25, 0.3, 1]], [0.22, [0, 0.85, 1]], [0.42, [0.2, 0.95, 0.35]], [0.62, [1, 0.95, 0.15]], [0.8, [1, 0.55, 0]], [1, [1, 0.1, 0.05]]];
+    // palette: band 0..1 -> colour, from the project colour chart (cream -> sage -> olive -> red)
+    CQ_heatRamp = [[0, [0.949, 0.945, 0.875]], [0.3, [0.651, 0.639, 0.506]], [0.6, [0.569, 0.549, 0.231]], [1, [0.729, 0.224, 0.173]]];   // chart: cream, sage, olive, red
     // rebuild the tiles in the background when a new packet arrives
     [] spawn {
         while { true } do {

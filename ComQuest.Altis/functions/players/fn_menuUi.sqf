@@ -58,9 +58,9 @@ private _bh = (_sh - _gy * (_rows + 1)) / _rows;
     private _b = ["RscButton", [_sx + _gx + _c * (_bw + _gx), _sy + _gy + _r * (_bh + _gy), _bw, _bh], _label] call _mk;
     _b ctrlSetFontHeight (_bh * 0.42);
     _b ctrlSetFont "PuristaMedium";
-    _b ctrlSetBackgroundColor [0.02, 0.16, 0.19, 0.85];
-    _b ctrlSetActiveColor [0.5, 0.95, 1, 1];
-    _b ctrlSetTextColor [0.85, 0.97, 1, 1];
+    _b ctrlSetBackgroundColor (CQ_ui get "button");
+    _b ctrlSetActiveColor (CQ_ui get "buttonActive");
+    _b ctrlSetTextColor (CQ_ui get "text");
     _b ctrlSetTooltip _tip;
     _b setVariable ["CQ_code", _code];
     _b ctrlAddEventHandler ["ButtonClick", {

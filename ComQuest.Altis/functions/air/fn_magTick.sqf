@@ -489,12 +489,12 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
             "\A3\ui_f\data\map\vehicleicons\iconHelicopter_ca.paa"
         ];
         private _rich = "<rich>";
-        { _rich = _rich + format ["<br/><t size='0.8' color='#D9F7FF'>%1</t>", _x] } forEach _news;
+        { _rich = _rich + format ["<br/><t size='0.8' color='#F2F1DF'>%1</t>", _x] } forEach _news;
         {
             private _row = _tab get _x;
             private _cells = "";
             { if ((_row select _forEachIndex) > 0) then { _cells = _cells + format ["   <img size='0.75' image='%1'/> %2", _x, _row select _forEachIndex] } } forEach _ico;
-            _rich = _rich + format ["<br/><t size='0.78' font='PuristaMedium' color='#8CB7BD'>%1</t><t size='0.8' color='#D9F7FF'>%2</t>", _x, _cells];
+            _rich = _rich + format ["<br/><t size='0.78' font='PuristaMedium' color='#A6A381'>%1</t><t size='0.8' color='#F2F1DF'>%2</t>", _x, _cells];
         } forEach _order;
         ["magReport", [_rich]] call CQ_fnc_say;
         ["MAGPIE report: %1 new identifications, %2 HQ news, areas %3", [_new, count _news, _order]] call CQ_fnc_log;
