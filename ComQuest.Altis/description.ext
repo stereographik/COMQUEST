@@ -59,7 +59,7 @@ class CfgNotifications
         description = "%2";
         iconPicture = "\A3\ui_f\data\map\markers\military\warning_ca.paa";
         iconText = "";
-        color[] = {1, 0.55, 0.2, 1};
+        color[] = {0.569, 0.549, 0.231, 1};   // chart olive
         duration = 7;
         priority = 5;
     };
@@ -69,7 +69,7 @@ class CfgNotifications
         description = "%2";
         iconPicture = "\A3\ui_f\data\igui\cfg\simpleTasks\types\radio_ca.paa";
         iconText = "";
-        color[] = {0.55, 0.8, 0.45, 1};
+        color[] = {0.651, 0.639, 0.506, 1};   // chart sage
         duration = 9;
         priority = 6;
     };

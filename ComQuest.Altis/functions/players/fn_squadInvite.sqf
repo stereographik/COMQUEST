@@ -45,7 +45,7 @@ _this spawn {
     _title ctrlSetTextColor (CQ_ui get "muted");
     private _msg = ["RscStructuredText", 14, 38, _W - 28, 50] call _mk;
     _msg ctrlSetStructuredText parseText format [
-        "<t font='PuristaLight' size='1.1' color='#D9F7FF'>%1</t><t font='PuristaLight' size='1.1' color='#8CB7BD'> invites you to join </t><t font='PuristaSemibold' size='1.1' color='#D9F7FF'>%2</t>", _lname, _sname];
+        "<t font='PuristaLight' size='1.1' color='#F2F1DF'>%1</t><t font='PuristaLight' size='1.1' color='#A6A381'> invites you to join </t><t font='PuristaSemibold' size='1.1' color='#F2F1DF'>%2</t>", _lname, _sname];
     private _timer = ["RscText", 16, _H - 40, 150, 26] call _mk;
     _timer ctrlSetFont "PuristaLight";
     _timer ctrlSetTextColor (CQ_ui get "dim");

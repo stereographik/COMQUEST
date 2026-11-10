@@ -228,15 +228,15 @@ CQ_loadZoneCount = 4;                    // loadout zones in the base parking ar
 CQ_loadZoneRadius = 9;
 // Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
 // [label, unit class (loadout), traits, max players in that class]
-// UI design: one look for every window (the field transceiver): Purista, deep teal panels,
-// teal buttons, pale cyan text. Structured text uses the matching hex colours.
+// UI design: one look for every window, from the project colour chart
+//   #00272B deep teal   #918C3B olive   #A6A381 khaki   #F2F1DF cream   #BA392C red
 CQ_ui = createHashMapFromArray [
     ["font", "PuristaMedium"], ["fontHead", "PuristaSemibold"], ["fontLight", "PuristaLight"],
-    ["panel", [0.02, 0.07, 0.08, 0.92]], ["header", [0.02, 0.16, 0.19, 0.95]], ["inset", [0, 0.03, 0.04, 0.5]],
-    ["button", [0.02, 0.16, 0.19, 0.85]], ["buttonOn", [0.13, 0.53, 0.6, 1]], ["buttonActive", [0.5, 0.95, 1, 1]],
-    ["text", [0.85, 0.97, 1, 1]], ["muted", [0.55, 0.75, 0.78, 1]], ["dim", [0.38, 0.5, 0.52, 1]],
-    ["accent", [0.5, 0.95, 1, 1]], ["alert", [1, 0.55, 0.48, 1]], ["warn", [1, 0.82, 0.5, 1]]
-];   // hex: text #D9F7FF, soft #B8D6DB, muted #8CB7BD, dim #5E7F84, accent #7FF2FF, alert #FF8C7A, warn #FFD27F
+    ["panel", [0, 0.153, 0.169, 0.93]], ["header", [0, 0.11, 0.122, 0.97]], ["inset", [0, 0.08, 0.09, 0.6]],
+    ["button", [0.569, 0.549, 0.231, 0.85]], ["buttonOn", [0.729, 0.224, 0.173, 1]], ["buttonActive", [0.949, 0.945, 0.875, 1]],
+    ["text", [0.949, 0.945, 0.875, 1]], ["muted", [0.651, 0.639, 0.506, 1]], ["dim", [0.45, 0.44, 0.35, 1]],
+    ["accent", [0.569, 0.549, 0.231, 1]], ["alert", [0.729, 0.224, 0.173, 1]], ["warn", [0.651, 0.639, 0.506, 1]]
+];   // hex: text #F2F1DF, muted #A6A381, accent #918C3B, alert #BA392C
 CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
 CQ_menuScreen = [0.4072, 0.4023, 0.7100, 0.5479];   // its blue screen zone in the picture (fractions)
 CQ_bleedOut = 300;                       // s a downed player waits for a medic (ReviveBleedOutDelay in description.ext)

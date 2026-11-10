@@ -36,9 +36,9 @@ if (isNil "CQ_bleedKeyBound") then {
             private _medic = (allPlayers select { _x != _u && { alive _x } && { side group _x == west } && { lifeState _x != "INCAPACITATED" } && { _x getUnitTrait "Medic" } && { _x distance _u < CQ_bleedMedicRange } }) isNotEqualTo [];
             CQ_canBleed = !_medic;
             hintSilent parseText (if (_medic) then {
-                format ["<t size='1.1' color='#7FF2FF'>A medic is within %1 m</t><br/>Hold on.", CQ_bleedMedicRange]
+                format ["<t size='1.1' color='#918C3B'>A medic is within %1 m</t><br/>Hold on.", CQ_bleedMedicRange]
             } else {
-                format ["<t size='1.1' color='#FF8C7A'>No medic within %1 m</t><br/>Press <t color='#D9F7FF'>%2</t> to BLEEDOUT and respawn at the base.", CQ_bleedMedicRange, keyName CQ_bleedKey]
+                format ["<t size='1.1' color='#D45A4C'>No medic within %1 m</t><br/>Press <t color='#F2F1DF'>%2</t> to BLEEDOUT and respawn at the base.", CQ_bleedMedicRange, keyName CQ_bleedKey]
             });
         } else {
             if (CQ_canBleed) then { CQ_canBleed = false; hintSilent "" };
