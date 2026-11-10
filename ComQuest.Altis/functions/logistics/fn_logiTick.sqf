@@ -147,7 +147,6 @@ if (_hubId > -1 && { !CQ_ammoFlightActive } && { CQ_nextAmmoFlight > 0 } && { ti
 // ---- debug: stock report every minute
 if (CQ_debug && { time >= CQ_logiReportT }) then {
     CQ_logiReportT = time + 60;
-    { (format ["cq_hq_%1_exact", _x get "id"]) setMarkerText format ["DEBUG HQ #%1 %2 | ammo %3 fuel %4 /%5", _x get "id", _x get "state", round (_x get "stock"), round (_x get "fuel"), _x get "cap"] } forEach _built;
     private _parts = _built apply { format ["HQ%1%2 ammo %3 fuel %4 /%5", _x get "id", ["", "(main)"] select ((_x get "id") == _hubId), round (_x get "stock"), round (_x get "fuel"), _x get "cap"] };
     ["Stocks: %1 | trucks on the road %2 | aircraft %3 | enemy AI %4", [_parts joinString ", ", CQ_trucksActive, count CQ_air, call CQ_fnc_enemyCount]] call CQ_fnc_log;
 };

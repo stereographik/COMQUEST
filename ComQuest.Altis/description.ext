@@ -116,6 +116,7 @@ class CfgFunctions
             class callReinf {};
             class hqSplit {};
             class hqTick {};
+            class hqStatusMarker {};
             class hqBalance {};
             class moveGroups {};
             class cmdCapture {};

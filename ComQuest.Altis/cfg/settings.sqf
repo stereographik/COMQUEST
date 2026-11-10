@@ -5,6 +5,7 @@
 */
 
 CQ_debug = true;                         // log to systemChat as well as the .rpt
+CQ_playerView = true;                    // final player view by default: no debug chat, cards or markers (toggle in the debug panel)
 CQ_debugCards = false;                   // debug phase messages as orange cards too (story lines use the cards)
 
 // --- Director -------------------------------------------------------------
@@ -100,6 +101,8 @@ CQ_siteMaxGradient = 0.15;
 CQ_siteNoPlayerRadius = 800;
 CQ_siteMinHqSpacing = 1500;
 CQ_hqBuildStageTime = 120;               // seconds per construction stage (4 stages, 8 min)
+CQ_buildPauseRange = 400;                // m: BLUFOR this close to a site under construction stops the work
+CQ_buildPauseAfterContact = 120;         // s: and for this long after the HQ reports contact
 CQ_hqMarkerRadius = 400;                 // approximate circle shown to players
 CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted", "SatchelCharge_Remote_Ammo", "SatchelCharge_Remote_Ammo_Scripted"];
 

@@ -8,7 +8,7 @@
     Group leaders show their callsign; CSAT groups and vehicles also show role and ammo %.
 */
 if (!hasInterface) exitWith {};
-if (isNil "CQ_dbgShowEnemy") then { CQ_dbgShowEnemy = CQ_debug };
+if (isNil "CQ_dbgShowEnemy") then { CQ_dbgShowEnemy = false };     // switched on from the debug panel
 if (isNil "CQ_dbgShowFriend") then { CQ_dbgShowFriend = false };
 if (isNil "CQ_dbgShowHq") then { CQ_dbgShowHq = false };
 if (!isNil "CQ_dbgMapHooked") exitWith {};

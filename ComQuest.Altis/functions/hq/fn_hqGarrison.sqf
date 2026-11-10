@@ -88,27 +88,15 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
     };
 } forEach (_hq get "vehicles");
 
-// Map markers, once: approximate circle for players, exact marker only in debug
-if !(_hq get "markersMade") then {
+// Map markers, once: approximate circle only if CQ_playerMapMarkers (off: players find HQs
+// with the direction finder; a status marker appears when the HQ is fully built)
+if (!(_hq get "markersMade") && { CQ_playerMapMarkers }) then {
     _hq set ["markersMade", true];
-    if (!CQ_playerMapMarkers && { !CQ_debug }) exitWith {};   // players find HQs with the direction finder
     private _fuzzy = _c getPos [random (CQ_hqMarkerRadius * 0.6), random 360];
     private _m1 = createMarker [format ["cq_hq_%1_area", _id], _fuzzy];
     _m1 setMarkerShape "ELLIPSE";
     _m1 setMarkerSize [CQ_hqMarkerRadius, CQ_hqMarkerRadius];
     _m1 setMarkerBrush "Border";
     _m1 setMarkerColor "ColorOPFOR";
-    private _m2 = createMarker [format ["cq_hq_%1_label", _id], _fuzzy];
-    _m2 setMarkerType "o_hq";
-    _m2 setMarkerColor "ColorOPFOR";
-    _m2 setMarkerText format ["Objective %1", [_id] call CQ_fnc_objName];
-    (_hq get "markers") append [_m1, _m2];
-
-    if (CQ_debug) then {
-        private _m3 = createMarker [format ["cq_hq_%1_exact", _id], _c];
-        _m3 setMarkerType "mil_destroy";
-        _m3 setMarkerColor "ColorRed";
-        _m3 setMarkerText format ["DEBUG exact HQ #%1 (%2)", _id, [_id] call CQ_fnc_objName];
-        (_hq get "markers") pushBack _m3;
-    };
+    (_hq get "markers") pushBack _m1;
 };
