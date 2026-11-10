@@ -6,7 +6,7 @@
       0 BLACK      time and date, then the place (CQ_introPlace), typed small, then a fade
       1 SATELLITE  Altis from very high, almost still, a slow drift
       2 COAST      low and wide on a quiet east-coast village, calm sea, slow pan
-      3 SQUAD      a friendly fire team moving tactically on a hilltop, sea behind, the leader
+      3 SQUAD      three guerilla fighters moving tactically on a hilltop, sea behind, the leader
                    signalling and the men answering (local soldiers driven by animations)
       4 LANDING    an MH-9 Hummingbird settling at the muster area, seen from behind
       5 BLACK      fade out
@@ -194,7 +194,7 @@ call {
     [_tCoast] call _nap;
     if (CQ_introSkip) exitWith {};
 
-    // ---- 3 SQUAD: a friendly fire team moving tactically along a hilltop, sea behind them.
+    // ---- 3 SQUAD: three guerilla fighters moving tactically along a hilltop, sea behind them.
     // The leader signals, the men answer: they go from a careful walk to a crouch, then on.
     // Local, brainless soldiers driven by animations (only on your screen), deleted at the end.
     call _dip;
@@ -223,7 +223,7 @@ call {
         _u switchMove "AmovPercMwlkSrasWrflDf";                 // careful walk, weapon up
         _locals pushBack _u;
         _men pushBack _u;
-    } forEach [["B_Soldier_SL_F", 0, 0], ["B_Soldier_F", 3, 5], ["B_soldier_AR_F", -3, 9], ["B_Soldier_GL_F", 2, 14], ["B_soldier_LAT_F", -2, 18], ["B_medic_F", 1, 22]];
+    } forEach [["O_G_Soldier_SL_F", 0, 0], ["O_G_Soldier_AR_F", 3, 6], ["O_G_Soldier_LAT_F", -2, 11]];
     // camera inland of them, low, looking past the team to the sea
     private _cp = (_best getPos [26, _seaDir + 180]) getPos [6, _walkDir + 180];
     _cam camSetPos [_cp select 0, _cp select 1, 1.7];
@@ -244,13 +244,13 @@ call {
         };
         if (_phase == 1 && { _e > _tFlight * 0.45 }) then {
             _phase = 2;                                         // the team takes a knee
-            { _x switchMove "AmovPknlMstpSrasWrflDnon" } forEach (_men select [1, 5]);
+            { _x switchMove "AmovPknlMstpSrasWrflDnon" } forEach (_men select [1, 2]);
         };
         if (_phase == 2 && { _e > _tFlight * 0.7 }) then {
             _phase = 3;                                         // "move up": on again, crouched
             (_men select 0) playActionNow "gestureAdvance";
             (_men select 0) switchMove "AmovPercMwlkSrasWrflDf";
-            { _x playMove "AmovPknlMwlkSrasWrflDf" } forEach (_men select [1, 5]);
+            { _x playMove "AmovPknlMwlkSrasWrflDf" } forEach (_men select [1, 2]);
         };
         uiSleep 0.05;
     };
@@ -265,14 +265,26 @@ call {
     _cam camSetFov 0.6;
     _cam camCommit 0;
     _hb hideObject false;
-    // a slow vertical descent, from a few metres down to about 1 m above the pad, engine and
-    // rotors running; it never touches the ground. Moved every frame, height only.
-    CQ_introLand = [_hook, _lz, _gz, time, _tLand];
+    detach _hb;
+    _hb engineOn true;                                          // engine sound and turning rotors
+    // a slow vertical descent, from a few metres down to about 1 m above the pad, never touching.
+    // Every frame the helicopter is given its next position through setVelocityTransformation:
+    // the engine interpolates between frames, so the motion is perfectly smooth.
+    CQ_introLand = [_hb, _lz, _gz, _lzDir, time, _tLand, time];
     private _landEh = addMissionEventHandler ["EachFrame", {
-        CQ_introLand params ["_hook", "_lz", "_gz", "_t0", "_dur"];
-        private _k = ((time - _t0) / _dur) max 0 min 1;
-        private _s = _k * (2 - _k);                             // ease out: slower near the end
-        _hook setPosASL [_lz select 0, _lz select 1, _gz + CQ_introHoverTop - (CQ_introHoverTop - CQ_introHoverLow) * _s];
+        CQ_introLand params ["_h", "_lz", "_gz", "_dir", "_t0", "_dur", "_tPrev"];
+        private _f = {
+            params ["_t"];
+            private _k = ((_t - _t0) / _dur) max 0 min 1;
+            private _s = _k * _k * (3 - 2 * _k);                // smoothstep: soft start, soft stop
+            AGLToASL [_lz select 0, _lz select 1, 0] vectorAdd [0, 0, CQ_introHoverTop - (CQ_introHoverTop - CQ_introHoverLow) * _s]
+        };
+        private _p0 = [_tPrev] call _f;
+        private _p1 = [time] call _f;
+        private _v = if (time > _tPrev) then { (_p1 vectorDiff _p0) vectorMultiply (1 / (time - _tPrev)) } else { [0, 0, 0] };
+        private _vd = [sin _dir, cos _dir, 0];
+        _h setVelocityTransformation [_p0, _p1, _v, _v, _vd, _vd, [0, 0, 1], [0, 0, 1], 1];
+        CQ_introLand set [6, time];
     }];
     _bl cutText ["", "BLACK IN", CQ_introFade];
     [_tLand] call _nap;
