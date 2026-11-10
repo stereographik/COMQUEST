@@ -38,6 +38,8 @@ for "_t" from 1 to CQ_tigrisPerInsertion do {
         ['Tigris down for HQ #%1 at grid %%1', [mapGridPosition _v]] call CQ_fnc_log;
     ", _id], "Tigris"] spawn CQ_fnc_paraDropVehicle;
 };
+// snipers: high ground ~1 km west of the HQ, driven out by the medic and engineer teams
+[_id] spawn CQ_fnc_sniperQueue;
 private _hqDir = _hq get "dir";
 
 // Helis take off from the carrier (fallback: from the side opposite the player base)
@@ -69,13 +71,6 @@ private _lzAt = {
 ["Enemy insertion inbound", format ["HQ #%1: CSAT heavy helicopters leaving the carrier, %2 km out, heading for grid %3",
     _id, round ((_start distance2D _site) / 100) / 10, mapGridPosition _site]] call CQ_fnc_announce;
 
-if (CQ_debug) then {
-    private _m = createMarker [format ["cq_dbg_site_%1", _id], _site];
-    _m setMarkerType "mil_objective";
-    _m setMarkerColor "ColorOPFOR";
-    _m setMarkerText format ["DEBUG site HQ #%1", _id];
-    (_hq get "markers") pushBack _m;
-};
 
 // ---------------------------------------------------------------- vehicle drop planes
 // Each vehicle flies inside a Mohawk (vehicle transport, Vehicle-in-Vehicle) and is

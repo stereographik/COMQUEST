@@ -15,6 +15,8 @@ addMissionEventHandler ["EntityKilled", {
     params ["_unit", "_killer", "_inst"];
     if (isNull _inst) then { _inst = effectiveCommander _killer };
     if (isNull _inst && { !isNull _killer }) then { _inst = _killer };
+    private _hid = _unit getVariable ["CQ_hqId", -1];      // HQ objective: remember who did it (HUNTERS target)
+    if (_hid > -1 && { !isNull _inst } && { isPlayer _inst }) then { (CQ_hqs getOrDefault [_hid, createHashMap]) set ["lastKiller", _inst] };
     private _side = side group _unit;
     if (!(_unit isKindOf "CAManBase") && { !(_side in [east, west, resistance]) }) then {
         _side = [east, west, resistance, civilian] param [getNumber (configOf _unit >> "side"), civilian];

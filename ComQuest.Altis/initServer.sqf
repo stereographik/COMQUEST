@@ -56,6 +56,7 @@ call CQ_fnc_statsInit;
 call CQ_fnc_magInit;
 ["magpie", CQ_fnc_magTick] call CQ_fnc_directorAddTask;
 ["tigris", CQ_fnc_tigrisTick] call CQ_fnc_directorAddTask;
+["heatmap", CQ_fnc_heatTick] call CQ_fnc_directorAddTask;
 CQ_act = 1;
 publicVariable "CQ_act";
 ["story", CQ_fnc_actTick] call CQ_fnc_directorAddTask;

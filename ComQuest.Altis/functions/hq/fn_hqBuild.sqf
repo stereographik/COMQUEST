@@ -60,10 +60,24 @@ private _engineerOnly = {
         if (_ammo in CQ_engineerCharges && { typeOf _who in CQ_engineerClasses }) then { _dmg } else { damage _o };
     }];
 };
-// Stage wait: CQ_hqBuildStageTime, or until the debug panel skips it
+// Stage wait: CQ_hqBuildStageTime of calm, or until the debug panel skips it. The clock stops
+// during a battle (no construction under fire): contact reported by the HQ less than
+// CQ_buildPauseAfterContact s ago, or BLUFOR within CQ_buildPauseRange of the site.
 private _wait = {
-    private _t = time + CQ_hqBuildStageTime;
-    waitUntil { sleep 1; time >= _t || { _hq get "skipStage" } };
+    private _left = CQ_hqBuildStageTime;
+    private _paused = false;
+    waitUntil {
+        sleep 1;
+        private _fight = (time - (_hq get "lastContactT") < CQ_buildPauseAfterContact)
+            || { ((_c nearEntities [["CAManBase", "LandVehicle", "Air"], CQ_buildPauseRange]) findIf { alive _x && { side group _x == west } }) > -1 };
+        if (_fight) then {
+            if (!_paused) then { _paused = true; ["HQ #%1: construction paused, battle at the site", [_id]] call CQ_fnc_log };
+        } else {
+            if (_paused) then { _paused = false; ["HQ #%1: construction resumes", [_id]] call CQ_fnc_log };
+            _left = _left - 1;
+        };
+        _left <= 0 || { _hq get "skipStage" }
+    };
     _hq set ["skipStage", false];
 };
 
@@ -219,4 +233,6 @@ if (!isNull _tower) then {
 // Recall the perimeter squads and set the garrison
 [_hq] call CQ_fnc_hqGarrison;
 _hq set ["buildDone", true];
+_hq set ["builtT", time];
+[_hq] call CQ_fnc_hqStatusMarker;
 [_hq] call CQ_fnc_hqGuerilla;

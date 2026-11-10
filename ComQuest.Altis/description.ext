@@ -4,6 +4,9 @@
 author = "Django";
 onLoadName = "ComQuest";
 onLoadMission = "Destroy the CSAT HQ network on Altis.";
+loadScreen = "media\loading.jpg";          // 2048 x 1024: the mission visual with title bars
+overviewPicture = "media\loading.jpg";     // same picture in the mission list / lobby
+overviewText = "Co-op, up to 26 players. A CSAT carrier plants a network of HQs on Altis: find it and cut it apart.";
 briefingName = "ComQuest";
 briefing = 0;                   // no briefing map screen after the lobby: straight into the game
 
@@ -19,7 +22,18 @@ joinUnassigned = 0;             // joining players are put on the first free slo
 respawn = 3;                    // BASE (marker "respawn_west", created by script)
 respawnDelay = 15;              // keep in sync with CQ_respawnDelay in cfg\settings.sqf
 respawnOnStart = -1;            // start on the Eden slot, no respawn at mission start
-respawnTemplates[] = {"Counter"};
+respawnTemplates[] = {"Revive", "Counter"};
+
+// --- Revive (vanilla BI): medics only, 5 min to be revived, then respawn at the base ---
+ReviveMode = 1;                     // enabled for every player
+ReviveUnconsciousStateMode = 0;     // basic: a player always goes down instead of dying
+ReviveRequiredTrait = 1;            // only medics revive
+ReviveRequiredItems = 2;            // Medikit or First Aid Kit
+ReviveRequiredItemsFakConsumed = 1;
+ReviveDelay = 8;                    // s to revive
+ReviveMedicSpeedMultiplier = 1;
+ReviveForceRespawnDelay = 1000;     // vanilla "hold to respawn" off: giving up is the BLEEDOUT rule (CQ_fnc_adrenalineSurge)
+ReviveBleedOutDelay = 300;          // keep in sync with CQ_bleedOut in cfg\settings.sqf
 respawnDialog = 0;
 disabledAI = 1;                 // empty slots have no AI
 
@@ -116,6 +130,8 @@ class CfgFunctions
             class callReinf {};
             class hqSplit {};
             class hqTick {};
+            class hqStatusMarker {};
+            class hqNerves {};
             class hqBalance {};
             class moveGroups {};
             class cmdCapture {};
@@ -156,6 +172,8 @@ class CfgFunctions
             class magTick {};
             class magMarks {};
             class magMapClient {};
+            class heatTick {};
+            class heatMapClient {};
             class tigrisTick {};
             class runwayClear {};
             class airLoadout {};
@@ -182,6 +200,11 @@ class CfgFunctions
             class rootTick {};
             class paraDropVehicle {};
             class specialTeam {};
+            class sniperSpots {};
+            class sniperQueue {};
+            class sniperRun {};
+            class sniperPost {};
+            class huntLaunch {};
             class carrierMarker {};
         };
 
@@ -208,6 +231,8 @@ class CfgFunctions
             class squadUi {};
             class menuUi {};
             class setClass {};
+            class basicKit {};
+            class adrenalineSurge {};
             class applyTraits {};
             class vehAutoFill {};
             class baseDefBuild {};

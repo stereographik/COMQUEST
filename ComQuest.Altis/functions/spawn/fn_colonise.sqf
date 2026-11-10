@@ -9,13 +9,6 @@ params ["_child", "_groups", "_vehs", "_cmdG"];
 private _id = _child get "id";
 private _site = _child get "pos";
 
-if (CQ_debug) then {
-    private _m = createMarker [format ["cq_dbg_site_%1", _id], _site];
-    _m setMarkerType "mil_objective";
-    _m setMarkerColor "ColorOPFOR";
-    _m setMarkerText format ["DEBUG site HQ #%1 (child of #%2)", _id, _child get "parent"];
-    (_child get "markers") pushBack _m;
-};
 
 // Colonists must keep moving even with no player around (dynamic simulation would freeze
 // them on the spot), and their old patrol / reinforcement waypoints must not pull them back

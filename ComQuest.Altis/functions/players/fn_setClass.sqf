@@ -15,8 +15,9 @@ if !(player inArea [CQ_basePos, (CQ_compoundSize select 0) / 2 + CQ_classChangeR
 if (_label == (player getVariable ["CQ_class", "Rifleman"])) exitWith { hint format ["You are already %1", _label] };
 private _taken = { _x != player && { (_x getVariable ["CQ_class", "Rifleman"]) == _label } } count (allPlayers select { side group _x == west });
 if (_taken >= _max) exitWith { hint format ["%1: no slot left (%2 / %2 taken)", _label, _max] };
-private _lo = getUnitLoadout _cls;
-player setUnitLoadout _lo;
+player setUnitLoadout (getUnitLoadout _cls);
+call CQ_fnc_basicKit;
+private _lo = getUnitLoadout player;
 CQ_savedLoadout = _lo;
 CQ_myClass = _label;
 [_traits] call CQ_fnc_applyTraits;

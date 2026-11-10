@@ -166,7 +166,7 @@ if (time >= CQ_magDetectT) then {
             if (([_v, "VIEW", _o] checkVisibility [_eye, aimPos _o]) < 0.2) then { continue };
             if (_rec isEqualTo []) then {
                 private _c = [_o] call _cat;
-                if (random 1 > (CQ_magSpotChance getOrDefault [_c, 0.3])) then { continue };   // not identified this pass
+                if (random 1 > ([CQ_magSpotChance getOrDefault [_c, 0.3], CQ_huntSpotChance] select (_o getVariable ["CQ_hunter", false]))) then { continue };   // not identified this pass
                 CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false]];
                 private _fp = missionNamespace getVariable ["CQ_magFocus", []];
                 if (_fp isEqualTo []) then {
@@ -256,6 +256,28 @@ if (_focusOn) then {
         _m set ["planT", time];
         private _v = _m get "veh";
         private _r = CQ_magRingR * ((_m get "scale") max 1);
+        // fixed wings (Greyhawk, Reaper): a loiter circle around the contact whose radius
+        // oscillates (CQ_magOsc) as it is renewed every 30 s; kept CQ_magAaAvoid clear of a
+        // known Tigris near the focus by widening the circle
+        if (_m call _fixed) then {
+            CQ_magOsc params ["_amp", "_period"];
+            private _R = _r * (1 + _amp * sin (360 * (time - CQ_magFocusT) / _period + _forEachIndex * 120));
+            { private _d = _x distance2D _focus; if (abs (_R - _d) < CQ_magAaAvoid) then { _R = _R max (_d + CQ_magAaAvoid) } } forEach _aa;
+            private _g = group effectiveCommander _v;
+            [_g] call CQ_fnc_clearWaypoints;
+            _v flyInHeight (_m get "alt");
+            private _wp = _g addWaypoint [_focus, 0];
+            _wp setWaypointType "LOITER";
+            _wp setWaypointLoiterType "CIRCLE_L";
+            _wp setWaypointLoiterRadius _R;
+            _g setCurrentWaypoint _wp;
+            _m set ["target", _focus];
+            if (time - (_m getOrDefault ["loiterLogT", -1e6]) > 120) then {
+                _m set ["loiterLogT", time];
+                ["MAGPIE: %1 loiters around the contact at %2, radius %3 m", [_m get "name", mapGridPosition _focus, round _R]] call CQ_fnc_log;
+            };
+            continue;
+        };
         private _a0 = _rot + _forEachIndex * _step;
         private _pts = [];
         {
@@ -444,7 +466,7 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
         if (count _h == 0) then { continue };
         private _st = _h getOrDefault ["magSeenStage", 0];
         if (_y == -2) then {
-            _news pushBack format ["New enemy position: Objective %1.", [_x] call CQ_fnc_objName];
+            _news pushBack format ["New enemy position: %1.", [_x] call CQ_fnc_objName];
         } else {
             if (_st > _y) then {
                 _news pushBack (if (_st >= 4) then { format ["%1 is fully operational.", [_x] call CQ_fnc_objName] }

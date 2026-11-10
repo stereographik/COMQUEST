@@ -34,12 +34,15 @@ private _now = time;
         if (_cmdGone && { _standing isEqualTo [] }) then {
             _hq set ["state", "Destroyed"];
             { deleteMarker _x } forEach (_hq get "markers");
+            if (_hq get "buildDone") then { [_hq] call CQ_fnc_hqNerves };
+    [_hq] call CQ_fnc_hqStatusMarker;
             ["Enemy HQ destroyed", format ["HQ #%1 has fallen. Enemy AI left on the map: %2", _id, call CQ_fnc_enemyCount]] call CQ_fnc_announce;
             ["fallen", [[_id] call CQ_fnc_objName, { (_x get "state") in CQ_activeStates } count (values CQ_hqs)]] call CQ_fnc_say;
         };
     };
     _state = _hq get "state";
     if !(_state in CQ_activeStates) then { continue };
+    [_hq] call CQ_fnc_hqStatusMarker;
 
     // ---- contact -> call for reinforcements
     if (_now - (_hq get "lastContactT") > CQ_contactCooldown) then {

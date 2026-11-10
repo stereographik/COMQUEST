@@ -243,6 +243,21 @@ CQ_story = createHashMapFromArray [
         [["COMHAT", "...enemy contact. Everyone to the perimeter."], ["CROSSROAD", "They've seen you. They have nowhere to go. Neither should they."]]
     ]],
     // [obj] - red flare
+    ["huntLaunch", [
+        [["COMHAT", "...%1 to command, request Spectre. Find them. Bring back their tags."]],
+        [["COMHAT", "...%1, Spectre authorised. High jump, tonight's guests are the ones with the rifles."]],
+        [["COMHAT", "...command to %1, Spectre is in the air. Stop crying on the net."]]
+    ]],
+    ["huntContact", [
+        [["CROSSROAD", "That last contact was quiet, quick and well-led. Special forces. They're hunting a squad of ours. Watch your trail."]],
+        [["CROSSROAD", "Suppressed fire, good discipline. That's not a garrison. Somebody sent professionals after you."]],
+        [["CROSSROAD", "All stations, enemy special forces in the field. They don't patrol, they hunt. Move like it."]]
+    ]],
+    ["huntDown", [
+        [["CROSSROAD", "Their special forces team is down. Somewhere a colonel is filing a very awkward report."]],
+        [["CROSSROAD", "Spectre team neutralised. Good work. The squad that did it has earned a bonus."]],
+        [["CROSSROAD", "That was their best, and it's lying in the grass. Well done."]]
+    ]],
     ["flare", [
         [["CROSSROAD", "Red flare. They're emptying the garrison on you. Stand fast."]],
         [["CROSSROAD", "Red flare over %1. They're calling everything they have."]],
@@ -354,7 +369,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "assault", "fallen", "fallenEarly"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "assault", "fallen", "fallenEarly"];
 
 CQ_uiCardWidth = 620;                     // notification card width in pixels (message text block ~560 px)
 CQ_uiCardMax = 5;                         // cards on screen at once (more wait in line)

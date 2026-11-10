@@ -5,6 +5,7 @@
 */
 
 CQ_debug = true;                         // log to systemChat as well as the .rpt
+CQ_playerView = true;                    // final player view by default: no debug chat, cards or markers (toggle in the debug panel)
 CQ_debugCards = false;                   // debug phase messages as orange cards too (story lines use the cards)
 
 // --- Director -------------------------------------------------------------
@@ -100,6 +101,8 @@ CQ_siteMaxGradient = 0.15;
 CQ_siteNoPlayerRadius = 800;
 CQ_siteMinHqSpacing = 1500;
 CQ_hqBuildStageTime = 120;               // seconds per construction stage (4 stages, 8 min)
+CQ_buildPauseRange = 400;                // m: BLUFOR this close to a site under construction stops the work
+CQ_buildPauseAfterContact = 120;         // s: and for this long after the HQ reports contact
 CQ_hqMarkerRadius = 400;                 // approximate circle shown to players
 CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted", "SatchelCharge_Remote_Ammo", "SatchelCharge_Remote_Ammo_Scripted"];
 
@@ -125,6 +128,12 @@ CQ_wavePools = [                         // one vehicle from each pool per wave
     ["random", ["O_MRAP_02_hmg_F", "O_G_Offroad_01_armed_F"]]
 ];
 CQ_dynSimGarrison = false;               // true = HQ squads freeze when no player is near (saves CPU, but they stop patrolling)
+// HQ nervousness (CQ_fnc_hqNerves), never calms down: CALM (built, no contact), WARY (contact),
+// TENSE (1 objective lost), ALARMED (2), FORTRESS (3+ or commander killed / captured)
+CQ_nervNames = ["CALM", "WARY", "TENSE", "ALARMED", "FORTRESS"];
+CQ_nervPatrolR = [[400, 1000], [250, 700], [200, 500], [120, 300], [60, 150]];   // patrol loop radius per level (1st squad smallest)
+CQ_nervSniperDist = [[800, 1200], [800, 1200], [600, 900], [400, 700], [150, 300]];   // snipers' new spots after an alarm
+CQ_nervAlarmTime = 240;                  // s without a new loss before the recalled groups spread out again
 CQ_patrolRadius = [250, 700];            // patrol loop radius around an HQ: 1st patrol squad smallest, then wider
 CQ_vehPatrolRadius = 1200;               // HQ vehicles (Ifrit, Marid, Mora, Nyx...) roam this far around their HQ
 CQ_vehRoamRefresh = 420;                 // new random roaming route every 7 min
@@ -157,7 +166,29 @@ CQ_specialVehicle = "I_MRAP_03_hmg_F";   // Strider HMG
 CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Blackfish drop of the game
 CQ_specialRespawn = 900;                 // a wiped-out team is dropped again 15 min later
 CQ_specialRespawns = 3;                  // ...at most this many times per team (first drop not counted)
-CQ_specialRange = 6000;                  // how far a team drives for a job
+CQ_specialRange = 6000;
+// Snipers: with every carrier insertion, CQ_snipersPerWave snipers on high ground on the HQ's
+// west side, driven by the medic and engineer teams to CQ_sniperDrop m short of their spots
+CQ_snipersPerWave = 4;
+CQ_sniperClass = "O_sniper_F";           // falls back to the marksman if missing or DLC
+CQ_sniperSeats = 2;                      // Strider cargo seats each team keeps free for them
+CQ_sniperDist = [800, 1200];             // m from the HQ
+CQ_sniperArc = [200, 340];               // bearings from the HQ (west side)
+CQ_sniperGap = 200;                      // m between two spots
+CQ_sniperDrop = 200;                     // m short of the spots where the team drops them
+CQ_sniperWait = 1200;                    // s: a job no team has taken by then is done on foot                  // how far a team drives for a job
+// HUNTERS: CSAT special forces sent after the player squad hurting an HQ (CQ_fnc_huntLaunch)
+CQ_huntTeams = 3;                        // per carrier, one alive at a time (not shown on the carrier marker)
+CQ_huntClasses = ["O_recon_TL_F", "O_recon_F", "O_recon_F", "O_Soldier_AR_F", "O_recon_LAT_F", "O_recon_medic_F"];
+CQ_huntHaloAlt = 2500;                   // m: HALO jump altitude
+CQ_huntChuteAlt = 150;                   // m: chute opened
+CQ_huntDropDist = [1500, 2500];          // m from the target squad
+CQ_huntUpdate = [120, 180];              // s between two position updates on the target
+CQ_huntFuzz = 300;                       // m of error on the target position (exact once they know one of them)
+CQ_huntTime = 1800;                      // s of hunt, then front-line patrol
+CQ_huntPatrolR = 600;                    // m: patrol around the western-most HQ
+CQ_huntSpotChance = 0.25;                // MAGPIE identification chance per pass
+CQ_huntBounty = 150;                     // squad points for wiping a team out
 CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get treated
 // Radio direction finder (players with a radio): signal from enemy HQ radios
 CQ_rdfRange = 6000;                      // no signal beyond this
@@ -197,6 +228,14 @@ CQ_loadZoneCount = 4;                    // loadout zones in the base parking ar
 CQ_loadZoneRadius = 9;
 // Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
 // [label, unit class (loadout), traits, max players in that class]
+CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
+CQ_menuScreen = [0.4072, 0.4023, 0.7100, 0.5479];   // its blue screen zone in the picture (fractions)
+CQ_bleedOut = 300;                       // s a downed player waits for a medic (ReviveBleedOutDelay in description.ext)
+CQ_surgeChance = 0.10;                   // adrenalineSurge: chance for a downed medic to get up on his own over the whole wait
+CQ_bleedMedicRange = 500;                // BLEEDOUT (give up and respawn) only allowed with no medic this close
+CQ_bleedKey = 48;                        // B
+CQ_surgeEvery = 30;                      // s between two small rolls (1.05 % each for 10 % over 5 min)
+CQ_basicKit = ["ItemGPS", "ItemMap", "ItemCompass", "ItemRadio"];   // linked on every preset, plus binoculars (CQ_fnc_basicKit)
 CQ_classes = [
     ["Rifleman",        "B_Soldier_F",      [],                                  26],
     ["Squad Leader",    "B_Soldier_SL_F",   [],                                  4],
@@ -208,6 +247,7 @@ CQ_classes = [
     ["Anti-Air",        "B_soldier_AA_F",   [],                                  2],
     ["Engineer",        "B_engineer_F",     ["Engineer", "explosiveSpecialist"], 4],
     ["Marksman",        "B_soldier_M_F",    [],                                  2],
+    ["Sniper",          "B_sniper_F",       [],                                  2],
     ["Pilot",           "B_Helipilot_F",    [],                                  4]
 ];
 CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
@@ -381,6 +421,7 @@ CQ_magRingStart = 3000;                  // m ring radius at first contact
 CQ_magRingMin = 700;                     // m tightest ring
 CQ_magRingShrink = 120;                  // m per minute the ring tightens
 CQ_magRingTurn = 0.5;                    // deg per second the ring turns (a full turn in 12 min)
+CQ_magOsc = [0.3, 240];                  // Greyhawk / Reaper loiter radius around a contact: +/- 30 %, one swing every 240 s
 CQ_magFocusQuiet = 300;                  // s without a new contact in the ring (once tight) -> next focus
 CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (the carrier group)
 CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
@@ -394,9 +435,28 @@ CQ_magAoRange = 2500;                    // a contact belongs to the nearest kno
 // Tigris: one long-range anti-air vehicle paradropped with each carrier insertion; it roams the HQ network
 CQ_tigrisClass = "O_APC_Tracked_02_AA_F";
 CQ_tigrisPerInsertion = 1;
-CQ_tigrisRadar = 6000;                   // m: any MAGPIE drone in line of sight within this range is locked and engaged
-CQ_tigrisMissileRange = 4500;            // m (slant): the Tigris launches a guided Titan at a drone in line of sight within this
-CQ_tigrisSalvo = 12;                     // s between two launches of one Tigris
+CQ_tigrisRadar = 6000;                   // m: a MAGPIE drone in line of sight within this range can be noticed
+CQ_tigrisSpot = [0.25, 0.03];            // chance per 4 s check to notice a drone in sight: at point blank -> at the radar edge
+CQ_tigrisSpotSize = 0.5;                 // x for the small Darter
+CQ_tigrisTrack = 40;                     // s a noticed drone stays tracked
+CQ_tigrisMissileRange = 3500;            // m (slant): the Tigris launches a Titan at a tracked drone within this
+CQ_tigrisSalvo = 25;                     // s between two launches of one Tigris
+CQ_tigrisGuide = 0.5;                    // share of launches forced onto the drone (the others often miss)
+
+// MAGPIE heatmap (map overlay, every player, always on): contacts only, blue -> red
+// contour bands shaped by the terrain, fading (half-life) as the information gets old
+CQ_heatCell = 300;                       // m per cell
+CQ_heatHalfHeat = 60;                    // s: contact heat halves every minute
+CQ_heatEvery = 5;                        // s between two server updates
+CQ_heatPubEvery = 10;                    // s between two broadcasts to the players
+CQ_heatWeights = createHashMapFromArray [["inf", 0.15], ["static", 0.3], ["light", 0.35], ["armour", 0.6], ["air", 0.6]];   // heat per seen unit (summed per cell, max 1)
+CQ_heatEnabled = true;                   // false: no heatmap overlay on the map (the server grid still runs)
+CQ_heatFine = 100;                       // m: drawn tile size (the field is sampled this fine)
+CQ_heatSigma = 260;                      // m: spread of one contact cell (gaussian)
+CQ_heatTerrain = 0.35;                   // heightmap mask: how much local relief bends the contours
+CQ_heatBands = 7;                        // colour bands (stepped contours, blue -> red)
+CQ_heatAlpha = 0.10;                     // final opacity of the overlay
+CQ_heatMaxTiles = 1800;                  // drawn tiles at most (strongest first, on screen only)
 // fixed-wing spawn spots placed in Eden by hand: name -> [[x, y], direction]
 CQ_magFixedSpawns = createHashMapFromArray [
     ["Greyhawk", [[14305.65, 15841.31], 39.09]],
