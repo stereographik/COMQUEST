@@ -4,6 +4,9 @@
 author = "Django";
 onLoadName = "ComQuest";
 onLoadMission = "Destroy the CSAT HQ network on Altis.";
+loadScreen = "media\loading.jpg";          // 2048 x 1024: the mission visual with title bars
+overviewPicture = "media\loading.jpg";     // same picture in the mission list / lobby
+overviewText = "Co-op, up to 26 players. A CSAT carrier plants a network of HQs on Altis: find it and cut it apart.";
 briefingName = "ComQuest";
 briefing = 0;                   // no briefing map screen after the lobby: straight into the game
 
