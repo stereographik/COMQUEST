@@ -130,6 +130,7 @@ class CfgFunctions
             class debugUi {};
             class uiStyle {};
             class uiSel {};
+            class feed {};
             class introDone {};
             class debugUiFill {};
         };

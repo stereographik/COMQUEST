@@ -13,6 +13,20 @@ if (typeOf player in CQ_engineerClasses) then {
 // Every preset carries binoculars and a GPS (class loadouts get them in CQ_fnc_setClass)
 if (isNil "CQ_savedLoadout") then { call CQ_fnc_basicKit };
 
+// Player feed: what last hit him (the enemy's class, or its vehicle), told to everyone when he
+// goes down (CQ_fnc_adrenalineSurge) or dies outright (initServer.sqf)
+player addEventHandler ["HandleDamage", {
+    params ["_u", "", "_dmg", "_src", "", "", "_inst"];
+    private _w = [_inst, _src] select (isNull _inst);
+    if (!isNull _w && { _w != _u } && { _dmg > 0.05 }) then {
+        private _o = [vehicle _w, _w] select (vehicle _w == _w);
+        private _nm = getText (configOf _o >> "displayName");
+        if (_nm == "") then { _nm = typeOf _o };
+        if (_nm != (_u getVariable ["CQ_lastHit", ""])) then { _u setVariable ["CQ_lastHit", _nm, true] };
+    };
+    nil
+}];
+
 // adrenalineSurge: a downed medic may get back up on his own (one watcher per life)
 [] spawn CQ_fnc_adrenalineSurge;
 

@@ -234,7 +234,7 @@ CQ_loadZoneRadius = 9;
 //   chart: #918C3B olive   #A6A381 light brown   #F2F1DF cream   #BA392C red
 CQ_ui = createHashMapFromArray [
     ["font", "PuristaMedium"], ["fontHead", "PuristaSemibold"], ["fontLight", "PuristaLight"],
-    ["panel", [0.098, 0.094, 0.07, 0.94]], ["header", [0.169, 0.165, 0.11, 1]], ["inset", [0, 0, 0, 0.35]],
+    ["panel", [0.07, 0.068, 0.05, 0.97]], ["header", [0.15, 0.146, 0.098, 1]], ["inset", [0, 0, 0, 0.55]],
     ["button", [0.2, 0.192, 0.122, 1]], ["buttonHover", [0.569, 0.549, 0.231, 1]], ["buttonOn", [0.729, 0.224, 0.173, 1]],
     ["buttonActive", [0.949, 0.945, 0.875, 1]], ["textOn", [0.949, 0.945, 0.875, 1]],
     ["text", [0.949, 0.945, 0.875, 1]], ["muted", [0.651, 0.639, 0.506, 1]], ["dim", [0.45, 0.44, 0.35, 1]],

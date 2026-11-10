@@ -16,6 +16,21 @@ call CQ_fnc_carrierSetup;           // CSAT carrier off the east coast: every in
 
 CQ_hqs = createHashMap;            // exists from the start (radio lines may look at it)
 
+// Player feed in everyone's chat: joins, departures, deaths (CQ_fnc_feed)
+addMissionEventHandler ["PlayerConnected", {
+    params ["", "", "_name"];
+    if (_name != "__SERVER__") then { [format ["%1 joined the operation", _name]] remoteExec ["CQ_fnc_feed", 0] };
+}];
+addMissionEventHandler ["PlayerDisconnected", {
+    params ["", "", "_name"];
+    if (_name != "__SERVER__") then { [format ["%1 left the operation", _name]] remoteExec ["CQ_fnc_feed", 0] };
+}];
+addMissionEventHandler ["EntityKilled", {
+    params ["_u"];
+    if (!isPlayer _u || { _u getVariable ["CQ_downFed", false] }) exitWith {};   // already announced when he went down
+    [format ["%1 killed  ·  %2", name _u, _u getVariable ["CQ_lastHit", "unknown"]]] remoteExec ["CQ_fnc_feed", 0];
+}];
+
 // The mission starts CQ_startAfterIntro s after the first player's intro (CQ_fnc_introDone).
 // Base and carrier are already in place for the intro; the enemy, MAGPIE and the story wait.
 // Fallback: CQ_introMaxTime s after the first player is in, whatever happens to his intro.
