@@ -249,6 +249,7 @@ CQ_introFade = 1;                        // s per fade (out, and in) between sho
 CQ_introSatAlt = 1300;                   // m: satellite shot altitude (under the clouds)
 CQ_introViewDist = 7000;                 // m: view distance during the satellite shot only
 CQ_introHoverTop = 7;                    // landing shot: the Hummingbird descends from this height...
+CQ_introPrewarm = 1.5;                   // s: the landing (movement + engine sound) starts this long before the picture opens
 CQ_introHoverLow = 2.1;                  // ...to this (about 1 m above the pad), never touching
 CQ_introMaxTime = 90;                    // s: watchdog, the intro is cleaned up whatever happens
 CQ_startAfterIntro = 5;                  // s after the FIRST player's intro: the mission starts

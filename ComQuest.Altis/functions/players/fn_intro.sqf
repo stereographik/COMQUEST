@@ -261,6 +261,11 @@ call {
     // ---- 4 LANDING: an empty Hummingbird settling at the muster area, seen from behind
     call _dip;
     if (CQ_introSkip) exitWith {};
+    // a clear spot on/next to the pad (a vehicle may stand there), and no collision with what
+    // stands around: the local helicopter must never touch, push or be pushed by a real vehicle
+    private _fe = _lz findEmptyPosition [0, 30, "B_Heli_Light_01_F"];
+    if (_fe isNotEqualTo []) then { _lz = [_fe select 0, _fe select 1, 0] };
+    { _hb disableCollisionWith _x } forEach ((_lz nearObjects ["AllVehicles", 30]) + (nearestObjects [_lz, ["Static", "Thing"], 25]));
     private _behind = _lz getPos [24, _lzDir + 180];
     _cam camSetPos [_behind select 0, _behind select 1, 4];
     _cam camSetTarget [_lz select 0, _lz select 1, 1.5];
@@ -273,7 +278,9 @@ call {
     // a slow vertical descent, from a few metres down to about 1 m above the pad, never touching.
     // Every frame the helicopter is given its next position through setVelocityTransformation:
     // the engine interpolates between frames, so the motion is perfectly smooth.
-    CQ_introLand = [_hb, _lz, _gz, _lzDir, time, _tLand, time];
+    // pre-warm: the descent and the engine sound start while the screen is still black, the
+    // picture opens CQ_introPrewarm s later, the helicopter already moving and heard
+    CQ_introLand = [_hb, _lz, _gz, _lzDir, time, _tLand + CQ_introPrewarm, time];
     CQ_introLandEh = addMissionEventHandler ["EachFrame", {
         CQ_introLand params ["_h", "_lz", "_gz", "_dir", "_t0", "_dur", "_tPrev"];
         private _f = {
@@ -289,6 +296,7 @@ call {
         _h setVelocityTransformation [_p0, _p1, _v, _v, _vd, _vd, [0, 0, 1], [0, 0, 1], 1];
         CQ_introLand set [6, time];
     }];
+    [CQ_introPrewarm] call _nap;
     _bl cutText ["", "BLACK IN", CQ_introFade];
     [_tLand] call _nap;
     // the handler keeps it hovering at its last height until the screen is black (removed below)
