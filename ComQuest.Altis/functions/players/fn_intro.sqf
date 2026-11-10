@@ -1,11 +1,9 @@
 /*
     CQ_fnc_intro  (client, spawned once at join from initPlayerLocal)
     Opens on black: time and place typed out in small letters (CQ_introPlace), then a fade.
-    Contemplative cinematic, three long, slow shots joined by soft dips to black (CQ_introShots):
+    Contemplative cinematic, two long, slow shots joined by a soft dip to black (CQ_introShots):
       1 SATELLITE  Altis from very high, almost still, a slow drift
-      2 COCKPIT    pilot seat of a helicopter cruising slowly over the east coast, eyes on the
-                   horizon (a local, unsimulated Ghost Hawk moved by script)
-      3 CARRIER    far and low over the water, the carrier small on the horizon, the title
+      2 CARRIER    far and low over the water, the carrier small on the horizon, the title
                    fading in late
     Then back to the player. Local only (nothing is created on the network). Skipped when
     CQ_introEnabled is false. Silent. Space skips it. Every player at join (late joiners too).
@@ -14,7 +12,7 @@ if (!hasInterface || { !CQ_introEnabled }) exitWith {};
 waitUntil { sleep 0.1; !isNull player && { !isNull (findDisplay 46) } };
 private _t0 = time;
 waitUntil { sleep 0.2; !isNil "CQ_carrierPos" || { time - _t0 > 8 } };
-CQ_introShots params ["_t1", "_t2", "_t3"];
+CQ_introShots params ["_t1", "_t3"];
 private _car = missionNamespace getVariable ["CQ_carrierPos", [worldSize * 0.85, worldSize * 0.5, 0]];
 
 private _bl = "CQ_introBlack" call BIS_fnc_rscLayer;
@@ -69,41 +67,7 @@ call {
     [_t1] call _nap;
 
     if (CQ_introSkip) exitWith {};
-    // ---- 2 COCKPIT: pilot seat of a Ghost Hawk, low over the coast, heading for the carrier
-    private _hdg = (CQ_basePos getDir _car);
-    private _start = _car getPos [(_car distance2D CQ_basePos) * 0.55, _hdg + 180];
-    private _h = createVehicleLocal ["B_Heli_Transport_01_F", [0, 0, 1000], [], 0, "CAN_COLLIDE"];
-    _h enableSimulation false;
-    _h allowDamage false;
-    _h setDir _hdg;
-    private _alt = 140;
-    _h setPosASL [_start select 0, _start select 1, ((getTerrainHeightASL _start) max 0) + _alt];
-    // pilot eye: a memory point named like the pilot view, else a measured fallback
-    private _eye = [0.55, 3.55, -0.35];
-    private _mp = (selectionNames [_h, "Memory"]) select { "pilot" in toLower _x && { "view" in toLower _x || { toLower _x == "pilot" } } };
-    if (_mp isNotEqualTo []) then { private _p = _h selectionPosition [_mp select 0, "Memory"]; if (_p isNotEqualTo [0, 0, 0]) then { _eye = _p } };
-    private _speed = 28;   // m/s: an unhurried flight
-    private _tS = time + 0.5;
-    private _end = _tS + _t2;
-    private _dir = [sin _hdg, cos _hdg, 0];
-    _bl cutText ["", "BLACK OUT", 0.5]; [0.5] call _nap;   // slow dip between shots
-    private _first = true;
-    while { time < _end && { !CQ_introSkip } } do {
-        private _p = ([_start select 0, _start select 1, 0]) vectorAdd (_dir vectorMultiply (_speed * ((time - _tS) max 0)));
-        _p set [2, ((getTerrainHeightASL _p) max 0) + _alt];
-        _h setPosASL _p;
-        _h setVectorDirAndUp [[sin _hdg, cos _hdg, -0.03], [0, 0, 1]];
-        _cam camSetPos (_h modelToWorldVisual _eye);
-        _cam camSetTarget (_h modelToWorldVisual (_eye vectorAdd [-8, 100, -3]));   // the horizon
-        _cam camSetFov 0.75;
-        _cam camCommit 0;
-        if (_first) then { _first = false; _bl cutText ["", "BLACK IN", 0.6] };
-        uiSleep 0.02;
-    };
-    deleteVehicle _h;
-
-    if (CQ_introSkip) exitWith {};
-    // ---- 3 CARRIER: slow dolly along the ship at sea level, title
+    // ---- 2 CARRIER: slow dolly along the ship at sea level, title
     _bl cutText ["", "BLACK OUT", 0.5]; [0.5] call _nap;
     // far and low over the water, the ship small on the horizon, the camera barely moving
     private _from = _car vectorAdd [-1300, -500, 6];
@@ -126,7 +90,6 @@ _bl cutText ["", "BLACK OUT", 0.8];
 uiSleep 0.8;
 titleText ["", "PLAIN"];
 ("CQ_introType" call BIS_fnc_rscLayer) cutText ["", "PLAIN"];
-if (!isNil "_h" && { !isNull _h }) then { deleteVehicle _h };
 _cam cameraEffect ["terminate", "back"];
 camDestroy _cam;
 showCinemaBorder false;
