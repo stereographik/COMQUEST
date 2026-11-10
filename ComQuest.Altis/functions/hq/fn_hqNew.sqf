@@ -9,8 +9,14 @@ params ["_pos", ["_parent", -1]];
 private _id = CQ_hqNextId;
 CQ_hqNextId = CQ_hqNextId + 1;
 
+// codename: next one of CQ_hqNames (numbered again if the list runs out: "OVERLORD 2")
+private _nn = count CQ_hqNames;
+private _name = CQ_hqNames select ((_id - 1) mod _nn);
+if (_id > _nn) then { _name = format ["%1 %2", _name, floor ((_id - 1) / _nn) + 1] };
+
 private _hq = createHashMapFromArray [
     ["id", _id],
+    ["name", _name],
     ["pos", _pos],
     ["dir", random 360],
     ["parent", _parent],

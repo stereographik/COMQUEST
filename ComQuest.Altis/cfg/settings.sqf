@@ -173,6 +173,10 @@ CQ_heliPreferDist = 3000;                // farther than this, a helicopter is t
 CQ_watchIdle = 180;                      // a patrolling squad standing still 3 min outside combat gets a new patrol
 CQ_objMinGap = 300;                      // HQ objectives (depot, radio tower, fuel tanker, 3 AA, HMG tower): at least this far from each other and from the command building
 CQ_objRing = [360, 650];                 // ...placed on a ring this far around the command building (widens until they fit)
+// Enemy HQ codenames (famous real operation names), one per HQ in creation order; messages and
+// markers show "NAME (HQ#n)" (CQ_fnc_objName)
+CQ_hqNames = ["ROLLING THUNDER", "URGENT FURY", "OVERLORD", "AVALANCHE", "RED DAWN", "KILLER",
+    "MASHER", "JUNIPER COBRA", "HERCULES", "CARTHAGE", "EAGLE CLAW", "BEASTMASTER"];
 // Enemy squad callsigns (real aviator callsigns, aggressive ones), given in this order to every
 // enemy squad (CQ_fnc_callsignTick); a wiped-out squad frees its name for the next one; numbers
 // ("Viper 2") only when every name is in use at once
