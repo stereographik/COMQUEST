@@ -52,7 +52,7 @@ CQ_magSensor params ["_r0", "_rk", "_rmax"];
 private _sum = createHashMap;
 {
     _x params ["_o", "", "_last", "", "_cat"];
-    if (time - _last > CQ_heatEvery + 1 || { !alive _o }) then { continue };
+    if (time - _last > CQ_heatEvery + 1 || { !alive _o } || { _o getVariable ["CQ_hunterHidden", false] }) then { continue };
     private _p = getPosATL _o;
     private _k = (floor ((_p select 0) / CQ_heatCell)) * _n + floor ((_p select 1) / CQ_heatCell);
     _sum set [_k, (_sum getOrDefault [_k, 0]) + (CQ_heatWeights getOrDefault [_cat, 0.2])];

@@ -190,6 +190,7 @@ class CfgFunctions
             class sniperQueue {};
             class sniperRun {};
             class sniperPost {};
+            class huntLaunch {};
             class carrierMarker {};
         };
 

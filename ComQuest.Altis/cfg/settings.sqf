@@ -177,6 +177,18 @@ CQ_sniperArc = [200, 340];               // bearings from the HQ (west side)
 CQ_sniperGap = 200;                      // m between two spots
 CQ_sniperDrop = 200;                     // m short of the spots where the team drops them
 CQ_sniperWait = 1200;                    // s: a job no team has taken by then is done on foot                  // how far a team drives for a job
+// HUNTERS: CSAT special forces sent after the player squad hurting an HQ (CQ_fnc_huntLaunch)
+CQ_huntTeams = 3;                        // per carrier, one alive at a time (not shown on the carrier marker)
+CQ_huntClasses = ["O_recon_TL_F", "O_recon_F", "O_recon_F", "O_recon_M_F", "O_recon_LAT_F", "O_recon_medic_F"];
+CQ_huntHaloAlt = 2500;                   // m: HALO jump altitude
+CQ_huntChuteAlt = 150;                   // m: chute opened
+CQ_huntDropDist = [1500, 2500];          // m from the target squad
+CQ_huntUpdate = [120, 180];              // s between two position updates on the target
+CQ_huntFuzz = 300;                       // m of error on the target position (exact once they know one of them)
+CQ_huntTime = 1800;                      // s of hunt, then front-line patrol
+CQ_huntPatrolR = 600;                    // m: patrol around the western-most HQ
+CQ_huntSpotChance = 0.25;                // MAGPIE identification chance per pass
+CQ_huntBounty = 150;                     // squad points for wiping a team out
 CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get treated
 // Radio direction finder (players with a radio): signal from enemy HQ radios
 CQ_rdfRange = 6000;                      // no signal beyond this

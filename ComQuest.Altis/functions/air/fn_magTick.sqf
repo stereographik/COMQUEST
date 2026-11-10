@@ -166,7 +166,7 @@ if (time >= CQ_magDetectT) then {
             if (([_v, "VIEW", _o] checkVisibility [_eye, aimPos _o]) < 0.2) then { continue };
             if (_rec isEqualTo []) then {
                 private _c = [_o] call _cat;
-                if (random 1 > (CQ_magSpotChance getOrDefault [_c, 0.3])) then { continue };   // not identified this pass
+                if (random 1 > ([CQ_magSpotChance getOrDefault [_c, 0.3], CQ_huntSpotChance] select (_o getVariable ["CQ_hunter", false]))) then { continue };   // not identified this pass
                 CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false]];
                 private _fp = missionNamespace getVariable ["CQ_magFocus", []];
                 if (_fp isEqualTo []) then {
