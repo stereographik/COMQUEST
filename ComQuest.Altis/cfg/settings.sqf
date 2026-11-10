@@ -249,6 +249,7 @@ CQ_splashWidth = 0.8;                    // picture width, share of the screen w
 CQ_splashTime = 4;                       // s (Space ends it)
 CQ_introEnabled = true;                  // cinematic at join: black + typed time/place, satellite, coast, flight, landing, eyes (CQ_fnc_intro)
 CQ_introShots = [8, 8, 8, 8];            // s per shot: satellite, coast, squad on a hilltop, landing (on the shop pad)
+CQ_introScene = -1;                      // squad shot: -1 random, or 0 attack, 1 retreat, 2 report, 3 sneak, 4 ambush
 CQ_introFade = 1;                        // s per fade (out, and in) between shots; the end is a blink
 CQ_introSatAlt = 1300;                   // m: satellite shot altitude (under the clouds)
 CQ_introViewDist = 7000;                 // m: view distance during the satellite shot only

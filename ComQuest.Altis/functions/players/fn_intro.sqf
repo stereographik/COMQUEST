@@ -6,8 +6,8 @@
       0 BLACK      time and date, then the place (CQ_introPlace), typed small, then a fade
       1 SATELLITE  Altis from very high, almost still, a slow drift
       2 COAST      low and wide on a quiet east-coast village, calm sea, slow pan
-      3 SQUAD      three guerilla fighters on a hilltop, sea behind, each one picking random
-                   animations (orders, crouch, run, prone, stances, emotes; local soldiers)
+      3 SQUAD      three guerilla fighters on a hilltop, sea behind, in a random scene: attack,
+                   retreat, report, sneak or ambush (local soldiers, moves fitting the mood)
       4 LANDING    an MH-9 Hummingbird settling at the muster area, seen from behind
       5 BLACK      fade out
       6 EYES       the player's own view opens in two blinks, a blur clearing: control
@@ -200,8 +200,8 @@ call {
     [_tCoast] call _nap;
     if (CQ_introSkip) exitWith {};
 
-    // ---- 3 SQUAD: three guerilla fighters on a hilltop, sea behind them, each one doing his own
-    // thing at random (orders, crouch, run, prone, stances, emotes).
+    // ---- 3 SQUAD: three guerilla fighters on a hilltop, sea behind them, in one of 5 scenes
+    // (attack, retreat, report, sneak, ambush), each man with moves that fit the mood.
     // Local, brainless soldiers driven by animations (only on your screen), deleted at the end.
     call _dip;
     if (CQ_introSkip) exitWith {};
@@ -217,19 +217,76 @@ call {
     if (_best isEqualTo []) then { _best = _coast getPos [800, _inland] };
     private _seaDir = _best getDir _car;                        // the sea is that way
     private _walkDir = _seaDir + 90;                            // they cross the frame
+    // One of 5 scenes, picked at random (CQ_introScene in the settings forces one):
+    //   0 ATTACK   1 RETREAT   2 REPORT (conversation)   3 SNEAK   4 AMBUSH
+    // Each man has his own pool of moves for the mood of the scene: [move, gesture, min s, max s]
+    // ("" = none; gesture "FIRE" = a short burst). He picks from it at random, never the same
+    // entry twice in a row. Formation: [side offset, back offset, facing] (facing: "walk" along
+    // the line, "back" toward where they came from, "lead" toward the leader, "sea").
+    private _st  = "AmovPercMstpSrasWrflDnon";   private _low  = "AmovPercMstpSlowWrflDnon";
+    private _wk  = "AmovPercMwlkSrasWrflDf";     private _wkL  = "AmovPercMwlkSlowWrflDf";
+    private _run = "AmovPercMrunSrasWrflDf";     private _spr  = "AmovPercMevaSrasWrflDf";
+    private _kn  = "AmovPknlMstpSrasWrflDnon";   private _knW  = "AmovPknlMwlkSrasWrflDf";
+    private _knR = "AmovPknlMrunSrasWrflDf";     private _pr   = "AmovPpneMstpSrasWrflDnon";
+    private _crl = "AmovPpneMrunSlowWrflDf";     private _wkB  = "AmovPercMwlkSrasWrflDb";
+    private _knB = "AmovPknlMwlkSrasWrflDb";     private _runB = "AmovPercMrunSrasWrflDb";
+    private _scenes = [
+        ["ATTACK", _knR, [[0, 0, "walk"], [3, 5, "walk"], [-3, 8, "walk"]], [
+            [[_knR, "", 1, 1.6], [_kn, "gestureAdvance", 1.2, 2], [_spr, "", 0.8, 1.2], [_kn, "gesturePoint", 1.2, 1.8], [_pr, "", 1.2, 2], [_kn, "FIRE", 1, 1.5]],
+            [[_knR, "", 1, 1.6], [_spr, "", 0.8, 1.2], [_pr, "FIRE", 1.5, 2.2], [_kn, "FIRE", 1, 1.5], [_run, "", 0.8, 1.3]],
+            [[_knR, "", 1, 1.6], [_spr, "", 0.8, 1.2], [_kn, "", 1, 1.6], [_pr, "", 1.5, 2.2], [_kn, "FIRE", 1, 1.5]]
+        ]],
+        ["RETREAT", _wkB, [[0, 0, "back"], [3, 4, "back"], [-3, 7, "back"]], [
+            [[_wkB, "", 1.2, 2], [_knB, "", 1.2, 2], [_kn, "gestureFollow", 1.2, 1.8], [_kn, "gestureGo", 1.2, 1.8], [_runB, "", 0.8, 1.2], [_kn, "FIRE", 1, 1.4]],
+            [[_wkB, "", 1.2, 2], [_knB, "", 1.2, 2], [_runB, "", 0.8, 1.2], [_kn, "FIRE", 1, 1.4], [_pr, "FIRE", 1.5, 2]],
+            [[_knB, "", 1.2, 2], [_wkB, "", 1.2, 2], [_runB, "", 0.8, 1.2], [_kn, "", 1, 1.5]]
+        ]],
+        ["REPORT", _low, [[0, 0, "sea"], [2.2, 2.6, "lead"], [-2, 3, "lead"]], [
+            [[_low, "gesturePoint", 1.6, 2.4], [_low, "gestureNod", 1.4, 2], [_low, "gestureNo", 1.4, 2], [_low, "gestureYes", 1.4, 2], [_low, "gestureCover", 1.6, 2.2], [_kn, "gesturePoint", 1.8, 2.6]],
+            [[_low, "gestureNod", 1.5, 2.2], [_low, "gestureYes", 1.5, 2.2], [_low, "", 1.6, 2.4], [_kn, "", 2, 3], [_low, "gesturePoint", 1.6, 2.2]],
+            [[_kn, "", 2, 3], [_low, "gestureNod", 1.5, 2.2], [_low, "gestureNo", 1.5, 2.2], [_st, "", 1.6, 2.4], [_kn, "gestureYes", 1.5, 2.2]]
+        ]],
+        ["SNEAK", _knW, [[0, 0, "walk"], [1.5, 4, "walk"], [-1.5, 8, "walk"]], [
+            [[_knW, "", 1.6, 2.6], [_kn, "gestureFreeze", 1.6, 2.4], [_kn, "gestureFollow", 1.4, 2], [_kn, "gestureCover", 1.4, 2], [_pr, "", 1.6, 2.4], [_crl, "", 1.4, 2.2]],
+            [[_knW, "", 1.6, 2.6], [_kn, "", 1.4, 2.2], [_pr, "", 1.6, 2.4], [_crl, "", 1.4, 2.2]],
+            [[_knW, "", 1.6, 2.6], [_kn, "", 1.4, 2.2], [_crl, "", 1.4, 2.2], [_kn, "gestureNod", 1.2, 1.8]]
+        ]],
+        ["AMBUSH", _pr, [[0, 0, "sea"], [4, 2, "sea"], [-4, 2.5, "sea"]], [
+            [[_pr, "", 1.8, 2.6], [_kn, "gestureFreeze", 1.6, 2.2], [_kn, "gestureCeaseFire", 1.6, 2.2], [_kn, "gesturePoint", 1.4, 2], [_pr, "", 1.8, 2.6]],
+            [[_pr, "", 2, 3], [_crl, "", 1, 1.4], [_kn, "", 1.4, 2], [_pr, "", 2, 3]],
+            [[_pr, "", 2, 3], [_kn, "", 1.4, 2], [_crl, "", 1, 1.4], [_pr, "gestureNod", 1.6, 2.2]]
+        ]]
+    ];
+    private _si = missionNamespace getVariable ["CQ_introScene", -1];
+    if (_si < 0 || { _si >= count _scenes }) then { _si = floor random count _scenes };
+    (_scenes select _si) params ["_sName", "_sMove", "_sForm", "_sPools"];
+    ["Intro squad scene: %1", [_sName]] call CQ_fnc_log;
     private _men = [];
     {
-        _x params ["_cls", "_side", "_back"];
+        (_sForm select _forEachIndex) params ["_side", "_back"];
         private _p = (_best getPos [_back, _walkDir + 180]) getPos [_side, _seaDir];
-        private _u = _cls createVehicleLocal [0, 0, 0];
+        private _u = (_x select 0) createVehicleLocal [0, 0, 0];
         _u setVariable ["CQ_introVeh", true];
         _u allowDamage false;
         _u setPosATL [_p select 0, _p select 1, 0];
         _u setDir _walkDir;
-        _u switchMove "AmovPercMwlkSrasWrflDf";                 // careful walk, weapon up
         _locals pushBack _u;
         _men pushBack _u;
-    } forEach [["O_G_Soldier_SL_F", 0, 0], ["O_G_Soldier_AR_F", 3, 6], ["O_G_Soldier_LAT_F", -2, 11]];
+    } forEach [["O_G_Soldier_SL_F"], ["O_G_Soldier_AR_F"], ["O_G_Soldier_LAT_F"]];
+    {
+        private _f = (_sForm select _forEachIndex) select 2;
+        _x setDir (switch (_f) do {
+            case "back": { _walkDir + 180 };
+            case "sea":  { _seaDir };
+            case "lead": { _x getDir (_men select 0) };
+            default      { _walkDir };
+        });
+        _x switchMove _sMove;
+        _x setVariable ["CQ_introNext", time + 0.3 + random 1.2];
+        _x setVariable ["CQ_introLast", -1];
+    } forEach _men;
+    // REPORT: the leader faces his two men
+    if (_sName == "REPORT") then { (_men select 0) setDir ((_men select 0) getDir (((getPosATL (_men select 1)) vectorAdd (getPosATL (_men select 2))) vectorMultiply 0.5)) };
     // camera inland of them, low, looking past the team to the sea
     private _cp = (_best getPos [26, _seaDir + 180]) getPos [6, _walkDir + 180];
     _cam camSetPos [_cp select 0, _cp select 1, 1.7];
@@ -239,43 +296,33 @@ call {
     _bl cutText ["", "BLACK IN", CQ_introFade];
     _cam camSetPos (([_cp select 0, _cp select 1, 0] getPos [6, _walkDir]) vectorAdd [0, 0, 1.8]);
     _cam camCommit _tFlight;                                    // slow drift with them
-    // every man lives his own life: each 1.5-3 s he picks something at random (giving an
-    // order, crouch, crouched walk, short run, prone, standing, careful walk, a vanilla emote),
-    // never the same thing twice in a row
-    private _acts = [
-        ["move", "AmovPercMstpSrasWrflDnon", "gestureAdvance"],     // order: move up
-        ["move", "AmovPercMstpSrasWrflDnon", "gestureFreeze"],      // order: freeze
-        ["move", "AmovPercMstpSrasWrflDnon", "gestureCover"],       // order: take cover
-        ["move", "AmovPercMstpSrasWrflDnon", "gesturePoint"],       // order: over there
-        ["move", "AmovPknlMstpSrasWrflDnon", ""],                   // crouch
-        ["move", "AmovPknlMwlkSrasWrflDf", ""],                     // crouched walk
-        ["move", "AmovPercMrunSrasWrflDf", ""],                     // short run
-        ["move", "AmovPpneMstpSrasWrflDnon", ""],                   // prone
-        ["move", "AmovPercMstpSrasWrflDnon", ""],                   // standing, weapon up
-        ["move", "AmovPercMwlkSrasWrflDf", ""],                     // careful walk
-        ["emote", "", "gestureHi"],
-        ["emote", "", "gestureNod"],
-        ["emote", "", "gestureYes"],
-        ["emote", "", "gestureNo"],
-        ["emote", "", "gestureCeaseFire"],
-        ["emote", "", "gestureFollow"]
-    ];
-    { _x setVariable ["CQ_introNext", time + random 1.2]; _x setVariable ["CQ_introLast", -1] } forEach _men;
     private _tq = time;
+    private _ambushed = false;
     while { time - _tq < _tFlight && { !CQ_introSkip } } do {
+        // AMBUSH: at 70 % of the shot the leader springs it, everybody up on a knee and firing
+        if (_sName == "AMBUSH" && { !_ambushed } && { time - _tq > _tFlight * 0.7 }) then {
+            _ambushed = true;
+            (_men select 0) playActionNow "gestureGo";
+            { _x playMoveNow _kn; _x setVariable ["CQ_introNext", time + 0.4 + random 0.4]; _x setVariable ["CQ_introFireOnly", true] } forEach _men;
+        };
         {
             private _u = _x;
             if (time < (_u getVariable "CQ_introNext")) then { continue };
-            private _i = floor random count _acts;
-            if (_i == (_u getVariable "CQ_introLast")) then { _i = (_i + 1) mod count _acts };
+            if (_u getVariable ["CQ_introFireOnly", false]) then {
+                _u forceWeaponFire [primaryWeapon _u, currentWeaponMode _u];
+                _u setVariable ["CQ_introNext", time + 0.15 + random 0.35];
+                continue;
+            };
+            private _pool = _sPools select _forEachIndex;
+            private _i = floor random count _pool;
+            if (_i == (_u getVariable "CQ_introLast") && { count _pool > 1 }) then { _i = (_i + 1) mod count _pool };
             _u setVariable ["CQ_introLast", _i];
-            (_acts select _i) params ["_kind", "_move", "_gest"];
-            // emotes are played standing (a man lying down gets up first)
-            if (_kind == "emote" && { stance _u != "STAND" }) then { _move = "AmovPercMstpSrasWrflDnon" };
-            if (_move != "") then { _u playMoveNow _move };
-            if (_gest != "") then { _u playActionNow _gest };
-            // a run is kept short so nobody leaves the frame
-            _u setVariable ["CQ_introNext", time + ([1.5 + random 1.5, 1 + random 0.8] select (_move == "AmovPercMrunSrasWrflDf"))];
+            (_pool select _i) params ["_mv", "_gs", "_t0", "_t1"];
+            if (_mv != "") then { _u playMoveNow _mv };
+            if (_gs == "FIRE") then {
+                [_u] spawn { params ["_u"]; sleep 0.5; for "_k" from 1 to (2 + floor random 3) do { _u forceWeaponFire [primaryWeapon _u, currentWeaponMode _u]; sleep 0.18 } };
+            } else { if (_gs != "") then { _u playActionNow _gs } };
+            _u setVariable ["CQ_introNext", time + _t0 + random (_t1 - _t0)];
         } forEach _men;
         uiSleep 0.05;
     };
