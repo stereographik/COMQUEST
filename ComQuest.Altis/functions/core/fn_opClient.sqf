@@ -1,7 +1,11 @@
 /*
     CQ_fnc_opClient  (client, spawned once from initPlayerLocal)
-    Shows the OPERATION checklist (CQ_opPub, CQ_fnc_opTick) in the map's "Operation" section
-    and rewrites it whenever the server publishes a change (and after a respawn).
+    Shows the OPERATION briefing (CQ_opPub, CQ_fnc_opTick) in the map's "Operation" section:
+    one section per objective type, one line per object, always the same list (done lines
+    struck in red, active lines in cream, lines not available yet greyed out).
+    A single "Progress" record is kept and rewritten (never one more per respawn). When the
+    content changes, a notification "Objectives updated, check map" (at most every
+    CQ_opNotifyGap s; changes in between are announced together).
 */
 if (!hasInterface) exitWith {};
 private _render = {
@@ -9,27 +13,44 @@ private _render = {
     private _txt = "<font face='PuristaSemibold' size='16' color='#F2F1DF'>OPERATION  ·  PROGRESS</font><br/><br/>";
     if (_steps isEqualTo []) then { _txt = _txt + "<font color='#A6A381'>Waiting for the operation to start.</font>" };
     {
-        _x params ["_done", "_title", "_detail", "_sub"];
+        _x params ["_done", "_title", "_detail", "_rows"];
         _txt = _txt + format ["<font color='%1'>%2</font>  <font face='PuristaSemibold' color='#F2F1DF'>%3. %4</font><br/><font color='#A6A381'>      %5</font><br/>",
             ["#918C3B", "#BA392C"] select _done, ["[  ]", "[x]"] select _done, _forEachIndex + 1, _title, _detail];
-        { _x params ["_d", "_l"]; _txt = _txt + format ["<font color='%1'>        %2  %3</font><br/>", ["#A6A381", "#7A7860"] select _d, ["·", "x"] select _d, _l] } forEach _sub;
+        {
+            _x params ["_st", "_l"];
+            _txt = _txt + format ["<font color='%1'>        %2  %3</font><br/>", ["#55534A", "#F2F1DF", "#BA392C"] select _st, ["-", "·", "x"] select _st, _l];
+        } forEach _rows;
         _txt = _txt + "<br/>";
     } forEach _steps;
-    if (isNil "CQ_opRec" || { (missionNamespace getVariable ["CQ_opUnit", objNull]) != player }) then {
-        if !(player diarySubjectExists "CQ_op") then { player createDiarySubject ["CQ_op", "Operation"] };
-        CQ_opRec = player createDiaryRecord ["CQ_op", ["Progress", _txt]];
-        CQ_opUnit = player;
+    if !(player diarySubjectExists "CQ_op") then { player createDiarySubject ["CQ_op", "Operation"] };
+    // the existing record (it survives respawns): rewrite it, drop any duplicate
+    private _recs = (player allDiaryRecords "CQ_op") select { (_x select 1) == "Progress" };
+    if (_recs isEqualTo []) then {
+        player createDiaryRecord ["CQ_op", ["Progress", _txt]];
     } else {
-        player setDiaryRecordText [["CQ_op", CQ_opRec], ["Progress", _txt]];
+        player setDiaryRecordText [["CQ_op", (_recs select 0) select 8], ["Progress", _txt]];
+        { player removeDiaryRecord ["CQ_op", _x select 8] } forEach (_recs select [1, count _recs]);
     };
 };
-// rewritten when the server publishes a change, and for the new unit after a respawn (a poll:
-// a public-variable handler would not fire on a hosting player's own machine)
+// polled (a public-variable handler would not fire on a hosting player's own machine)
 private _seen = 0;
+private _first = true;
+private _pending = false;
+private _lastNote = -1e6;
 while { true } do {
     private _now = missionNamespace getVariable ["CQ_opPub", []];
-    if (!(_now isEqualTo _seen) || { (missionNamespace getVariable ["CQ_opUnit", objNull]) != player }) then {
-        if (alive player) then { call _render; _seen = +_now };
+    private _respawned = (missionNamespace getVariable ["CQ_opUnit", objNull]) != player;
+    if (alive player && { !(_now isEqualTo _seen) || _respawned }) then {
+        if (!(_now isEqualTo _seen) && { !_first } && { _now isNotEqualTo [] }) then { _pending = true };
+        call _render;
+        _seen = +_now;
+        _first = false;
+        CQ_opUnit = player;
+    };
+    if (_pending && { time - _lastNote > CQ_opNotifyGap } && { alive player }) then {
+        _pending = false;
+        _lastNote = time;
+        ["CQ_Objectives", ["Objectives updated, check map"]] call BIS_fnc_showNotification;
     };
     sleep 2;
 };

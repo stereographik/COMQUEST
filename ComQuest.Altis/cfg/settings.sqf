@@ -52,6 +52,7 @@ CQ_parkClear = 10;                       // a cell needs no object / rock / buil
 CQ_parkMaxGradient = 0.1;                // ...and flat ground
 CQ_parkSearch = 450;                     // grid searched this far around the park point behind the camp
 CQ_vehAbandonDelay = 900;                // depot vehicle empty and still this long, no player within 200 m: back in stock (15 min)
+CQ_opNotifyGap = 20;                     // "Objectives updated, check map": at most one notification every 20 s
 CQ_rspCredits = 10;                      // squad respawn vehicle: teleports a vehicle gives before it stops being a respawn point
 CQ_rspBaseRange = 150;                   // ...teleports leave from within this of the base muster point
 CQ_depotMaxPerSquad = 2;                 // depot vehicles out at the same time per squad

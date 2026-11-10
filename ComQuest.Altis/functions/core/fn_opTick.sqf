@@ -1,16 +1,14 @@
 /*
-    CQ_fnc_opTick  (server, director task, every 5 s)
-    OPERATION briefing: a fixed checklist of friendly progress, published to every player
-    (CQ_opPub, shown by CQ_fnc_opClient in the map's "Operation" section). Same-type events
-    are stacked in one line:
-      1 Find where they land        first HQ located (MAGPIE, players within 300 m, intel)
-      2 Hostile HQs                 one sub-line per built HQ, like its map marker
-      3 Radio towers down           n / N of the built HQs
-      4 Supply line cut             convoys and supply flights destroyed (CQ_fnc_opEvent)
-      5 Special forces neutralised  Spectre teams wiped out / CQ_huntTeams
-      6 Carrier empty               carrier stock %
-      7 Last HQ destroyed           victory
-    Each line: done or not, the time (operation clock) and the squad that did it when known.
+    CQ_fnc_opTick  (server, director task, every 10 s)
+    OPERATION briefing, published to every player (CQ_opPub, shown by CQ_fnc_opClient in the
+    map's "Operation" section). One section per objective type, and inside it one line per
+    object, always in the same order, never removed:
+      state 2  done      destroyed / neutralised (time + squad when known)
+      state 1  active    standing, en route, hunting
+      state 0  greyed    not available yet (team in reserve, nothing seen yet)
+    Sections: Find where they land, Hostile HQs, Radio towers, Supply convoys, Supply
+    flights, Special forces, Carrier, Victory.
+    CQ_opPub = [[done, title, summary, [[state, text], ...]], ...]
 */
 if (time < (missionNamespace getVariable ["CQ_opNext", 0])) exitWith {};
 CQ_opNext = time + 10;
@@ -25,6 +23,7 @@ private _clock = {
 private _squad = { params ["_u"]; if (!isNull _u && { isPlayer _u }) then { groupId group _u } else { "" } };
 private _hqs = values CQ_hqs;
 private _built = _hqs select { _x getOrDefault ["builtT", -1] > -1 };
+_built = [_built, [], { _x get "id" }] call BIS_fnc_sortBy;       // always the same order
 
 // ---- 1 first HQ located
 private _loc = CQ_op getOrDefault ["located", []];
@@ -65,35 +64,60 @@ private _sub = _built apply {
     }
 };
 
-// ---- 3 radio towers
-private _towers = _built select { !isNull (_x getOrDefault ["radio", objNull]) };
-private _down = _towers select { !alive (_x get "radio") };
-{
-    if (_x getOrDefault ["opTower", []] isEqualTo []) then { _x set ["opTower", [time, [_x getOrDefault ["lastKiller", objNull]] call _squad]] };
-} forEach _down;
-private _lastTower = [];
-{ if (_lastTower isEqualTo [] || { ((_x get "opTower") select 0) > (_lastTower select 0) }) then { _lastTower = _x get "opTower" } } forEach _down;
+private _when = { params ["_t", "_sq"]; format ["%1%2", [_t] call _clock, ["", "  ·  " + _sq] select (_sq != "")] };
 
-// ---- 4 supply, 5 spectre, 6 carrier, 7 victory
-private _cv = CQ_op getOrDefault ["convoy", [0, 0, ""]];
-private _fl = CQ_op getOrDefault ["flight", [0, 0, ""]];
-private _sup = [_cv, _fl] select ((_fl select 1) > (_cv select 1));
-private _sp = CQ_op getOrDefault ["spectre", [0, 0, ""]];
+// ---- 3 radio towers: one line per built HQ that got its tower
+private _towers = _built select { !isNull (_x getOrDefault ["radio", objNull]) || { (_x getOrDefault ["opTower", []]) isNotEqualTo [] } };
+private _tRows = _towers apply {
+    private _h = _x;
+    if (alive (_h get "radio")) then { [1, format ["%1  ·  tower standing", [_h get "id"] call CQ_fnc_objName]] } else {
+        if (_h getOrDefault ["opTower", []] isEqualTo []) then { _h set ["opTower", [time, [_h getOrDefault ["lastKiller", objNull]] call _squad]] };
+        [2, format ["%1  ·  tower down %2", [_h get "id"] call CQ_fnc_objName, (_h get "opTower") call _when]]
+    }
+};
+private _tDown = { (_x select 0) == 2 } count _tRows;
+if (_tRows isEqualTo []) then { _tRows = [[0, "no tower built yet"]] };
+
+// ---- 4 / 5 supply convoys and flights: every one destroyed + the ones on their way now
+private _supRows = {
+    params ["_type", "_noun"];
+    private _rows = (CQ_op getOrDefault [_type + "List", []]) apply { [2, format ["%1 destroyed %2", _noun, _x call _when]] };
+    { _rows pushBack [1, format ["%1 en route", _noun]] } forEach (vehicles select { alive _x && { (_x getVariable ["CQ_supply", ""]) == _type } });
+    if (_rows isEqualTo []) then { _rows = [[0, format ["no %1 seen yet", toLower _noun]]] };
+    _rows
+};
+private _cvRows = ["convoy", "Convoy"] call _supRows;
+private _flRows = ["flight", "Supply flight"] call _supRows;
+private _cvDone = { (_x select 0) == 2 } count _cvRows;
+private _flDone = { (_x select 0) == 2 } count _flRows;
+
+// ---- 6 special forces: one line per team (neutralised / hunting / in reserve)
+private _spList = CQ_op getOrDefault ["spectreList", []];
+private _hunting = !isNull (missionNamespace getVariable ["CQ_huntGroup", grpNull]) && { ({ alive _x } count units CQ_huntGroup) > 0 };
+private _spRows = [];
+for "_i" from 0 to CQ_huntTeams - 1 do {
+    _spRows pushBack (switch (true) do {
+        case (_i < count _spList): { [2, format ["Spectre team %1 neutralised %2", _i + 1, (_spList select _i) call _when]] };
+        case (_i == count _spList && { _hunting }): { [1, format ["Spectre team %1 hunting a squad", _i + 1]] };
+        default { [0, format ["Spectre team %1 in reserve", _i + 1]] };
+    });
+};
+
+// ---- 7 carrier, 8 victory
 private _pct = round (100 * ((missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs]) max 0) / (CQ_carrierHqs max 1));
 private _won = !isNil "CQ_victory";
+private _hqRows = _sub apply { [[1, 2] select (_x select 0), _x select 1] };
+if (_hqRows isEqualTo []) then { _hqRows = [[0, "no HQ built yet"]] };
 
-private _when = { params ["_t", "_sq"]; format ["%1%2", [_t] call _clock, ["", "  ·  " + _sq] select (_sq != "")] };
 private _steps = [
     [_loc isNotEqualTo [], "Find where they land",
         if (_loc isEqualTo []) then { "Their beachhead will be due west of the carrier, within 2 km of the shore." }
         else { format ["%1  ·  %2  (%3)", [_loc select 0] call _clock, _loc select 1, [_loc select 2] call CQ_fnc_objName] }, []],
-    [_won, "Hostile HQs", format ["%1 / %2 destroyed", _dead, count _built], _sub],
-    [(count _towers) > 0 && { (count _down) == (count _towers) }, "Radio towers down",
-        format ["%1 / %2%3", count _down, count _towers, if (_lastTower isEqualTo []) then { "" } else { "  ·  last " + (_lastTower call _when) }], []],
-    [((_cv select 0) + (_fl select 0)) > 0, "Supply line cut",
-        format ["%1 convoys, %2 supply flights destroyed%3", _cv select 0, _fl select 0, if ((_sup select 0) == 0) then { "" } else { "  ·  last " + ([_sup select 1, _sup select 2] call _when) }], []],
-    [(_sp select 0) >= CQ_huntTeams, "Special forces neutralised",
-        format ["%1 / %2 teams%3", _sp select 0, CQ_huntTeams, if ((_sp select 0) == 0) then { "" } else { "  ·  last " + ([_sp select 1, _sp select 2] call _when) }], []],
+    [_won, "Hostile HQs", format ["%1 / %2 destroyed", _dead, count _built], _hqRows],
+    [_towers isNotEqualTo [] && { _tDown == count _towers }, "Radio towers", format ["%1 / %2 down", _tDown, count _towers], _tRows],
+    [_cvDone > 0, "Supply convoys", format ["%1 destroyed", _cvDone], _cvRows],
+    [_flDone > 0, "Supply flights", format ["%1 destroyed", _flDone], _flRows],
+    [(count _spList) >= CQ_huntTeams, "Special forces", format ["%1 / %2 teams neutralised", count _spList, CQ_huntTeams], _spRows],
     [_pct <= 0, "Carrier empty", format ["carrier at %1 %%", _pct], []],
     [_won, "Last HQ destroyed", ["VICTORY when the carrier is empty and no HQ stands", "VICTORY"] select _won, []]
 ];
