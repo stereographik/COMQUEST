@@ -1,5 +1,6 @@
 /*
     CQ_fnc_intro  (client, spawned once at join from initPlayerLocal)
+    Opens on black: time and place typed out in small letters (CQ_introPlace), then a fade.
     5 s cinematic intro, three shots joined by quick cuts (CQ_introShots, seconds each):
       1 SATELLITE  straight down on Altis from very high, slowly sinking and zooming in
       2 COCKPIT    from the pilot seat of a helicopter flying low over the east coast,
@@ -15,10 +16,38 @@ waitUntil { sleep 0.2; !isNil "CQ_carrierPos" || { time - _t0 > 8 } };
 CQ_introShots params ["_t1", "_t2", "_t3"];
 private _car = missionNamespace getVariable ["CQ_carrierPos", [worldSize * 0.85, worldSize * 0.5, 0]];
 
+private _bl = "CQ_introBlack" call BIS_fnc_rscLayer;
+_bl cutText ["", "BLACK FADED", 999];                       // black from the very first frame
 showCinemaBorder true;
 private _cam = "camera" camCreate (getPosATL player);
 _cam cameraEffect ["internal", "back"];
-cutText ["", "BLACK IN", 0.4];
+
+// ---- 0 BLACK: time and place typed out, small and quiet, then a fade into the first shot
+private _tl = "CQ_introType" call BIS_fnc_rscLayer;
+_tl cutRsc ["RscTitleDisplayEmpty", "PLAIN", 0, false];
+private _td = uiNamespace getVariable ["RscTitleDisplayEmpty", displayNull];
+private _tc = _td ctrlCreate ["RscStructuredText", -1];
+_tc ctrlSetPosition [safeZoneX + safeZoneW * 0.08, safeZoneY + safeZoneH * 0.72, safeZoneW * 0.6, safeZoneH * 0.12];
+_tc ctrlCommit 0;
+date params ["_y", "_mo", "_d", "_hh", "_mm"];
+private _months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+private _l1 = format ["%1%2:%3%4  ·  %5 %6 %7", ["", "0"] select (_hh < 10), _hh, ["", "0"] select (_mm < 10), _mm, _d, _months select (_mo - 1), _y];
+private _l2 = CQ_introPlace;
+private _show = {
+    params ["_a", "_b", ["_cursor", true]];
+    _tc ctrlSetStructuredText parseText format [
+        "<t font='PuristaLight' size='0.78' color='#F2F1DF'>%1</t><br/><t font='PuristaLight' size='0.78' color='#A6A381'>%2%3</t>",
+        _a, _b, ["", "_"] select _cursor];
+};
+uiSleep 0.4;
+for "_i" from 1 to count _l1 do { [_l1 select [0, _i], ""] call _show; uiSleep CQ_introTypeDelay };
+for "_i" from 1 to count _l2 do { [_l1, _l2 select [0, _i]] call _show; uiSleep CQ_introTypeDelay };
+for "_i" from 1 to 3 do { [_l1, _l2, false] call _show; uiSleep 0.25; [_l1, _l2, true] call _show; uiSleep 0.25 };
+_tc ctrlSetFade 1;
+_tc ctrlCommit 0.5;
+uiSleep 0.5;
+_tl cutText ["", "PLAIN"];
+_bl cutText ["", "BLACK IN", 0.6];
 
 // ---- 1 SATELLITE: high above the middle of the island, looking straight down
 private _mid = [worldSize * 0.5, worldSize * 0.5, 0];
@@ -48,7 +77,7 @@ private _speed = 60;   // m/s
 private _tS = time + 0.08;
 private _end = _tS + _t2;
 private _dir = [sin _hdg, cos _hdg, 0];
-cutText ["", "BLACK OUT", 0.08]; uiSleep 0.08;
+_bl cutText ["", "BLACK OUT", 0.08]; uiSleep 0.08;
 private _first = true;
 while { time < _end } do {
     private _p = ([_start select 0, _start select 1, 0]) vectorAdd (_dir vectorMultiply (_speed * ((time - _tS) max 0)));
@@ -59,20 +88,20 @@ while { time < _end } do {
     _cam camSetTarget (_h modelToWorldVisual (_eye vectorAdd [0, 100, -12]));
     _cam camSetFov 0.85;
     _cam camCommit 0;
-    if (_first) then { _first = false; cutText ["", "BLACK IN", 0.12] };
+    if (_first) then { _first = false; _bl cutText ["", "BLACK IN", 0.12] };
     uiSleep 0.02;
 };
 deleteVehicle _h;
 
 // ---- 3 CARRIER: slow dolly along the ship at sea level, title
-cutText ["", "BLACK OUT", 0.08]; uiSleep 0.08;
+_bl cutText ["", "BLACK OUT", 0.08]; uiSleep 0.08;
 private _from = _car vectorAdd [-420, -260, 14];
 private _to = _car vectorAdd [-420, 120, 18];
 _cam camSetPos _from;
 _cam camSetTarget (_car vectorAdd [0, 40, 12]);
 _cam camSetFov 0.5;
 _cam camCommit 0;
-cutText ["", "BLACK IN", 0.12];
+_bl cutText ["", "BLACK IN", 0.12];
 _cam camSetPos _to;
 _cam camSetTarget (_car vectorAdd [0, 80, 12]);
 _cam camCommit (_t3 + 1);
@@ -80,10 +109,10 @@ titleText ["<t font='PuristaSemibold' size='2.2' color='#F2F1DF'>COMQUEST</t><br
 uiSleep (_t3 - 0.35);
 
 // ---- back to the player
-cutText ["", "BLACK OUT", 0.3];
+_bl cutText ["", "BLACK OUT", 0.3];
 uiSleep 0.3;
 titleText ["", "PLAIN"];
 _cam cameraEffect ["terminate", "back"];
 camDestroy _cam;
 showCinemaBorder false;
-cutText ["", "BLACK IN", 0.6];
+_bl cutText ["", "BLACK IN", 0.6];

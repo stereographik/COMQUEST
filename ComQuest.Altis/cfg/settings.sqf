@@ -239,6 +239,8 @@ CQ_ui = createHashMapFromArray [
 ];   // hex: text #F2F1DF, muted #A6A381, accent #918C3B, alert #BA392C
 CQ_introEnabled = true;                  // 5 s cinematic at join: satellite, cockpit, carrier (CQ_fnc_intro)
 CQ_introShots = [1.6, 1.7, 1.7];         // s per shot
+CQ_introPlace = "ALTIS  ·  AEGEAN SEA  ·  AAC AIRFIELD";   // typed on black before the shots, under the time and date
+CQ_introTypeDelay = 0.035;               // s per typed letter
 CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
 CQ_menuScreen = [0.4072, 0.4023, 0.7100, 0.5479];   // its blue screen zone in the picture (fractions)
 CQ_bleedOut = 300;                       // s a downed player waits for a medic (ReviveBleedOutDelay in description.ext)
