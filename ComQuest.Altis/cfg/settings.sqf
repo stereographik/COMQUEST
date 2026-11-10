@@ -410,7 +410,10 @@ CQ_heatHalfScan = 60;                    // s: scan halves every minute
 CQ_heatEvery = 5;                        // s between two server updates
 CQ_heatPubEvery = 10;                    // s between two broadcasts to the players
 CQ_heatWeights = createHashMapFromArray [["inf", 0.15], ["static", 0.3], ["light", 0.35], ["armour", 0.6], ["air", 0.6]];   // heat per seen unit (summed per cell, max 1)
-CQ_heatBlobCold = 2.2;                   // blob diameter in cells (overlap = smooth gradient)
+CQ_heatEnabled = true;                   // false: no heatmap overlay on the map (the server grid still runs)
+CQ_heatColdMerge = 3;                    // the cold (scanned) layer is drawn in 3 x 3 merged cells (900 m): 9x fewer blobs
+CQ_heatMaxBlobs = 150;                   // per layer, strongest first; only blobs on screen are drawn
+CQ_heatBlobCold = 1.8;                   // blob diameter in (merged) cells (overlap = smooth gradient)
 CQ_heatBlobHot = 2.6;
 CQ_heatIconK = 1;                        // size calibration of the blobs on the map
 // fixed-wing spawn spots placed in Eden by hand: name -> [[x, y], direction]
