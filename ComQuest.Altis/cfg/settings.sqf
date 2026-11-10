@@ -34,7 +34,7 @@ CQ_baseVehPadding = 25;                  // metres between base vehicles (fallba
 //   HQ compound at CQ_basePos facing CQ_baseDir; 4 parallel vehicle rows in the vehicle zone
 //   (start point next to the HQ, running along CQ_baseDir); a crate dispenser + loadout zone
 //   at the far end of each row; 2 repair stations east of the vehicle zone
-CQ_billboardFlip = false;                // true if the base billboard shows its back to the muster area
+CQ_billboardFlip = false;                // true if the base billboard (front wall, right of the gate) shows its back to the courtyard
 CQ_compoundSize = [80, 60];              // inner compound width x depth (m)
 CQ_rayStarts = [[14255, 16151, 0], [14282, 16143, 0], [14304, 16130, 0], [14330, 16116, 0]];
 CQ_dispensers = [[14293, 16200, 0], [14310, 16189, 0], [14339, 16175, 0], [14364, 16166, 0]];   // pushed further out if a row is longer

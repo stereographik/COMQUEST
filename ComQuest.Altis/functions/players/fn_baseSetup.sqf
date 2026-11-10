@@ -410,8 +410,9 @@ CQ_baseDefs = [];
 } forEach CQ_baseDefAngles;
 { [_x] call CQ_fnc_baseDefBuild } forEach CQ_baseDefs;
 
-// billboard with the mission visual, against the back wall, facing the muster area
-private _bbP = [_hw * 0.45, -_hd + 5] call _at;
+// billboard with the mission visual, against the front wall just right of the gate (along the
+// H-barriers), picture facing the courtyard
+private _bbP = [_gate + 12, _hd - 3] call _at;
 _bbP = [_bbP select 0, _bbP select 1, 0];
 // a billboard model whose picture can be replaced (hiddenSelections), else a plain 10 m user
 // texture panel standing upright
