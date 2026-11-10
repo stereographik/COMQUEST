@@ -247,6 +247,39 @@ if (_focus isNotEqualTo [] && { CQ_magRingR <= CQ_magRingMin } && { time - CQ_ma
         ["MAGPIE: focus moves to the newest contact at %1", [mapGridPosition _focus]] call CQ_fnc_log;
     };
 };
+// ---- the centre of the encirclement follows the situation (every CQ_magCentreEvery s):
+//   1 the first ground contact (set when it is identified)
+//   2 the barycentre of the largest group of ground positions identified in the last
+//     CQ_magMemory s within CQ_magRingStart of the focus (groups: CQ_magClusterR)
+//   3 the radio tower of the enemy HQ in the area, as soon as it is built
+// The drones re-route when the centre moves more than CQ_magCentreMove m.
+if (_focus isNotEqualTo [] && { time - (missionNamespace getVariable ["CQ_magCentreT", -1e6]) > CQ_magCentreEvery }) then {
+    CQ_magCentreT = time;
+    private _new = [];
+    private _why = "";
+    private _tw = ((values CQ_hqs) select { (_x get "state") in CQ_activeStates && { alive (_x getOrDefault ["radio", objNull]) } && { (_x get "pos") distance2D _focus < CQ_magRingStart } })
+        apply { _x get "radio" };
+    if (_tw isNotEqualTo []) then {
+        _new = getPosATL (([_tw, [], { _x distance2D _focus }, "ASCEND"] call BIS_fnc_sortBy) select 0);
+        _why = "radio tower";
+    } else {
+        private _pts = ((values CQ_magSeen) select { time - (_x select 2) < CQ_magMemory && { (_x select 4) != "air" } && { (_x select 3) distance2D _focus < CQ_magRingStart } }) apply { _x select 3 };
+        private _best = [];
+        { private _c = _x; private _grp = _pts select { _x distance2D _c < CQ_magClusterR }; if (count _grp > count _best) then { _best = _grp } } forEach _pts;
+        if (count _best >= 2) then {
+            private _sx = 0; private _sy = 0;
+            { _sx = _sx + (_x select 0); _sy = _sy + (_x select 1) } forEach _best;
+            _new = [_sx / count _best, _sy / count _best, 0];
+            _why = format ["largest group (%1 positions)", count _best];
+        };
+    };
+    if (_new isNotEqualTo [] && { _new distance2D _focus > CQ_magCentreMove }) then {
+        private _moved = round (_new distance2D _focus);
+        CQ_magFocus = _new; _focus = _new;
+        { _x set ["planT", -1e6] } forEach CQ_mag;
+        ["MAGPIE: encirclement centre moves %1 m to the %2 at %3", [_moved, _why, mapGridPosition _new]] call CQ_fnc_log;
+    };
+};
 private _focusOn = _focus isNotEqualTo [];
 if (_focusOn) then {
     _focus = [_focus select 0, _focus select 1, 0];
