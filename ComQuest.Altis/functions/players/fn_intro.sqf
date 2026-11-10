@@ -18,7 +18,11 @@
 if (!hasInterface) exitWith {};
 private _done = { [] remoteExec ["CQ_fnc_introDone", 2] };
 if (!CQ_introEnabled) exitWith { call _done };
-waitUntil { sleep 0.1; !isNull player && { !isNull (findDisplay 46) } };
+// black at once (no glimpse of the game), then wait until the loading screen is really gone:
+// mission time running, the game display up, the client in game
+("CQ_introBlack" call BIS_fnc_rscLayer) cutText ["", "BLACK FADED", 999];
+waitUntil { sleep 0.1; !isNull player && { !isNull (findDisplay 46) } && { time > 0 } && { isServer || { getClientStateNumber >= 10 } } };
+uiSleep CQ_introLoadPause;
 private _t0 = time;
 waitUntil { sleep 0.2; (!isNil "CQ_carrierPos" && { !isNil "CQ_musterPos" }) || { time - _t0 > 8 } };
 CQ_introShots params ["_tSat", "_tCoast", "_tFlight", "_tLand"];   // _tFlight: the squad shot
