@@ -10,8 +10,10 @@
       no known positions        explore: the nearest unscanned search cell (each drone its own)
       known positions           an ellipse fitted around every position identified in the
                                 last CQ_magMemory s (principal axes), wider for the higher
-                                drones (CQ_magDrones scale); the Reaper alternates ellipse and
-                                exploration, the Greyhawk explores when the last report was empty
+                                drones (CQ_magDrones scale); Sentinel_Hermes alternates ellipse and
+                                exploration, Sentinel_Argos explores when the last report was empty
+      before MAGPIE's first contact the two Sentinels fly their search circuits instead
+                                (CQ_magPatrol: shared trunk from the base, then a loop flown over and over)
     Report (every CQ_magReportEvery s, if anything is new): a MAGPIE card with the count of new
     identifications by kind and the HQ news, and dots on every player's map for 10 s.
 */
@@ -171,6 +173,7 @@ if (time >= CQ_magDetectT) then {
                 private _fp = missionNamespace getVariable ["CQ_magFocus", []];
                 if (_fp isEqualTo []) then {
                     CQ_magFocus = getPosATL _o; CQ_magFocusT = time; CQ_magFocusNew = time;
+                    CQ_magContactMade = true;                       // the Sentinels leave their search circuits for good
                     { _x set ["planT", -1e6] } forEach CQ_mag;      // everyone re-routes now
                     ["magFocus", []] call CQ_fnc_say;
                     ["MAGPIE: first contact (%1) at %2, every drone encircles it", [typeOf _o, mapGridPosition _o]] call CQ_fnc_log;
@@ -256,7 +259,7 @@ if (_focusOn) then {
         _m set ["planT", time];
         private _v = _m get "veh";
         private _r = CQ_magRingR * ((_m get "scale") max 1);
-        // fixed wings (Greyhawk, Reaper): a loiter circle around the contact whose radius
+        // fixed wings (the Sentinels): a loiter circle around the contact whose radius
         // oscillates (CQ_magOsc) as it is renewed every 30 s; kept CQ_magAaAvoid clear of a
         // known Tigris near the focus by widening the circle
         if (_m call _fixed) then {
@@ -366,6 +369,26 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     if (_arrived) then { { if ((_x select 0) isEqualTo _tgt) then { _x set [1, true] } } forEach CQ_magCells };
     private _gr = group effectiveCommander _v;
     if (currentWaypoint _gr >= count waypoints _gr) then { _arrived = true };   // route flown: new one now
+    // search circuit until the first contact: trunk + loop the first time, then the loop again
+    // each time it is flown (a replacement drone starts from the trunk again)
+    private _route = CQ_magPatrol getOrDefault [_m get "name", []];
+    if (_route isNotEqualTo [] && { isNil "CQ_magContactMade" }) then {
+        private _on = (_m getOrDefault ["patrolVeh", objNull]) == _v;
+        if (_on && { currentWaypoint _gr < count waypoints _gr }) then { continue };
+        _route params ["_trunk", "_loop"];
+        private _pts = if (_on) then { _loop } else { _trunk + _loop };
+        _m set ["patrolVeh", _v];
+        _m set ["planT", time];
+        _m set ["explore", false];
+        _m set ["target", []];
+        [_gr] call CQ_fnc_clearWaypoints;
+        _v flyInHeight (_m get "alt");
+        private _first = -1;
+        { private _wp = _gr addWaypoint [[_x select 0, _x select 1, 0], 0]; _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 400; if (_first < 0) then { _first = _wp select 1 } } forEach _pts;
+        if (_first >= 0) then { _gr setCurrentWaypoint [_gr, _first] };
+        ["MAGPIE: %1 %2 its search circuit (%3 points)", [_m get "name", ["starts", "loops"] select _on, count _pts]] call CQ_fnc_log;
+        continue;
+    };
     if (time - (_m get "planT") < CQ_magPlanEvery && { !_arrived }) then { continue };
     _m set ["planT", time];
     private _i = _m get "i";

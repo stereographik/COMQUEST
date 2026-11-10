@@ -457,12 +457,12 @@ CQ_shopRange = 6;                        // metres from the shop terminal to use
 
 // MAGPIE - friendly UAV recon (CQ_fnc_magInit / CQ_fnc_magTick)
 // [callsign / airframe name, classes (first available, no DLC), flight altitude m, ellipse scale]
-// Arma 3 has no MQ-9 Reaper and its Sentinel UCAV needs the Jets DLC: the "Reaper" slot flies a
-// second Greyhawk airframe, higher and wider. Weapons are removed: MAGPIE only looks.
+// The two large drones are Greyhawk airframes named Sentinel_Argos (low) and Sentinel_Hermes
+// (high, wider sensor); the Sentinel UCAV itself needs the Jets DLC. Weapons are removed: MAGPIE only looks.
 CQ_magDrones = [
     ["Darter",   ["B_UAV_01_F"],                                  250, 0.8],
-    ["Greyhawk", ["B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"],     900, 1.2],
-    ["Reaper",   ["B_UAV_05_F", "B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"], 1500, 1.6]
+    ["Sentinel_Argos",  ["B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"],     900, 1.2],
+    ["Sentinel_Hermes", ["B_UAV_05_F", "B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"], 1500, 1.6]
 ];
 CQ_magFirstDelay = 5;                    // s after mission start: first take-off (the carrier arrives at start)
 CQ_magPadDist = 200;                     // m behind the HQ compound: the Darters' take-off field (grid of pads)
@@ -485,14 +485,14 @@ CQ_magRingStart = 3000;                  // m ring radius at first contact
 CQ_magRingMin = 700;                     // m tightest ring
 CQ_magRingShrink = 120;                  // m per minute the ring tightens
 CQ_magRingTurn = 0.5;                    // deg per second the ring turns (a full turn in 12 min)
-CQ_magOsc = [0.3, 240];                  // Greyhawk / Reaper loiter radius around a contact: +/- 30 %, one swing every 240 s
+CQ_magOsc = [0.3, 240];                  // Sentinels loiter radius around a contact: +/- 30 %, one swing every 240 s
 CQ_magChecksPerPass = 30;                // line-of-sight checks per drone and detection pass (was 60)
 CQ_magFocusQuiet = 300;                  // s without a new contact in the ring (once tight) -> next focus
 CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (the carrier group)
 CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
-CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2, max 2400 m (Darter ~600, Greyhawk ~1380, Reaper ~2100)
+CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2, max 2400 m (Darter ~600, Sentinel_Argos ~1380, Sentinel_Hermes ~2100)
 CQ_magSpotChance = createHashMapFromArray [["inf", 0.6], ["static", 0.7], ["light", 0.8], ["armour", 0.85], ["air", 0.9]];   // chance per pass to identify a new contact in sight
 CQ_magAaClasses = ["O_APC_Tracked_02_AA_F"];   // anti-air MAGPIE keeps away from once identified (HQ AA guns are a plain risk)
 CQ_magAaAvoid = 2500;                    // m kept from the last known position of a Tigris (its missiles reach ~4 km: a moved Tigris is deadly)
@@ -524,8 +524,21 @@ CQ_heatAlpha = 0.10;                     // final opacity of the overlay
 CQ_heatMaxTiles = 1200;                  // drawn tiles at most (strongest first, on screen only)
 // fixed-wing spawn spots placed in Eden by hand: name -> [[x, y], direction]
 CQ_magFixedSpawns = createHashMapFromArray [
-    ["Greyhawk", [[14305.65, 15841.31], 39.09]],
-    ["Reaper",   [[14287.53, 15824.28], 39.09]]
+    ["Sentinel_Argos",  [[14305.65, 15841.31], 39.09]],
+    ["Sentinel_Hermes", [[14287.53, 15824.28], 39.09]]
+];
+// Search circuits (drawn on the map by Django): until MAGPIE's FIRST contact, each Sentinel flies
+// the shared trunk east from the base, then loops its own circuit over and over:
+//   Sentinel_Argos   north loop, clockwise: Almyra salt lake, Sofia, back down the NE coast
+//   Sentinel_Hermes  south loop: down the spine to Selakano, round the south tip, up the east coast
+// After the first contact they switch to the usual encirclement / ellipse behaviour.
+// name -> [trunk points, loop points]  ([x, y] metres)
+CQ_magTrunk = [[17000, 16000], [19700, 15950], [20800, 16100]];
+CQ_magPatrol = createHashMapFromArray [
+    ["Sentinel_Argos",  [CQ_magTrunk, [[20800, 16450], [22600, 17600], [24050, 18550], [25350, 20150], [26050, 21400], [27150, 21500],
+        [27950, 20800], [28000, 19500], [27300, 18400], [25850, 17400], [24550, 16750], [23700, 15950], [22600, 15550], [21150, 15500]]]],
+    ["Sentinel_Hermes", [CQ_magTrunk, [[20300, 15700], [20150, 14000], [20150, 11800], [20250, 9050], [20350, 6950], [21000, 6300], [22100, 6300],
+        [23100, 6950], [23650, 8550], [23550, 10800], [23150, 13050], [23550, 14850], [21950, 15500]]]]
 ];
 CQ_magRunwayIn = 15;                     // m past the runway threshold (SW end): where the fixed-wing drones spawn
 CQ_magRunwayFlip = false;                // true if the drones spawn facing off the runway end
