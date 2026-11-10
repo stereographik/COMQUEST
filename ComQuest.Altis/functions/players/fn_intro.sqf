@@ -97,36 +97,30 @@ _hb hideObject true;
 _hb engineOn true;
 _locals pushBack _hb;
 
-// ---- SPLASH (proof of concept): the mission visual as a full-screen wallpaper with text on
-// top, right after Arma's loading screen. Covers the screen (sides cropped to keep its
-// proportions), darkened, chart colours. Holds CQ_splashTime s; Space ends it early.
+// ---- SPLASH (proof of concept), right after Arma's loading screen: black background, the
+// mission visual centred (CQ_splashWidth of the screen width, whole picture, no crop), the
+// text under it on its bottom-left corner. Holds CQ_splashTime s; Space ends it early.
 if (CQ_splashEnabled) then {
-    private _hpx = safeZoneH / pixelH;                          // screen height in pixels
-    private _w = 4 * _hpx * pixelW;                             // the 2048 x 512 picture at that height
+    // black background (the black layer is already up), picture centred, text under it
+    // aligned on the picture's bottom-left corner
+    private _w = safeZoneW * CQ_splashWidth;
+    private _h = (_w / pixelW) / 4 * pixelH;                    // 2048 x 512: 4:1 in screen pixels
+    private _x0 = safeZoneX + (safeZoneW - _w) / 2;
+    private _y0 = safeZoneY + (safeZoneH - _h) / 2 - safeZoneH * 0.05;
     private _sp = [];
     private _pic = _td ctrlCreate ["RscPicture", -1];
-    _pic ctrlSetPosition [safeZoneX + (safeZoneW - _w) / 2, safeZoneY, _w, safeZoneH];
+    _pic ctrlSetPosition [_x0, _y0, _w, _h];
     _pic ctrlSetText (getMissionPath "media\loading.jpg");
     _sp pushBack _pic;
-    private _shade = _td ctrlCreate ["RscText", -1];
-    _shade ctrlSetPosition [safeZoneX, safeZoneY, safeZoneW, safeZoneH];
-    _shade ctrlSetBackgroundColor [0, 0.153, 0.169, 0.45];      // chart deep teal veil
-    _sp pushBack _shade;
-    private _band = _td ctrlCreate ["RscText", -1];
-    _band ctrlSetPosition [safeZoneX, safeZoneY + safeZoneH * 0.8, safeZoneW, safeZoneH * 0.2];
-    _band ctrlSetBackgroundColor [0, 0.153, 0.169, 0.6];
-    _sp pushBack _band;
-    private _top = _td ctrlCreate ["RscStructuredText", -1];
-    _top ctrlSetPosition [safeZoneX + safeZoneW * 0.04, safeZoneY + safeZoneH * 0.05, safeZoneW * 0.5, safeZoneH * 0.12];
-    _top ctrlSetStructuredText parseText format ["<t font='PuristaSemibold' size='2' color='#F2F1DF'>COMQUEST</t><br/><t font='PuristaLight' size='0.8' color='#A6A381'>v%1  ·  build %2</t>", CQ_version, CQ_build];
-    _sp pushBack _top;
-    private _bot = _td ctrlCreate ["RscStructuredText", -1];
-    _bot ctrlSetPosition [safeZoneX + safeZoneW * 0.04, safeZoneY + safeZoneH * 0.86, safeZoneW * 0.7, safeZoneH * 0.08];
-    _bot ctrlSetStructuredText parseText "<t font='PuristaMedium' size='1' color='#F2F1DF'>ALTIS  ·  CUT THE NETWORK BEFORE THE CARRIER EMPTIES</t><br/><t font='PuristaLight' size='0.75' color='#A6A381'>Co-op, up to 26 players  ·  by Django aka stereographik</t>";
-    _sp pushBack _bot;
+    private _txt = _td ctrlCreate ["RscStructuredText", -1];
+    _txt ctrlSetPosition [_x0, _y0 + _h + safeZoneH * 0.02, _w * 0.75, safeZoneH * 0.14];
+    _txt ctrlSetStructuredText parseText format [
+        "<t font='PuristaSemibold' size='1.3' color='#F2F1DF'>COMQUEST</t><t font='PuristaLight' size='0.75' color='#A6A381'>   v%1  ·  build %2</t><br/><t font='PuristaMedium' size='0.85' color='#F2F1DF'>ALTIS  ·  CUT THE NETWORK BEFORE THE CARRIER EMPTIES</t><br/><t font='PuristaLight' size='0.72' color='#A6A381'>Co-op, up to 26 players  ·  by Django aka stereographik</t>",
+        CQ_version, CQ_build];
+    _sp pushBack _txt;
     private _cont = _td ctrlCreate ["RscStructuredText", -1];
-    _cont ctrlSetPosition [safeZoneX + safeZoneW * 0.75, safeZoneY + safeZoneH * 0.9, safeZoneW * 0.22, safeZoneH * 0.04];
-    _cont ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='0.75' color='#918C3B'>SPACE  ·  continue</t>";
+    _cont ctrlSetPosition [_x0 + _w * 0.75, _y0 + _h + safeZoneH * 0.02, _w * 0.25, safeZoneH * 0.04];
+    _cont ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='0.72' color='#918C3B'>SPACE  ·  continue</t>";
     _sp pushBack _cont;
     _hint ctrlShow false;
     { _x ctrlSetFade 1; _x ctrlCommit 0; _x ctrlSetFade 0; _x ctrlCommit 0.8 } forEach _sp;
