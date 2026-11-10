@@ -15,6 +15,7 @@ if (isNil "CQ_dbgGod") then { CQ_dbgGod = false };
 
 private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
 uiNamespace setVariable ["CQ_dbgDisplay", _d];
+_d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];   // U closes it
 
 private _W = safeZoneW * 0.86;
 private _H = safeZoneH * 0.86;

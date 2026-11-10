@@ -441,20 +441,20 @@ CQ_tigrisMissileRange = 3500;            // m (slant): the Tigris launches a Tit
 CQ_tigrisSalvo = 25;                     // s between two launches of one Tigris
 CQ_tigrisGuide = 0.5;                    // share of launches forced onto the drone (the others often miss)
 
-// MAGPIE heatmap (map overlay, every player, always on): cold where her drones scanned,
-// yellow -> red where they saw enemies; both fade (half-life) as the information gets old
+// MAGPIE heatmap (map overlay, every player, always on): contacts only, blue -> red
+// contour bands shaped by the terrain, fading (half-life) as the information gets old
 CQ_heatCell = 300;                       // m per cell
 CQ_heatHalfHeat = 60;                    // s: contact heat halves every minute
-CQ_heatHalfScan = 60;                    // s: scan halves every minute
 CQ_heatEvery = 5;                        // s between two server updates
 CQ_heatPubEvery = 10;                    // s between two broadcasts to the players
 CQ_heatWeights = createHashMapFromArray [["inf", 0.15], ["static", 0.3], ["light", 0.35], ["armour", 0.6], ["air", 0.6]];   // heat per seen unit (summed per cell, max 1)
 CQ_heatEnabled = true;                   // false: no heatmap overlay on the map (the server grid still runs)
-CQ_heatColdMerge = 3;                    // the cold (scanned) layer is drawn in 3 x 3 merged cells (900 m): 9x fewer blobs
-CQ_heatMaxBlobs = 150;                   // per layer, strongest first; only blobs on screen are drawn
-CQ_heatBlobCold = 1.8;                   // blob diameter in (merged) cells (overlap = smooth gradient)
-CQ_heatBlobHot = 2.6;
-CQ_heatIconK = 1;                        // size calibration of the blobs on the map
+CQ_heatFine = 100;                       // m: drawn tile size (the field is sampled this fine)
+CQ_heatSigma = 260;                      // m: spread of one contact cell (gaussian)
+CQ_heatTerrain = 0.35;                   // heightmap mask: how much local relief bends the contours
+CQ_heatBands = 7;                        // colour bands (stepped contours, blue -> red)
+CQ_heatAlpha = 0.10;                     // final opacity of the overlay
+CQ_heatMaxTiles = 1800;                  // drawn tiles at most (strongest first, on screen only)
 // fixed-wing spawn spots placed in Eden by hand: name -> [[x, y], direction]
 CQ_magFixedSpawns = createHashMapFromArray [
     ["Greyhawk", [[14305.65, 15841.31], 39.09]],

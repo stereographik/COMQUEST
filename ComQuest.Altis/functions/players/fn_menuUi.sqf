@@ -9,7 +9,7 @@
 if (!hasInterface) exitWith {};
 disableSerialization;
 if (!isNull (uiNamespace getVariable ["CQ_menuDisplay", displayNull])) exitWith { (uiNamespace getVariable "CQ_menuDisplay") closeDisplay 1 };
-{ if (!isNull (uiNamespace getVariable [_x, displayNull])) exitWith { (uiNamespace getVariable _x) closeDisplay 1 } } forEach ["CQ_sqDisplay", "CQ_shopDisplay"];
+{ if (!isNull (uiNamespace getVariable [_x, displayNull])) exitWith { (uiNamespace getVariable _x) closeDisplay 1 } } forEach ["CQ_sqDisplay", "CQ_shopDisplay", "CQ_dbgDisplay"];
 
 private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
 uiNamespace setVariable ["CQ_menuDisplay", _d];
