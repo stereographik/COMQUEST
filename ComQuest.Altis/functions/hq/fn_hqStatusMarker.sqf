@@ -9,27 +9,28 @@
     appear only when the HQ is fully built (last objective ready); a fallen HQ keeps a grey
     [HQ#1][destroyed] marker.
     Every objective gets its own marker as soon as it is set up during the construction (called
-    every tick by CQ_fnc_hqTick, building included), kept after the HQ falls:
-        [Depot][active]   orange        [Depot][disabled]   yellow
+    every tick by CQ_fnc_hqTick, building included), orange [Depot][active], removed as soon as
+    the objective is destroyed.
 */
 params ["_hq"];
 private _id = _hq get "id";
 
-// one marker per objective: [type][active] orange / [type][disabled] yellow
+// one marker per objective while it stands: [type][active], orange; removed when destroyed
 {
     private _o = _x;
     private _om = format ["cq_obj_%1_%2", _id, _forEachIndex];
+    if (!alive _o) then {
+        if (markerType _om != "") then { deleteMarker _om };
+        continue;
+    };
     if (markerType _om == "") then {
         createMarker [_om, getPosATL _o];
         _om setMarkerType "mil_objective";
         _om setMarkerSize [0.7, 0.7];
+        _om setMarkerColor "ColorOrange";
     };
-    private _on = alive _o;
-    private _ot = format ["[%1][%2]", _o getVariable ["CQ_objType", "Objective"], ["disabled", "active"] select _on];
-    if (markerText _om != _ot) then {
-        _om setMarkerText _ot;
-        _om setMarkerColor (["ColorYellow", "ColorOrange"] select _on);
-    };
+    private _ot = format ["[%1][active]", _o getVariable ["CQ_objType", "Objective"]];
+    if (markerText _om != _ot) then { _om setMarkerText _ot };
 } forEach (_hq get "installations");
 
 // the HQ's own marker (dot + AO circle) only once the last objective is ready
