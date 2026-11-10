@@ -430,7 +430,13 @@ if (_bbC != "") then {
     ["Billboard (%1) at %2", [_bbC, mapGridPosition _bb]] call CQ_fnc_log;
 };
 
-CQ_musterPos = [0, -6] call _at;
+// muster point (start + respawn): open ground in the front half of the courtyard, right of the
+// flag, never inside or against a building (nearest clear spot if something stands there)
+private _mw = [8, 16] call _at;
+CQ_musterPos = [_mw, 4, 24] call CQ_fnc_clearPos;
+if (CQ_musterPos isEqualTo []) then { CQ_musterPos = _mw };
+CQ_musterPos = [CQ_musterPos select 0, CQ_musterPos select 1, 0];
+["Muster point (start + respawn) %1 m from the wanted spot", [round (CQ_musterPos distance2D _mw)]] call CQ_fnc_log;
 publicVariable "CQ_musterPos";
 private _respawn = createMarker ["respawn_west", CQ_musterPos];
 _respawn setMarkerType "Empty";

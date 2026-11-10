@@ -7,7 +7,10 @@ waitUntil { !isNull player };
 // Start on the muster area of the base camp
 if (!_didJIP || { player distance2D CQ_basePos < 200 }) then {
     waitUntil { !isNil "CQ_musterPos" };
-    player setPosATL (CQ_musterPos getPos [2 + random 8, random 360]);
+    // a free spot outside, close to the muster point (never in a building or on another player)
+    private _sp = CQ_musterPos findEmptyPosition [0, 8, "B_Soldier_F"];
+    if (_sp isEqualTo []) then { _sp = CQ_musterPos };
+    player setPosATL [_sp select 0, _sp select 1, 0];
     player setDir CQ_baseDir;
 };
 // Every slot is a Rifleman: the class is taken in game (U -> CLASS)
