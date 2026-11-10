@@ -237,6 +237,8 @@ CQ_ui = createHashMapFromArray [
     ["text", [0.949, 0.945, 0.875, 1]], ["muted", [0.651, 0.639, 0.506, 1]], ["dim", [0.45, 0.44, 0.35, 1]],
     ["accent", [0.569, 0.549, 0.231, 1]], ["alert", [0.729, 0.224, 0.173, 1]], ["warn", [0.651, 0.639, 0.506, 1]]
 ];   // hex: text #F2F1DF, muted #A6A381, accent #918C3B, alert #BA392C
+CQ_splashEnabled = true;                 // POC: full-screen wallpaper splash with text, before the intro
+CQ_splashTime = 4;                       // s (Space ends it)
 CQ_introEnabled = true;                  // cinematic at join: black + typed time/place, satellite, coast, flight, landing, eyes (CQ_fnc_intro)
 CQ_introShots = [8, 8, 8, 8];            // s per shot: satellite, coast, squad on a hilltop, landing (on the shop pad)
 CQ_introFade = 1;                        // s per fade (out, and in) between shots; the end is a blink
