@@ -8,6 +8,7 @@
     Also stores CQ_coastPoint, used to choose where root insertions land.
 */
 private _y = (CQ_coastBand select 0) + random ((CQ_coastBand select 1) - (CQ_coastBand select 0));
+if (missionNamespace getVariable ["CQ_testOverride", false]) then { _y = worldSize / 2; ["TEST OVERRIDE: carrier at mid-height"] call CQ_fnc_log };
 
 private _coast = [];
 for "_x" from (worldSize - 200) to (worldSize * 0.5) step -100 do {

@@ -14,6 +14,13 @@ if ((call CQ_fnc_enemyInfantry) > CQ_maxInfantry - 30) exitWith {
 
 private _site = if (CQ_rootsLaunched == 0 && CQ_debugFirstAtRunway) then {
     call CQ_fnc_debugRunwaySite
+} else { if (CQ_rootsLaunched == 0 && { missionNamespace getVariable ["CQ_testOverride", false] }) then {
+    // TEST OVERRIDE: first HQ as far west as allowed, just outside the base no-spawn radius,
+    // on the line from the base to the carrier
+    private _p = CQ_basePos getPos [CQ_baseNoSpawnRadius + 700, CQ_basePos getDir CQ_carrierPos];
+    private _s = [_p, 0, 900, true, 40] call CQ_fnc_findSite;
+    ["TEST OVERRIDE: first HQ site %1 (%2 m from the base)", [if (_s isEqualTo []) then { "none" } else { mapGridPosition _s }, if (_s isEqualTo []) then { -1 } else { round (_s distance2D CQ_basePos) }]] call CQ_fnc_log;
+    _s
 } else {
     // The very first HQ is a beachhead: straight west of the carrier, close to the shore
     private _first = CQ_rootsLaunched == 0;
@@ -28,7 +35,7 @@ private _site = if (CQ_rootsLaunched == 0 && CQ_debugFirstAtRunway) then {
     private _s = [_coast, _inland select 0, _inland select 1, true, 40, _coast getDir CQ_basePos, [60, 75] select _first] call CQ_fnc_findSite;
     if (_first && { _s isNotEqualTo [] }) then { ["Beachhead site %1 m from the shore (grid %2)", [round (_s distance2D _coast), mapGridPosition _s]] call CQ_fnc_log };
     _s
-};
+} };
 
 if (_site isEqualTo []) exitWith {
     ["Root insertion: no land found this tick, retrying"] call CQ_fnc_log;
