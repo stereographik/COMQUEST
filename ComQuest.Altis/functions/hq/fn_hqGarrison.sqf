@@ -2,7 +2,7 @@
     CQ_fnc_hqGarrison  (server)
     [_hq] call CQ_fnc_hqGarrison;
     End of installation: commander standing in the middle of the command building's floor and
-    his guards inside, perimeter squads recalled (1st defends the HQ, the others patrol), a
+    his guards inside, an elite escort squad around the building (CQ_cmdEscortClasses), perimeter squads recalled (1st defends the HQ, the others patrol), a
     guard team of CQ_objGuardSize on every objective site away from the building (taken from
     the patrols, role "guard": never sent as QRF, colonists or alarm), armed vehicles patrol.
     Creates the map markers once.
@@ -89,6 +89,24 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
     };
     _g enableDynamicSimulation CQ_dynSimGarrison;
 } forEach ((_hq get "infantry") select { ({ alive _x } count units _x) > 0 });
+
+// Commander's escort: an elite squad (CQ_cmdEscortClasses, skill CQ_cmdEscortSkill) that always
+// stays around the command building and defends it (role "escort": never sent away)
+if (isNull (_hq getOrDefault ["escort", grpNull]) && { alive (_hq get "commander") }) then {
+    private _eg = createGroup [east, true];
+    { _eg createUnit [_x, _c getPos [8 + random 10, random 360], [], 0, "NONE"] } forEach CQ_cmdEscortClasses;
+    [units _eg] call CQ_fnc_unitPrep;
+    { _x setSkill CQ_cmdEscortSkill } forEach units _eg;
+    _eg setVariable ["CQ_role", "escort"];
+    _eg setBehaviour "AWARE";
+    _eg setCombatMode "RED";
+    _eg allowFleeing 0;
+    [_eg, _c, 40] call BIS_fnc_taskDefend;
+    _eg enableDynamicSimulation false;
+    _hq set ["escort", _eg];
+    (_hq get "support") pushBack _eg;
+    ["HQ #%1: elite escort of %2 around the commander", [_id, count units _eg]] call CQ_fnc_log;
+};
 
 // Guard team on every objective site away from the command building, taken from the patrols
 // (never their leader, a group keeps at least 2 men)
