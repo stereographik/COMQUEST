@@ -397,6 +397,18 @@ CQ_tigrisPerInsertion = 1;
 CQ_tigrisRadar = 6000;                   // m: any MAGPIE drone in line of sight within this range is locked and engaged
 CQ_tigrisMissileRange = 4500;            // m (slant): the Tigris launches a guided Titan at a drone in line of sight within this
 CQ_tigrisSalvo = 12;                     // s between two launches of one Tigris
+
+// MAGPIE heatmap (map overlay, every player, always on): cold where her drones scanned,
+// yellow -> red where they saw enemies; both fade (half-life) as the information gets old
+CQ_heatCell = 300;                       // m per cell
+CQ_heatHalfHeat = 240;                   // s: contact heat halves every 4 min
+CQ_heatHalfScan = 480;                   // s: scan halves every 8 min
+CQ_heatEvery = 5;                        // s between two server updates
+CQ_heatPubEvery = 10;                    // s between two broadcasts to the players
+CQ_heatWeights = createHashMapFromArray [["inf", 0.15], ["static", 0.3], ["light", 0.35], ["armour", 0.6], ["air", 0.6]];   // heat per seen unit (summed per cell, max 1)
+CQ_heatBlobCold = 2.2;                   // blob diameter in cells (overlap = smooth gradient)
+CQ_heatBlobHot = 2.6;
+CQ_heatIconK = 1;                        // size calibration of the blobs on the map
 // fixed-wing spawn spots placed in Eden by hand: name -> [[x, y], direction]
 CQ_magFixedSpawns = createHashMapFromArray [
     ["Greyhawk", [[14305.65, 15841.31], 39.09]],

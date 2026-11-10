@@ -156,6 +156,8 @@ class CfgFunctions
             class magTick {};
             class magMarks {};
             class magMapClient {};
+            class heatTick {};
+            class heatMapClient {};
             class tigrisTick {};
             class runwayClear {};
             class airLoadout {};
