@@ -179,7 +179,7 @@ CQ_sniperDrop = 200;                     // m short of the spots where the team 
 CQ_sniperWait = 1200;                    // s: a job no team has taken by then is done on foot                  // how far a team drives for a job
 // HUNTERS: CSAT special forces sent after the player squad hurting an HQ (CQ_fnc_huntLaunch)
 CQ_huntTeams = 3;                        // per carrier, one alive at a time (not shown on the carrier marker)
-CQ_huntClasses = ["O_recon_TL_F", "O_recon_F", "O_recon_F", "O_recon_M_F", "O_recon_LAT_F", "O_recon_medic_F"];
+CQ_huntClasses = ["O_recon_TL_F", "O_recon_F", "O_recon_F", "O_Soldier_AR_F", "O_recon_LAT_F", "O_recon_medic_F"];
 CQ_huntHaloAlt = 2500;                   // m: HALO jump altitude
 CQ_huntChuteAlt = 150;                   // m: chute opened
 CQ_huntDropDist = [1500, 2500];          // m from the target squad
@@ -240,6 +240,7 @@ CQ_classes = [
     ["Anti-Air",        "B_soldier_AA_F",   [],                                  2],
     ["Engineer",        "B_engineer_F",     ["Engineer", "explosiveSpecialist"], 4],
     ["Marksman",        "B_soldier_M_F",    [],                                  2],
+    ["Sniper",          "B_sniper_F",       [],                                  2],
     ["Pilot",           "B_Helipilot_F",    [],                                  4]
 ];
 CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
