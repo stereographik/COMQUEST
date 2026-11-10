@@ -228,6 +228,8 @@ CQ_loadZoneCount = 4;                    // loadout zones in the base parking ar
 CQ_loadZoneRadius = 9;
 // Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
 // [label, unit class (loadout), traits, max players in that class]
+CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
+CQ_menuScreen = [0.4072, 0.4023, 0.7100, 0.5479];   // its blue screen zone in the picture (fractions)
 CQ_bleedOut = 300;                       // s a downed player waits for a medic (ReviveBleedOutDelay in description.ext)
 CQ_surgeChance = 0.10;                   // adrenalineSurge: chance for a downed medic to get up on his own over the whole wait
 CQ_bleedMedicRange = 500;                // BLEEDOUT (give up and respawn) only allowed with no medic this close

@@ -1,10 +1,10 @@
 /*
     CQ_fnc_menuUi  (client)   U key, or the scroll menu "Menu (U)"
-    Small hub with every window of the mission:
+    Hub with every window of the mission, shown on the screen of a field transceiver picture:
       SQUADS / CLASS / STATS   -> CQ_fnc_squadUi (its three tabs)
       VEHICLE SHOP             -> CQ_fnc_shopUi (browse anywhere; buying needs the shop terminal)
       DEBUG PANEL              -> CQ_fnc_debugUi (debug missions, the host and logged-in admins)
-    U or Esc closes it; U again inside a window closes that window.
+    U or Esc closes it; U again inside a window closes that window (debug panel included).
 */
 if (!hasInterface) exitWith {};
 disableSerialization;
@@ -25,11 +25,13 @@ private _items = [
 ];
 if (_admin) then { _items pushBack ["DEBUG PANEL", "Test commands (F3)", { [] spawn CQ_fnc_debugUi }] };
 
-private _ml = 0.05;
-private _mw = safeZoneW * 0.2;
-private _mh = _ml * (1.6 + 1.15 * count _items) + 0.02;
-private _mx = safeZoneX + (safeZoneW - _mw) / 2;
-private _my = safeZoneY + (safeZoneH - _mh) / 2;
+// the field transceiver picture (media\comdevice_ca.paa, 1024 x 1024, background cut out); the
+// choices are laid out in its screen (blue zone, CQ_menuScreen = [x0, y0, x1, y1] as fractions
+// of the picture)
+private _npx = (safeZoneH * CQ_menuSize) / pixelH;              // picture size in screen pixels
+private _pw = _npx * pixelW; private _ph = _npx * pixelH;
+private _picX = safeZoneX + (safeZoneW - _pw) / 2;
+private _picY = safeZoneY + (safeZoneH - _ph) / 2;
 private _mk = {
     params ["_cls", "_pos", ["_txt", ""]];
     private _c = _d ctrlCreate [_cls, -1];
@@ -38,15 +40,26 @@ private _mk = {
     _c ctrlCommit 0;
     _c
 };
-(["RscText", [_mx, _my, _mw, _mh]] call _mk) ctrlSetBackgroundColor [0.03, 0.04, 0.03, 0.9];
-(["RscText", [_mx, _my, _mw, _ml * 1.1]] call _mk) ctrlSetBackgroundColor [0.12, 0.16, 0.1, 0.95];
-(["RscText", [_mx + 0.01, _my + 0.005, _mw - 0.07, _ml], "COMQUEST"] call _mk) ctrlSetTextColor [0.78, 0.88, 0.48, 1];
-private _xb = ["RscButton", [_mx + _mw - 0.05, _my + 0.005, 0.04, _ml], "X"] call _mk;
-_xb ctrlAddEventHandler ["ButtonClick", { (uiNamespace getVariable ["CQ_menuDisplay", displayNull]) closeDisplay 1 }];
-
+private _pic = ["RscPicture", [_picX, _picY, _pw, _ph]] call _mk;
+_pic ctrlSetText (getMissionPath "media\comdevice_ca.paa");
+CQ_menuScreen params ["_fx0", "_fy0", "_fx1", "_fy1"];
+private _sx = _picX + _pw * _fx0; private _sy = _picY + _ph * _fy0;
+private _sw = _pw * (_fx1 - _fx0); private _sh = _ph * (_fy1 - _fy0);
+// two columns of choices filling the screen
+private _cols = 2;
+private _rows = ceil (count _items / _cols);
+private _gx = _sw * 0.03; private _gy = _sh * 0.05;
+private _bw = (_sw - _gx * (_cols + 1)) / _cols;
+private _bh = (_sh - _gy * (_rows + 1)) / _rows;
 {
     _x params ["_label", "_tip", "_code"];
-    private _b = ["RscButton", [_mx + 0.01, _my + _ml * (1.4 + 1.15 * _forEachIndex), _mw - 0.02, _ml], _label] call _mk;
+    private _c = _forEachIndex mod _cols; private _r = floor (_forEachIndex / _cols);
+    private _b = ["RscButton", [_sx + _gx + _c * (_bw + _gx), _sy + _gy + _r * (_bh + _gy), _bw, _bh], _label] call _mk;
+    _b ctrlSetFontHeight (_bh * 0.42);
+    _b ctrlSetFont "PuristaMedium";
+    _b ctrlSetBackgroundColor [0.02, 0.16, 0.19, 0.85];
+    _b ctrlSetActiveColor [0.5, 0.95, 1, 1];
+    _b ctrlSetTextColor [0.85, 0.97, 1, 1];
     _b ctrlSetTooltip _tip;
     _b setVariable ["CQ_code", _code];
     _b ctrlAddEventHandler ["ButtonClick", {
