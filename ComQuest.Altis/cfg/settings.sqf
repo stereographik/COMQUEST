@@ -68,7 +68,7 @@ CQ_depotPadGap = 24;                     // depot helipad distance behind the re
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
 // >>> TEST OVERRIDE (branch m8-heatmap only, REMOVE before merging to main) <<<
 // carrier at the map's mid-height, first HQ next to Charkia (looked up by name)
-CQ_testOverride = true;
+CQ_testOverride = false;
 CQ_testFirstHqTown = "Charkia";
 CQ_testFirstHqPos = [18300, 15300, 0];   // around Charkia: search centre and fallback
 CQ_coastBand = [9000, 23000];            // latitudes (y) where the carrier can appear
