@@ -160,7 +160,17 @@ CQ_specialVehicle = "I_MRAP_03_hmg_F";   // Strider HMG
 CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Blackfish drop of the game
 CQ_specialRespawn = 900;                 // a wiped-out team is dropped again 15 min later
 CQ_specialRespawns = 3;                  // ...at most this many times per team (first drop not counted)
-CQ_specialRange = 6000;                  // how far a team drives for a job
+CQ_specialRange = 6000;
+// Snipers: with every carrier insertion, CQ_snipersPerWave snipers on high ground on the HQ's
+// west side, driven by the medic and engineer teams to CQ_sniperDrop m short of their spots
+CQ_snipersPerWave = 4;
+CQ_sniperClass = "O_sniper_F";           // falls back to the marksman if missing or DLC
+CQ_sniperSeats = 2;                      // Strider cargo seats each team keeps free for them
+CQ_sniperDist = [800, 1200];             // m from the HQ
+CQ_sniperArc = [200, 340];               // bearings from the HQ (west side)
+CQ_sniperGap = 200;                      // m between two spots
+CQ_sniperDrop = 200;                     // m short of the spots where the team drops them
+CQ_sniperWait = 1200;                    // s: a job no team has taken by then is done on foot                  // how far a team drives for a job
 CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get treated
 // Radio direction finder (players with a radio): signal from enemy HQ radios
 CQ_rdfRange = 6000;                      // no signal beyond this

@@ -10,6 +10,8 @@
       engineer  Strider HMG, engineers in urban camo: drives to damaged CSAT vehicles and
                 statics (damage or broken wheels/tracks) and repairs them on the spot
     Between jobs the team waits near the main HQ. Runs for the whole mission.
+    Each team keeps CQ_sniperSeats seats free: with every insertion it drives snipers out to
+    their overwatch spots before anything else (CQ_fnc_sniperQueue / CQ_fnc_sniperRun).
 */
 params ["_kind"];
 private _medic = _kind == "medic";
@@ -41,7 +43,7 @@ while { true } do {
         };
         (call _mk) moveInDriver _v;
         { (call _mk) moveInTurret [_v, _x] } forEach (allTurrets [_v, false]);
-        for '_i' from 1 to (_v emptyPositions 'cargo') do { (call _mk) moveInCargo _v };
+        for '_i' from 1 to ((_v emptyPositions 'cargo') - CQ_sniperSeats) do { (call _mk) moveInCargo _v };
         {
             if (_medic) then {
                 _x setObjectTextureGlobal [0, '#(rgb,8,8,3)color(0.95,0.95,0.93,1)'];
@@ -73,6 +75,13 @@ while { true } do {
     private _jobT = 0;
     while { alive _v && { ({ alive _x } count units _g) > 0 } } do {
         sleep 10;
+        // snipers to deliver come first (CQ_fnc_sniperQueue)
+        private _sj = (missionNamespace getVariable ["CQ_sniperJobs", createHashMap]) getOrDefault [_kind, []];
+        if (_sj isNotEqualTo []) then {
+            [_v, _g, _sj deleteAt 0, _tag] call CQ_fnc_sniperRun;
+            _job = objNull;
+            continue;
+        };
         private _p = getPosATL _v;
         if (isNull _job || { time - _jobT > 300 }) then {
             _job = objNull;

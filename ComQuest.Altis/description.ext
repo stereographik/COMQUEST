@@ -185,6 +185,9 @@ class CfgFunctions
             class rootTick {};
             class paraDropVehicle {};
             class specialTeam {};
+            class sniperSpots {};
+            class sniperQueue {};
+            class sniperRun {};
             class carrierMarker {};
         };
 
