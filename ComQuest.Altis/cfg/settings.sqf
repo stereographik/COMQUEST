@@ -67,9 +67,10 @@ CQ_depotPadGap = 24;                     // depot helipad distance behind the re
 // --- Enemy origin: a carrier off the east coast -------------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
 // >>> TEST OVERRIDE (branch m8-heatmap only, REMOVE before merging to main) <<<
-// carrier at the map's mid-height, first HQ at Frini (CQ_testFirstHqPos, ~4.7 km north of the base)
+// carrier at the map's mid-height, first HQ next to Charkia (looked up by name)
 CQ_testOverride = true;
-CQ_testFirstHqPos = [14625, 20770, 0];   // Frini
+CQ_testFirstHqTown = "Charkia";
+CQ_testFirstHqPos = [18300, 15300, 0];   // around Charkia: search centre and fallback
 CQ_coastBand = [9000, 23000];            // latitudes (y) where the carrier can appear
 CQ_carrierOffshore = 3000;               // metres out from the coast (deeper water if needed)
 CQ_rootInland = [1500, 4000];            // root insertions land this far inland from a coast point

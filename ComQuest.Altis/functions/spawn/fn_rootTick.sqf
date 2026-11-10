@@ -15,9 +15,12 @@ if ((call CQ_fnc_enemyInfantry) > CQ_maxInfantry - 30) exitWith {
 private _site = if (CQ_rootsLaunched == 0 && CQ_debugFirstAtRunway) then {
     call CQ_fnc_debugRunwaySite
 } else { if (CQ_rootsLaunched == 0 && { missionNamespace getVariable ["CQ_testOverride", false] }) then {
-    // TEST OVERRIDE: first HQ next to the village of Frini (CQ_testFirstHqPos)
-    private _p = CQ_testFirstHqPos;
-    private _s = [_p, 0, 900, true, 40] call CQ_fnc_findSite;
+    // TEST OVERRIDE: first HQ next to the town CQ_testFirstHqTown (looked up by name around
+    // CQ_testFirstHqPos, which is also the fallback)
+    private _loc = (nearestLocations [CQ_testFirstHqPos, ["NameCityCapital", "NameCity", "NameVillage", "NameLocal"], 4000]) select { text _x == CQ_testFirstHqTown };
+    private _p = if (_loc isEqualTo []) then { CQ_testFirstHqPos } else { locationPosition (_loc select 0) };
+    _p = [_p select 0, _p select 1, 0];
+    private _s = [_p, 0, 700, true, 40] call CQ_fnc_findSite;
     ["TEST OVERRIDE: first HQ site %1 (%2 m from the base)", [if (_s isEqualTo []) then { "none" } else { mapGridPosition _s }, if (_s isEqualTo []) then { -1 } else { round (_s distance2D CQ_basePos) }]] call CQ_fnc_log;
     _s
 } else {
