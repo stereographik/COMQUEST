@@ -214,21 +214,30 @@ call {
     // ---- 4 LANDING: an empty Hummingbird settling at the muster area, seen from behind
     call _dip;
     if (CQ_introSkip) exitWith {};
-    private _behind = _lz getPos [20, _lzDir + 180];
-    _cam camSetPos [_behind select 0, _behind select 1, 7];
+    private _behind = _lz getPos [48, _lzDir + 180];          // well behind its approach path
+    _cam camSetPos [_behind select 0, _behind select 1, 9];
     _cam camSetTarget [_lz select 0, _lz select 1, 1.5];
     _cam camSetFov 0.6;
     _cam camCommit 0;
     _hb hideObject false;
+    // a smooth approach: it comes in from behind the camera, slows, flares (nose up) and
+    // settles. Moved every frame (EachFrame handler) so nothing stutters.
+    CQ_introLand = [_hook, _lz, _gz, _lzDir, time, _tLand * 0.9];
+    private _landEh = addMissionEventHandler ["EachFrame", {
+        CQ_introLand params ["_hook", "_lz", "_gz", "_dir", "_t0", "_dur"];
+        private _k = ((time - _t0) / _dur) max 0 min 1;
+        private _s = _k * _k * (3 - 2 * _k);                    // smoothstep
+        private _back = 30 * (1 - _s);                          // horizontal approach
+        private _p = _lz getPos [_back, _dir + 180];
+        private _alt = 1.1 + 24 * ((1 - _s) ^ 1.6);             // descends, slower near the ground
+        _hook setPosASL [_p select 0, _p select 1, _gz + _alt];
+        private _pitch = 0.10 * sin (180 * _s) - 0.04 * (1 - _s);   // nose down coming in, flare before touchdown
+        _hook setVectorDirAndUp [[sin _dir, cos _dir, _pitch], [0, 0, 1]];
+    }];
     _bl cutText ["", "BLACK IN", CQ_introFade];
-    private _tL = time;
-    while { time - _tL < _tLand && { !CQ_introSkip } } do {
-        private _k = ((time - _tL) / (_tLand * 0.85)) min 1;
-        private _ease = 1 - (1 - _k) ^ 2;                        // slows down as it settles
-        _hook setPosASL [_lz select 0, _lz select 1, _gz + 22 * (1 - _ease) + 1.1];
-        _hook setVectorDirAndUp [[sin _lzDir, cos _lzDir, 0.04 * (1 - _ease)], [0, 0, 1]];
-        uiSleep 0.02;
-    };
+    [_tLand] call _nap;
+    removeMissionEventHandler ["EachFrame", _landEh];
+    CQ_introLand = nil;
 };
 
 // ---- 5 BLACK, then 6 EYES: the player's own view opens in two blinks, a blur clearing
