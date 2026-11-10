@@ -50,6 +50,7 @@ p{margin:0;max-width:65ch}
 .hero h1{font-size:clamp(64px,15.5vw,190px);line-height:.86;letter-spacing:-.02em;margin:8px 0 18px;white-space:nowrap}
 .plate{position:relative;border:1px solid var(--line);background:#0a1415;overflow:hidden}
 .plate canvas{display:block;width:100%;height:auto}
+#plate{aspect-ratio:1180/520;height:auto}
 .plate .tag{position:absolute;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:rgba(13,15,16,.72);padding:4px 8px}
 .hero-foot{display:grid;grid-template-columns:1.2fr 2fr;gap:40px;padding:36px 0 48px;align-items:start}
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
@@ -155,11 +156,11 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     </div>
     <h1>ComQuest</h1>
     <div class="plate">
-      <canvas id="plate" width="1180" height="520" aria-label="Stylised map of Altis: MAGPIE drone tracks in teal, a scanned area, enemy heat in rose"></canvas>
-      <span class="tag" style="left:12px;top:12px">MAGPIE · scan grid 300 m</span>
-      <span class="tag" style="right:12px;top:12px">Contact · heat fades 60 s</span>
-      <span class="tag" style="left:12px;bottom:12px">Tigris AA · 3.5 km</span>
-      <span class="tag" style="right:12px;bottom:12px">Grid 144159 · runway 044°</span>
+      <canvas id="plate" aria-label="Animated map: the CSAT carrier plants HQs inland, each one built in four stages and founding the next"></canvas>
+      <span class="tag" style="left:12px;top:12px">Enemy network · live</span>
+      <span class="tag" style="right:12px;top:12px">6 HQs per carrier</span>
+      <span class="tag" style="left:12px;bottom:12px">4 build stages each</span>
+      <span class="tag" style="right:12px;bottom:12px">No markers on your map</span>
     </div>
     <div class="hero-foot">
       <p class="lead">A CSAT carrier parks off Altis and starts planting headquarters inland. Each one grows, splits and feeds the next, while a friendly drone operator hunts them from the sky. Find the network and cut it apart before the carrier empties onto the island.</p>
@@ -419,31 +420,64 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
   const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const T=css('--teal'), R=css('--rose'), L=css('--line');
 
-  // hero plate: island contours, scan grid, drone tracks, heat, HUD crosses
-  const c=document.getElementById('plate'), g=c.getContext('2d'), W=c.width, H=c.height;
-  g.fillStyle='#0a1415'; g.fillRect(0,0,W,H);
-  const isl=[]; const cx=W*0.52, cy=H*0.55;
-  for(let a=0;a<Math.PI*2;a+=0.05){ const k=1+0.18*Math.sin(a*3+1)+0.1*Math.sin(a*7)+0.06*Math.sin(a*13+2); isl.push([cx+Math.cos(a)*W*0.36*k, cy+Math.sin(a)*H*0.33*k*(a>3.6&&a<5.4?0.8:1)]) }
-  for(let i=0;i<9;i++){ const f=1-i*0.1; g.beginPath(); isl.forEach((p,j)=>{const x=cx+(p[0]-cx)*f+Math.sin(j*0.3+i)*3, y=cy+(p[1]-cy)*f; j?g.lineTo(x,y):g.moveTo(x,y)}); g.closePath();
-    if(i===0){g.fillStyle='#123033';g.fill()} g.strokeStyle=i===0?'#3f6f71':'rgba(127,182,181,'+(0.12+i*0.02)+')'; g.lineWidth=1; g.stroke() }
-  g.strokeStyle='rgba(127,182,181,.08)'; for(let x=0;x<W;x+=40){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke()} for(let y=0;y<H;y+=40){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke()}
-  const blob=(x,y,rad,col,a)=>{const gr=g.createRadialGradient(x,y,0,x,y,rad); gr.addColorStop(0,col.replace(')',','+a+')').replace('rgb','rgba')); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(x-rad,y-rad,rad*2,rad*2)};
-  for(let i=0;i<26;i++) blob(W*0.3+r()*W*0.32, H*0.3+r()*H*0.45, 50+r()*40,'rgb(127,182,181)',0.16);
-  const hot=[[W*0.66,H*0.42],[W*0.7,H*0.5],[W*0.74,H*0.38]];
-  hot.forEach(([x,y],i)=>{blob(x,y,90-i*15,'rgb(242,120,140)',0.35); blob(x,y,40,'rgb(255,214,120)',0.35)});
-  g.setLineDash([4,6]); g.strokeStyle=T; g.lineWidth=1.2;
-  g.beginPath(); g.ellipse(W*0.7,H*0.45,W*0.13,H*0.2,0.3,0,Math.PI*2); g.stroke();
-  g.beginPath(); for(let i=0;i<9;i++){const y=H*0.16+i*H*0.085; g.moveTo(W*0.5-8,y); g.lineTo(W*0.5+8,y)} g.stroke();
-  g.beginPath(); g.moveTo(W*0.5,H*0.12); g.lineTo(W*0.5,H*0.88); g.stroke(); g.setLineDash([]);
-  g.fillStyle=R; [[W*0.6,H*0.3,46,10],[W*0.78,H*0.58,30,8],[W*0.82,H*0.22,64,6]].forEach(b=>g.fillRect(...b));
-  g.fillStyle='rgba(242,195,205,.18)'; g.fillRect(W*0.08,H*0.18,W*0.14,H*0.16);
-  g.strokeStyle='rgba(238,241,239,.7)'; g.lineWidth=1;
-  const cross=(x,y,z)=>{g.beginPath();g.moveTo(x-z,y);g.lineTo(x+z,y);g.moveTo(x,y-z);g.lineTo(x,y+z);g.stroke()};
-  [[W*0.2,H*0.7],[W*0.45,H*0.25],[W*0.88,H*0.75],[W*0.62,H*0.8]].forEach(([x,y])=>cross(x,y,9)); cross(W*0.7,H*0.45,18);
-  g.fillStyle='rgba(238,241,239,.85)'; g.font='11px "IBM Plex Mono",monospace';
-  g.fillText('FIRST CONTACT', W*0.7+24, H*0.45-8); g.fillText('SCAN CHAIN →', W*0.5+14, H*0.14);
-  // a Tigris danger circle
-  g.strokeStyle='rgba(242,195,205,.55)'; g.beginPath(); g.arc(W*0.8,H*0.66,70,0,Math.PI*2); g.stroke();
+  // hero plate: the network grows. The carrier plants a beachhead, each HQ builds in four
+  // stages, then founds the next, until the carrier is empty (loops)
+  (function(){
+    const cv=document.getElementById('plate'), ctx=cv.getContext('2d');
+    const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const names=['ALPHA','BRAVO','CHARLIE','DELTA','ECHO','FOXTROT'];
+    const carrier={x:0.93,y:0.36};
+    const nodes=[{x:0.74,y:0.42,p:-1},{x:0.6,y:0.24,p:0},{x:0.6,y:0.66,p:0},{x:0.45,y:0.4,p:1},{x:0.44,y:0.78,p:2},{x:0.3,y:0.24,p:3}];
+    const STEP=2.4, HOLD=6;
+    let W=0,H=0,t0=performance.now(),contours=[];
+    function size(){
+      const dpr=window.devicePixelRatio||1;
+      W=cv.clientWidth; H=cv.clientHeight; cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+      contours=[]; let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+      for(let i=0;i<10;i++) contours.push({cx:0.1+rnd()*0.65,cy:0.15+rnd()*0.7,r:0.08+rnd()*0.25,k:rnd()*6});
+    }
+    const coast=y=>0.82+0.05*Math.sin(y*7)+0.03*Math.sin(y*17);
+    function draw(now){
+      const tt=reduce?999:(now-t0)/1000, cyc=nodes.length*STEP+HOLD, t=reduce?999:tt%cyc;
+      ctx.fillStyle='#0f2427'; ctx.fillRect(0,0,W,H);                     // land
+      ctx.strokeStyle='rgba(127,182,181,.07)'; ctx.lineWidth=1;            // grid
+      for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+      for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+      ctx.fillStyle='#0a1415'; ctx.beginPath(); ctx.moveTo(W,0);           // sea
+      for(let y=0;y<=1.0001;y+=0.02) ctx.lineTo(coast(y)*W,y*H);
+      ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle='rgba(127,182,181,.45)'; ctx.beginPath();
+      for(let y=0;y<=1.0001;y+=0.02) y?ctx.lineTo(coast(y)*W,y*H):ctx.moveTo(coast(y)*W,0); ctx.stroke();
+      ctx.strokeStyle='rgba(127,182,181,.13)';                             // contours
+      contours.forEach(c=>{ for(let j=1;j<=4;j++){ ctx.beginPath();
+        for(let a=0;a<=Math.PI*2+0.01;a+=0.12){ const rr=c.r*j*0.42*(1+0.18*Math.sin(a*3+c.k)); const px=(c.cx+Math.cos(a)*rr)*W, py=(c.cy+Math.sin(a)*rr*0.8)*H; a===0?ctx.moveTo(px,py):ctx.lineTo(px,py) }
+        ctx.stroke() } });
+      const pos=n=>({x:n.x*W,y:n.y*H}), car=pos(carrier);
+      ctx.font="500 11px 'IBM Plex Mono', monospace";
+      let planted=0;
+      nodes.forEach((n,i)=>{
+        const age=t-i*STEP; if(age<0) return;
+        const from=n.p<0?car:pos(nodes[n.p]), to=pos(n), f=Math.min(1,age/1.2);
+        ctx.strokeStyle='rgba(242,195,205,.6)'; ctx.setLineDash([4,5]);
+        ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(from.x+(to.x-from.x)*f,from.y+(to.y-from.y)*f); ctx.stroke(); ctx.setLineDash([]);
+        if(f<1) return;
+        planted++;
+        const built=Math.min(4,Math.floor((age-1.2)/0.35)), s=7;
+        ctx.strokeStyle='#f2c3cd'; ctx.lineWidth=2; ctx.strokeRect(to.x-s,to.y-s,s*2,s*2);
+        ctx.fillStyle='#f2c3cd'; for(let k=0;k<built;k++) ctx.fillRect(to.x-s+2+k*3,to.y-s+2,2,s*2-4);
+        if(built>=4 && !reduce){ const pulse=(tt*0.6+i*0.3)%1; ctx.strokeStyle=`rgba(242,195,205,${0.4*(1-pulse)})`; ctx.beginPath(); ctx.arc(to.x,to.y,10+pulse*26,0,Math.PI*2); ctx.stroke() }
+        ctx.lineWidth=1;
+        ctx.strokeStyle='rgba(238,241,239,.5)'; ctx.beginPath(); ctx.moveTo(to.x+12,to.y-14); ctx.lineTo(to.x+20,to.y-14); ctx.moveTo(to.x+16,to.y-18); ctx.lineTo(to.x+16,to.y-10); ctx.stroke();
+        ctx.fillStyle='rgba(238,241,239,.85)'; ctx.fillText(names[i]+'  '+built+'/4',to.x+12,to.y+4);
+      });
+      ctx.fillStyle='#f2c3cd'; ctx.beginPath();                            // carrier
+      ctx.moveTo(car.x-22,car.y-4); ctx.lineTo(car.x+18,car.y-4); ctx.lineTo(car.x+24,car.y); ctx.lineTo(car.x+18,car.y+4); ctx.lineTo(car.x-22,car.y+4); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='rgba(238,241,239,.85)';
+      ctx.textAlign='right'; ctx.fillText('CSAT CARRIER  '+Math.round(100*(1-planted/nodes.length))+'%',W-14,car.y+22); ctx.textAlign='left';
+      if(!reduce) requestAnimationFrame(draw);
+    }
+    size(); window.addEventListener('resize',()=>{size(); if(reduce) draw(0)}); requestAnimationFrame(draw);
+  })();
 
   // base plan
   const b=document.getElementById('base'), q=b.getContext('2d'), bw=b.width, bh=b.height;
