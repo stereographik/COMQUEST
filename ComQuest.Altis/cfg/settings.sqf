@@ -79,6 +79,8 @@ CQ_rootCoastSpread = 4000;               // ...picked up to this far north/south
 CQ_childSpread = 70;                     // child HQs head toward the player base, +/- this many degrees
 CQ_waveSpread = 60;                      // waves arrive from the carrier side of the HQ, +/- degrees
 CQ_assaultRange = 3500;                  // an HQ this close to the player base assaults it instead of colonising
+CQ_assaultSweep = 300;                   // assault groups this close to the command post sweep the base (COMBAT, SAD)
+CQ_assaultBreach = 70;                   // ...and this close, the infantry storms the command post after Colonel Harlan
 
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 6;                         // root insertions in a campaign (victory after the last one)

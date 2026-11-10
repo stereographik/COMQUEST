@@ -151,6 +151,7 @@ CQ_friendlyCmd setUnitPos "UP";
 CQ_friendlyCmd setName "Colonel Harlan";
 _fg setGroupIdGlobal ["CROSSROAD Actual"];
 publicVariable "CQ_friendlyCmd";
+CQ_cmdPost = _ops;      // the enemy assault breaches this building (CQ_fnc_assaultTick)
 // floor height = lowest building position (the roof ones are higher), then snapped onto the
 // floor surface right under the building's centre. Done a moment later, once the building's
 // geometry is ready.

@@ -276,6 +276,12 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "FLASH. Enemy force inbound on the base. All units return and defend."]],
         [["CROSSROAD", "FLASH, FLASH. The airfield is under threat. Everyone back. Now."]]
     ]],
+    // [] - assault infantry storming the command post
+    ["breach", [
+        [["CROSSROAD", "They're at my door. I'd appreciate company. Armed company."]],
+        [["CROSSROAD", "Hostiles in the command post. Get in here, all of you."]],
+        [["COMHAT", "...we're inside their command post. Find the colonel!"], ["CROSSROAD", "They're inside. I'm holding the stairs with a pistol and strong opinions."]]
+    ]],
 
     // ================================================================ players
     // [] - several friendly deaths in a few minutes
@@ -369,7 +375,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "assault", "fallen", "fallenEarly"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "fallen", "fallenEarly"];
 
 CQ_uiCardWidth = 620;                     // notification card width in pixels (message text block ~560 px)
 CQ_uiCardMax = 5;                         // cards on screen at once (more wait in line)

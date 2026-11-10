@@ -152,6 +152,7 @@ class CfgFunctions
             class hqContact {};
             class callReinf {};
             class hqSplit {};
+            class assaultTick {};
             class hqTick {};
             class hqStatusMarker {};
             class hqNerves {};

@@ -109,12 +109,11 @@ private _seats = 0;
 
 if (_assault) exitWith {
     {
+        // orders from CQ_fnc_assaultTick: approach, sweep, then breach the command post
         [_x] call CQ_fnc_clearWaypoints;
         _x setVariable ["CQ_role", "assault"];
-        _x setBehaviour "AWARE";
-        _x setSpeedMode "FULL";
-        private _wp = _x addWaypoint [CQ_basePos, 150];
-        _wp setWaypointType "SAD";
+        _x setVariable ["CQ_aHq", _id];
+        _x setVariable ["CQ_aStage", ""];
     } forEach (_col + (_colVehs apply { group effectiveCommander _x }) select { !isNull _x });
     ["ENEMY ASSAULT ON YOUR BASE", format ["HQ #%1 (%2 m from your base) sends %3 soldiers and %4 vehicles against the airport",
         _id, round (_c distance2D CQ_basePos), _n, count _colVehs]] call CQ_fnc_announce;

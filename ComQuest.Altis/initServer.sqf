@@ -83,6 +83,7 @@ addMissionEventHandler ["EntityKilled", {
     ["medic"] spawn CQ_fnc_specialTeam;
     ["engineer"] spawn CQ_fnc_specialTeam;
     ["groupWatch", CQ_fnc_groupWatch] call CQ_fnc_directorAddTask;
+    ["assault", CQ_fnc_assaultTick] call CQ_fnc_directorAddTask;
     call CQ_fnc_statsInit;
     call CQ_fnc_magInit;
     ["magpie", CQ_fnc_magTick] call CQ_fnc_directorAddTask;
