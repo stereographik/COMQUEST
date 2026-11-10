@@ -91,7 +91,25 @@ private _withObj = [_hqs select { (_x get "installations") isNotEqualTo [] }, []
     {
         private _o = _x;
         private _c = _cache getOrDefault [_forEachIndex, []];
-        if (_c isEqualTo []) then { _c = [_o getVariable ["CQ_objType", ""], -1, ""]; _cache set [_forEachIndex, _c] };
+        if (_c isEqualTo []) then {
+            _c = [_o getVariable ["CQ_objType", ""], -1, ""];
+            _cache set [_forEachIndex, _c];
+            // the exact killer: the squad of the player who destroyed (or blew up) this object
+            if (alive _o) then {
+                _o setVariable ["CQ_opEntry", _c];
+                _o addEventHandler ["Killed", {
+                    params ["_o", "_k", "_i"];
+                    private _c = _o getVariable ["CQ_opEntry", []];
+                    if (_c isEqualTo [] || { (_c select 1) >= 0 }) exitWith {};
+                    private _w = [_i, _k] select (isNull _i);
+                    if (!isNull _w && { !(_w isKindOf "CAManBase") }) then { _w = effectiveCommander _w };
+                    _c set [1, time];
+                    _c set [2, if (!isNull _w && { isPlayer _w }) then { groupId group _w } else { "" }];
+                    CQ_opNext = 0;      // refresh the briefing at once
+                }];
+            };
+        };
+        // fallback (died before the briefing first saw it): the HQ's last known attacker
         if ((_c select 1) < 0 && { !alive _o }) then { _c set [1, time]; _c set [2, [_h getOrDefault ["lastKiller", objNull]] call _squad] };
         private _type = _c select 0;
         if (_type == "") then { continue };
