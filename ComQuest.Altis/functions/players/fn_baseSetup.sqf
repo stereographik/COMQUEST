@@ -3,7 +3,7 @@
     Builds the player base from the zones drawn on the map (cfg/settings.sqf):
     1. HQ compound at CQ_basePos, front toward CQ_baseDir (CQ_compoundSize), H-barrier walls,
        vehicle gate flanked by two H-barrier towers, guard towers in the corners, tank traps:
-         back row     warehouse | HQ offices (friendly commander inside) | cargo HQ
+         back row     cargo HQ (friendly commander inside) | HQ offices | cargo HQ
          courtyard    radar + watchtower, flag, medical post, 4 squad equipment boxes aligned
                       in the centre (arsenal + squad resupply)
        Terrain objects inside the compound are hidden.
@@ -122,7 +122,7 @@ private _gate = 9;                                  // half width of the vehicle
 
 // back row of buildings, packed from the left, their back 4 m from the back wall
 private _row = [
-    ["Land_i_Shed_Ind_F", "Land_Shed_Big_F"],
+    ["Land_Cargo_HQ_V1_F", "Land_MilOffices_V1_F"],    // command post: the friendly commander's building
     ["Land_MilOffices_V1_F", "Land_Cargo_HQ_V1_F"],
     ["Land_Cargo_HQ_V1_F", "Land_Cargo_House_V1_F"]
 ];
@@ -138,17 +138,14 @@ private _ops = objNull;
 {
     ([_x] call _dims) params ["_bw", "_bl"];
     private _b = [[_x], _cx + _bw / 2, -_hd + 4 + _bl / 2, 0, true] call _put;
-    if (_x find "Offices" > -1 || { isNull _ops && { _forEachIndex == 1 } }) then { _ops = _b };
+    if (_forEachIndex == 0) then { _ops = _b };
     _cx = _cx + _bw + 5;
 } forEach _rowCls;
 
-// friendly commander in the HQ offices: if he dies, the mission is lost
+// friendly commander in the command post (first building of the row), standing in the middle
+// of its floor: if he dies, the mission is lost. Only enemy fire can hurt him.
 private _fg = createGroup [west, true];
 private _fp = [0, -_hd + 10] call _at;
-if (!isNull _ops) then {
-    private _bp = _ops buildingPos -1;
-    if (_bp isNotEqualTo []) then { _fp = _bp select 0 };
-};
 CQ_friendlyCmd = _fg createUnit ["B_officer_F", _fp, [], 0, "CAN_COLLIDE"];
 CQ_friendlyCmd setPosATL _fp;
 CQ_friendlyCmd setDir (_d + 180);
@@ -157,6 +154,32 @@ CQ_friendlyCmd setUnitPos "UP";
 CQ_friendlyCmd setName "Colonel Harlan";
 _fg setGroupIdGlobal ["CROSSROAD Actual"];
 publicVariable "CQ_friendlyCmd";
+// floor height = lowest building position (the roof ones are higher), then snapped onto the
+// floor surface right under the building's centre. Done a moment later, once the building's
+// geometry is ready.
+if (!isNull _ops) then {
+    [_ops, _d] spawn {
+        params ["_b", "_d"];
+        sleep 1;
+        private _bps = (_b buildingPos -1) apply { AGLToASL _x };
+        private _c = _b modelToWorldWorld [0, 0, 0];
+        private _z = if (_bps isEqualTo []) then { (_c select 2) + 1 } else { selectMin (_bps apply { _x select 2 }) };
+        private _hits = lineIntersectsSurfaces [[_c select 0, _c select 1, _z + 1.2], [_c select 0, _c select 1, _z - 1.5], CQ_friendlyCmd, objNull, true, 1, "GEOM", "FIRE"];
+        if (_hits isNotEqualTo []) then { _z = ((_hits select 0) select 0) select 2 };
+        CQ_friendlyCmd setPosASL [_c select 0, _c select 1, _z + 0.05];
+        CQ_friendlyCmd setDir (_d + 180);
+        ["Friendly commander in %1 at %2 (floor %3 m above ground)", [typeOf _b, mapGridPosition _b, ((ASLToATL [_c select 0, _c select 1, _z]) select 2) toFixed 2]] call CQ_fnc_log;
+    };
+};
+// friendly fire, crashes, falls, collapsing walls: no damage. Only an enemy can kill him.
+CQ_friendlyCmd addEventHandler ["HandleDamage", {
+    params ["_u", "_sel", "_dmg", "_src", "", "_idx", "_inst"];
+    private _who = [_inst, _src] select (isNull _inst);
+    if (!isNull _who && { !(_who isKindOf "CAManBase") }) then { _who = effectiveCommander _who };
+    if (isNull _who || { (side group _who) getFriend west >= 0.6 }) then {
+        if (_sel == "") then { damage _u } else { _u getHitIndex _idx }
+    } else { _dmg }
+}];
 CQ_friendlyCmd addEventHandler ["Killed", {
     if (!isNil "CQ_victory" || { !isNil "CQ_defeat" }) exitWith {};
     CQ_defeat = true;
