@@ -173,6 +173,12 @@ CQ_heliPreferDist = 3000;                // farther than this, a helicopter is t
 CQ_watchIdle = 180;                      // a patrolling squad standing still 3 min outside combat gets a new patrol
 CQ_objMinGap = 300;                      // HQ objectives (depot, radio tower, fuel tanker, 3 AA, HMG tower): at least this far from each other and from the command building
 CQ_objRing = [360, 650];                 // ...placed on a ring this far around the command building (widens until they fit)
+// Enemy squad callsigns (real aviator callsigns, aggressive ones), given in this order to every
+// enemy squad (CQ_fnc_callsignTick); after the last one they come back numbered ("Viper 2")
+CQ_enemyCallsigns = ["Viper", "Talon", "Ghost", "Hammer", "Bandit", "Hawk", "Tank", "Dozer", "Badger", "Bear",
+    "Barracuda", "Beast", "Blackjack", "Blaze", "Bone-Saw", "Bloodlust", "Butcher", "Bullet", "Boomslang", "Bison",
+    "Blindside", "Butane", "Bam-Bam", "Lasher", "Lazer", "Snake", "Smoke", "Toro", "Chaos", "Steel Rain",
+    "Dead Walker", "Skull", "Xerxes", "Mad Dog", "Giant Killer", "Fatal"];
 CQ_cmdEscortClasses = ["O_recon_TL_F", "O_recon_F", "O_recon_F", "O_recon_M_F", "O_recon_LAT_F", "O_recon_medic_F"];   // elite squad always around each enemy HQ commander
 CQ_cmdEscortSkill = 0.8;
 CQ_objGuardSize = 3;                     // ...each site guarded by this many soldiers taken from the HQ patrols

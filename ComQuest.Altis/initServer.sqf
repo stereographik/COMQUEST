@@ -95,6 +95,7 @@ addMissionEventHandler ["EntityKilled", {
     ["operation", CQ_fnc_opTick] call CQ_fnc_directorAddTask;
     ["stats", CQ_fnc_statsTick] call CQ_fnc_directorAddTask;
     ["vehRoam", CQ_fnc_vehRoamTick] call CQ_fnc_directorAddTask;
+    ["callsigns", CQ_fnc_callsignTick] call CQ_fnc_directorAddTask;
 
     call CQ_fnc_directorStart;
 };

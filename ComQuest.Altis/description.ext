@@ -213,6 +213,7 @@ class CfgFunctions
         class spawn
         {
             file = "functions\spawn";
+            class callsignTick {};
             class spawnHeli {};
             class carrierSetup {};
             class crewVehicle {};
