@@ -85,13 +85,14 @@ private _local = {   // a local, unsimulated vehicle
     _v
 };
 
-// the landing Hummingbird is made now, hidden, engine running: its rotors are at full speed by
-// shot 4. It hangs on a local helper moved by script (no crew, nobody can see it but you).
+// the landing Hummingbird is made now, hidden, engine running, parked high above a far corner
+// of the map (out of earshot of every shot): by shot 4 its rotors are at full speed and its
+// sound starts the moment it is brought to the pad. Local, no crew, nobody sees it but you.
 private _lz = missionNamespace getVariable ["CQ_shopLZ", _muster getPos [35, CQ_baseDir + 90]];
 private _lzDir = missionNamespace getVariable ["CQ_shopDir", CQ_baseDir];
 private _gz = getTerrainHeightASL _lz;
 private _hook = "Land_HelipadEmpty_F" createVehicleLocal [0, 0, 0];
-_hook setPosASL [_lz select 0, _lz select 1, _gz + CQ_introHoverTop];
+_hook setPosASL [150, 150, 2500];          // far from every shot: its engine runs unheard until shot 4
 _hook setDir _lzDir;
 _locals pushBack _hook;
 private _hb = createVehicleLocal ["B_Heli_Light_01_F", [0, 0, 1000], [], 0, "CAN_COLLIDE"];
@@ -265,9 +266,10 @@ call {
     _cam camSetTarget [_lz select 0, _lz select 1, 1.5];
     _cam camSetFov 0.6;
     _cam camCommit 0;
+    detach _hb;                                                 // engine already running: rotors at speed, sound at once
+    _hb setPosASL ((AGLToASL [_lz select 0, _lz select 1, 0]) vectorAdd [0, 0, CQ_introHoverTop]);
+    _hb setDir _lzDir;
     _hb hideObject false;
-    detach _hb;
-    _hb engineOn true;                                          // engine sound and turning rotors
     // a slow vertical descent, from a few metres down to about 1 m above the pad, never touching.
     // Every frame the helicopter is given its next position through setVelocityTransformation:
     // the engine interpolates between frames, so the motion is perfectly smooth.
