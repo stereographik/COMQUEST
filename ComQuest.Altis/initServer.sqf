@@ -14,6 +14,8 @@ call CQ_fnc_carrierSetup;           // CSAT carrier off the east coast: every in
     for "_i" from 0 to _n - 1 do { [_class, _spots param [_i, []], CQ_baseDir] call CQ_fnc_vehRegister };
 } forEach CQ_baseVehicles;
 
+CQ_hqs = createHashMap;            // exists from the start (radio lines may look at it)
+
 // The mission starts CQ_startAfterIntro s after the first player's intro (CQ_fnc_introDone).
 // Base and carrier are already in place for the intro; the enemy, MAGPIE and the story wait.
 // Fallback: CQ_introMaxTime s after the first player is in, whatever happens to his intro.
@@ -24,6 +26,7 @@ call CQ_fnc_carrierSetup;           // CSAT carrier off the east coast: every in
     if (isNil "CQ_introDoneT") then { CQ_introDoneT = time };
     waitUntil { sleep 0.5; time >= CQ_introDoneT + CQ_startAfterIntro };
     ["Mission start"] call CQ_fnc_log;
+    CQ_missionStarted = true;
     // Enemy network state
     CQ_hqs = createHashMap;
     CQ_hqNextId = 1;

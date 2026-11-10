@@ -51,4 +51,4 @@ call CQ_fnc_carrierMarker;
 
 ["CSAT carrier spotted", format ["An enemy carrier group is holding off the east coast (grid %1). Expect landings on the east coast.",
     mapGridPosition CQ_carrierPos]] call CQ_fnc_announce;
-[] spawn { sleep 15; ["carrier", []] call CQ_fnc_say };   // let the players load in first
+[] spawn { waitUntil { sleep 1; !isNil "CQ_missionStarted" }; sleep 3; ["carrier", []] call CQ_fnc_say };   // once the mission has started (after the intro)
