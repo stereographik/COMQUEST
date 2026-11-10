@@ -6,7 +6,8 @@
       0 BLACK      time and date, then the place (CQ_introPlace), typed small, then a fade
       1 SATELLITE  Altis from very high, almost still, a slow drift
       2 COAST      low and wide on a quiet east-coast village, calm sea, slow pan
-      3 FLIGHT     CSAT Orcas low over the water, heading for the island
+      3 SQUAD      a friendly fire team moving tactically on a hilltop, sea behind, the leader
+                   signalling and the men answering (local soldiers driven by animations)
       4 LANDING    an MH-9 Hummingbird settling at the muster area, seen from behind
       5 BLACK      fade out
       6 EYES       the player's own view opens in two blinks, a blur clearing: control
@@ -20,7 +21,7 @@ if (!CQ_introEnabled) exitWith { call _done };
 waitUntil { sleep 0.1; !isNull player && { !isNull (findDisplay 46) } };
 private _t0 = time;
 waitUntil { sleep 0.2; (!isNil "CQ_carrierPos" && { !isNil "CQ_musterPos" }) || { time - _t0 > 8 } };
-CQ_introShots params ["_tSat", "_tCoast", "_tFlight", "_tLand"];
+CQ_introShots params ["_tSat", "_tCoast", "_tFlight", "_tLand"];   // _tFlight: the squad shot
 private _car = missionNamespace getVariable ["CQ_carrierPos", [worldSize * 0.85, worldSize * 0.5, 0]];
 private _coast = missionNamespace getVariable ["CQ_coastPoint", _car getPos [3000, 270]];
 private _muster = missionNamespace getVariable ["CQ_musterPos", getPosATL player];
@@ -148,36 +149,65 @@ call {
     [_tCoast] call _nap;
     if (CQ_introSkip) exitWith {};
 
-    // ---- 3 FLIGHT: three Orcas low over the water toward the island, camera just above the waves
+    // ---- 3 SQUAD: a friendly fire team moving tactically along a hilltop, sea behind them.
+    // The leader signals, the men answer: they go from a careful walk to a crouch, then on.
+    // Local, brainless soldiers driven by animations (only on your screen), deleted at the end.
     call _dip;
     if (CQ_introSkip) exitWith {};
-    private _hdg = _car getDir _coast;
-    private _mid3 = _car getPos [(_car distance2D _coast) * 0.5, _hdg];
-    private _from = _mid3 getPos [180, _hdg + 180];
-    private _helis = [[0, 0], [-35, -30], [35, -45]] apply {
-        _x params ["_dx", "_dy"];
-        private _p = _from getPos [sqrt (_dx * _dx + _dy * _dy), _hdg + (_dx atan2 _dy)];
-        [["O_Heli_Light_02_unarmed_F", [_p select 0, _p select 1, 35 + random 6], _hdg] call _local, [_p select 0, _p select 1]]
+    // highest ground within 2.5 km inland of the carrier's coast point, with the sea in view
+    private _best = []; private _bh = -1e6;
+    private _inland = _coast getDir CQ_basePos;
+    for "_i" from 0 to 40 do {
+        private _p = _coast getPos [600 + random 1900, _inland - 70 + random 140];
+        if (surfaceIsWater _p) then { continue };
+        private _h = getTerrainHeightASL _p;
+        if (_h > _bh) then { _bh = _h; _best = _p };
     };
-    private _cp3 = _mid3 getPos [90, _hdg + 90];
-    _cam camSetPos [_cp3 select 0, _cp3 select 1, 3];
-    _cam camSetTarget [_from select 0, _from select 1, 30];
-    _cam camSetFov 0.55;
+    if (_best isEqualTo []) then { _best = _coast getPos [800, _inland] };
+    private _seaDir = _best getDir _car;                        // the sea is that way
+    private _walkDir = _seaDir + 90;                            // they cross the frame
+    private _men = [];
+    {
+        _x params ["_cls", "_side", "_back"];
+        private _p = (_best getPos [_back, _walkDir + 180]) getPos [_side, _seaDir];
+        private _u = _cls createVehicleLocal [0, 0, 0];
+        _u setVariable ["CQ_introVeh", true];
+        _u allowDamage false;
+        _u setPosATL [_p select 0, _p select 1, 0];
+        _u setDir _walkDir;
+        _u switchMove "AmovPercMwlkSrasWrflDf";                 // careful walk, weapon up
+        _locals pushBack _u;
+        _men pushBack _u;
+    } forEach [["B_Soldier_SL_F", 0, 0], ["B_Soldier_F", 3, 5], ["B_soldier_AR_F", -3, 9], ["B_Soldier_GL_F", 2, 14], ["B_soldier_LAT_F", -2, 18], ["B_medic_F", 1, 22]];
+    // camera inland of them, low, looking past the team to the sea
+    private _cp = (_best getPos [26, _seaDir + 180]) getPos [6, _walkDir + 180];
+    _cam camSetPos [_cp select 0, _cp select 1, 1.7];
+    _cam camSetTarget ((_best getPos [120, _seaDir]) vectorAdd [0, 0, -10]);
+    _cam camSetFov 0.6;
     _cam camCommit 0;
     _bl cutText ["", "BLACK IN", CQ_introFade];
-    private _tS = time;
-    private _dir = [sin _hdg, cos _hdg, 0];
-    while { time - _tS < _tFlight && { !CQ_introSkip } } do {
-        private _k = 45 * (time - _tS);                          // 45 m/s
-        {
-            _x params ["_v", "_p0"];
-            private _p = ([_p0 select 0, _p0 select 1, 0]) vectorAdd (_dir vectorMultiply _k);
-            _v setPosASL [_p select 0, _p select 1, (getPosASL _v) select 2];
-            _v setVectorDirAndUp [[sin _hdg, cos _hdg, -0.12], [0, 0, 1]];
-        } forEach _helis;
-        _cam camSetTarget (getPosASL ((_helis select 0) select 0));
-        _cam camCommit 0;
-        uiSleep 0.02;
+    _cam camSetPos (([_cp select 0, _cp select 1, 0] getPos [6, _walkDir]) vectorAdd [0, 0, 1.8]);
+    _cam camCommit _tFlight;                                    // slow drift with them
+    private _tq = time;
+    private _phase = 0;
+    while { time - _tq < _tFlight && { !CQ_introSkip } } do {
+        private _e = time - _tq;
+        if (_phase == 0 && { _e > _tFlight * 0.35 }) then {
+            _phase = 1;                                         // the leader stops and signals
+            (_men select 0) switchMove "AmovPercMstpSrasWrflDnon";
+            (_men select 0) playActionNow "gestureFreeze";
+        };
+        if (_phase == 1 && { _e > _tFlight * 0.45 }) then {
+            _phase = 2;                                         // the team takes a knee
+            { _x switchMove "AmovPknlMstpSrasWrflDnon" } forEach (_men select [1, 5]);
+        };
+        if (_phase == 2 && { _e > _tFlight * 0.7 }) then {
+            _phase = 3;                                         // "move up": on again, crouched
+            (_men select 0) playActionNow "gestureAdvance";
+            (_men select 0) switchMove "AmovPercMwlkSrasWrflDf";
+            { _x playMove "AmovPknlMwlkSrasWrflDf" } forEach (_men select [1, 5]);
+        };
+        uiSleep 0.05;
     };
     if (CQ_introSkip) exitWith {};
 
@@ -232,4 +262,4 @@ _blur ppEffectEnable false;
 ppEffectDestroy _blur;
 CQ_introSkip = nil;
 // last check: no intro vehicle may survive (local, but never left in the world)
-{ deleteVehicle _x } forEach ((allMissionObjects "Helicopter") select { local _x && { !simulationEnabled _x } && { _x getVariable ["CQ_introVeh", false] } });
+{ deleteVehicle _x } forEach ((allMissionObjects "All") select { local _x && { _x getVariable ["CQ_introVeh", false] } });
