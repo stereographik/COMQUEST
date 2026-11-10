@@ -87,9 +87,9 @@ while { !isNull _d } do {
             default { "" };
         };
         _info ctrlSetStructuredText parseText format [
-            "<t size='1.05' font='PuristaSemibold' color='#F2F1DF'>%1</t><br/><br/><t size='0.8' color='#A6A381'>Seats: </t><t size='0.8' color='#F2F1DF'>%2</t><br/><t size='0.8' color='#A6A381'>In stock: </t><t size='0.8' color='#F2F1DF'>%3 / %4</t><br/><t size='0.8' color='#A6A381'>Cooldown after the request: </t><t size='0.8' color='#F2F1DF'>%5 min</t><br/><br/><t size='0.8' color='#BA392C'>%6</t><br/><br/><t size='0.7' color='#7A7860'>Free vehicles from a shared stock. A vehicle is back in stock as soon as it is destroyed, returned at a depot, left unboarded %7 min after the request, or abandoned %8 min. Your squad can have %9 out at once.</t>",
+            "<t size='1.05' font='PuristaSemibold' color='#F2F1DF'>%1</t><br/><br/><t size='0.8' color='#A6A381'>Seats: </t><t size='0.8' color='#F2F1DF'>%2</t><br/><t size='0.8' color='#A6A381'>In stock: </t><t size='0.8' color='#F2F1DF'>%3 / %4</t><br/><t size='0.8' color='#A6A381'>Cooldown after the request: </t><t size='0.8' color='#F2F1DF'>%5 min</t><br/><br/><t size='0.8' color='#BA392C'>%6</t><br/><br/><t size='0.7' color='#7A7860'>Free vehicles from a shared stock. A vehicle is back in stock as soon as it is destroyed, returned at a depot, or abandoned %7 min. Your squad can have %8 out at once.</t>",
             getText (_cfg >> "displayName"), ([_cls, true] call BIS_fnc_crewCount), _free, _quota, round (([_cls] call _cdOf) / 60), _why,
-            round (CQ_depotUnused / 60), round (CQ_vehAbandonDelay / 60), CQ_depotMaxPerSquad];
+            round (CQ_vehAbandonDelay / 60), CQ_depotMaxPerSquad];
     };
     _req ctrlEnable (_it isNotEqualTo [] && { _why == "" });
     sleep 0.5;

@@ -9,7 +9,7 @@
       - player cooldown (CQ_depotCooldown by type, keyed by UID: survives respawn/reconnect)
       - the depot's helipad is clear
     The vehicle spawns on the pad, owned by the player's group. CQ_fnc_depotTick returns it to
-    the stock when destroyed, never boarded (CQ_depotUnused) or abandoned (CQ_vehAbandonDelay).
+    the stock when destroyed or abandoned (CQ_vehAbandonDelay).
 */
 params ["_p", "_cls"];
 if (!isServer || { isNull _p }) exitWith {};
@@ -39,7 +39,6 @@ _v allowDamage false;            // no damage while it settles on the pad
 clearWeaponCargoGlobal _v; clearMagazineCargoGlobal _v; clearItemCargoGlobal _v; clearBackpackCargoGlobal _v;
 _v addItemCargoGlobal ["FirstAidKit", 4];
 _v setVariable ["CQ_depotGroup", _g, true];
-_v setVariable ["CQ_depotT", serverTime];
 CQ_depotVehs pushBack _v;
 publicVariable "CQ_depotVehs";
 
@@ -47,5 +46,5 @@ private _cat = [["light", "truck"] select (_cls isKindOf "Truck_F"), "air"] sele
 private _cd = (CQ_depotCooldown select (CQ_depotCooldown findIf { (_x select 0) == _cat })) select 1;
 CQ_depotReady set [_uid, serverTime + _cd];
 publicVariable "CQ_depotReady";
-[format ["%1 ready on the depot pad. Board it within %2 min or it goes back to the stock.", _name, round (CQ_depotUnused / 60)]] call _say;
+[format ["%1 ready on the depot pad.", _name]] call _say;
 ["Depot: %1 (%2) took a %3, %4 left", [name _p, groupId _g, _cls, _quota - ({ typeOf _x == _cls } count CQ_depotVehs)]] call CQ_fnc_log;

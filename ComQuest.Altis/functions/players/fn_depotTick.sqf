@@ -2,9 +2,8 @@
     CQ_fnc_depotTick  (server, director task, every 5 s)
     Keeps the depot stock (CQ_depotVehs) honest:
       - destroyed: out of the list at once, so its slot is back in stock immediately
-      - never boarded CQ_depotUnused s after the request: deleted, back in stock
-      - abandoned: boarded once, now empty and still for CQ_vehAbandonDelay s with no player
-        within 200 m: deleted, back in stock
+      - abandoned: empty and still for CQ_vehAbandonDelay s with no player within 200 m:
+        deleted, back in stock
     Polling on purpose: a vehicle driven by a player is local to him, where a Killed event
     handler added by the server would not fire.
 */
@@ -24,14 +23,6 @@ private _keep = [];
         continue;
     };
     private _empty = ({ alive _x } count crew _v) == 0;
-    if (!_empty) then { _v setVariable ["CQ_depotUsed", true] };
-    if (!(_v getVariable ["CQ_depotUsed", false])) then {
-        if (_empty && { serverTime - (_v getVariable ["CQ_depotT", serverTime]) > CQ_depotUnused }) then {
-            ["Depot: %1 never boarded, back in stock", [typeOf _v]] call CQ_fnc_log;
-            deleteVehicle _v;
-        } else { _keep pushBack _v };
-        continue;
-    };
     if (_empty && { speed _v < 1 }) then {
         private _t = _v getVariable ["CQ_abandonT", -1];
         if (_t < 0) then { _v setVariable ["CQ_abandonT", serverTime]; _t = serverTime };

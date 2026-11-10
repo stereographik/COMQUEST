@@ -27,9 +27,8 @@ CQ_baseVehicles = [
     ["I_MRAP_03_F",               "strider",    4],   // Strider, unarmed
     ["B_G_Offroad_01_armed_F",    "pickup",     4],   // Offroad HMG
     ["B_Truck_01_transport_F",    "hemtt",      2],   // HEMTT troop transport
-    ["B_Heli_Light_01_F",         "littlebird", 2],   // MH-6 Little Bird
-    ["B_Heli_Transport_01_F",     "ghosthawk",  2],   // UH-80 Ghost Hawk
-    ["B_Heli_Transport_01_F",     "blackhawk",  1]    // the "blackhawk": a 3rd UH-80 Ghost Hawk
+    ["B_Heli_Light_01_F",         "littlebird", 6],   // MH-6 Little Bird
+    ["B_Heli_Transport_01_F",     "ghosthawk",  4]    // UH-80 Ghost Hawk (one line per class: the quota is read from the first match)
 ];
 CQ_baseVehPadding = 25;                  // metres between base vehicles (fallback search)
 // Base layout (CQ_fnc_baseSetup), from the zones drawn on the map:
@@ -55,7 +54,6 @@ CQ_parkSearch = 450;                     // grid searched this far around the pa
 CQ_vehAbandonDelay = 900;                // depot vehicle empty and still this long, no player within 200 m: back in stock (15 min)
 CQ_depotMaxPerSquad = 2;                 // depot vehicles out at the same time per squad
 CQ_depotCooldown = [["light", 120], ["truck", 180], ["air", 300]];   // s before the same player can request again, by type taken
-CQ_depotUnused = 120;                    // a requested vehicle nobody boards within this is put back in stock
 CQ_depotRange = 10;                      // metres from the depot furniture to use it
 CQ_depotReturnRange = 30;                // a vehicle this close to a depot (or its pad) can be returned
 CQ_depotPadGap = 24;                     // depot helipad distance behind the repair point (away from the runway)
