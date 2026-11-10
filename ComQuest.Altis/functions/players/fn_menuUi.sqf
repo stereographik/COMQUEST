@@ -35,6 +35,7 @@ private _picY = safeZoneY + (safeZoneH - _ph) / 2;
 private _mk = {
     params ["_cls", "_pos", ["_txt", ""]];
     private _c = _d ctrlCreate [_cls, -1];
+    [_c, _cls] call CQ_fnc_uiStyle;
     _c ctrlSetPosition _pos;
     if (_txt != "") then { _c ctrlSetText _txt };
     _c ctrlCommit 0;

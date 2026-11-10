@@ -25,24 +25,25 @@ private _L = 0.036;                                     // line height
 private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
     private _c = _d ctrlCreate [_cls, _idc];
+    [_c, _cls] call CQ_fnc_uiStyle;
     _c ctrlSetPosition _pos;
     if (_txt != "") then { _c ctrlSetText _txt };
     _c ctrlCommit 0;
     _c
 };
-(["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0.04, 0.04, 0.04, 0.92];
-(["RscText", -1, [_X, _Y, 0.004, _H]] call _mk) ctrlSetBackgroundColor [1, 0.6, 0.2, 0.9];
+(["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor (CQ_ui get "panel");
+(["RscText", -1, [_X, _Y, 0.004, _H]] call _mk) ctrlSetBackgroundColor (CQ_ui get "accent");
 private _title = ["RscText", -1, [_X + 0.015, _Y + 0.004, _W * 0.5, _L * 1.1], "COMQUEST DEBUG"] call _mk;
 _title ctrlSetFont "PuristaMedium";
-_title ctrlSetTextColor [1, 0.6, 0.2, 1];
+_title ctrlSetTextColor (CQ_ui get "accent");
 private _close = ["RscButton", -1, [_X + _W - 0.05, _Y + 0.004, 0.04, _L], "X"] call _mk;
 _close ctrlAddEventHandler ["ButtonClick", { (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) closeDisplay 1 }];
 
 // ---- left: status + HQ list
 private _lw = _W * 0.38;
 private _status = ["RscStructuredText", 9001, [_X + 0.015, _Y + _L * 1.3, _lw, _L * 5.2]] call _mk;
-_status ctrlSetBackgroundColor [0, 0, 0, 0.4];
-(["RscText", -1, [_X + 0.015, _Y + _L * 6.7, _lw, _L * 0.8], "ENEMY HQs  (select one for the HQ buttons)"] call _mk) ctrlSetTextColor [0.65, 0.65, 0.65, 1];
+_status ctrlSetBackgroundColor (CQ_ui get "inset");
+(["RscText", -1, [_X + 0.015, _Y + _L * 6.7, _lw, _L * 0.8], "ENEMY HQs  (select one for the HQ buttons)"] call _mk) ctrlSetTextColor (CQ_ui get "muted");
 private _list = ["RscListBox", 9000, [_X + 0.015, _Y + _L * 7.6, _lw, _H - _L * 8.2]] call _mk;
 
 uiNamespace setVariable ["CQ_dbgSel", {
@@ -93,7 +94,7 @@ private _toggles = [];
     _x params ["_cat", "_btns"];
     private _h = ["RscText", -1, [_rx, _y, _rw, _L * 0.8], _cat] call _mk;
     _h ctrlSetFont "PuristaMedium";
-    _h ctrlSetTextColor [1, 0.6, 0.2, 1];
+    _h ctrlSetTextColor (CQ_ui get "accent");
     _y = _y + _L * 0.85;
     {
         _x params ["_label", "_cmd"];
@@ -138,7 +139,7 @@ uiNamespace setVariable ["CQ_dbgToggleLabels", {
             default { false };
         };
         _x ctrlSetText format ["%1: %2", _x getVariable ["CQ_label", ""], ["OFF", "ON"] select _on];
-        _x ctrlSetTextColor ([[0.75, 0.75, 0.75, 1], [0.55, 0.95, 0.45, 1]] select _on);
+        _x ctrlSetTextColor ([(CQ_ui get "muted"), [0.55, 0.95, 0.45, 1]] select _on);
     } forEach (uiNamespace getVariable ["CQ_dbgToggles", []]);
 }];
 call (uiNamespace getVariable "CQ_dbgToggleLabels");

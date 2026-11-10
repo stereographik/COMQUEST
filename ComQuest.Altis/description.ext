@@ -112,6 +112,7 @@ class CfgFunctions
             class debugMap {};
             class debugCmd {};
             class debugUi {};
+            class uiStyle {};
             class debugUiFill {};
         };
 
