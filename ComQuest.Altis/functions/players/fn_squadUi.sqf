@@ -191,9 +191,9 @@ while { !isNull _d } do {
         { _x ctrlShow (_view == "squads") } forEach _sqCtrls;
         { _x ctrlShow (_view == "board") } forEach _bdCtrls;
         { _x ctrlShow (_view == "class") } forEach _clCtrls;
-        _tabC ctrlSetBackgroundColor ([CQ_ui get "button", CQ_ui get "buttonOn"] select (_view == "class"));
-        _tabS ctrlSetBackgroundColor ([CQ_ui get "button", CQ_ui get "buttonOn"] select (_view == "squads"));
-        _tabB ctrlSetBackgroundColor ([CQ_ui get "button", CQ_ui get "buttonOn"] select (_view == "board"));
+        [_tabC, _view == "class"] call CQ_fnc_uiSel;
+        [_tabS, _view == "squads"] call CQ_fnc_uiSel;
+        [_tabB, _view == "board"] call CQ_fnc_uiSel;
         _lastView = _view;
     };
     private _players = allPlayers select { side group _x == west };
@@ -204,7 +204,7 @@ while { !isNull _d } do {
         private _cls = if (_i >= 0) then { (CQ_classes select _i) select 1 } else { "" };
         private _near = player inArea [CQ_basePos, (CQ_compoundSize select 0) / 2 + CQ_classChangeRange, (CQ_compoundSize select 1) / 2 + CQ_classChangeRange, CQ_baseDir, true];
         _classInfo ctrlSetStructuredText parseText format [
-            "<t size='0.9' color='#918C3B'>Your class: %1</t><br/><t size='0.7' color='#A6A381'>Right column: players in that class / limit</t><br/><br/><t size='0.8' color='#CFCDB3'>%2</t><br/><br/><t size='0.75' color='#A6A381'>%3</t>",
+            "<t size='0.9' color='#5C5920'>Your class: %1</t><br/><t size='0.7' color='#6E6A2C'>Right column: players in that class / limit</t><br/><br/><t size='0.8' color='#4A4830'>%2</t><br/><br/><t size='0.75' color='#6E6A2C'>%3</t>",
             _mine,
             if (_cls == "") then { "Pick a class on the left." } else {
                 private _w = getArray (configFile >> "CfgVehicles" >> _cls >> "weapons") select { !(_x in ["Throw", "Put"]) };
@@ -218,9 +218,9 @@ while { !isNull _d } do {
             private _free = (_max - _used) max 0;
             _classList lbSetTextRight [_forEachIndex, format ["%1 / %2", _used, _max]];
             private _col = switch (true) do {
-                case (_lbl == _mine): { [0.78, 0.88, 0.48, 1] };
-                case (_free == 0):    { [0.6, 0.35, 0.35, 1] };
-                default               { [1, 1, 1, 1] };
+                case (_lbl == _mine): { [0.729, 0.224, 0.173, 1] };
+                case (_free == 0):    { [0.54, 0.53, 0.44, 1] };
+                default               { (CQ_ui get "text") };
             };
             _classList lbSetColor [_forEachIndex, _col];
             _classList lbSetColorRight [_forEachIndex, _col];
@@ -233,7 +233,7 @@ while { !isNull _d } do {
         private _solos = _groups - _squads;
         private _slots = playableSlotsNumber west;
         _info ctrlSetStructuredText parseText format [
-            "<t size='0.85' color='#918C3B'>%1 players</t><t size='0.85' color='#CFCDB3'>   |   %2 squads   |   %3 unassigned   |   %4 free slots   |   you: %5</t>",
+            "<t size='0.85' color='#5C5920'>%1 players</t><t size='0.85' color='#4A4830'>   |   %2 squads   |   %3 unassigned   |   %4 free slots   |   you: %5</t>",
             count _players, count _squads, count _solos, (_slots - count _players) max 0, [format ["in %1 (%2 squad pts)", groupId group player, (group player) getVariable ["CQ_sqPts", 0]], "unassigned"] select ((group player) getVariable ["CQ_solo", false])];
         private _sel = lbCurSel _grpList;
         private _old = uiNamespace getVariable ["CQ_sqGroups", []];
@@ -248,9 +248,9 @@ while { !isNull _d } do {
             private _i = _grpList lbAdd format ["%1   (%2/%3)", groupId _g, _np, count units _g];
             _grpList lbSetTextRight [_i, format ["%1 pts", _g getVariable ["CQ_sqPts", 0]]];
             _grpList lbSetValue [_i, _all find _g];
-            if (_g isEqualTo group player) then { _grpList lbSetColor [_i, [0.55, 0.9, 0.45, 1]] };
+            if (_g isEqualTo group player) then { _grpList lbSetColor [_i, [0.729, 0.224, 0.173, 1]] };
         } forEach _squads;
-        if (_squads isEqualTo []) then { _grpList lbSetValue [_grpList lbAdd "(no squad yet)", -1]; _grpList lbSetColor [0, [0.5, 0.5, 0.5, 1]] };
+        if (_squads isEqualTo []) then { _grpList lbSetValue [_grpList lbAdd "(no squad yet)", -1]; _grpList lbSetColor [0, (CQ_ui get "dim")] };
 
         // unassigned players, always listed
         private _solP = (_solos apply { leader _x }) select { isPlayer _x };
@@ -262,10 +262,10 @@ while { !isNull _d } do {
         {
             private _i = _solList lbAdd format ["%1  -  %2", name _x, [_x] call _role];
             _solList lbSetValue [_i, _forEachIndex];
-            if (_x == player) then { _solList lbSetColor [_i, [0.55, 0.9, 0.45, 1]] };
+            if (_x == player) then { _solList lbSetColor [_i, [0.729, 0.224, 0.173, 1]] };
             if (_x isEqualTo _solPick) then { _solList lbSetCurSel _i };
         } forEach _solP;
-        if (_solP isEqualTo []) then { _solList lbSetValue [_solList lbAdd "(nobody)", -1]; _solList lbSetColor [0, [0.5, 0.5, 0.5, 1]] };
+        if (_solP isEqualTo []) then { _solList lbSetValue [_solList lbAdd "(nobody)", -1]; _solList lbSetColor [0, (CQ_ui get "dim")] };
         _bInv ctrlEnable (!((group player) getVariable ["CQ_solo", false]) && { leader group player == player });
         private _want = _all find _selG;
         for "_i" from 0 to (lbSize _grpList) - 1 do { if ((_grpList lbValue _i) == _want && { _want > -1 }) exitWith { _grpList lbSetCurSel _i } };
@@ -274,8 +274,8 @@ while { !isNull _d } do {
         if (!isNull _sg) then {
             {
                 private _i = _memList lbAdd format ["%1%2  -  %3%4", ["", "* "] select (leader _sg == _x), name _x, [_x] call _role, ["  (AI)", ""] select (isPlayer _x)];
-                if (_x == player) then { _memList lbSetColor [_i, [0.55, 0.9, 0.45, 1]] };
-                if (!alive _x) then { _memList lbSetColor [_i, [0.6, 0.3, 0.3, 1]] };
+                if (_x == player) then { _memList lbSetColor [_i, [0.729, 0.224, 0.173, 1]] };
+                if (!alive _x) then { _memList lbSetColor [_i, (CQ_ui get "dim")] };
             } forEach units _sg;
         };
     };
@@ -347,7 +347,7 @@ while { !isNull _d } do {
         private _selUid = uiNamespace getVariable ["CQ_sqStatSel", getPlayerUID player];
         lnbClear _board;
         _board lnbAddRow ["#", "NAME", "CLASS", (CQ_sqSorts select _sortI) select 1, "K", "D", "SCORE"];
-        for "_c" from 0 to 6 do { _board lnbSetColor [[0, _c], [0.6, 0.6, 0.6, 1]] };
+        for "_c" from 0 to 6 do { _board lnbSetColor [[0, _c], (CQ_ui get "muted")] };
         private _selRow = -1;
         {
             _x params ["_v", "_uid"];
@@ -356,9 +356,9 @@ while { !isNull _d } do {
                 [_v] call _fmt, str ([_m, "killsInf"] call _g), str ([_m, "deaths"] call _g), str round ([_m] call _score)];
             _board lnbSetData [[_row, 0], _uid];
             private _col = switch (true) do {
-                case (_uid == getPlayerUID player): { [0.55, 0.9, 0.45, 1] };
-                case (!_on): { [0.5, 0.5, 0.5, 1] };
-                default { [1, 1, 1, 1] };
+                case (_uid == getPlayerUID player): { [0.729, 0.224, 0.173, 1] };
+                case (!_on): { (CQ_ui get "dim") };
+                default { (CQ_ui get "text") };
             };
             for "_cc" from 0 to 6 do { _board lnbSetColor [[_row, _cc], _col] };
             if (_uid == _selUid) then { _selRow = _row };
@@ -368,16 +368,16 @@ while { !isNull _d } do {
         // details
         private _sel = _rows getOrDefault [_selUid, []];
         if (_sel isEqualTo []) then {
-            _detail ctrlSetStructuredText parseText "<t size='0.85' color='#A6A381'>Select a player in the ranking.</t>";
+            _detail ctrlSetStructuredText parseText "<t size='0.85' color='#6E6A2C'>Select a player in the ranking.</t>";
         } else {
             _sel params ["_n", "_c", "_on", "_m"];
             private _rank = 1 + ((([_rows] call {
                 params ["_rs"]; private _a = []; { _a pushBack [[_y select 3] call _score, _x] } forEach _rs; _a sort false; _a apply { _x select 1 }
             }) find _selUid) max 0);
             private _t = [_m, "timePlayed"] call _g;
-            private _line = { params ["_l", "_v"]; format ["<t size='0.8' color='#A6A381'>%1:  </t><t size='0.8' color='#F2F1DF'>%2</t><br/>", _l, _v] };
-            private _sec = { params ["_l"]; format ["<br/><t size='0.75' font='PuristaMedium' color='#7A7860'>%1</t><br/>", _l] };
-            private _txt = format ["<t size='1.05' font='PuristaSemibold' color='#F2F1DF'>%1</t><br/><t size='0.8' color='#A6A381'>%2  -  %3</t><br/><t size='0.95' color='#F2F1DF'>SCORE %4</t><t size='0.8' color='#A6A381'>   overall rank #%5</t><br/>",
+            private _line = { params ["_l", "_v"]; format ["<t size='0.8' color='#6E6A2C'>%1:  </t><t size='0.8' color='#2B2A14'>%2</t><br/>", _l, _v] };
+            private _sec = { params ["_l"]; format ["<br/><t size='0.75' font='PuristaMedium' color='#8A8770'>%1</t><br/>", _l] };
+            private _txt = format ["<t size='1.05' font='PuristaSemibold' color='#2B2A14'>%1</t><br/><t size='0.8' color='#6E6A2C'>%2  -  %3</t><br/><t size='0.95' color='#2B2A14'>SCORE %4</t><t size='0.8' color='#6E6A2C'>   overall rank #%5</t><br/>",
                 _n, _c, ["offline", "online"] select _on, round ([_m] call _score), _rank];
             _txt = _txt + (["COMBAT"] call _sec)
                 + (["Infantry kills", [_m, "killsInf"] call _g] call _line)

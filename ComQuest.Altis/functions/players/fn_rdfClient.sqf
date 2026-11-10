@@ -32,7 +32,7 @@ private _mk = {
 };
 
 private _bg = ["RscText", 0, 0, _W, _H] call _mk;
-_bg ctrlSetBackgroundColor [0, 0.153, 0.169, 0.75];
+_bg ctrlSetBackgroundColor [0.949, 0.945, 0.875, 0.8];
 private _edge = ["RscText", 0, 0, 3, _H] call _mk;
 _edge ctrlSetBackgroundColor (CQ_ui get "accent");
 
@@ -56,7 +56,7 @@ private _all = [_bg, _edge, _lbl, _pct] + _bars;
 
 private _shown = -1;
 private _disp = 0;
-private _offColor = [0.035, 0.2, 0.215, 0.7];
+private _offColor = [0.651, 0.639, 0.506, 0.45];
 while { true } do {
     sleep 0.2;
     private _has = alive player && { "ItemRadio" in assignedItems player || { (assignedItems player) findIf { "radio" in toLower _x } > -1 } };
@@ -91,7 +91,7 @@ while { true } do {
         _lbl ctrlSetText "NO SIGNAL";
         _lbl ctrlSetTextColor (CQ_ui get "dim");
         _edge ctrlSetBackgroundColor [0.478, 0.471, 0.376, 0.9];
-        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='1.05' color='#7A7860'>--</t>";
+        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='1.05' color='#8A8770'>--</t>";
         { _x ctrlSetBackgroundColor _offColor } forEach _bars;
     } else {
         _disp = _disp + (_target - _disp) * 0.4;          // smooth the needle
@@ -100,10 +100,10 @@ while { true } do {
         _lbl ctrlSetTextColor (CQ_ui get "muted");
         _edge ctrlSetBackgroundColor (CQ_ui get "accent");
         _pct ctrlSetStructuredText parseText format [
-            "<t align='right'><t font='PuristaSemibold' size='1.25' color='#F2F1DF'>%1</t><t font='PuristaLight' size='0.85' color='#A6A381'> %%</t></t>", _v];
+            "<t align='right'><t font='PuristaSemibold' size='1.25' color='#2B2A14'>%1</t><t font='PuristaLight' size='0.85' color='#6E6A2C'> %%</t></t>", _v];
         private _n = round (_disp * _segs);
         {
-            _x ctrlSetBackgroundColor ([_offColor, [0.569, 0.549, 0.231, 0.55 + 0.45 * (_forEachIndex / _segs)]] select (_forEachIndex < _n));
+            _x ctrlSetBackgroundColor ([_offColor, [0.729, 0.224, 0.173, 0.55 + 0.45 * (_forEachIndex / _segs)]] select (_forEachIndex < _n));
         } forEach _bars;
     };
 };

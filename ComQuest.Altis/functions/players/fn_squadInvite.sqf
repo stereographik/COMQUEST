@@ -45,13 +45,13 @@ _this spawn {
     _title ctrlSetTextColor (CQ_ui get "muted");
     private _msg = ["RscStructuredText", 14, 38, _W - 28, 50] call _mk;
     _msg ctrlSetStructuredText parseText format [
-        "<t font='PuristaLight' size='1.1' color='#F2F1DF'>%1</t><t font='PuristaLight' size='1.1' color='#A6A381'> invites you to join </t><t font='PuristaSemibold' size='1.1' color='#F2F1DF'>%2</t>", _lname, _sname];
+        "<t font='PuristaLight' size='1.1' color='#2B2A14'>%1</t><t font='PuristaLight' size='1.1' color='#6E6A2C'> invites you to join </t><t font='PuristaSemibold' size='1.1' color='#2B2A14'>%2</t>", _lname, _sname];
     private _timer = ["RscText", 16, _H - 40, 150, 26] call _mk;
     _timer ctrlSetFont "PuristaLight";
     _timer ctrlSetTextColor (CQ_ui get "dim");
     private _bNo = ["RscButton", _W - 266, _H - 44, 120, 32, "DECLINE"] call _mk;
     private _bYes = ["RscButton", _W - 136, _H - 44, 120, 32, "ACCEPT"] call _mk;
-    _bYes ctrlSetBackgroundColor (CQ_ui get "buttonOn");
+    [_bYes, true] call CQ_fnc_uiSel;
     _bYes ctrlSetTextColor (CQ_ui get "text");
     _bNo ctrlSetBackgroundColor (CQ_ui get "button");
     _bYes ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_invAnswer", 1]; (uiNamespace getVariable ["CQ_invDisplay", displayNull]) closeDisplay 1 }];

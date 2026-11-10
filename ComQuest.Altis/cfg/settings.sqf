@@ -228,15 +228,17 @@ CQ_loadZoneCount = 4;                    // loadout zones in the base parking ar
 CQ_loadZoneRadius = 9;
 // Classes taken in game (every lobby slot is a Rifleman): [label, config class for the loadout, traits]
 // [label, unit class (loadout), traits, max players in that class]
-// UI design: one look for every window, from the project colour chart
-//   #00272B deep teal   #918C3B olive   #A6A381 khaki   #F2F1DF cream   #BA392C red
+// UI design: light theme from the project colour chart (no dark green). Backgrounds are light
+// grey or light brown; buttons light grey, light brown on hover, red when selected.
+//   chart: #918C3B olive   #A6A381 light brown   #F2F1DF light grey   #BA392C red
 CQ_ui = createHashMapFromArray [
     ["font", "PuristaMedium"], ["fontHead", "PuristaSemibold"], ["fontLight", "PuristaLight"],
-    ["panel", [0, 0.153, 0.169, 0.93]], ["header", [0, 0.11, 0.122, 0.97]], ["inset", [0, 0.08, 0.09, 0.6]],
-    ["button", [0.569, 0.549, 0.231, 0.85]], ["buttonOn", [0.729, 0.224, 0.173, 1]], ["buttonActive", [0.949, 0.945, 0.875, 1]],
-    ["text", [0.949, 0.945, 0.875, 1]], ["muted", [0.651, 0.639, 0.506, 1]], ["dim", [0.45, 0.44, 0.35, 1]],
-    ["accent", [0.569, 0.549, 0.231, 1]], ["alert", [0.729, 0.224, 0.173, 1]], ["warn", [0.651, 0.639, 0.506, 1]]
-];   // hex: text #F2F1DF, muted #A6A381, accent #918C3B, alert #BA392C
+    ["panel", [0.949, 0.945, 0.875, 0.95]], ["header", [0.651, 0.639, 0.506, 1]], ["inset", [0.651, 0.639, 0.506, 0.28]],
+    ["button", [0.871, 0.863, 0.776, 1]], ["buttonHover", [0.651, 0.639, 0.506, 1]], ["buttonOn", [0.729, 0.224, 0.173, 1]],
+    ["buttonActive", [0.169, 0.165, 0.078, 1]], ["textOn", [0.949, 0.945, 0.875, 1]],
+    ["text", [0.169, 0.165, 0.078, 1]], ["muted", [0.431, 0.416, 0.173, 1]], ["dim", [0.54, 0.53, 0.44, 1]],
+    ["accent", [0.569, 0.549, 0.231, 1]], ["alert", [0.729, 0.224, 0.173, 1]], ["warn", [0.431, 0.416, 0.173, 1]]
+];   // hex on light backgrounds: text #2B2A14, muted #6E6A2C, accent #5C5920, dim #8A8770, alert #BA392C
 CQ_splashEnabled = true;                 // POC splash before the intro: black, picture centred, text under it
 CQ_splashWidth = 0.8;                    // picture width, share of the screen width
 CQ_splashTime = 4;                       // s (Space ends it)

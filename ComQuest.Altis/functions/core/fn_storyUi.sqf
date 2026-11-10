@@ -63,7 +63,7 @@ CQ_uiLoop = true;
             _icon ctrlSetTextColor (CQ_ui get "text");
             private _txtC = _d ctrlCreate ["RscStructuredText", -1];
             _txtC ctrlSetStructuredText parseText format [
-                "<t font='PuristaSemibold' size='0.72' color='#A6A381'>%1</t><br/><t font='PuristaLight' size='0.88' color='#F2F1DF'>%2</t>",
+                "<t font='PuristaSemibold' size='0.72' color='#6E6A2C'>%1</t><br/><t font='PuristaLight' size='0.88' color='#2B2A14'>%2</t>",
                 _who, if ((_txt select [0, 6]) == "<rich>") then { _txt select [6] } else { [_txt] call _esc }];
             // height from the wrapped text (min: the icon column)
             _txtC ctrlSetPosition [_x0 + _ic + _pad, -1, _w - _ic - 2 * _pad, 0.05];
