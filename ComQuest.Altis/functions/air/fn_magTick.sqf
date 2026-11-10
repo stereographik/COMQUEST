@@ -161,7 +161,7 @@ if (time >= CQ_magDetectT) then {
             private _k = hashValue _o;
             private _rec = CQ_magSeen getOrDefault [_k, []];
             if (_rec isNotEqualTo [] && { time - (_rec select 2) < CQ_magDetectEvery - 1 }) then { continue };   // another drone just saw it
-            if (_checks >= 60) then { break };
+            if (_checks >= CQ_magChecksPerPass) then { break };
             _checks = _checks + 1;
             if (([_v, "VIEW", _o] checkVisibility [_eye, aimPos _o]) < 0.2) then { continue };
             if (_rec isEqualTo []) then {
@@ -274,7 +274,7 @@ if (_focusOn) then {
             _m set ["target", _focus];
             if (time - (_m getOrDefault ["loiterLogT", -1e6]) > 120) then {
                 _m set ["loiterLogT", time];
-                ["MAGPIE: %1 loiters around the contact at %2, radius %3 m", [_m get "name", mapGridPosition _focus, round _R]] call CQ_fnc_log;
+                if (CQ_logVerbose) then { ["MAGPIE: %1 loiters around the contact at %2, radius %3 m", [_m get "name", mapGridPosition _focus, round _R]] call CQ_fnc_log };
             };
             continue;
         };
@@ -299,7 +299,7 @@ if (_focusOn) then {
     } forEach _ring;
     if (time - (missionNamespace getVariable ["CQ_magRingLogT", -1e6]) > 60) then {
         CQ_magRingLogT = time;
-        ["MAGPIE: %1 drones encircle %2, ring %3 m, %4 known Tigris", [_n, mapGridPosition _focus, round CQ_magRingR, count _aa]] call CQ_fnc_log;
+        if (CQ_logVerbose) then { ["MAGPIE: %1 drones encircle %2, ring %3 m, %4 known Tigris", [_n, mapGridPosition _focus, round CQ_magRingR, count _aa]] call CQ_fnc_log };
     };
 };
 
@@ -336,7 +336,7 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
         if (_new isNotEqualTo []) then { CQ_magChainSlots = _new };
         CQ_magChainT = time;
         { _x set ["planT", -1e6] } forEach _chain;
-        ["MAGPIE: scan chain moves to x %1 (%2 slots on land)", [round CQ_magChainX, count CQ_magChainSlots]] call CQ_fnc_log;
+        if (CQ_logVerbose) then { ["MAGPIE: scan chain moves to x %1 (%2 slots on land)", [round CQ_magChainX, count CQ_magChainSlots]] call CQ_fnc_log };
     };
     {
         private _m = _x;
@@ -430,8 +430,10 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     private _first = -1;
     { private _wp = _g addWaypoint [_x, 0]; _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 300; if (_first < 0) then { _first = _wp select 1 } } forEach _pts;
     if (_first >= 0) then { _g setCurrentWaypoint [_g, _first] };     // start the new route at its first point
+    if (CQ_logVerbose) then {
     ["MAGPIE: %1 %2 (%3 waypoints, %4 known positions, %5 known AA, alt %6)", [_m get "name", ["orbits the known positions", "explores a new cell"] select _explore,
         count _pts, count _known, count _aa, _m get "alt"]] call CQ_fnc_log;
+    };
 } forEach _flying;
 
 // ---- report (every CQ_magReportEvery s, only when something is new)

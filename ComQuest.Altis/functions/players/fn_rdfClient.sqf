@@ -57,6 +57,7 @@ private _all = [_bg, _edge, _lbl, _pct] + _bars;
 private _shown = -1;
 private _disp = 0;
 private _offColor = [0.2, 0.192, 0.122, 0.7];
+private _lastV = -2;
 while { true } do {
     sleep 0.2;
     private _has = alive player && { "ItemRadio" in assignedItems player || { (assignedItems player) findIf { "radio" in toLower _x } > -1 } };
@@ -64,6 +65,7 @@ while { true } do {
     if (_on != (_shown == 1)) then {
         { _x ctrlShow _on } forEach _all;
         _shown = [0, 1] select _on;
+        _lastV = -2;                                       // redraw once shown again
     };
     if (!_on) then { continue };
 
@@ -87,6 +89,8 @@ while { true } do {
     };
 
     if (_target < 0) then {
+        if (_lastV == -1) then { continue };               // already showing NO SIGNAL
+        _lastV = -1;
         _disp = 0;
         _lbl ctrlSetText "NO SIGNAL";
         _lbl ctrlSetTextColor (CQ_ui get "dim");
@@ -96,6 +100,8 @@ while { true } do {
     } else {
         _disp = _disp + (_target - _disp) * 0.4;          // smooth the needle
         private _v = round (_disp * 100);
+        if (_v == _lastV) then { continue };               // nothing to redraw
+        _lastV = _v;
         _lbl ctrlSetText "SIGNAL";
         _lbl ctrlSetTextColor (CQ_ui get "muted");
         _edge ctrlSetBackgroundColor (CQ_ui get "accent");

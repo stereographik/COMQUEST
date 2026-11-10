@@ -9,6 +9,7 @@ CQ_playerView = true;                    // final player view by default: no deb
 CQ_debugCards = false;                   // debug phase messages as orange cards too (story lines use the cards)
 
 // --- Director -------------------------------------------------------------
+CQ_logVerbose = false;                   // true: also log every drone route / ring / Tigris lock (chatty .rpt)
 CQ_tickSeconds = 5;                      // one server tick every 5 s
 
 // --- Player base (Altis International Airport) -----------------------------
@@ -450,6 +451,7 @@ CQ_magRingMin = 700;                     // m tightest ring
 CQ_magRingShrink = 120;                  // m per minute the ring tightens
 CQ_magRingTurn = 0.5;                    // deg per second the ring turns (a full turn in 12 min)
 CQ_magOsc = [0.3, 240];                  // Greyhawk / Reaper loiter radius around a contact: +/- 30 %, one swing every 240 s
+CQ_magChecksPerPass = 30;                // line-of-sight checks per drone and detection pass (was 60)
 CQ_magFocusQuiet = 300;                  // s without a new contact in the ring (once tight) -> next focus
 CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (the carrier group)
 CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
@@ -479,12 +481,12 @@ CQ_heatEvery = 5;                        // s between two server updates
 CQ_heatPubEvery = 10;                    // s between two broadcasts to the players
 CQ_heatWeights = createHashMapFromArray [["inf", 0.15], ["static", 0.3], ["light", 0.35], ["armour", 0.6], ["air", 0.6]];   // heat per seen unit (summed per cell, max 1)
 CQ_heatEnabled = true;                   // false: no heatmap overlay on the map (the server grid still runs)
-CQ_heatFine = 100;                       // m: drawn tile size (the field is sampled this fine)
+CQ_heatFine = 120;                       // m: drawn tile size (the field is sampled this fine)
 CQ_heatSigma = 260;                      // m: spread of one contact cell (gaussian)
 CQ_heatTerrain = 0.35;                   // heightmap mask: how much local relief bends the contours
 CQ_heatBands = 7;                        // colour bands (stepped contours, blue -> red)
 CQ_heatAlpha = 0.10;                     // final opacity of the overlay
-CQ_heatMaxTiles = 1800;                  // drawn tiles at most (strongest first, on screen only)
+CQ_heatMaxTiles = 1200;                  // drawn tiles at most (strongest first, on screen only)
 // fixed-wing spawn spots placed in Eden by hand: name -> [[x, y], direction]
 CQ_magFixedSpawns = createHashMapFromArray [
     ["Greyhawk", [[14305.65, 15841.31], 39.09]],

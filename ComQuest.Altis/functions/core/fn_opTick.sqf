@@ -13,7 +13,7 @@
     Each line: done or not, the time (operation clock) and the squad that did it when known.
 */
 if (time < (missionNamespace getVariable ["CQ_opNext", 0])) exitWith {};
-CQ_opNext = time + 5;
+CQ_opNext = time + 10;
 if (isNil "CQ_op") then { CQ_op = createHashMap };
 if (isNil "CQ_opStartT") then { CQ_opStartT = time };
 private _clock = {
