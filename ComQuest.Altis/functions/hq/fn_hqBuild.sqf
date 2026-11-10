@@ -233,5 +233,6 @@ if (!isNull _tower) then {
 // Recall the perimeter squads and set the garrison
 [_hq] call CQ_fnc_hqGarrison;
 _hq set ["buildDone", true];
+_hq set ["builtT", time];
 [_hq] call CQ_fnc_hqStatusMarker;
 [_hq] call CQ_fnc_hqGuerilla;

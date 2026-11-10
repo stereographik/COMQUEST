@@ -81,7 +81,7 @@ if (_plan isEqualTo []) exitWith {};
     private _movers = [];
     { if ((_x select 0) isEqualTo _d) then { _movers append (_x select 2) } } forEach _plan;
     private _stay = ((_d get "infantry") - _movers) select { (_x getVariable ["CQ_role", ""]) in ["patrol", "reinf"] && { ({ alive _x } count units _x) > 0 } };
-    CQ_patrolRadius params ["_r0", "_r1"];
+    (CQ_nervPatrolR select (_d getOrDefault ["nerv", 1])) params ["_r0", "_r1"];   // radius of the HQ's nervousness
     {
         _x setVariable ["CQ_role", "patrol"];
         [_x, _d get "pos", _r0 + (_r1 - _r0) * (_forEachIndex / ((count _stay - 1) max 1))] call CQ_fnc_infPatrol;

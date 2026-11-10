@@ -117,6 +117,7 @@ class CfgFunctions
             class hqSplit {};
             class hqTick {};
             class hqStatusMarker {};
+            class hqNerves {};
             class hqBalance {};
             class moveGroups {};
             class cmdCapture {};
@@ -188,6 +189,7 @@ class CfgFunctions
             class sniperSpots {};
             class sniperQueue {};
             class sniperRun {};
+            class sniperPost {};
             class carrierMarker {};
         };
 

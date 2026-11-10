@@ -42,22 +42,6 @@ if (!isNull _v && { alive _v }) then {
     [_g] call CQ_fnc_clearWaypoints;
 };
 
-// each sniper to his spot; there: prone, eyes west, stays
-{
-    private _u = _x;
-    private _p = _spots select _forEachIndex;
-    if (!alive _u) then { continue };
-    [_u, _p] spawn {
-        params ["_u", "_p"];
-        _u doMove _p;
-        private _t0 = time;
-        waitUntil { sleep 4; !alive _u || { _u distance2D _p < 6 } || { time - _t0 > 900 } };
-        if (!alive _u) exitWith {};
-        doStop _u;
-        _u setUnitPos "DOWN";
-        _u setDir 270;
-        _u doWatch (_p getPos [1000, 270]);
-        _u disableAI "PATH";
-        ["Sniper in position at grid %1", [mapGridPosition _u]] call CQ_fnc_log;
-    };
-} forEach _men;
+// each sniper to his spot (CQ_fnc_sniperPost); the HQ keeps them for its alarms (CQ_fnc_hqNerves)
+if (count _hq > 0) then { private _sn = _hq getOrDefault ["snipers", []]; _sn append _men; _hq set ["snipers", _sn] };
+{ _x setVariable ["CQ_hqId", _id]; [_x, _spots select _forEachIndex] spawn CQ_fnc_sniperPost } forEach (_men select { alive _x });

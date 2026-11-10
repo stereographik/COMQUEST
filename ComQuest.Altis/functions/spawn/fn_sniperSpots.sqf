@@ -6,13 +6,13 @@
     (higher than the ground 60 m around it), with a bonus when it has a clear line of sight
     600 m to the west. Picked greedily, at least CQ_sniperGap m apart.
 */
-params ["_c", ["_n", 4]];
+params ["_c", ["_n", 4], ["_dist", CQ_sniperDist]];
 private _h0 = getTerrainHeightASL _c;
 private _cands = [];
 CQ_sniperArc params ["_a0", "_a1"];
-CQ_sniperDist params ["_d0", "_d1"];
+_dist params ["_d0", "_d1"];
 for "_a" from _a0 to _a1 step 8 do {
-    for "_d" from _d0 to _d1 step 100 do {
+    for "_d" from _d0 to _d1 step ((_d1 - _d0) / 4 max 50) do {
         private _p = _c getPos [_d, _a];
         if (surfaceIsWater _p) then { continue };
         private _h = getTerrainHeightASL _p;

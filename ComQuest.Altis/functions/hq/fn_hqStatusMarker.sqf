@@ -2,7 +2,7 @@
     CQ_fnc_hqStatusMarker  (server)
     [_hq] call CQ_fnc_hqStatusMarker;
     Status marker of a fully built HQ, seen by every player:
-        [HQ#1][alive][1/7 objectives]
+        [HQ#1][alive][1/7 objectives][TENSE]   (last: nervousness, CQ_fnc_hqNerves)
     commander: alive / captured / killed; objectives = installations destroyed / total (depot,
     radio tower, fuel tanker, AA pits, HMG tower). Created when the HQ finishes building,
     updated by CQ_fnc_hqTick (text only rewritten when it changes); a fallen HQ keeps a grey
@@ -27,6 +27,6 @@ private _txt = if ((_hq get "state") == "Destroyed") then {
         default { "alive" };
     };
     private _all = _hq get "installations";
-    format ["[HQ#%1][%2][%3/%4 objectives]", _id, _cmd, { !alive _x } count _all, count _all]
+    format ["[HQ#%1][%2][%3/%4 objectives][%5]", _id, _cmd, { !alive _x } count _all, count _all, CQ_nervNames select (_hq getOrDefault ["nerv", 0])]
 };
 if (markerText _m != _txt) then { _m setMarkerText _txt };

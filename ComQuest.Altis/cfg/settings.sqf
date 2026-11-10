@@ -128,6 +128,12 @@ CQ_wavePools = [                         // one vehicle from each pool per wave
     ["random", ["O_MRAP_02_hmg_F", "O_G_Offroad_01_armed_F"]]
 ];
 CQ_dynSimGarrison = false;               // true = HQ squads freeze when no player is near (saves CPU, but they stop patrolling)
+// HQ nervousness (CQ_fnc_hqNerves), never calms down: CALM (built, no contact), WARY (contact),
+// TENSE (1 objective lost), ALARMED (2), FORTRESS (3+ or commander killed / captured)
+CQ_nervNames = ["CALM", "WARY", "TENSE", "ALARMED", "FORTRESS"];
+CQ_nervPatrolR = [[400, 1000], [250, 700], [200, 500], [120, 300], [60, 150]];   // patrol loop radius per level (1st squad smallest)
+CQ_nervSniperDist = [[800, 1200], [800, 1200], [600, 900], [400, 700], [150, 300]];   // snipers' new spots after an alarm
+CQ_nervAlarmTime = 240;                  // s without a new loss before the recalled groups spread out again
 CQ_patrolRadius = [250, 700];            // patrol loop radius around an HQ: 1st patrol squad smallest, then wider
 CQ_vehPatrolRadius = 1200;               // HQ vehicles (Ifrit, Marid, Mora, Nyx...) roam this far around their HQ
 CQ_vehRoamRefresh = 420;                 // new random roaming route every 7 min

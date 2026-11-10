@@ -111,7 +111,8 @@ _home set ["infantry", (_home get "infantry") + _alive];
 {
     [_x] call CQ_fnc_clearWaypoints;
     _x setVariable ["CQ_role", "patrol"];
-    [_x, _home get "pos", (CQ_patrolRadius select 0) + random ((CQ_patrolRadius select 1) - (CQ_patrolRadius select 0))] call CQ_fnc_infPatrol;
+    (CQ_nervPatrolR select (_home getOrDefault ["nerv", 1])) params ["_r0", "_r1"];
+    [_x, _home get "pos", _r0 + random (_r1 - _r0)] call CQ_fnc_infPatrol;
     _x enableDynamicSimulation CQ_dynSimGarrison;
 } forEach _alive;
 ["reinf", [[_home get "id"] call CQ_fnc_objName], _home] call CQ_fnc_say;
