@@ -171,6 +171,9 @@ CQ_walkMaxDist = 1000;                   // closer than this, squads walk betwee
 CQ_transportPickRange = 200;             // a squad that must move takes a truck or a parked Taru only if one is this close, else it walks
 CQ_heliPreferDist = 3000;                // farther than this, a helicopter is tried before a truck
 CQ_watchIdle = 180;                      // a patrolling squad standing still 3 min outside combat gets a new patrol
+CQ_objMinGap = 300;                      // HQ objectives (depot, radio tower, fuel tanker, 3 AA, HMG tower): at least this far from each other and from the command building
+CQ_objRing = [360, 650];                 // ...placed on a ring this far around the command building (widens until they fit)
+CQ_objGuardSize = 3;                     // ...each site guarded by this many soldiers taken from the HQ patrols
 CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is finished: compass direction from the HQ (270 = west)
 CQ_hmgTowerDist = 45;                    // ...and distance
 // Enemy support teams: one medic team, one engineer team, dropped again after destruction

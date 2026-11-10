@@ -1,8 +1,10 @@
 /*
     CQ_fnc_hqGarrison  (server)
     [_hq] call CQ_fnc_hqGarrison;
-    End of installation: commander + guards inside the command building, perimeter squads
-    recalled (1st defends the HQ, the others patrol), armed vehicles patrol, the truck parks.
+    End of installation: commander standing in the middle of the command building's floor and
+    his guards inside, perimeter squads recalled (1st defends the HQ, the others patrol), a
+    guard team of CQ_objGuardSize on every objective site away from the building (taken from
+    the patrols, role "guard": never sent as QRF, colonists or alarm), armed vehicles patrol.
     Creates the map markers once.
 */
 params ["_hq"];
@@ -42,6 +44,17 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
 
     private _cmd = leader _cmdGroup;
     _cmd setVariable ["CQ_hqId", _id];
+    // like the friendly commander: standing in the middle of the building, on its floor (lowest
+    // building position = floor, then snapped onto the floor under the centre)
+    if (!isNull _bld) then {
+        private _bps = (_bld buildingPos -1) apply { AGLToASL _x };
+        private _bc = _bld modelToWorldWorld [0, 0, 0];
+        private _z = if (_bps isEqualTo []) then { (_bc select 2) + 1 } else { selectMin (_bps apply { _x select 2 }) };
+        private _hits = lineIntersectsSurfaces [[_bc select 0, _bc select 1, _z + 1.2], [_bc select 0, _bc select 1, _z - 1.5], _cmd, objNull, true, 1, "GEOM", "FIRE"];
+        if (_hits isNotEqualTo []) then { _z = ((_hits select 0) select 0) select 2 };
+        _cmd setPosASL [_bc select 0, _bc select 1, _z + 0.05];
+        _cmd setDir ((_hq get "dir") + 180);
+    };
     _hq set ["commander", _cmd];
     // Capture: hold action for every player (JIP too), only once his guards are down
     [_cmd, "<t color='#918C3B'>Capture the commander</t>",
@@ -76,6 +89,22 @@ if (!isNull _cmdGroup && { ({ alive _x } count units _cmdGroup) > 0 }) then {
     };
     _g enableDynamicSimulation CQ_dynSimGarrison;
 } forEach ((_hq get "infantry") select { ({ alive _x } count units _x) > 0 });
+
+// Guard team on every objective site away from the command building, taken from the patrols
+// (never their leader, a group keeps at least 2 men)
+{
+    private _site = getPosATL _x;
+    private _donor = ((_hq get "infantry") select { (_x getVariable ["CQ_role", ""]) == "patrol" && { ({ alive _x } count units _x) >= CQ_objGuardSize + 2 } }) param [0, grpNull];
+    if (isNull _donor) exitWith { ["HQ #%1: not enough patrol infantry left to guard every objective", [_id]] call CQ_fnc_log };
+    private _men = ((units _donor) select { alive _x && { _x != leader _donor } }) select [0, CQ_objGuardSize];
+    private _g = createGroup [east, true];
+    _men joinSilent _g;
+    _g setVariable ["CQ_role", "guard"];
+    _g setBehaviour "SAFE";
+    [_g, _site, 35] call CQ_fnc_infPatrol;
+    _g enableDynamicSimulation CQ_dynSimGarrison;
+    (_hq get "infantry") pushBack _g;
+} forEach ((_hq get "installations") select { alive _x && { (_x distance2D _c) > 80 } });
 
 // Vehicles: armed ones patrol 400 m, the truck parks by the depot
 {

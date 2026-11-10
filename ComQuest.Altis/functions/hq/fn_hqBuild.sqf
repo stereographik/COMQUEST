@@ -4,7 +4,12 @@
     Builds the HQ composition in 4 stages, CQ_hqBuildStageTime seconds apart, announcing each.
     Offsets are [right, forward] metres in the HQ's own frame (rotated by its "dir").
       1 command building   2 sandbag ring (gaps front and back)
-      3 supply depot + radio tower   4 helipad + parked QRF helicopter + 3 AA pits
+      3 supply depot + radio tower + fuel tanker   4 helipad + parked QRF helicopter + 3 AA pits
+      then the HMG watchtower.
+    The 7 objectives (depot, radio tower, fuel tanker, 3 AA pits, HMG tower) each stand on their
+    own site, at least CQ_objMinGap m from each other and from the command building, on a ring
+    CQ_objRing m around it (the HMG tower takes the site closest to CQ_hmgTowerDir).
+    CQ_fnc_hqGarrison puts a small guard team on each site.
     At the end the squads are recalled to garrison the HQ and "buildDone" is set.
 */
 params ["_hq"];
@@ -20,9 +25,9 @@ private _at = {
 // Places one object with a spacing check against the environment AND the pieces already placed.
 // Blocked -> shifted up to 6 m. Still blocked -> minor piece skipped; essential piece hides the
 // terrain blockers under its footprint. Enemy soldiers standing there are pushed out first.
-private _place = {
-    params ["_cls", "_ox", "_oy", ["_rot", 0], ["_essential", false]];
-    private _want = [_ox, _oy] call _at;
+private _placeAt = {
+    params ["_cls", "_want", ["_rot", 0], ["_essential", false]];
+    _want = [_want select 0, _want select 1, 0];
     private _r = (CQ_objRadius getOrDefault [_cls, 2]) + CQ_objectClearance;
     private _p = [_want, _r, 6] call CQ_fnc_clearPos;
 
@@ -51,13 +56,52 @@ private _place = {
     (_hq get "objects") pushBack _o;
     _o
 };
+private _place = {
+    params ["_cls", "_ox", "_oy", ["_rot", 0], ["_essential", false]];
+    [_cls, [_ox, _oy] call _at, _rot, _essential] call _placeAt
+};
+// Objective sites: 7 spots on a ring around the command building, every one at least
+// CQ_objMinGap m from the others and from the centre (the ring widens and turns until it fits;
+// if it never fits, the best spacing found is used and logged)
+private _sitesFor = {
+    CQ_objRing params ["_r0", "_r1"];
+    private _best = []; private _bestGap = -1;
+    for "_try" from 0 to 59 do {
+        private _r = _r0 + (_r1 - _r0) * (_try / 59) + random 30;
+        private _a0 = random 360;
+        private _pts = [];
+        for "_i" from 0 to 6 do {
+            private _p = [_c getPos [_r, _a0 + _i * (360 / 7) + random 16 - 8], 10, 80] call CQ_fnc_clearPos;
+            if (_p isEqualTo []) exitWith {};
+            _pts pushBack [_p select 0, _p select 1, 0];
+        };
+        if (count _pts < 7) then { continue };
+        private _gap = 1e6;
+        { private _a = _x; { _gap = _gap min (_a distance2D _x) } forEach ((_pts + [_c]) - [_a]) } forEach _pts;
+        if (_gap > _bestGap) then { _bestGap = _gap; _best = _pts };
+        if (_gap >= CQ_objMinGap) exitWith {};
+    };
+    if (_best isEqualTo []) exitWith {
+        ["HQ #%1: no room for spread objectives, built around the command building", [_id]] call CQ_fnc_log;
+        [[-24, 0], [0, 26], [18, -18], [-20, 22], [20, 22], [0, -26], [CQ_hmgTowerDist * sin (CQ_hmgTowerDir - _d), CQ_hmgTowerDist * cos (CQ_hmgTowerDir - _d)]] apply { _x call _at }
+    };
+    if (_bestGap < CQ_objMinGap) then { ["HQ #%1: objectives only %2 m apart (wanted %3)", [_id, round _bestGap, CQ_objMinGap]] call CQ_fnc_log };
+    // HMG tower on the site closest to CQ_hmgTowerDir, last in the list
+    private _hi = 0; private _hd = 1e6;
+    { private _dd = abs (((_c getDir _x) - CQ_hmgTowerDir + 540) % 360 - 180); if (_dd < _hd) then { _hd = _dd; _hi = _forEachIndex } } forEach _best;
+    private _hmgSite = _best deleteAt _hi;
+    _best pushBack _hmgSite;
+    _best
+};
 // Radio and depot only take damage from engineer demolition charges
 private _engineerOnly = {
     params ["_obj"];
     _obj addEventHandler ["HandleDamage", {
         params ["_o", "", "_dmg", "_src", "_ammo", "", "_inst"];
         private _who = [_inst, _src] select (isNull _inst);
-        if (_ammo in CQ_engineerCharges && { typeOf _who in CQ_engineerClasses }) then { _dmg } else { damage _o };
+        // a player is an engineer by the class he took at the base (all slots are riflemen)
+        private _eng = typeOf _who in CQ_engineerClasses || { (_who getVariable ["CQ_class", ""]) == "Engineer" };
+        if (_ammo in CQ_engineerCharges && { _eng }) then { _dmg } else { damage _o };
     }];
 };
 // Stage wait: CQ_hqBuildStageTime of calm, or until the debug panel skips it. The clock stops
@@ -113,9 +157,11 @@ for "_a" from 15 to 345 step 15 do {
 
 // Stage 3 - supply depot + ammo boxes, radio tower, fuel tanker, field resupply truck
 call _wait;
-private _depot = ["Land_Cargo_House_V1_F", -24, 0, 90, true] call _place;
-{ ["Box_East_Ammo_F", _x, -6] call _place } forEach [-26, -24, -22];
-private _radio = ["Land_TTowerBig_2_F", 0, 26, 0, true] call _place;
+private _sites = call _sitesFor;
+_hq set ["objSites", _sites];
+private _depot = ["Land_Cargo_House_V1_F", _sites select 0, 90, true] call _placeAt;
+if (!isNull _depot) then { { ["Box_East_Ammo_F", (getPosATL _depot) getPos [7, _d + 180 + _x]] call _placeAt } forEach [-25, 0, 25] };
+private _radio = ["Land_TTowerBig_2_F", _sites select 1, 0, true] call _placeAt;
 { [_x] call _engineerOnly } forEach [_depot, _radio];
 
 _depot addEventHandler ["Killed", {
@@ -129,7 +175,7 @@ _depot addEventHandler ["Killed", {
 }];
 
 // Fuel tanker: holds the HQ's fuel. Any weapon can destroy it.
-private _tanker = [CQ_tankerClass, 18, -18, 90] call _place;
+private _tanker = [CQ_tankerClass, _sites select 2, 90] call _placeAt;
 if (!isNull _tanker) then {
     _tanker setFuelCargo 0;           // players can't refuel from it
     _tanker lock 2;
@@ -193,16 +239,17 @@ if (!isNull _pad) then {
 
 private _aaGroup = createGroup [east, true];
 {
-    _x params ["_ox", "_oy"];
-    private _aa = ["O_static_AA_F", _ox, _oy] call _place;
+    private _sp = _x;
+    private _aa = ["O_static_AA_F", _sp] call _placeAt;
     if (!isNull _aa) then {
-        { ["Land_BagFence_Round_F", _ox + 2.6 * sin _x, _oy + 2.6 * cos _x, _x + 180] call _place } forEach [0, 120, 240];
+        private _ap = getPosATL _aa;
+        { ["Land_BagFence_Round_F", _ap getPos [2.6, _d + _x], _x + 180] call _placeAt } forEach [0, 120, 240];
         createVehicleCrew _aa;
         (_hq get "installations") pushBack _aa;
         (crew _aa) joinSilent _aaGroup;
         [_aa, 1] call CQ_fnc_vehAmmoInit;
     };
-} forEach [[-20, 22], [20, 22], [0, -26]];
+} forEach (_sites select [3, 3]);
 _aaGroup setBehaviour "AWARE";
 _aaGroup setCombatMode "RED";
 (_hq get "support") pushBack _aaGroup;
@@ -210,7 +257,7 @@ _aaGroup setCombatMode "RED";
 
 // Construction finished: an HMG watchtower on the west side (facing the player's side of the island)
 private _ta = CQ_hmgTowerDir - _d;
-private _tower = ["Land_Cargo_Patrol_V1_F", CQ_hmgTowerDist * sin _ta, CQ_hmgTowerDist * cos _ta, _ta, true] call _place;
+private _tower = ["Land_Cargo_Patrol_V1_F", _sites select 6, _ta, true] call _placeAt;
 if (!isNull _tower) then {
     private _bp = _tower buildingPos 0;
     if (_bp isEqualTo [0, 0, 0]) then { _bp = (getPosATL _tower) vectorAdd [0, 0, 4.3] };
