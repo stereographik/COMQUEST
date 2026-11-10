@@ -387,6 +387,23 @@ CQ_baseDefs = [];
 } forEach CQ_baseDefAngles;
 { [_x] call CQ_fnc_baseDefBuild } forEach CQ_baseDefs;
 
+// billboard with the mission visual, against the back wall, facing the muster area
+private _bbP = [_hw * 0.45, -_hd + 5] call _at;
+_bbP = [_bbP select 0, _bbP select 1, 0];
+// a billboard model whose picture can be replaced (hiddenSelections), else a plain 10 m user
+// texture panel standing upright
+private _bbC = [["Land_Billboard_F", "Land_Billboard_02_blank_F"]] call _pick;
+if (_bbC != "" && { (getArray (configFile >> "CfgVehicles" >> _bbC >> "hiddenSelections")) isEqualTo [] }) then { _bbC = "UserTexture10m_F" };
+if (_bbC != "") then {
+    { _x hideObjectGlobal true } forEach (nearestTerrainObjects [_bbP, ["TREE", "SMALL TREE", "BUSH", "ROCK", "HIDE", "FENCE", "WALL"], 5, false, true]);
+    private _bb = createVehicle [_bbC, _bbP, [], 0, "CAN_COLLIDE"];
+    _bb setDir (_d + ([0, 180] select CQ_billboardFlip));
+    _bb setPosATL _bbP;
+    _bb allowDamage false;
+    _bb setObjectTextureGlobal [0, "media\billboard.jpg"];
+    ["Billboard (%1) at %2", [_bbC, mapGridPosition _bb]] call CQ_fnc_log;
+};
+
 CQ_musterPos = [0, -6] call _at;
 publicVariable "CQ_musterPos";
 private _respawn = createMarker ["respawn_west", CQ_musterPos];
