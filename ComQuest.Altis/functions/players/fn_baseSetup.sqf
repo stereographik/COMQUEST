@@ -403,3 +403,31 @@ _zone setMarkerColor "ColorWEST";
 
 ["Base built at %1 (front %2 deg): %3 pieces, %4 terrain objects hidden, %5 rows, %6 repair stations",
     [mapGridPosition _o, round _d, _placed, _hidden, _nRays, count CQ_repairPoints]] call CQ_fnc_log;
+
+// Map footprints: buildings created by script are not drawn on the map (only the terrain's own
+// buildings are), so every base building and wall gets a filled rectangle marker of its real
+// footprint, like the map's own buildings. Done once, a few seconds after the base is placed.
+[] spawn {
+    sleep 5;
+    private _n = 0;
+    {
+        private _o = _x;
+        if (getObjectType _o != 8) then { continue };                             // mission objects only
+        if (!(_o isKindOf "Building") && { !(_o isKindOf "House") } && { !(_o isKindOf "Strategic") }) then { continue };
+        if (_o isKindOf "AllVehicles" || { _o isKindOf "ReammoBox_F" } || { "helipad" in toLower typeOf _o } || { "light" in toLower typeOf _o }) then { continue };
+        (boundingBoxReal _o) params ["_a", "_b"];
+        private _w = ((_b select 0) - (_a select 0)) / 2;
+        private _l = ((_b select 1) - (_a select 1)) / 2;
+        if (_w < 0.6 && { _l < 0.6 }) then { continue };                          // signs, props
+        if ((_b select 2) - (_a select 2) < 0.8) then { continue };              // flat things
+        private _m = createMarker [format ["cq_bld_%1", _n], getPosATL _o];
+        _m setMarkerShape "RECTANGLE";
+        _m setMarkerSize [_w, _l];
+        _m setMarkerDir getDir _o;
+        _m setMarkerBrush "SolidFull";
+        _m setMarkerColor "ColorBlack";
+        _m setMarkerAlpha 0.55;
+        _n = _n + 1;
+    } forEach (CQ_basePos nearObjects ["All", CQ_baseRadius + 150]);
+    ["Base map footprints: %1 buildings and walls drawn", [_n]] call CQ_fnc_log;
+};
