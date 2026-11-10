@@ -6,556 +6,458 @@
 <title>ComQuest Altis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  /* field dossier on a tactical display: olive-slate ground, sand ink, amber for friendly, CSAT red for enemy */
-  --ground: #1b201d;
-  --panel: #232a26;
-  --line: #3a443d;
-  --ink: #e6dfcc;
-  --muted: #a39d8b;
-  --amber: #e1a43c;
-  --red: #d4553f;
-  --display: "Saira Stencil One", "Impact", sans-serif;
-  --cond: "Barlow Condensed", "Arial Narrow", sans-serif;
-  --body: "Barlow", "Segoe UI", sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, monospace;
-  color-scheme: dark;
-  /* layout: one 1120px column; sections are numbered annexes of an operations order */
+/* Layout idea: a field-ops dossier. Black sheet, huge wide display type, small mono labels,
+   duotone teal imagery cut by rose blocks and HUD crosshairs, a ticker between chapters. */
+:root{
+  --ink:#0d0f10;          /* page */
+  --sheet:#151819;        /* panels */
+  --line:#2a3133;         /* rules and grid */
+  --paper:#eef1ef;        /* main text */
+  --mute:#8d9a99;         /* secondary text */
+  --teal:#7fb6b5;         /* friendly, scan, accent */
+  --teal-d:#28494b;
+  --rose:#f2c3cd;         /* enemy, heat, alarms */
+  --display:"Michroma","Eurostile","Arial Black",sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  color-scheme:dark;
 }
-* { box-sizing: border-box; }
-html, body { margin: 0; background: var(--ground); color: var(--ink); }
-body { font-family: var(--body); font-size: 17px; line-height: 1.55; }
-a { color: var(--amber); }
-.wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
-h1, h2, h3 { text-wrap: balance; margin: 0; }
-h2 { font-family: var(--display); font-weight: 400; font-size: clamp(30px, 4.4vw, 46px); letter-spacing: 0.02em; line-height: 1.05; }
-h3 { font-family: var(--cond); font-weight: 700; font-size: 21px; letter-spacing: 0.04em; text-transform: uppercase; }
-p { margin: 0; max-width: 65ch; }
-.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-.muted { color: var(--muted); }
-.tag { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.tag b { color: var(--amber); font-weight: 600; }
-.enemy { color: var(--red); }
-.friend { color: var(--amber); }
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--ink);color:var(--paper);font:16px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+a{color:var(--teal)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--rose);outline-offset:3px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-transform:uppercase;text-wrap:balance;margin:0}
+h2{font-size:clamp(28px,4.6vw,56px);line-height:1.02;letter-spacing:-.01em}
+h3{font-size:15px;letter-spacing:.04em;line-height:1.3}
+p{margin:0;max-width:65ch}
+.lead{font-size:18px;color:#cfd6d4}
 
-/* ---- hero */
-header.hero { position: relative; border-bottom: 1px solid var(--line); overflow: hidden; }
-#net { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.hero .wrap { position: relative; padding-top: 56px; padding-bottom: 64px; display: grid; gap: 22px; }
-.classif { display: flex; flex-wrap: wrap; gap: 10px 22px; }
-.hero h1 { font-family: var(--display); font-weight: 400; font-size: clamp(56px, 10vw, 128px); line-height: 0.9; letter-spacing: 0.01em; }
-.hero h1 span { color: var(--amber); }
-.hero .lede { font-size: clamp(19px, 2.1vw, 23px); max-width: 34ch; line-height: 1.4; }
-.hero .lede em { font-style: normal; color: var(--red); }
-.facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
-.fact { border: 1px solid var(--line); background: rgba(27, 32, 29, 0.82); padding: 8px 12px; font-family: var(--cond); font-weight: 600; font-size: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
-.fact b { font-family: var(--mono); color: var(--amber); font-weight: 600; margin-right: 6px; }
+/* top bar */
+.bar{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 0;border-bottom:1px solid var(--line)}
+.bar span b{color:var(--paper);font-weight:500}
 
-/* ---- annex sections */
-section { border-bottom: 1px solid var(--line); padding: 64px 0; }
-.annex { display: grid; grid-template-columns: 180px 1fr; gap: 32px; }
-.annex > aside { padding-top: 8px; }
-.annex > aside .num { font-family: var(--display); font-size: 64px; line-height: 1; color: var(--line); }
-.annex-body { display: grid; gap: 28px; min-width: 0; }
-.intro { display: grid; gap: 12px; }
-.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.card { background: var(--panel); border: 1px solid var(--line); padding: 18px 20px; display: grid; gap: 8px; align-content: start; }
-.card p { font-size: 16px; }
-.card.red { border-left: 3px solid var(--red); }
-.card.amber { border-left: 3px solid var(--amber); }
+/* hero */
+.hero{padding:40px 0 0}
+.hero-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:16px}
+.hero-top .w{font-family:var(--display);font-size:clamp(22px,4vw,48px);line-height:1;text-transform:uppercase}
+.hero-top .w:last-child{text-align:right}
+.hero-top .meta{text-align:center;line-height:1.5}
+.hero h1{font-size:clamp(64px,15.5vw,190px);line-height:.86;letter-spacing:-.02em;margin:8px 0 18px;white-space:nowrap}
+.plate{position:relative;border:1px solid var(--line);background:#0a1415;overflow:hidden}
+.plate canvas{display:block;width:100%;height:auto}
+.plate .tag{position:absolute;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:rgba(13,15,16,.72);padding:4px 8px}
+.hero-foot{display:grid;grid-template-columns:1.2fr 2fr;gap:40px;padding:36px 0 48px;align-items:start}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.stats div{background:var(--ink);padding:16px 14px}
+.stats b{display:block;font-family:var(--display);font-size:clamp(26px,3vw,38px);font-weight:400;font-variant-numeric:tabular-nums;line-height:1.1}
+.stats span{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
 
-/* HQ lifecycle */
-.life { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); }
-.life li { padding: 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; gap: 6px; align-content: start; background: var(--panel); }
-.life li:nth-child(4n) { border-right: 0; }
-.life li:nth-last-child(-n+4) { border-bottom: 0; }
-.life .step { font-family: var(--mono); font-size: 12px; color: var(--red); letter-spacing: 0.1em; }
-.life h3 { font-size: 18px; }
-.life p { font-size: 15px; color: var(--muted); }
+/* ticker */
+.ticker{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;background:var(--ink)}
+.ticker div{display:inline-block;padding:10px 0;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5d6a69;animation:tick 60s linear infinite}
+.ticker i{font-style:normal;color:var(--teal);margin:0 18px}
+@keyframes tick{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.ticker div{animation:none}}
 
-/* escalation ladder */
-.ladder { display: grid; gap: 0; border-left: 2px solid var(--red); }
-.rung { display: grid; grid-template-columns: 150px 1fr; gap: 20px; padding: 14px 0 14px 20px; position: relative; }
-.rung::before { content: ""; position: absolute; left: -7px; top: 22px; width: 12px; height: 12px; background: var(--ground); border: 2px solid var(--red); }
-.rung.hot::before { background: var(--red); }
-.rung .trig { font-family: var(--mono); font-size: 13px; color: var(--red); padding-top: 3px; }
-.rung p { font-size: 16px; }
+/* chapters */
+section{padding:72px 0}
+.head{display:grid;grid-template-columns:120px 1fr;gap:24px;margin-bottom:40px}
+.num{font-family:var(--display);font-size:44px;line-height:1;color:var(--teal)}
+.head .mono{display:block;margin-bottom:10px}
+.head p{margin-top:16px}
+.grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.cell{background:var(--ink);padding:22px 20px;position:relative}
+.cell .mono{display:block;margin-bottom:8px}
+.cell h3{margin-bottom:8px}
+.cell p{color:#c4ccca;font-size:15px}
+.cell.hot .mono{color:var(--rose)}
+.cell.cool .mono{color:var(--teal)}
+.x::before,.x::after{content:"+";position:absolute;font-family:var(--mono);font-size:14px;color:var(--teal);line-height:1}
+.x::before{top:6px;right:8px}.x::after{bottom:6px;left:8px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+.stack{display:grid;gap:22px}
+.pill{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);padding:2px 8px;color:var(--mute)}
+.pill.r{border-color:var(--rose);color:var(--rose)}.pill.t{border-color:var(--teal);color:var(--teal)}
+
+/* escalation */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.steps div{background:var(--ink);padding:22px 20px}
+.steps div:nth-child(1){box-shadow:inset 0 3px 0 #5f7a79}
+.steps div:nth-child(2){box-shadow:inset 0 3px 0 #d79aa7}
+.steps div:nth-child(3){box-shadow:inset 0 3px 0 var(--rose)}
+.steps b{font-family:var(--mono);font-size:12px;letter-spacing:.1em;display:block;margin-bottom:8px}
 
 /* tables */
-.tbl { overflow-x: auto; border: 1px solid var(--line); }
-table { border-collapse: collapse; width: 100%; font-size: 15px; }
-th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
-th { font-family: var(--cond); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--panel); font-size: 14px; }
-tr:last-child td { border-bottom: 0; }
-td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-th.n { text-align: right; }
-.bar { display: inline-block; height: 6px; background: var(--amber); vertical-align: middle; margin-right: 8px; }
-
-/* base plan */
-.plan { background: var(--panel); border: 1px solid var(--line); }
-.plan svg { display: block; width: 100%; height: auto; }
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+.tbl td{padding:10px 12px;border-bottom:1px solid #1d2224}
+.tbl td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.tbl th.n{text-align:right}
+.tblbox{overflow-x:auto;border:1px solid var(--line);background:var(--sheet)}
 
 /* radio */
-.radio { display: grid; gap: 12px; }
-.msg { display: grid; grid-template-columns: 44px 1fr; background: #e9e6df; color: #111; max-width: 620px; }
-.msg .ic { background: #2a2a2a; color: #f2f2f2; font-family: var(--cond); font-weight: 700; font-size: 13px; display: grid; place-items: center; writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 0.12em; }
-.msg .tx { padding: 10px 14px; font-size: 15px; display: grid; gap: 2px; }
-.msg .who { font-family: var(--cond); font-weight: 700; font-size: 13px; letter-spacing: 0.1em; color: #555; }
-.msg.mag .tx { font-family: var(--mono); font-size: 14px; }
-.msg.int .ic { background: #7a2a20; }
-.msg.int .who { color: #9a3424; }
+.radio{display:grid;gap:10px}
+.msg{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:start;background:var(--sheet);border-left:3px solid var(--teal);padding:12px 14px}
+.msg.e{border-left-color:var(--rose)}.msg.u{border-left-color:#cfd6d4}
+.msg .mono{color:var(--paper)}
+.msg p{font-family:var(--mono);font-size:13px;color:#cfd6d4}
+.mag{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}
+.mag span{font-family:var(--mono);font-size:12px;color:var(--paper)}
+.mag em{font-style:normal;color:var(--rose)}
 
-/* signal meter mock */
-.meter { width: 240px; height: 44px; background: rgba(13, 13, 13, 0.72); position: relative; border-left: 3px solid #fff; }
-.meter .lbl { position: absolute; left: 10px; top: 4px; font-family: var(--cond); font-weight: 600; font-size: 15px; color: #bfbfbf; letter-spacing: 0.04em; }
-.meter .val { position: absolute; right: 12px; top: 1px; font-family: var(--cond); font-weight: 700; font-size: 21px; color: #fff; }
-.meter .val small { font-weight: 500; font-size: 14px; color: #a0a0a0; }
-.meter .segs { position: absolute; left: 12px; right: 12px; bottom: 8px; display: grid; grid-template-columns: repeat(20, 1fr); gap: 2px; height: 6px; }
-.meter .segs i { background: rgba(71, 71, 71, 0.6); }
-.meter .segs i.on { background: #fff; }
+/* menu mock */
+.menu{background:var(--sheet);border:1px solid var(--line);max-width:300px}
+.menu .t{display:flex;justify-content:space-between;padding:10px 12px;background:#1d2a25;font-family:var(--display);font-size:13px;color:#cfe08c}
+.menu button{display:block;width:calc(100% - 20px);margin:8px 10px;padding:10px;background:#262b2c;border:0;color:var(--paper);font:500 13px var(--body);letter-spacing:.05em;text-align:left;cursor:default}
+.menu button span{float:right;font-family:var(--mono);font-size:10px;color:var(--mute);text-transform:uppercase}
+.signal{display:inline-grid;grid-template-columns:auto auto;gap:4px 14px;align-items:center;background:rgba(13,15,16,.8);border:1px solid var(--line);padding:10px 14px;margin-top:18px}
+.signal b{font-family:var(--display);font-size:28px;font-weight:400}
+.meter{grid-column:1/-1;height:4px;background:#243032}.meter i{display:block;height:100%;width:65%;background:var(--teal)}
 
-/* squad manager mock */
-.uiwin { border: 1px solid var(--line); background: #0f1210; font-family: var(--cond); font-size: 15px; }
-.uiwin .tabs { display: flex; gap: 6px; padding: 6px; background: #1e271c; }
-.uiwin .tabs span { padding: 4px 12px; background: #333; color: #ddd; font-weight: 600; letter-spacing: 0.05em; }
-.uiwin .tabs span.on { background: #5a7f40; color: #fff; }
-.uiwin .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 10px; }
-.uiwin .col { display: grid; gap: 3px; align-content: start; }
-.uiwin .col b { color: #a6a6a6; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; }
-.uiwin .col div { background: #1a1d1b; padding: 3px 8px; color: #ddd; display: flex; justify-content: space-between; gap: 8px; }
-.uiwin .col div.me { color: #8de073; }
-.uiwin .btns { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 10px; }
-.uiwin .btns span { background: #2c2c2c; color: #ddd; padding: 4px 10px; font-weight: 600; font-size: 13px; letter-spacing: 0.06em; }
+footer{border-top:1px solid var(--line);padding:28px 0 48px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
-footer { padding: 40px 0 56px; }
-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
-
-:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
-
-@media (max-width: 860px) {
-  .annex { grid-template-columns: 1fr; gap: 12px; }
-  .annex > aside .num { font-size: 44px; }
-  .grid3 { grid-template-columns: 1fr 1fr; }
-  .life { grid-template-columns: 1fr 1fr; }
-  .life li:nth-child(4n) { border-right: 1px solid var(--line); }
-  .life li:nth-child(2n) { border-right: 0; }
-  .life li:nth-last-child(-n+4) { border-bottom: 1px solid var(--line); }
-  .life li:nth-last-child(-n+2) { border-bottom: 0; }
+@media (max-width:900px){
+  .g3,.g4{grid-template-columns:repeat(2,1fr)}
+  .hero-foot,.split{grid-template-columns:1fr;gap:28px}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .head{grid-template-columns:1fr;gap:8px}
 }
-@media (max-width: 560px) {
-  body { font-size: 16px; }
-  .wrap { padding: 0 16px; }
-  .grid2, .grid3, .life { grid-template-columns: 1fr; }
-  .life li { border-right: 0 !important; border-bottom: 1px solid var(--line) !important; }
-  .life li:last-child { border-bottom: 0 !important; }
-  .rung { grid-template-columns: 1fr; gap: 4px; }
-  .uiwin .cols { grid-template-columns: 1fr; }
+@media (max-width:560px){
+  .g2,.g3,.g4,.steps{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .hero-top{grid-template-columns:1fr 1fr}.hero-top .meta{display:none}
+  .msg{grid-template-columns:1fr;gap:4px}
+  .hero h1{white-space:normal}
 }
 </style>
 </head>
 <body>
 
-<header class="hero">
-  <canvas id="net" aria-hidden="true"></canvas>
-  <div class="wrap">
-    <div class="classif">
-      <span class="tag"><b>OPORD</b> Arma 3 multiplayer scenario</span>
-      <span class="tag">Altis</span>
-      <span class="tag">Vanilla + CBA</span>
-      <span class="tag">Co-op, up to 26 players</span>
-    </div>
-    <h1>Com<span>Quest</span></h1>
-    <p class="lede">A CSAT carrier parks off Altis and starts planting headquarters inland. Each one grows, splits and feeds the next. <em>Your job is to find the network and cut it apart</em> before it reaches your airfield.</p>
-    <div class="facts">
-      <span class="fact"><b>8</b>enemy HQs alive at once</span>
-      <span class="fact"><b>4</b>build stages per HQ</span>
-      <span class="fact"><b>11</b>player classes</span>
-      <span class="fact"><b>19</b>base vehicles</span>
-      <span class="fact"><b>0</b>DLC required</span>
-    </div>
+<div class="wrap">
+  <div class="bar mono">
+    <span>OPORD / <b>ComQuest.Altis</b></span>
+    <span>Arma 3 · multiplayer co-op · up to 26 players</span>
+    <span>Vanilla + CBA · <b>0 DLC</b></span>
   </div>
-</header>
 
-<main>
-
-<!-- 01 -->
-<section>
-  <div class="wrap annex">
-    <aside><div class="num">01</div><div class="tag">The enemy</div></aside>
-    <div class="annex-body">
-      <div class="intro">
-        <h2>A network that grows on its own</h2>
-        <p>Nothing is placed by hand. A server-side director runs the enemy as a living system: it inserts, builds, resupplies, redeploys and calls for help, every few seconds, whether you are watching or not.</p>
-      </div>
-      <ol class="life">
-        <li><span class="step">STEP 1</span><h3>Insertion</h3><p>Two minutes in, Taru and Mohawk transports leave the carrier. The first HQ is a beachhead, inside 2 km of the shore.</p></li>
-        <li><span class="step">STEP 2</span><h3>Paradrop</h3><p>A Zamak and an Ifrit come down under their own chutes, at least 350 m from the water.</p></li>
-        <li><span class="step">STEP 3</span><h3>Secure</h3><p>Squads post out to a 1 km perimeter before anyone lays a sandbag.</p></li>
-        <li><span class="step">STAGE 1/4</span><h3>Command post</h3><p>The HQ commander moves in. Kill or capture him: he matters.</p></li>
-        <li><span class="step">STAGE 2/4</span><h3>Perimeter</h3><p>Sandbags around the site.</p></li>
-        <li><span class="step">STAGE 3/4</span><h3>Depot and radio</h3><p>Ammo depot, fuel tanker, supply truck and a radio mast.</p></li>
-        <li><span class="step">STAGE 4/4</span><h3>Operational</h3><p>Helipad with a QRF helicopter, three AA pits, an HMG tower to the west. Two squads of armed locals join them.</p></li>
-        <li><span class="step">THEN</span><h3>Split</h3><p>Once it is strong enough, the HQ sends colonists out by truck and helicopter to found the next one.</p></li>
-      </ol>
-      <div class="grid3">
-        <div class="card red"><h3>Logistics</h3><p>The main HQ receives ammunition by air. HEMTT convoys carry it on to the others. Every new HQ starts short of ammo, so a dead convoy is felt across the island.</p></div>
-        <div class="card red"><h3>Redeployment</h3><p>Every minute the director evens out the infantry over the built HQs. Squads move by truck or helicopter when one is within 200 m. One squad always walks.</p></div>
-        <div class="card red"><h3>Movement</h3><p>Ifrits, Hunters and armour roam between HQs and avoid hilltops and rock fields. Orca and Kajman helicopters fly irregular patrols over the whole network.</p></div>
-        <div class="card red"><h3>Support teams</h3><p>A medic team in a white Strider keeps the wounded alive. An engineer team repairs damaged vehicles. Each is dropped 40 s after the first insertion and comes back 15 min after it dies.</p></div>
-        <div class="card red"><h3>Reinforcements</h3><p>Weakened HQs call in fresh sections from the carrier, sent straight to the HQs that need them, including ones still being built.</p></div>
-        <div class="card red"><h3>No markers</h3><p>Enemy positions never appear on your map. You find them with the radio direction finder, or by making an HQ commander talk.</p></div>
+  <header class="hero">
+    <div class="hero-top">
+      <div class="w">Cut the</div>
+      <div class="meta mono">Altis · AAC airfield<br>CSAT carrier group offshore</div>
+      <div class="w">Network</div>
+    </div>
+    <h1>ComQuest</h1>
+    <div class="plate">
+      <canvas id="plate" width="1180" height="520" aria-label="Stylised map of Altis: MAGPIE drone tracks in teal, a scanned area, enemy heat in rose"></canvas>
+      <span class="tag" style="left:12px;top:12px">MAGPIE · scan grid 300 m</span>
+      <span class="tag" style="right:12px;top:12px">Contact · heat fades 60 s</span>
+      <span class="tag" style="left:12px;bottom:12px">Tigris AA · 3.5 km</span>
+      <span class="tag" style="right:12px;bottom:12px">Grid 144159 · runway 044°</span>
+    </div>
+    <div class="hero-foot">
+      <p class="lead">A CSAT carrier parks off Altis and starts planting headquarters inland. Each one grows, splits and feeds the next, while a friendly drone operator hunts them from the sky. Find the network and cut it apart before the carrier empties onto the island.</p>
+      <div class="stats">
+        <div><b>6</b><span>HQs per carrier</span></div>
+        <div><b>4</b><span>build stages</span></div>
+        <div><b>12</b><span>MAGPIE drones</span></div>
+        <div><b>11</b><span>player classes</span></div>
+        <div><b>160</b><span>enemy infantry cap</span></div>
       </div>
     </div>
+  </header>
+</div>
+
+<div class="ticker" aria-hidden="true"><div>
+ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanilla + CBA<i>↗</i>No markers<i>↗</i>Cut the network<i>↗</i>ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanilla + CBA<i>↗</i>No markers<i>↗</i>Cut the network<i>↗</i>
+ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanilla + CBA<i>↗</i>No markers<i>↗</i>Cut the network<i>↗</i>ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanilla + CBA<i>↗</i>No markers<i>↗</i>Cut the network<i>↗</i>
+</div></div>
+
+<main class="wrap">
+
+<section id="enemy">
+  <div class="head">
+    <div class="num">01</div>
+    <div><span class="mono">The enemy</span><h2>A network that grows on its own</h2>
+    <p class="lead">Nothing is placed by hand. A server-side director runs the enemy as a living system: it inserts, builds, resupplies, redeploys and calls for help every few seconds, whether you are watching or not. The carrier holds enough for six HQs, and its marker shows what is left.</p></div>
   </div>
-</section>
-
-<!-- 02 -->
-<section>
-  <div class="wrap annex">
-    <aside><div class="num">02</div><div class="tag">Contact</div></aside>
-    <div class="annex-body">
-      <div class="intro">
-        <h2>Get spotted and it escalates</h2>
-        <p>Each HQ reacts to contact on its own, in steps. How fast you kill the squad that spotted you decides how bad it gets.</p>
-      </div>
-      <div class="ladder">
-        <div class="rung"><span class="trig">CONTACT</span><p>The spotting squad engages and calls on every patrolling squad within 700 m to join in.</p></div>
-        <div class="rung hot"><span class="trig">RED FLARE</span><p>If that squad loses 40% of its men within two minutes, a red flare goes up over the HQ. Heavy support follows: 30% of the garrison and half of the roaming squads within 2.5 km come back to defend.</p></div>
-        <div class="rung hot"><span class="trig">ROOT DEFENCE</span><p>Attack the first HQ, the root of the network, and every HQ it founded sends troops back to defend it.</p></div>
-      </div>
-    </div>
+  <div class="grid g4">
+    <div class="cell x"><span class="mono">Step 1</span><h3>Insertion</h3><p>Taru and Mohawk transports leave the carrier. The first HQ is a beachhead within 2 km of the shore.</p></div>
+    <div class="cell x"><span class="mono">Step 2</span><h3>Paradrop</h3><p>A Zamak and an Ifrit come down under their own chutes, plus a long-range Tigris anti-air vehicle with every insertion.</p></div>
+    <div class="cell x"><span class="mono">Step 3</span><h3>Secure</h3><p>Squads post out to a 1 km perimeter before anyone lays a sandbag.</p></div>
+    <div class="cell x"><span class="mono">Then</span><h3>Split</h3><p>A strong HQ sends colonists by truck and helicopter to found the next one, until the carrier is empty.</p></div>
+    <div class="cell"><span class="mono">Stage 1/4</span><h3>Command post</h3><p>The HQ commander moves in. Kill or capture him: he matters.</p></div>
+    <div class="cell"><span class="mono">Stage 2/4</span><h3>Perimeter</h3><p>Sandbags around the site.</p></div>
+    <div class="cell"><span class="mono">Stage 3/4</span><h3>Depot and radio</h3><p>Ammo depot, fuel tanker, supply truck and a radio tower.</p></div>
+    <div class="cell"><span class="mono">Stage 4/4</span><h3>Operational</h3><p>Helipad with a QRF helicopter, three AA pits, an HMG tower, and two squads of armed locals.</p></div>
+  </div>
+  <div class="grid g3" style="margin-top:24px">
+    <div class="cell"><h3>Logistics</h3><p>The main HQ is resupplied by air and HEMTT convoys carry ammunition on to the others. A dead convoy is felt across the island.</p></div>
+    <div class="cell"><h3>Redeployment</h3><p>Every minute the director evens out infantry across built HQs, by truck or helicopter. At most 160 enemy soldiers are on the ground at once.</p></div>
+    <div class="cell"><h3>Movement</h3><p>Ifrits, Hunters and armour roam between HQs and avoid hilltops. Orca and Kajman helicopters fly irregular patrols.</p></div>
+    <div class="cell"><h3>Support teams</h3><p>A medic team and an engineer team keep the network running. Each comes back three times, then it is gone for good.</p></div>
+    <div class="cell"><h3>Reinforcements</h3><p>Weakened HQs call fresh sections from the carrier, while it still has men to send.</p></div>
+    <div class="cell hot"><span class="mono">Rule</span><h3>No markers</h3><p>Enemy positions never appear on your map by themselves. Drones, the direction finder or a talkative commander put them there.</p></div>
   </div>
 </section>
 
-<!-- 03 -->
-<section>
-  <div class="wrap annex">
-    <aside><div class="num">03</div><div class="tag">Win and lose</div></aside>
-    <div class="annex-body">
-      <div class="intro">
-        <h2>Victory is total, defeat is one man</h2>
-      </div>
-      <div class="grid3">
-        <div class="card amber"><h3>An HQ falls</h3><p>Only when its commander is dead or captured <strong>and</strong> every installation is destroyed: depot, fuel, radio mast, helipad and AA.</p></div>
-        <div class="card amber"><h3>Capture the commander</h3><p>Hold the action on him. He talks: every HQ in his network goes on your map.</p></div>
-        <div class="card amber"><h3>Victory</h3><p>Every enemy HQ on Altis destroyed.</p></div>
-        <div class="card red"><h3>Defeat</h3><p>Colonel Harlan, the friendly commander in your HQ offices, is killed. Then the operation is over.</p></div>
-      </div>
-    </div>
+<section id="contact">
+  <div class="head">
+    <div class="num">02</div>
+    <div><span class="mono">Contact</span><h2>Get spotted and it escalates</h2>
+    <p class="lead">Each HQ reacts to contact on its own, in steps. How fast you kill the squad that spotted you decides how bad it gets.</p></div>
+  </div>
+  <div class="steps">
+    <div><b>CONTACT</b><p>The spotting squad engages and calls every patrol within 700 m to join in.</p></div>
+    <div><b>RED FLARE</b><p>Lose 40% of that squad within two minutes and a red flare goes up: 30% of the garrison and half of the roaming squads within 2.5 km come back to defend.</p></div>
+    <div><b>ROOT DEFENCE</b><p>Attack the first HQ, the root of the network, and every HQ it founded sends troops back to save it.</p></div>
   </div>
 </section>
 
-<!-- 04 -->
-<section>
-  <div class="wrap annex">
-    <aside><div class="num">04</div><div class="tag">Your base</div></aside>
-    <div class="annex-body">
-      <div class="intro">
-        <h2>An airfield compound and its motor pool</h2>
-        <p>The base is built by script at the AAC airfield, from zones drawn on the map: a walled HQ, four vehicle rows, crate dispensers, repair depots facing the runway, and a vehicle shop.</p>
-      </div>
-      <div class="plan">
-        <svg viewBox="0 0 760 360" role="img" aria-label="Base plan: walled compound at bottom left, four parallel vehicle rows to the north-east, crate dispensers at the end of each row, two repair depots to the east, the vehicle shop to the west">
-          <defs>
-            <pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#2c342f" stroke-width="1"/></pattern>
-          </defs>
-          <rect width="760" height="360" fill="url(#g)"/>
-          <!-- runway -->
-          <g transform="translate(700 -20) rotate(38)"><rect x="-26" y="0" width="52" height="520" fill="#2e3631"/><line x1="0" y1="10" x2="0" y2="510" stroke="#5d675f" stroke-width="2" stroke-dasharray="18 14"/></g>
-          <text x="640" y="345" fill="#a39d8b" font-family="JetBrains Mono" font-size="11">RUNWAY</text>
-          <!-- compound -->
-          <g transform="translate(250 255) rotate(-38)">
-            <rect x="-80" y="-60" width="160" height="120" fill="none" stroke="#e6dfcc" stroke-width="5"/>
-            <rect x="-14" y="-64" width="28" height="8" fill="#232a26"/>
-            <rect x="-70" y="30" width="44" height="22" fill="#5d675f"/><rect x="-20" y="28" width="48" height="26" fill="#5d675f"/><rect x="36" y="32" width="30" height="20" fill="#5d675f"/>
-            <rect x="-22" y="-4" width="8" height="8" fill="#e1a43c"/><rect x="-8" y="-4" width="8" height="8" fill="#e1a43c"/><rect x="6" y="-4" width="8" height="8" fill="#e1a43c"/><rect x="20" y="-4" width="8" height="8" fill="#e1a43c"/>
-            <circle cx="-45" cy="-34" r="7" fill="none" stroke="#a39d8b" stroke-width="2"/>
-          </g>
-          <text x="196" y="352" fill="#e6dfcc" font-family="Barlow Condensed" font-weight="700" font-size="14" letter-spacing="1">HQ COMPOUND</text>
-          <!-- rows -->
-          <g stroke="#e1a43c" stroke-width="2">
-            <g transform="translate(300 150) rotate(38)"><line x1="0" y1="0" x2="0" y2="-110" stroke-dasharray="3 5"/><rect x="-9" y="-14" width="18" height="6" fill="#e1a43c" stroke="none"/><rect x="-9" y="-36" width="18" height="6" fill="#e1a43c" stroke="none"/><rect x="-10" y="-58" width="20" height="7" fill="#e1a43c" stroke="none"/><circle cx="0" cy="-88" r="13" fill="none"/></g>
-            <g transform="translate(345 172) rotate(38)"><line x1="0" y1="0" x2="0" y2="-110" stroke-dasharray="3 5"/><rect x="-9" y="-14" width="18" height="6" fill="#e1a43c" stroke="none"/><rect x="-9" y="-36" width="18" height="6" fill="#e1a43c" stroke="none"/><rect x="-10" y="-58" width="20" height="7" fill="#e1a43c" stroke="none"/><circle cx="0" cy="-88" r="13" fill="none"/></g>
-            <g transform="translate(390 194) rotate(38)"><line x1="0" y1="0" x2="0" y2="-110" stroke-dasharray="3 5"/><rect x="-9" y="-14" width="18" height="6" fill="#e1a43c" stroke="none"/><rect x="-9" y="-36" width="18" height="6" fill="#e1a43c" stroke="none"/><rect x="-10" y="-58" width="20" height="7" fill="#e1a43c" stroke="none"/><circle cx="0" cy="-88" r="15" fill="none"/></g>
-            <g transform="translate(435 216) rotate(38)"><line x1="0" y1="0" x2="0" y2="-110" stroke-dasharray="3 5"/><rect x="-9" y="-14" width="18" height="6" fill="#e1a43c" stroke="none"/><rect x="-9" y="-36" width="18" height="6" fill="#e1a43c" stroke="none"/><rect x="-10" y="-58" width="20" height="7" fill="#e1a43c" stroke="none"/><circle cx="0" cy="-88" r="15" fill="none"/></g>
-          </g>
-          <g fill="#e6dfcc"><rect x="371" y="40" width="7" height="7"/><rect x="416" y="62" width="7" height="7"/><rect x="461" y="84" width="7" height="7"/><rect x="506" y="106" width="7" height="7"/></g>
-          <text x="352" y="28" fill="#e6dfcc" font-family="Barlow Condensed" font-weight="700" font-size="14" letter-spacing="1">CRATE DISPENSERS</text>
-          <text x="455" y="250" fill="#e1a43c" font-family="Barlow Condensed" font-weight="700" font-size="14" letter-spacing="1">4 VEHICLE ROWS, SMALL TO LARGE</text>
-          <!-- repair -->
-          <g fill="none" stroke="#e6dfcc" stroke-width="2"><circle cx="596" cy="168" r="16"/><circle cx="560" cy="240" r="16"/></g>
-          <text x="582" y="200" fill="#e6dfcc" font-family="Barlow Condensed" font-weight="700" font-size="14" letter-spacing="1">REPAIR</text>
-          <!-- shop -->
-          <circle cx="92" cy="180" r="16" fill="none" stroke="#d4553f" stroke-width="2"/><rect x="118" y="186" width="10" height="7" fill="#d4553f"/>
-          <text x="58" y="160" fill="#d4553f" font-family="Barlow Condensed" font-weight="700" font-size="14" letter-spacing="1">VEHICLE SHOP</text>
-          <!-- north -->
-          <g transform="translate(40 40)"><path d="M0 -14 L6 6 L0 2 L-6 6 Z" fill="#e6dfcc"/><text x="-4" y="22" fill="#a39d8b" font-family="JetBrains Mono" font-size="11">N</text></g>
-        </svg>
-      </div>
-      <div class="grid2">
-        <div class="card amber"><h3>HQ compound</h3><p>H-barrier walls, a vehicle gate between two towers, guard towers on the corners. Inside: warehouse, HQ offices, cargo HQ, radar, medical post, and one equipment box per squad with a full arsenal.</p></div>
-        <div class="card amber"><h3>Vehicle rows</h3><p>Four parallel rows. Vehicles park side by side, at right angles to the row, smallest first. The gap is each model's width plus 5 m. Every row gets a similar mix, so every squad has a motor pool.</p></div>
-        <div class="card amber"><h3>Crates and loadout</h3><p>Each row ends at a dispenser with ready-filled supply crates you can load into any vehicle, and a loadout zone where one action fills a vehicle with resupply for a whole squad.</p></div>
-        <div class="card amber"><h3>Repair and defence</h3><p>Two repair depots facing the runway repair, refuel and rearm anything that stops there. AA and HMG positions around the perimeter are rebuilt 10 minutes after they fall.</p></div>
-      </div>
-      <div class="tbl">
-        <table>
-          <thead><tr><th>Base fleet</th><th class="n">Count</th><th>Role</th></tr></thead>
-          <tbody>
-            <tr><td>Offroad HMG</td><td class="n">4</td><td>Fast, armed, fragile</td></tr>
-            <tr><td>Hunter</td><td class="n">4</td><td>Unarmed MRAP transport</td></tr>
-            <tr><td>Strider</td><td class="n">4</td><td>Unarmed MRAP, better armour</td></tr>
-            <tr><td>HEMTT transport</td><td class="n">2</td><td>Moves a whole squad</td></tr>
-            <tr><td>MH-6 Little Bird</td><td class="n">2</td><td>Light transport helicopter</td></tr>
-            <tr><td>UH-80 Ghost Hawk</td><td class="n">3</td><td>Squad transport helicopter</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="muted">Every base vehicle respawns on its own spot when it is destroyed, or when it has been left empty and still for 15 minutes away from the base.</p>
-    </div>
+<section id="magpie">
+  <div class="head">
+    <div class="num">03</div>
+    <div><span class="mono">Air intelligence</span><h2>MAGPIE hunts from the sky</h2>
+    <p class="lead">MAGPIE is the friendly drone operator, a bot. She launches as soon as the carrier shows up, flies twelve drones at once, and only speaks when she has tracked something.</p></div>
   </div>
-</section>
-
-<!-- 05 -->
-<section>
-  <div class="wrap annex">
-    <aside><div class="num">05</div><div class="tag">Players</div></aside>
-    <div class="annex-body">
-      <div class="intro">
-        <h2>26 slots, squads made in game</h2>
-        <p>The lobby has 26 identical Rifleman slots. You join, click OK and land in the compound, unassigned. Squads and classes are chosen in the U menu.</p>
-      </div>
-      <div class="uiwin" aria-label="Squad manager, squads view">
-        <div class="tabs"><span class="on">SQUADS</span><span>CLASS</span><span>STATS</span></div>
-        <div class="cols">
-          <div class="col"><b>SQUADS</b><div class="me"><span>Alpha (3/3)</span><span>140 pts</span></div><div><span>Bravo (4/4)</span><span>60 pts</span></div></div>
-          <div class="col"><b>MEMBERS</b><div class="me"><span>* Django - Squad Leader</span></div><div><span>Kael - Medic</span></div><div><span>Rook - Light Anti-Tank</span></div></div>
-          <div class="col"><b>UNASSIGNED PLAYERS</b><div><span>Vasko - Rifleman</span></div><div><span>Ines - Pilot</span></div></div>
-        </div>
-        <div class="btns"><span>JOIN SQUAD</span><span>CREATE SQUAD</span><span>LEAVE SQUAD</span><span>DISBAND SQUAD</span><span>INVITE PLAYER</span></div>
-      </div>
-      <div class="grid2">
-        <div class="card amber"><h3>Squads</h3><p>Create, join, leave or disband. A squad leader can invite an unassigned player, who answers in an accept or decline window with a 30 second timer.</p></div>
-        <div class="card amber"><h3>Classes</h3><p>Taken inside the compound walls only. You get the class loadout and its skills, and keep both through respawns. The arsenal can customise the loadout afterwards.</p></div>
-      </div>
-      <div class="tbl">
-        <table>
-          <thead><tr><th>Class</th><th class="n">Limit</th><th>Skill</th></tr></thead>
-          <tbody>
-            <tr><td>Rifleman</td><td class="n">26</td><td class="muted">Default class</td></tr>
-            <tr><td>Squad Leader</td><td class="n">4</td><td class="muted"></td></tr>
-            <tr><td>Medic</td><td class="n">4</td><td>Full heals</td></tr>
-            <tr><td>Grenadier</td><td class="n">4</td><td class="muted"></td></tr>
-            <tr><td>Autorifleman</td><td class="n">4</td><td class="muted"></td></tr>
-            <tr><td>Light Anti-Tank</td><td class="n">4</td><td class="muted"></td></tr>
-            <tr><td>Heavy Anti-Tank</td><td class="n">2</td><td class="muted"></td></tr>
-            <tr><td>Anti-Air</td><td class="n">2</td><td class="muted"></td></tr>
-            <tr><td>Engineer</td><td class="n">4</td><td>Repairs, defuses, explosive specialist</td></tr>
-            <tr><td>Marksman</td><td class="n">2</td><td class="muted"></td></tr>
-            <tr><td>Pilot</td><td class="n">4</td><td class="muted"></td></tr>
-          </tbody>
-        </table>
-      </div>
+  <div class="split">
+    <div class="grid g2">
+      <div class="cell cool x"><span class="mono">3 hunters</span><h3>Darter, Greyhawk, Reaper</h3><p>Flying at 250, 900 and 1,500 m. The higher the drone, the wider its sensor, up to 2.4 km. Fixed wings take off one at a time from the runway.</p></div>
+      <div class="cell cool x"><span class="mono">9 Darters</span><h3>Scan chain</h3><p>A north–south line of small drones sweeps east across the island, following the coast and never searching the sea.</p></div>
+      <div class="cell cool"><span class="mono">First contact</span><h3>Encirclement</h3><p>The first enemy spotted becomes the centre of every flight path. The drones spread around it and tighten the ring, taking risks to see more.</p></div>
+      <div class="cell cool"><span class="mono">Identification</span><h3>Not every pass counts</h3><p>Each pass has a chance to identify: 60% for infantry up to 90% for aircraft. Hidden units stay hidden.</p></div>
+      <div class="cell hot"><span class="mono">Threat</span><h3>Tigris</h3><p>Every insertion drops a Tigris. Its radar only wakes once it notices a drone, missiles reach 3.5 km, and half of them are guided home. A lost drone is replaced after 8 minutes.</p></div>
+      <div class="cell hot"><span class="mono">Map</span><h3>Live and heat</h3><p>While a drone sees an enemy, everyone sees it live on the map. A heatmap marks scanned ground in teal and contacts in rose, fading within a minute. <span class="pill t">heatmap in test</span></p></div>
     </div>
-  </div>
-</section>
-
-<!-- 06 -->
-<section>
-  <div class="wrap annex">
-    <aside><div class="num">06</div><div class="tag">Intel</div></aside>
-    <div class="annex-body">
-      <div class="intro">
-        <h2>Three voices on the net, no coordinates</h2>
-        <p>Messages never give a location. Intel stays thin on purpose: building progress, supplies received, reactions to what you just destroyed, and alarms. The tone is serious milsim with the dry humour of an old staff officer.</p>
-      </div>
+    <div class="stack">
       <div class="radio">
-        <div class="msg"><div class="ic">HQ</div><div class="tx"><span class="who">CROSSROAD</span>CROSSROAD to all stations. CSAT has parked a carrier group offshore. They didn't come for the beaches.</div></div>
-        <div class="msg mag"><div class="ic">UAV</div><div class="tx"><span class="who">MAGPIE</span>BRAVO: sandbags and a depot. They plan to stay.</div></div>
-        <div class="msg int"><div class="ic">ENY</div><div class="tx"><span class="who">INTERCEPT</span>...ALPHA, supply drop received, over.</div></div>
-        <div class="msg"><div class="ic">HQ</div><div class="tx"><span class="who">CROSSROAD</span>Large secondary at CHARLIE. That was their ammunition depot. Was.</div></div>
+        <div class="msg u"><span class="mono">MAGPIE</span><div><p>Report, last two minutes. New identifications:</p>
+          <div class="mag"><span>AO BRAVO <em>inf 7</em> · veh 2</span><span>AO DELTA <em>inf 3</em> · air 1</span></div></div></div>
+        <div class="msg u"><span class="mono">MAGPIE</span><p>Contact. All birds converging, I want a ring around it.</p></div>
+        <div class="msg e"><span class="mono">MAGPIE</span><p>Tracked anti-air east of the ridge. Keeping my distance. Mostly.</p></div>
       </div>
-      <div class="grid2">
-        <div class="card amber"><h3>Who is talking</h3><p><strong>CROSSROAD</strong> is your HQ. <strong>MAGPIE</strong> is the drone operator and reports facts only. <strong>INTERCEPT</strong> is translated enemy radio, heard only while that HQ's radio mast stands.</p></div>
-        <div class="card amber" style="gap: 14px;">
-          <h3>Direction finder</h3>
-          <div class="meter" role="img" aria-label="Signal panel showing 65 percent">
-            <span class="lbl">SIGNAL</span><span class="val">65<small> %</small></span>
-            <span class="segs"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
-          </div>
-          <p>Carry a radio and a panel at the top of the screen picks up the closest fully built HQ within 6 km. The antenna is directional: sweep your view to find the bearing, walk in to raise the level.</p>
-        </div>
-      </div>
+      <p class="mono" style="text-transform:none;letter-spacing:.02em">Reports every 2 minutes, only when something new was identified, as a compact list per area of operation.</p>
     </div>
   </div>
 </section>
 
-<!-- 07 -->
-<section>
-  <div class="wrap annex">
-    <aside><div class="num">07</div><div class="tag">Score and shop</div></aside>
-    <div class="annex-body">
-      <div class="intro">
-        <h2>Fight as a squad, buy as a squad</h2>
-        <p>Every player's combat is tracked for the session and ranked in the STATS tab, filtered by class and sorted by any column. Kills, vehicles destroyed and objectives also earn points for your squad. The squad leader spends them on armed vehicles.</p>
+<section id="win">
+  <div class="head">
+    <div class="num">04</div>
+    <div><span class="mono">Win and lose</span><h2>Victory is total, defeat is one man</h2></div>
+  </div>
+  <div class="grid g4">
+    <div class="cell"><span class="mono">An HQ falls</span><p>Only when its commander is dead or captured <b>and</b> every installation is destroyed: depot, fuel, radio tower, helipad and AA.</p></div>
+    <div class="cell"><span class="mono">Capture</span><p>Hold the action on the commander. He talks, and every HQ in his network goes on your map.</p></div>
+    <div class="cell cool"><span class="mono">Victory</span><p>The carrier is empty and every enemy HQ on Altis is destroyed.</p></div>
+    <div class="cell hot"><span class="mono">Defeat</span><p>Colonel Harlan, your commander in the HQ offices, is killed. The operation is over.</p></div>
+  </div>
+</section>
+
+<section id="base">
+  <div class="head">
+    <div class="num">05</div>
+    <div><span class="mono">Your base</span><h2>An airfield compound and its motor pool</h2>
+    <p class="lead">Built by script at the AAC airfield from zones drawn on the map: a walled HQ, four vehicle rows, crate dispensers, repair depots facing the runway, a vehicle shop and a field of drone pads.</p></div>
+  </div>
+  <div class="split">
+    <div class="plate"><canvas id="base" width="600" height="420" aria-label="Base layout: runway, HQ compound, four vehicle rows, repair depots, shop and UAV field"></canvas></div>
+    <div class="stack">
+      <div><h3>HQ compound</h3><p>H-barrier walls, a gate between two towers, guard towers on the corners. Inside: offices, warehouse, radar, medical post, and one arsenal box per squad. Classes can only be changed inside these walls.</p></div>
+      <div><h3>Vehicle rows</h3><p>Four parallel rows, smallest vehicle first, spaced by each model's width plus 5 m, ending at a repair depot. Every row gets a similar mix.</p></div>
+      <div><h3>Crates and loadout</h3><p>Dispensers hold ready-filled supply crates; one action fills a vehicle with resupply for a whole squad.</p></div>
+      <div><h3>Runway and defence</h3><p>The runway is kept clear for MAGPIE. AA and HMG positions around the perimeter are rebuilt 10 minutes after they fall.</p></div>
+    </div>
+  </div>
+  <div class="tblbox" style="margin-top:28px">
+    <table class="tbl">
+      <thead><tr><th>Base fleet</th><th class="n">Count</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>Offroad HMG</td><td class="n">4</td><td>Fast, armed, fragile</td></tr>
+        <tr><td>Hunter</td><td class="n">4</td><td>Unarmed MRAP transport</td></tr>
+        <tr><td>Strider</td><td class="n">4</td><td>Unarmed MRAP, better armour</td></tr>
+        <tr><td>HEMTT transport</td><td class="n">2</td><td>Moves a whole squad</td></tr>
+        <tr><td>MH-6 Little Bird</td><td class="n">2</td><td>Light transport helicopter</td></tr>
+        <tr><td>UH-80 Ghost Hawk</td><td class="n">3</td><td>Squad transport helicopter</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="players">
+  <div class="head">
+    <div class="num">06</div>
+    <div><span class="mono">Players</span><h2>26 slots, everything on U</h2>
+    <p class="lead">The lobby has 26 identical Rifleman slots. You land in the compound unassigned and press U: one small menu leads to everything.</p></div>
+  </div>
+  <div class="split">
+    <div>
+      <div class="menu" role="img" aria-label="The U menu">
+        <div class="t"><span>COMQUEST</span><span>X</span></div>
+        <button>SQUADS <span>join · invite</span></button>
+        <button>CLASS <span>in compound</span></button>
+        <button>STATS <span>ranking</span></button>
+        <button>VEHICLE SHOP <span>squad points</span></button>
+        <button>DEBUG PANEL <span>admin</span></button>
       </div>
-      <div class="grid2">
-        <div class="tbl">
-          <table>
-            <thead><tr><th>Squad points</th><th class="n">Each</th></tr></thead>
-            <tbody>
-              <tr><td>Infantry kill</td><td class="n">10</td></tr>
-              <tr><td>Light vehicle destroyed</td><td class="n">20</td></tr>
-              <tr><td>Armour destroyed</td><td class="n">40</td></tr>
-              <tr><td>Aircraft destroyed</td><td class="n">50</td></tr>
-              <tr><td>Static weapon destroyed</td><td class="n">10</td></tr>
-              <tr><td>Radio mast or depot</td><td class="n">50</td></tr>
-              <tr><td>HQ commander captured</td><td class="n">80</td></tr>
-              <tr><td class="enemy">Team kill</td><td class="n enemy">-50</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="tbl">
-          <table>
-            <thead><tr><th>Vehicle shop</th><th class="n">Cost</th></tr></thead>
-            <tbody>
-              <tr><td><span class="bar" style="width: 12px"></span>Offroad AT</td><td class="n">120</td></tr>
-              <tr><td><span class="bar" style="width: 15px"></span>Hunter HMG</td><td class="n">150</td></tr>
-              <tr><td><span class="bar" style="width: 17px"></span>Strider HMG</td><td class="n">170</td></tr>
-              <tr><td><span class="bar" style="width: 22px"></span>Hunter GMG</td><td class="n">220</td></tr>
-              <tr><td><span class="bar" style="width: 40px"></span>IFV-6c Panther</td><td class="n">400</td></tr>
-              <tr><td><span class="bar" style="width: 55px"></span>AMV-7 Marshall</td><td class="n">550</td></tr>
-              <tr><td><span class="bar" style="width: 60px"></span>AH-9 Pawnee</td><td class="n">600</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <p class="muted">One bought vehicle alive per squad. It spawns on the shop pad and does not respawn. Points belong to the squad and are lost if it is disbanded. Nothing is stored between server restarts.</p>
+    </div>
+    <div class="tblbox">
+      <table class="tbl">
+        <thead><tr><th>Class</th><th class="n">Limit</th><th>Skill</th></tr></thead>
+        <tbody>
+          <tr><td>Rifleman</td><td class="n">26</td><td>Default class</td></tr>
+          <tr><td>Squad Leader</td><td class="n">4</td><td>Buys vehicles</td></tr>
+          <tr><td>Medic</td><td class="n">4</td><td>Full heals</td></tr>
+          <tr><td>Grenadier</td><td class="n">4</td><td></td></tr>
+          <tr><td>Autorifleman</td><td class="n">4</td><td></td></tr>
+          <tr><td>Light Anti-Tank</td><td class="n">4</td><td></td></tr>
+          <tr><td>Heavy Anti-Tank</td><td class="n">2</td><td></td></tr>
+          <tr><td>Anti-Air</td><td class="n">2</td><td></td></tr>
+          <tr><td>Engineer</td><td class="n">4</td><td>Repairs, explosives</td></tr>
+          <tr><td>Marksman</td><td class="n">2</td><td></td></tr>
+          <tr><td>Pilot</td><td class="n">4</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="grid g3" style="margin-top:24px">
+    <div class="cell"><h3>Squads</h3><p>Create, join, leave or disband. A leader invites an unassigned player, who answers in an accept or decline window.</p></div>
+    <div class="cell"><h3>Classes</h3><p>Shown as used / limit. You keep your class loadout and skills through respawns, and the arsenal customises the rest.</p></div>
+    <div class="cell"><h3>Stats</h3><p>Every player's combat is tracked for the session: filter by class, sort by any column, open a player's details.</p></div>
+  </div>
+</section>
+
+<section id="intel">
+  <div class="head">
+    <div class="num">07</div>
+    <div><span class="mono">Radio and story</span><h2>Three voices, no coordinates</h2>
+    <p class="lead">Messages never give a location. The story follows the carrier: four acts as it empties, a SITREP every 20 minutes, and a speech budget so the net never floods. Serious milsim, with the dry humour of an old staff officer.</p></div>
+  </div>
+  <div class="split">
+    <div class="radio">
+      <div class="msg"><span class="mono">CROSSROAD</span><p>CSAT has parked a carrier group offshore. They didn't come for the beaches.</p></div>
+      <div class="msg"><span class="mono">CROSSROAD</span><p>They're no longer landing, they're settling in. Adjust accordingly.</p></div>
+      <div class="msg e"><span class="mono">COMHAT</span><p>...Alpha, supply drop received, over.</p></div>
+      <div class="msg"><span class="mono">CROSSROAD</span><p>Large secondary at Charlie. That was their ammunition depot. Was.</p></div>
+    </div>
+    <div class="stack">
+      <div><h3>CROSSROAD</h3><p>Your HQ. Acts, SITREPs, losses and the occasional dry remark.</p></div>
+      <div><h3>MAGPIE</h3><p>The drone operator. She reports enemy tracking only, never her own drones.</p></div>
+      <div><h3>COMHAT</h3><p>Translated enemy radio, heard only through a standing tower. Drop the tower and the voice cuts mid-sentence.</p></div>
+      <div><h3>Direction finder</h3><p>Carry a radio and the panel at the top of the screen picks up the closest fully built HQ. Sweep your view to find the bearing, walk in to raise the level.</p>
+        <div class="signal"><span class="mono">Signal</span><b>65%</b><div class="meter"><i></i></div></div></div>
     </div>
   </div>
 </section>
 
-<!-- 08 -->
-<section>
-  <div class="wrap annex">
-    <aside><div class="num">08</div><div class="tag">Under the hood</div></aside>
-    <div class="annex-body">
-      <div class="grid3">
-        <div class="card"><h3>Vanilla + CBA</h3><p>Base-game assets only. Every class is checked for DLC at runtime and falls back to a base-game one when needed.</p></div>
-        <div class="card"><h3>One director</h3><p>The server runs a single loop with self-timed tasks: HQs, logistics, air, balancing, roaming, crates, repair, stats.</p></div>
-        <div class="card"><h3>Tunable</h3><p>Timings, limits, prices, layout and the radio script live in two files: <span class="mono">cfg/settings.sqf</span> and <span class="mono">cfg/story.sqf</span>.</p></div>
-      </div>
-    </div>
+<section id="shop">
+  <div class="head">
+    <div class="num">08</div>
+    <div><span class="mono">Score and shop</span><h2>Fight as a squad, buy as a squad</h2>
+    <p class="lead">Kills, vehicles and objectives earn points for your squad. The squad leader spends them at the shop terminal west of the HQ.</p></div>
+  </div>
+  <div class="grid g2" style="background:transparent;border:0;gap:24px">
+    <div class="tblbox"><table class="tbl">
+      <thead><tr><th>Squad points</th><th class="n">Each</th></tr></thead>
+      <tbody>
+        <tr><td>Infantry kill</td><td class="n">10</td></tr>
+        <tr><td>Light vehicle destroyed</td><td class="n">20</td></tr>
+        <tr><td>Armour destroyed</td><td class="n">40</td></tr>
+        <tr><td>Aircraft destroyed</td><td class="n">50</td></tr>
+        <tr><td>Static weapon destroyed</td><td class="n">10</td></tr>
+        <tr><td>Radio tower or depot</td><td class="n">50</td></tr>
+        <tr><td>HQ commander captured</td><td class="n">80</td></tr>
+        <tr><td>Team kill</td><td class="n">−50</td></tr>
+      </tbody></table></div>
+    <div class="tblbox"><table class="tbl">
+      <thead><tr><th>Vehicle shop</th><th class="n">Cost</th></tr></thead>
+      <tbody>
+        <tr><td>Offroad AT</td><td class="n">120</td></tr>
+        <tr><td>Hunter HMG</td><td class="n">150</td></tr>
+        <tr><td>Strider HMG</td><td class="n">170</td></tr>
+        <tr><td>Hunter GMG</td><td class="n">220</td></tr>
+        <tr><td>IFV-6c Panther</td><td class="n">400</td></tr>
+        <tr><td>AMV-7 Marshall</td><td class="n">550</td></tr>
+        <tr><td>AH-9 Pawnee</td><td class="n">600</td></tr>
+      </tbody></table></div>
+  </div>
+  <p style="margin-top:18px;color:var(--mute)">One bought vehicle alive per squad. It spawns on the shop pad and does not respawn. Nothing is stored between server restarts.</p>
+</section>
+
+<section id="hood">
+  <div class="head">
+    <div class="num">09</div>
+    <div><span class="mono">Under the hood</span><h2>One director, two files</h2></div>
+  </div>
+  <div class="grid g4">
+    <div class="cell x"><h3>Vanilla + CBA</h3><p>Base-game assets only. Every class is checked for DLC at runtime, with a base-game fallback.</p></div>
+    <div class="cell x"><h3>One director</h3><p>A single server loop with self-timed tasks: HQs, logistics, air, MAGPIE, balancing, crates, repair, stats.</p></div>
+    <div class="cell x"><h3>Debug panel</h3><p>F3 or the U menu, for the host and admins: seven categories of test commands, map overlays and a final player view.</p></div>
+    <div class="cell x"><h3>Tunable</h3><p>Timings, limits, prices, layout and the whole radio script live in <code>cfg/settings.sqf</code> and <code>cfg/story.sqf</code>.</p></div>
   </div>
 </section>
 
 </main>
 
 <footer>
-  <div class="wrap">
-    <span class="tag"><b>ComQuest.Altis</b> Inspired by Invade &amp; Annex</span>
-    <span class="tag">Arma 3 multiplayer scenario</span>
+  <div class="wrap mono">
+    <span>ComQuest.Altis · inspired by Invade &amp; Annex</span>
+    <span><a href="https://github.com/stereographik/COMQUEST">github.com/stereographik/COMQUEST</a></span>
   </div>
 </footer>
 
 <script>
-(function () {
-  const cv = document.getElementById("net");
-  const ctx = cv.getContext("2d");
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const names = ["ALPHA", "BRAVO", "CHARLIE", "DELTA", "ECHO", "FOXTROT", "GOLF", "HOTEL"];
-  // network layout in 0..1 space: carrier offshore east, root on the beach, children inland
-  const carrier = { x: 0.93, y: 0.36 };
-  const nodes = [
-    { x: 0.74, y: 0.42, p: -1 }, { x: 0.62, y: 0.26, p: 0 }, { x: 0.6, y: 0.62, p: 0 },
-    { x: 0.47, y: 0.18, p: 1 }, { x: 0.45, y: 0.47, p: 1 }, { x: 0.49, y: 0.8, p: 2 },
-    { x: 0.33, y: 0.34, p: 4 }, { x: 0.35, y: 0.66, p: 5 }
-  ];
-  const STEP = 2.4, HOLD = 6;
-  let W = 0, H = 0, dpr = 1, t0 = performance.now(), contours = [];
+(function(){
+  // small seeded random so the pictures are the same on every load
+  let s=20261110; const r=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
+  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const T=css('--teal'), R=css('--rose'), L=css('--line');
 
-  function size() {
-    dpr = window.devicePixelRatio || 1;
-    W = cv.clientWidth; H = cv.clientHeight;
-    cv.width = W * dpr; cv.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    contours = [];
-    let seed = 7;
-    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 9; i++) contours.push({ cx: 0.15 + rnd() * 0.6, cy: 0.2 + rnd() * 0.6, r: 0.08 + rnd() * 0.25, k: rnd() * 6 });
-  }
+  // hero plate: island contours, scan grid, drone tracks, heat, HUD crosses
+  const c=document.getElementById('plate'), g=c.getContext('2d'), W=c.width, H=c.height;
+  g.fillStyle='#0a1415'; g.fillRect(0,0,W,H);
+  const isl=[]; const cx=W*0.52, cy=H*0.55;
+  for(let a=0;a<Math.PI*2;a+=0.05){ const k=1+0.18*Math.sin(a*3+1)+0.1*Math.sin(a*7)+0.06*Math.sin(a*13+2); isl.push([cx+Math.cos(a)*W*0.36*k, cy+Math.sin(a)*H*0.33*k*(a>3.6&&a<5.4?0.8:1)]) }
+  for(let i=0;i<9;i++){ const f=1-i*0.1; g.beginPath(); isl.forEach((p,j)=>{const x=cx+(p[0]-cx)*f+Math.sin(j*0.3+i)*3, y=cy+(p[1]-cy)*f; j?g.lineTo(x,y):g.moveTo(x,y)}); g.closePath();
+    if(i===0){g.fillStyle='#123033';g.fill()} g.strokeStyle=i===0?'#3f6f71':'rgba(127,182,181,'+(0.12+i*0.02)+')'; g.lineWidth=1; g.stroke() }
+  g.strokeStyle='rgba(127,182,181,.08)'; for(let x=0;x<W;x+=40){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke()} for(let y=0;y<H;y+=40){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke()}
+  const blob=(x,y,rad,col,a)=>{const gr=g.createRadialGradient(x,y,0,x,y,rad); gr.addColorStop(0,col.replace(')',','+a+')').replace('rgb','rgba')); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(x-rad,y-rad,rad*2,rad*2)};
+  for(let i=0;i<26;i++) blob(W*0.3+r()*W*0.32, H*0.3+r()*H*0.45, 50+r()*40,'rgb(127,182,181)',0.16);
+  const hot=[[W*0.66,H*0.42],[W*0.7,H*0.5],[W*0.74,H*0.38]];
+  hot.forEach(([x,y],i)=>{blob(x,y,90-i*15,'rgb(242,120,140)',0.35); blob(x,y,40,'rgb(255,214,120)',0.35)});
+  g.setLineDash([4,6]); g.strokeStyle=T; g.lineWidth=1.2;
+  g.beginPath(); g.ellipse(W*0.7,H*0.45,W*0.13,H*0.2,0.3,0,Math.PI*2); g.stroke();
+  g.beginPath(); for(let i=0;i<9;i++){const y=H*0.16+i*H*0.085; g.moveTo(W*0.5-8,y); g.lineTo(W*0.5+8,y)} g.stroke();
+  g.beginPath(); g.moveTo(W*0.5,H*0.12); g.lineTo(W*0.5,H*0.88); g.stroke(); g.setLineDash([]);
+  g.fillStyle=R; [[W*0.6,H*0.3,46,10],[W*0.78,H*0.58,30,8],[W*0.82,H*0.22,64,6]].forEach(b=>g.fillRect(...b));
+  g.fillStyle='rgba(242,195,205,.18)'; g.fillRect(W*0.08,H*0.18,W*0.14,H*0.16);
+  g.strokeStyle='rgba(238,241,239,.7)'; g.lineWidth=1;
+  const cross=(x,y,z)=>{g.beginPath();g.moveTo(x-z,y);g.lineTo(x+z,y);g.moveTo(x,y-z);g.lineTo(x,y+z);g.stroke()};
+  [[W*0.2,H*0.7],[W*0.45,H*0.25],[W*0.88,H*0.75],[W*0.62,H*0.8]].forEach(([x,y])=>cross(x,y,9)); cross(W*0.7,H*0.45,18);
+  g.fillStyle='rgba(238,241,239,.85)'; g.font='11px "IBM Plex Mono",monospace';
+  g.fillText('FIRST CONTACT', W*0.7+24, H*0.45-8); g.fillText('SCAN CHAIN →', W*0.5+14, H*0.14);
+  // a Tigris danger circle
+  g.strokeStyle='rgba(242,195,205,.55)'; g.beginPath(); g.arc(W*0.8,H*0.66,70,0,Math.PI*2); g.stroke();
 
-  function coast(y) { return 0.82 + 0.05 * Math.sin(y * 7) + 0.03 * Math.sin(y * 17); }
-
-  function draw(now) {
-    const tt = reduce ? 999 : (now - t0) / 1000;
-    const cyc = nodes.length * STEP + HOLD;
-    const t = reduce ? 999 : tt % cyc;
-    ctx.clearRect(0, 0, W, H);
-    // sea
-    ctx.fillStyle = "#161b19";
-    ctx.beginPath();
-    ctx.moveTo(W, 0);
-    for (let y = 0; y <= 1.0001; y += 0.02) ctx.lineTo(coast(y) * W, y * H);
-    ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
-    // contours
-    ctx.strokeStyle = "rgba(230, 223, 204, 0.06)";
-    ctx.lineWidth = 1;
-    contours.forEach(c => {
-      for (let j = 1; j <= 4; j++) {
-        ctx.beginPath();
-        for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.12) {
-          const rr = c.r * j * 0.42 * (1 + 0.18 * Math.sin(a * 3 + c.k));
-          const px = (c.cx + Math.cos(a) * rr) * W, py = (c.cy + Math.sin(a) * rr * 0.8) * H;
-          a === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-        }
-        ctx.stroke();
-      }
-    });
-    // only draw the network on the right part so the title stays readable on wide screens
-    const pos = n => ({ x: n.x * W, y: n.y * H });
-    const car = pos(carrier);
-    ctx.font = "600 11px 'JetBrains Mono', monospace";
-    nodes.forEach((n, i) => {
-      const age = t - i * STEP;
-      if (age < 0) return;
-      const from = n.p < 0 ? car : pos(nodes[n.p]);
-      const to = pos(n);
-      const f = Math.min(1, age / 1.2);
-      ctx.strokeStyle = "rgba(212, 85, 63, 0.55)";
-      ctx.setLineDash([4, 5]);
-      ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(from.x + (to.x - from.x) * f, from.y + (to.y - from.y) * f); ctx.stroke();
-      ctx.setLineDash([]);
-      if (f < 1) return;
-      const built = Math.min(4, Math.floor((age - 1.2) / 0.35));
-      const s = 7;
-      ctx.strokeStyle = "#d4553f"; ctx.lineWidth = 2;
-      ctx.strokeRect(to.x - s, to.y - s, s * 2, s * 2);
-      ctx.fillStyle = "#d4553f";
-      for (let k = 0; k < built; k++) ctx.fillRect(to.x - s + 2 + k * 3, to.y - s + 2, 2, s * 2 - 4);
-      if (built >= 4 && !reduce) {
-        const pulse = (tt * 0.6 + i * 0.3) % 1;
-        ctx.strokeStyle = `rgba(212, 85, 63, ${0.35 * (1 - pulse)})`;
-        ctx.beginPath(); ctx.arc(to.x, to.y, 10 + pulse * 26, 0, Math.PI * 2); ctx.stroke();
-      }
-      ctx.lineWidth = 1;
-      ctx.fillStyle = "rgba(230, 223, 204, 0.7)";
-      ctx.fillText(names[i], to.x + 12, to.y + 4);
-    });
-    // carrier
-    ctx.fillStyle = "#d4553f";
-    ctx.beginPath();
-    ctx.moveTo(car.x - 22, car.y - 4); ctx.lineTo(car.x + 18, car.y - 4); ctx.lineTo(car.x + 24, car.y); ctx.lineTo(car.x + 18, car.y + 4); ctx.lineTo(car.x - 22, car.y + 4); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = "rgba(230, 223, 204, 0.7)";
-    ctx.fillText("CSAT CARRIER", car.x - 34, car.y + 20);
-    if (!reduce) requestAnimationFrame(draw);
-  }
-  size();
-  window.addEventListener("resize", () => { size(); if (reduce) draw(0); });
-  requestAnimationFrame(draw);
+  // base plan
+  const b=document.getElementById('base'), q=b.getContext('2d'), bw=b.width, bh=b.height;
+  q.fillStyle='#0a1415'; q.fillRect(0,0,bw,bh);
+  q.strokeStyle='rgba(127,182,181,.08)'; for(let x=0;x<bw;x+=30){q.beginPath();q.moveTo(x,0);q.lineTo(x,bh);q.stroke()} for(let y=0;y<bh;y+=30){q.beginPath();q.moveTo(0,y);q.lineTo(bw,y);q.stroke()}
+  q.save(); q.translate(bw*0.5,bh*0.5); q.rotate(-0.68);
+  q.fillStyle='#22292b'; q.fillRect(-380,-150,760,44); q.setLineDash([14,12]); q.strokeStyle='rgba(238,241,239,.5)'; q.beginPath(); q.moveTo(-370,-128); q.lineTo(370,-128); q.stroke(); q.setLineDash([]);
+  q.strokeStyle=T; q.lineWidth=2; q.strokeRect(-70,0,140,100); q.fillStyle='rgba(127,182,181,.12)'; q.fillRect(-70,0,140,100);
+  for(let i=0;i<4;i++){ for(let k=0;k<6;k++){ q.fillStyle='rgba(238,241,239,'+(0.35+k*0.08)+')'; q.fillRect(-60+i*34, -20-k*14-(k*k), 14+k*2, 8) } q.fillStyle=R; q.fillRect(-60+i*34,-100-10, 18, 6) }
+  q.fillStyle=R; q.fillRect(110,20,36,26);
+  for(let i=0;i<10;i++){ q.strokeStyle='rgba(127,182,181,.7)'; q.strokeRect(-200+(i%4)*24, 40+Math.floor(i/4)*24, 14, 14) }
+  q.restore();
+  q.fillStyle='rgba(238,241,239,.85)'; q.font='11px "IBM Plex Mono",monospace';
+  [['RUNWAY',bw*0.08,bh*0.32],['HQ COMPOUND',bw*0.56,bh*0.68],['4 VEHICLE ROWS',bw*0.5,bh*0.2],['REPAIR',bw*0.66,bh*0.3],['SHOP',bw*0.72,bh*0.5],['UAV FIELD',bw*0.12,bh*0.72],['N ↑',bw-40,24]].forEach(t=>q.fillText(t[0],t[1],t[2]));
 })();
 </script>
 </body>
