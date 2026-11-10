@@ -394,15 +394,19 @@ CQ_magAoRange = 2500;                    // a contact belongs to the nearest kno
 // Tigris: one long-range anti-air vehicle paradropped with each carrier insertion; it roams the HQ network
 CQ_tigrisClass = "O_APC_Tracked_02_AA_F";
 CQ_tigrisPerInsertion = 1;
-CQ_tigrisRadar = 6000;                   // m: any MAGPIE drone in line of sight within this range is locked and engaged
-CQ_tigrisMissileRange = 4500;            // m (slant): the Tigris launches a guided Titan at a drone in line of sight within this
-CQ_tigrisSalvo = 12;                     // s between two launches of one Tigris
+CQ_tigrisRadar = 6000;                   // m: a MAGPIE drone in line of sight within this range can be noticed
+CQ_tigrisSpot = [0.25, 0.03];            // chance per 4 s check to notice a drone in sight: at point blank -> at the radar edge
+CQ_tigrisSpotSize = 0.5;                 // x for the small Darter
+CQ_tigrisTrack = 40;                     // s a noticed drone stays tracked
+CQ_tigrisMissileRange = 3500;            // m (slant): the Tigris launches a Titan at a tracked drone within this
+CQ_tigrisSalvo = 25;                     // s between two launches of one Tigris
+CQ_tigrisGuide = 0.5;                    // share of launches forced onto the drone (the others often miss)
 
 // MAGPIE heatmap (map overlay, every player, always on): cold where her drones scanned,
 // yellow -> red where they saw enemies; both fade (half-life) as the information gets old
 CQ_heatCell = 300;                       // m per cell
-CQ_heatHalfHeat = 240;                   // s: contact heat halves every 4 min
-CQ_heatHalfScan = 480;                   // s: scan halves every 8 min
+CQ_heatHalfHeat = 60;                    // s: contact heat halves every minute
+CQ_heatHalfScan = 60;                    // s: scan halves every minute
 CQ_heatEvery = 5;                        // s between two server updates
 CQ_heatPubEvery = 10;                    // s between two broadcasts to the players
 CQ_heatWeights = createHashMapFromArray [["inf", 0.15], ["static", 0.3], ["light", 0.35], ["armour", 0.6], ["air", 0.6]];   // heat per seen unit (summed per cell, max 1)
