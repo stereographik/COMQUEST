@@ -9,6 +9,7 @@
           trace   every CQ_magDetectEvery s an empty circle is left where he was, fading out
                   over CQ_echoLife s (shows the movement)
         Out of sight = the live circle goes, the last traces fade.
+      - under them, the range map (CQ_fnc_rangeMapClient): the ground those enemies can fire on.
 */
 if (!hasInterface) exitWith {};
 // traces: a snapshot of the visible enemies' positions every detection pass, kept CQ_echoLife s
@@ -34,6 +35,19 @@ CQ_echoes = [];
         // radar echoes: CQ_echoPx pixels across at any zoom (metres per screen pixel right now)
         private _r = (CQ_echoPx / 2) * ((_map ctrlMapScreenToWorld [0.5, 0.5]) distance2D (_map ctrlMapScreenToWorld [0.5 + pixelW, 0.5]));
         CQ_echoColor params ["_cr", "_cg", "_cb"];
+        // range map (CQ_fnc_rangeMapClient) under the echoes: cells on screen only, redder where
+        // more enemies can fire, darker inside their fire cones
+        if (CQ_rangeMap) then {
+            private _tl = _map ctrlMapScreenToWorld [safeZoneX, safeZoneY];
+            private _br = _map ctrlMapScreenToWorld [safeZoneX + safeZoneW, safeZoneY + safeZoneH];
+            private _h = CQ_rangeCell / 2;
+            {
+                _y params ["_x0", "_y0", "_cnt", "_cone"];
+                if (_x0 < (_tl select 0) || { _x0 > (_br select 0) } || { _y0 > (_tl select 1) } || { _y0 < (_br select 1) }) then { continue };
+                private _a = (CQ_rangeAlpha select 0) + (CQ_rangeAlpha select 1) * ((_cnt min 4) - 1) + ([0, CQ_rangeAlpha select 2] select (_cone > 0));
+                _map drawRectangle [[_x0, _y0], _h, _h, 0, [_cr, _cg, _cb, _a min 0.6], "#(rgb,8,8,3)color(1,1,1,1)"];
+            } forEach (missionNamespace getVariable ["CQ_rangeAgg", createHashMap]);
+        };
         private _now = time;
         {
             _x params ["_p", "_t"];

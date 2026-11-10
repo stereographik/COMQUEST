@@ -195,6 +195,7 @@ class CfgFunctions
             class magTick {};
             class magMarks {};
             class magMapClient {};
+            class rangeMapClient {};
             class heatTick {};
             class heatMapClient {};
             class tigrisTick {};

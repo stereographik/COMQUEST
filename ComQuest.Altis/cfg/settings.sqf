@@ -528,6 +528,15 @@ CQ_tigrisMissileRange = 3500;            // m (slant): the Tigris launches a Tit
 CQ_tigrisSalvo = 25;                     // s between two launches of one Tigris
 CQ_tigrisGuide = 0.5;                    // share of launches forced onto the drone (the others often miss)
 
+// Range map (fn_rangeMapClient): the ground each enemy MAGPIE sees right now can fire on (line of
+// sight through terrain + buildings + vegetation, within his weapon range), fire cone darker
+CQ_rangeMap = true;
+CQ_rangeCell = 25;                       // m per cell
+CQ_rangeOf = createHashMapFromArray [["rifle", 400], ["mg", 700], ["launcher", 500], ["sniper", 900], ["vehicle", 1000], ["static", 1200]];   // m by weapon
+CQ_rangeCone = 45;                       // deg either side of where the enemy faces = fire cone
+CQ_rangeMove = 40;                       // m an enemy must move before his range is recomputed
+CQ_rangeBudget = 120;                    // line-of-sight checks between two short pauses
+CQ_rangeAlpha = [0.10, 0.05, 0.12];      // opacity: 1 enemy, + per extra enemy (max 4), + inside a fire cone
 // MAGPIE radar echoes on the map (fn_magMapClient): live filled circle + fading empty traces
 CQ_echoPx = 5;                           // circle size in screen pixels (same at every zoom)
 CQ_echoLife = 5;                         // s a trace circle stays (fading out)
