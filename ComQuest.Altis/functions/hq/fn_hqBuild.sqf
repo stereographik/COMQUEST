@@ -163,6 +163,8 @@ private _depot = ["Land_Cargo_House_V1_F", _sites select 0, 90, true] call _plac
 if (!isNull _depot) then { { ["Box_East_Ammo_F", (getPosATL _depot) getPos [7, _d + 180 + _x]] call _placeAt } forEach [-25, 0, 25] };
 private _radio = ["Land_TTowerBig_2_F", _sites select 1, 0, true] call _placeAt;
 { [_x] call _engineerOnly } forEach [_depot, _radio];
+_depot setVariable ["CQ_objType", "Depot"];
+_radio setVariable ["CQ_objType", "Radio tower"];
 
 _depot addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
@@ -188,6 +190,7 @@ if (!isNull _tanker) then {
     }];
 };
 _hq set ["tanker", _tanker];
+if (!isNull _tanker) then { _tanker setVariable ["CQ_objType", "Fuel tanker"] };
 
 // Field resupply truck: driven out to groups short of ammo (CQ_fnc_fieldResupply)
 private _ftruck = [CQ_fieldTruckClass, -18, -20, 90] call _place;
@@ -245,6 +248,7 @@ private _aaGroup = createGroup [east, true];
         private _ap = getPosATL _aa;
         { ["Land_BagFence_Round_F", _ap getPos [2.6, _d + _x], _x + 180] call _placeAt } forEach [0, 120, 240];
         createVehicleCrew _aa;
+        _aa setVariable ["CQ_objType", "AA"];
         (_hq get "installations") pushBack _aa;
         (crew _aa) joinSilent _aaGroup;
         [_aa, 1] call CQ_fnc_vehAmmoInit;
@@ -273,6 +277,7 @@ if (!isNull _tower) then {
     _tg setCombatMode "RED";
     (_hq get "objects") pushBack _hmg;
     (_hq get "installations") pushBack _hmg;
+    _hmg setVariable ["CQ_objType", "HMG tower"];
     (_hq get "support") pushBack _tg;
     ["HQ #%1: HMG watchtower up at grid %2 (west side)", [_id, mapGridPosition _tower]] call CQ_fnc_log;
 };

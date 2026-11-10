@@ -7,6 +7,8 @@
     radio tower, fuel tanker, AA pits, HMG tower). Created when the HQ finishes building,
     updated by CQ_fnc_hqTick (text only rewritten when it changes); a fallen HQ keeps a grey
     [HQ#1][destroyed] marker.
+    Every objective also gets its own marker once the HQ is built, kept after the HQ falls:
+        [Depot][active]   orange        [Depot][disabled]   yellow
 */
 params ["_hq"];
 if !(_hq get "buildDone") exitWith {};
@@ -30,3 +32,20 @@ private _txt = if ((_hq get "state") == "Destroyed") then {
     format ["[HQ#%1][%2][%3/%4 objectives]", _id, _cmd, { !alive _x } count _all, count _all]
 };
 if (markerText _m != _txt) then { _m setMarkerText _txt };
+
+// one marker per objective: [type][active] orange / [type][disabled] yellow
+{
+    private _o = _x;
+    private _om = format ["cq_obj_%1_%2", _id, _forEachIndex];
+    if (markerType _om == "") then {
+        createMarker [_om, getPosATL _o];
+        _om setMarkerType "mil_objective";
+        _om setMarkerSize [0.7, 0.7];
+    };
+    private _on = alive _o;
+    private _ot = format ["[%1][%2]", _o getVariable ["CQ_objType", "Objective"], ["disabled", "active"] select _on];
+    if (markerText _om != _ot) then {
+        _om setMarkerText _ot;
+        _om setMarkerColor (["ColorYellow", "ColorOrange"] select _on);
+    };
+} forEach (_hq get "installations");
