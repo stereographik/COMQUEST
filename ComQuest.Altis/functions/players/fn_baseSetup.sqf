@@ -102,18 +102,6 @@ private _hidden = 0;
     if (abs _lx < _hw + 6 && { abs _ly < _hd + 6 }) then { hideObjectGlobal _x; _hidden = _hidden + 1 };
 } forEach (nearestTerrainObjects [_o, [], sqrt ((_hw + 6) ^ 2 + (_hd + 6) ^ 2), false, true]);
 
-// no grass in the compound and CQ_grassCutMargin m around it: a grid of clutter cutters
-private _gm = CQ_grassCutMargin;
-private _nCut = 0;
-for "_gx" from -_hw - _gm to _hw + _gm step 10 do {
-    for "_gy" from -_hd - _gm to _hd + _gm step 10 do {
-        private _cp = [_gx, _gy] call _at;
-        (createVehicle ["Land_ClutterCutter_large_F", _cp, [], 0, "CAN_COLLIDE"]) setPosATL _cp;
-        _nCut = _nCut + 1;
-    };
-};
-["Base: grass cut around the HQ compound (%1 cutters)", [_nCut]] call CQ_fnc_log;
-
 private _hb = ["Land_HBarrier_Big_F", "Land_HBarrier_5_F", "Land_HBarrier_3_F"];
 private _gate = 9;                                  // half width of the vehicle gate
 [_hb, [-_hw, -_hd], [_hw, -_hd]] call _wall;        // back

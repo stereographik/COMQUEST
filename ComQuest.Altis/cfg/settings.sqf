@@ -37,7 +37,9 @@ CQ_baseVehPadding = 25;                  // metres between base vehicles (fallba
 //   at the far end of each row; 2 repair stations east of the vehicle zone
 CQ_billboardFlip = false;                // true if the base billboard (front wall, right of the gate) shows its back to the courtyard
 CQ_compoundSize = [80, 60];              // inner compound width x depth (m)
-CQ_grassCutMargin = 20;                  // no grass inside the HQ compound and this far around it (m)
+CQ_grassCutRadius = 100;                 // no grass this far around the base centre (m)...
+CQ_grassCutMax = 50;                     // ...with at most this many big clutter cutter "splats"
+CQ_grassCutScale = 2.5;                  // ...each one enlarged this much (raise it if grass shows between them)
 CQ_rayStarts = [[14255, 16151, 0], [14282, 16143, 0], [14304, 16130, 0], [14330, 16116, 0]];
 CQ_dispensers = [[14293, 16200, 0], [14310, 16189, 0], [14339, 16175, 0], [14364, 16166, 0]];   // pushed further out if a row is longer
 CQ_repairSpots = [[14409, 16135, 0], [14380, 16102, 0]];

@@ -269,6 +269,7 @@ class CfgFunctions
             class depotTick {};
             class depotUi {};
             class rspVeh {};
+            class grassCut {};
             class pilotGuard {};
             class playerSetup {};
         };

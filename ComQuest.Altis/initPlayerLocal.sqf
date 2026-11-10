@@ -19,6 +19,7 @@ if (isNil "CQ_unassignedDone") then {
     ["unassign", player] remoteExec ["CQ_fnc_squadCmd", 2];
     [] spawn { sleep 6; hint parseText "<t size='1.1' color='#F2F1DF'>You are unassigned.</t><br/>Press <t color='#918C3B'>U</t> to join or create a squad."; };
 };
+call CQ_fnc_grassCut;      // no grass around the base (local objects)
 [] spawn CQ_fnc_opClient;   // map: Operation (progress checklist) - first section of the briefing
 [] spawn CQ_fnc_intro;   // 5 s cinematic intro
 player createDiarySubject ["CQ_op", "Operation"];     // first in the map's briefing panel
