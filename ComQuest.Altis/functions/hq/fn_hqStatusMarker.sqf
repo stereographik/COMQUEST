@@ -5,14 +5,35 @@
         [ROLLING THUNDER (root)][alive][1/7 objectives]     (rank: root, P1, P2... see CQ_fnc_objName)
     commander: alive / captured / killed; objectives = installations destroyed / total (depot,
     radio tower, fuel tanker, AA pits, HMG tower). Created when the HQ finishes building,
-    updated by CQ_fnc_hqTick (text only rewritten when it changes); a fallen HQ keeps a grey
+    updated by CQ_fnc_hqTick (text only rewritten when it changes); the dot and the AO circle
+    appear only when the HQ is fully built (last objective ready); a fallen HQ keeps a grey
     [HQ#1][destroyed] marker.
-    Every objective also gets its own marker once the HQ is built, kept after the HQ falls:
+    Every objective gets its own marker as soon as it is set up during the construction (called
+    every tick by CQ_fnc_hqTick, building included), kept after the HQ falls:
         [Depot][active]   orange        [Depot][disabled]   yellow
 */
 params ["_hq"];
-if !(_hq get "buildDone") exitWith {};
 private _id = _hq get "id";
+
+// one marker per objective: [type][active] orange / [type][disabled] yellow
+{
+    private _o = _x;
+    private _om = format ["cq_obj_%1_%2", _id, _forEachIndex];
+    if (markerType _om == "") then {
+        createMarker [_om, getPosATL _o];
+        _om setMarkerType "mil_objective";
+        _om setMarkerSize [0.7, 0.7];
+    };
+    private _on = alive _o;
+    private _ot = format ["[%1][%2]", _o getVariable ["CQ_objType", "Objective"], ["disabled", "active"] select _on];
+    if (markerText _om != _ot) then {
+        _om setMarkerText _ot;
+        _om setMarkerColor (["ColorYellow", "ColorOrange"] select _on);
+    };
+} forEach (_hq get "installations");
+
+// the HQ's own marker (dot + AO circle) only once the last objective is ready
+if !(_hq get "buildDone") exitWith {};
 private _m = format ["cq_st_%1", _id];
 // AO: a small dot carrying the text, inside a 1000 m red circle hatched in black (CQ_aoRadius)
 // that disappears when the HQ falls
@@ -49,20 +70,3 @@ private _txt = if ((_hq get "state") == "Destroyed") then {
     format ["[%1][%2][%3/%4 objectives]", [_id] call CQ_fnc_objName, _cmd, { !alive _x } count _all, count _all]
 };
 if (markerText _m != _txt) then { _m setMarkerText _txt };
-
-// one marker per objective: [type][active] orange / [type][disabled] yellow
-{
-    private _o = _x;
-    private _om = format ["cq_obj_%1_%2", _id, _forEachIndex];
-    if (markerType _om == "") then {
-        createMarker [_om, getPosATL _o];
-        _om setMarkerType "mil_objective";
-        _om setMarkerSize [0.7, 0.7];
-    };
-    private _on = alive _o;
-    private _ot = format ["[%1][%2]", _o getVariable ["CQ_objType", "Objective"], ["disabled", "active"] select _on];
-    if (markerText _om != _ot) then {
-        _om setMarkerText _ot;
-        _om setMarkerColor (["ColorYellow", "ColorOrange"] select _on);
-    };
-} forEach (_hq get "installations");
