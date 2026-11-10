@@ -42,6 +42,7 @@ CQ_introCam = _cam;
     { deleteVehicle _x } forEach (missionNamespace getVariable ["CQ_introLocals", []]);
     CQ_introLocals = [];
     CQ_introCam cameraEffect ["terminate", "back"]; camDestroy CQ_introCam; CQ_introCam = nil;
+    if (!isNil "CQ_introView") then { setViewDistance (CQ_introView select 0); setObjectViewDistance (CQ_introView select 1) };
     showCinemaBorder false;
     ("CQ_introType" call BIS_fnc_rscLayer) cutText ["", "PLAIN"];
     ("CQ_introBlack" call BIS_fnc_rscLayer) cutText ["", "BLACK IN", 0.5];
@@ -61,6 +62,9 @@ _hint ctrlSetPosition [safeZoneX + safeZoneW * 0.8, safeZoneY + safeZoneH * 0.93
 _hint ctrlCommit 0;
 _hint ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='0.7' color='#A6A381'>SPACE  ·  skip</t>";
 
+private _vdOld = viewDistance;
+private _ovdOld = getObjectViewDistance;
+CQ_introView = [_vdOld, _ovdOld];
 CQ_introSkip = false;
 private _skipEh = (findDisplay 46) displayAddEventHandler ["KeyDown", { params ["", "_k"]; if (_k == 57) then { CQ_introSkip = true; true } else { false } }];
 private _nap = { params ["_t"]; private _e = time + _t; waitUntil { uiSleep 0.02; CQ_introSkip || { time >= _e } } };
@@ -86,7 +90,7 @@ private _lz = missionNamespace getVariable ["CQ_shopLZ", _muster getPos [35, CQ_
 private _lzDir = missionNamespace getVariable ["CQ_shopDir", CQ_baseDir];
 private _gz = getTerrainHeightASL _lz;
 private _hook = "Land_HelipadEmpty_F" createVehicleLocal [0, 0, 0];
-_hook setPosASL [_lz select 0, _lz select 1, _gz + 23];
+_hook setPosASL [_lz select 0, _lz select 1, _gz + CQ_introHoverTop];
 _hook setDir _lzDir;
 _locals pushBack _hook;
 private _hb = createVehicleLocal ["B_Heli_Light_01_F", [0, 0, 1000], [], 0, "CAN_COLLIDE"];
@@ -154,16 +158,22 @@ call {
     if (CQ_introSkip) exitWith {};
 
     // ---- 1 SATELLITE
+    // under the cloud layer and with a long view distance for this shot only (restored after),
+    // otherwise the ground fades out in the haze and nothing is visible from up there
+    setViewDistance CQ_introViewDist;
+    setObjectViewDistance [CQ_introViewDist * 0.5, 100];
     private _mid = [worldSize * 0.5, worldSize * 0.5, 0];
-    _cam camSetPos (_mid vectorAdd [-150, -120, 4600]);
-    _cam camSetTarget _mid;
-    _cam camSetFov 0.6;
+    _cam camSetPos (_mid vectorAdd [-120, -400, CQ_introSatAlt]);
+    _cam camSetTarget (_mid vectorAdd [0, 200, 0]);
+    _cam camSetFov 0.75;
     _cam camCommit 0;
     _bl cutText ["", "BLACK IN", CQ_introFade];
-    _cam camSetPos (_mid vectorAdd [150, -60, 4300]);
-    _cam camSetFov 0.55;
+    _cam camSetPos (_mid vectorAdd [120, -340, CQ_introSatAlt - 80]);
+    _cam camSetFov 0.7;
     _cam camCommit (_tSat + 1.5);
     [_tSat] call _nap;
+    setViewDistance _vdOld;
+    setObjectViewDistance _ovdOld;
     if (CQ_introSkip) exitWith {};
 
     // ---- 2 COAST: the village nearest to the carrier's coast point, seen from the sea
@@ -249,25 +259,20 @@ call {
     // ---- 4 LANDING: an empty Hummingbird settling at the muster area, seen from behind
     call _dip;
     if (CQ_introSkip) exitWith {};
-    private _behind = _lz getPos [48, _lzDir + 180];          // well behind its approach path
-    _cam camSetPos [_behind select 0, _behind select 1, 9];
+    private _behind = _lz getPos [24, _lzDir + 180];
+    _cam camSetPos [_behind select 0, _behind select 1, 4];
     _cam camSetTarget [_lz select 0, _lz select 1, 1.5];
     _cam camSetFov 0.6;
     _cam camCommit 0;
     _hb hideObject false;
-    // a smooth approach: it comes in from behind the camera, slows, flares (nose up) and
-    // settles. Moved every frame (EachFrame handler) so nothing stutters.
-    CQ_introLand = [_hook, _lz, _gz, _lzDir, time, _tLand * 0.9];
+    // a slow vertical descent, from a few metres down to about 1 m above the pad, engine and
+    // rotors running; it never touches the ground. Moved every frame, height only.
+    CQ_introLand = [_hook, _lz, _gz, time, _tLand];
     private _landEh = addMissionEventHandler ["EachFrame", {
-        CQ_introLand params ["_hook", "_lz", "_gz", "_dir", "_t0", "_dur"];
+        CQ_introLand params ["_hook", "_lz", "_gz", "_t0", "_dur"];
         private _k = ((time - _t0) / _dur) max 0 min 1;
-        private _s = _k * _k * (3 - 2 * _k);                    // smoothstep
-        private _back = 30 * (1 - _s);                          // horizontal approach
-        private _p = _lz getPos [_back, _dir + 180];
-        private _alt = 1.1 + 24 * ((1 - _s) ^ 1.6);             // descends, slower near the ground
-        _hook setPosASL [_p select 0, _p select 1, _gz + _alt];
-        private _pitch = 0.10 * sin (180 * _s) - 0.04 * (1 - _s);   // nose down coming in, flare before touchdown
-        _hook setVectorDirAndUp [[sin _dir, cos _dir, _pitch], [0, 0, 1]];
+        private _s = _k * (2 - _k);                             // ease out: slower near the end
+        _hook setPosASL [_lz select 0, _lz select 1, _gz + CQ_introHoverTop - (CQ_introHoverTop - CQ_introHoverLow) * _s];
     }];
     _bl cutText ["", "BLACK IN", CQ_introFade];
     [_tLand] call _nap;
@@ -285,6 +290,8 @@ CQ_introLocals = [];
 _cam cameraEffect ["terminate", "back"];
 camDestroy _cam;
 CQ_introCam = nil;
+setViewDistance _vdOld;
+setObjectViewDistance _ovdOld;
 showCinemaBorder false;
 call _done;
 private _blur = ppEffectCreate ["DynamicBlur", 450];

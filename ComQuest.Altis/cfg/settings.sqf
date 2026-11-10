@@ -239,12 +239,16 @@ CQ_ui = createHashMapFromArray [
     ["text", [0.169, 0.165, 0.078, 1]], ["muted", [0.431, 0.416, 0.173, 1]], ["dim", [0.54, 0.53, 0.44, 1]],
     ["accent", [0.569, 0.549, 0.231, 1]], ["alert", [0.729, 0.224, 0.173, 1]], ["warn", [0.431, 0.416, 0.173, 1]]
 ];   // hex on light backgrounds: text #2B2A14, muted #6E6A2C, accent #5C5920, dim #8A8770, alert #BA392C
-CQ_splashEnabled = true;                 // POC splash before the intro: black, picture centred, text under it
+CQ_splashEnabled = false;                 // POC splash before the intro: black, picture centred, text under it
 CQ_splashWidth = 0.8;                    // picture width, share of the screen width
 CQ_splashTime = 4;                       // s (Space ends it)
 CQ_introEnabled = true;                  // cinematic at join: black + typed time/place, satellite, coast, flight, landing, eyes (CQ_fnc_intro)
 CQ_introShots = [8, 8, 8, 8];            // s per shot: satellite, coast, squad on a hilltop, landing (on the shop pad)
 CQ_introFade = 1;                        // s per fade (out, and in) between shots; the end is a blink
+CQ_introSatAlt = 1300;                   // m: satellite shot altitude (under the clouds)
+CQ_introViewDist = 7000;                 // m: view distance during the satellite shot only
+CQ_introHoverTop = 7;                    // landing shot: the Hummingbird descends from this height...
+CQ_introHoverLow = 2.1;                  // ...to this (about 1 m above the pad), never touching
 CQ_introMaxTime = 90;                    // s: watchdog, the intro is cleaned up whatever happens
 CQ_startAfterIntro = 5;                  // s after the FIRST player's intro: the mission starts
 CQ_introPlace = "ALTIS  ·  AEGEAN SEA  ·  AAC AIRFIELD";   // typed on black before the shots, under the time and date
