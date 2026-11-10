@@ -79,16 +79,6 @@ class CfgNotifications
         duration = 7;
         priority = 5;
     };
-    class CQ_Objectives
-    {
-        title = "OPERATION";
-        description = "%1";
-        iconPicture = "\A3\ui_f\data\igui\cfg\simpleTasks\types\map_ca.paa";
-        iconText = "";
-        color[] = {0.949, 0.945, 0.875, 1};   // chart cream
-        duration = 5;
-        priority = 4;
-    };
     class CQ_Story
     {
         title = "%1";

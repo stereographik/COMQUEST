@@ -5,7 +5,7 @@
     (done lines in red, active lines in cream, lines not available yet greyed out). A section
     stays hidden until its first objective is available.
     A single "Progress" record is kept and rewritten (never one more per respawn). When the
-    content changes, a notification "Objectives updated, check map" (at most every
+    content changes, COMHAT says "Objectives updated, check map" (radio card + chat) (at most every
     CQ_opNotifyGap s; changes in between are announced together).
 */
 if (!hasInterface) exitWith {};
@@ -53,7 +53,10 @@ while { true } do {
     if (_pending && { time - _lastNote > CQ_opNotifyGap } && { alive player }) then {
         _pending = false;
         _lastNote = time;
-        ["CQ_Objectives", ["Objectives updated, check map"]] call BIS_fnc_showNotification;
+        // told by COMHAT, with the radio cards (not in the radio log: it would fill it up)
+        playSound "CQ_radioIn";
+        ["COMHAT", "Objectives updated, check map"] call CQ_fnc_storyUi;
+        systemChat "[COMHAT] Objectives updated, check map";
     };
     sleep 2;
 };
