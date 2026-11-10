@@ -19,7 +19,18 @@ joinUnassigned = 0;             // joining players are put on the first free slo
 respawn = 3;                    // BASE (marker "respawn_west", created by script)
 respawnDelay = 15;              // keep in sync with CQ_respawnDelay in cfg\settings.sqf
 respawnOnStart = -1;            // start on the Eden slot, no respawn at mission start
-respawnTemplates[] = {"Counter"};
+respawnTemplates[] = {"Revive", "Counter"};
+
+// --- Revive (vanilla BI): medics only, 5 min to be revived, then respawn at the base ---
+ReviveMode = 1;                     // enabled for every player
+ReviveUnconsciousStateMode = 0;     // basic: a player always goes down instead of dying
+ReviveRequiredTrait = 1;            // only medics revive
+ReviveRequiredItems = 2;            // Medikit or First Aid Kit
+ReviveRequiredItemsFakConsumed = 1;
+ReviveDelay = 8;                    // s to revive
+ReviveMedicSpeedMultiplier = 1;
+ReviveForceRespawnDelay = 3;        // hold to give up and respawn
+ReviveBleedOutDelay = 300;          // keep in sync with CQ_bleedOut in cfg\settings.sqf
 respawnDialog = 0;
 disabledAI = 1;                 // empty slots have no AI
 
@@ -218,6 +229,7 @@ class CfgFunctions
             class menuUi {};
             class setClass {};
             class basicKit {};
+            class adrenalineSurge {};
             class applyTraits {};
             class vehAutoFill {};
             class baseDefBuild {};

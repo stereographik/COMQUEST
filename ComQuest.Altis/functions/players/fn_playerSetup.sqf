@@ -13,6 +13,9 @@ if (typeOf player in CQ_engineerClasses) then {
 // Every preset carries binoculars and a GPS (class loadouts get them in CQ_fnc_setClass)
 if (isNil "CQ_savedLoadout") then { call CQ_fnc_basicKit };
 
+// adrenalineSurge: a downed medic may get back up on his own (one watcher per life)
+[] spawn CQ_fnc_adrenalineSurge;
+
 // Pilot seats
 player addEventHandler ["GetInMan", {
     params ["_unit", "", "_veh"];
