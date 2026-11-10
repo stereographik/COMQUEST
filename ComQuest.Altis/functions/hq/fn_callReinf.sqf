@@ -5,7 +5,8 @@
       - the closest armed helicopters with ammo take off to hunt (search & destroy)
       - every HQ linked to it by radio (both radios standing, within CQ_commsRange) sends a
         share of its available troops, bigger the closer it is to the contact (CQ_qrfShares)
-      - no radio: only the spotting HQ's own forces respond
+      - no radio tower (not built yet, or destroyed): nobody hears the call; only the spotting
+        HQ's own forces and squads near the contact respond, no child HQ rallies to a root
     Each HQ keeps at least CQ_minDefenders infantry at home. Groups (and helis) short of ammo
     (under CQ_minAmmoToAdvance) never go forward.
     Also:
@@ -18,7 +19,10 @@ params ["_src", "_pos", ["_spotter", grpNull]];
 
 private _srcId = _src get "id";
 _src set ["lastContactT", time];
-private _srcRadio = alive (_src get "radio") || { !(_src get "buildDone") };   // before the tower exists, they use field radios
+// No radio tower (not built yet, or destroyed): nobody hears the call. Only the HQ's own
+// forces and the squads close to the contact respond.
+private _srcRadio = alive (_src get "radio");
+private _noRadioWhy = ["radio tower destroyed", "no radio tower yet"] select (isNull (_src get "radio"));
 
 ["Enemy contact reported", format ["HQ #%1 spotted friendlies near grid %2, calling reinforcements", _srcId, mapGridPosition _pos]] call CQ_fnc_announce;
 ["contact", [format ["HQ%1", _srcId]], _src] call CQ_fnc_say;   // arg only keys the cooldown
@@ -61,7 +65,7 @@ _air = [_air, [], { (_x get "veh") distance2D _pos }, "ASCEND"] call BIS_fnc_sor
 
     private _d = (_hq get "pos") distance2D _pos;
     private _linked = _srcRadio
-        && { alive (_hq get "radio") || { !(_hq get "buildDone") } }
+        && { alive (_hq get "radio") }
         && { (_hq get "pos") distance2D (_src get "pos") <= CQ_commsRange };
     if (!_isSrc && !_linked) then { continue };
 
@@ -138,7 +142,7 @@ while { (_root get "parent") > -1 && { _guard < 20 } } do {
     if (count _p == 0) exitWith {};
     _root = _p;
 };
-if ((_src get "parent") == -1 && { time - (_src get "rootDefendT") > CQ_rootDefendCooldown }) then {
+if (_srcRadio && { (_src get "parent") == -1 } && { time - (_src get "rootDefendT") > CQ_rootDefendCooldown }) then {
     _src set ["rootDefendT", time];
     private _kids = (values CQ_hqs) select {
         (_x get "state") in CQ_activeStates && { (_x get "id") != _srcId } && {
@@ -148,7 +152,7 @@ if ((_src get "parent") == -1 && { time - (_src get "rootDefendT") > CQ_rootDefe
                 if (count _r == 0) exitWith {};
             };
             (_r getOrDefault ["parent", -1]) == _srcId
-        }
+        } && { alive (_x get "radio") }
     };
     {
         private _kid = _x;
@@ -162,7 +166,7 @@ if ((_src get "parent") == -1 && { time - (_src get "rootDefendT") > CQ_rootDefe
 };
 
 if (_report isEqualTo []) then {
-    ["QRF", format ["HQ #%1: nobody available to respond%2", _srcId, ["", " (radio down)"] select !_srcRadio]] call CQ_fnc_announce;
+    ["QRF", format ["HQ #%1: nobody available to respond%2", _srcId, ["", format [" (%1)", _noRadioWhy]] select !_srcRadio]] call CQ_fnc_announce;
 } else {
-    ["QRF dispatched", (_report joinString ", ") + (["", ". Radio down: no help from other HQs"] select !_srcRadio)] call CQ_fnc_announce;
+    ["QRF dispatched", (_report joinString ", ") + (["", format [". %1: no help from other HQs", _noRadioWhy]] select !_srcRadio)] call CQ_fnc_announce;
 };
