@@ -526,6 +526,7 @@ CQ_magRespawn = 480;                     // s before a lost drone is replaced (8
 CQ_magReportEvery = 120;                 // s between two MAGPIE reports (only if something is new)
 // MAGPIE photos: every new enemy (vehicle or soldier) identified is photographed along the drone's line of
 // sight (render to texture, 64x64) and shown in a grid under the next report
+CQ_magReportVehMax = 8;                  // MAGPIE report: vehicle lines listed per category (GROUND / AIR), then "+N more"
 CQ_magPhotos = false;                    // photo grid under MAGPIE reports (off: text reports only, no cameras)
 CQ_magPhotoMax = 8;                      // photos per report at most (4 per row)
 CQ_magPhotoSlots = 24;                   // render textures reused in turn (cq_ph_0..23)
