@@ -368,7 +368,6 @@ CQ_classes = [
     ["Heavy Anti-Tank", "B_soldier_AT_F",   [],                                  2],
     ["Anti-Air",        "B_soldier_AA_F",   [],                                  2],
     ["Engineer",        "B_engineer_F",     ["Engineer", "explosiveSpecialist"], 4],
-    ["Marksman",        "B_soldier_M_F",    [],                                  2],
     ["Sniper",          "B_sniper_F",       [],                                  2],
     ["Pilot",           "B_Helipilot_F",    [],                                  4]
 ];
@@ -385,7 +384,6 @@ CQ_classKit = createHashMapFromArray [
     ["Heavy Anti-Tank", [8, 2, [["Titan_AP", 1], ["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
     ["Anti-Air",        [8, 3, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
     ["Engineer",        [10, 0, [["ToolKit", 1], ["MineDetector", 1], ["DemoCharge_Remote_Mag", 3], ["SatchelCharge_Remote_Mag", 1], ["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
-    ["Marksman",        [10, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
     ["Sniper",          [9, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
     ["Pilot",           [5, 0, [["SmokeShellBlue", 2], ["FirstAidKit", 2]], ""]]
 ];
@@ -406,7 +404,6 @@ CQ_classGear = createHashMapFromArray [
     ["Heavy Anti-Tank", ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_B_Titan_short_F", "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Anti-Air",        ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_B_Titan_F",       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Engineer",        ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
-    ["Marksman",        ["srifle_EBR_F",   ["muzzle_snds_B", "acc_pointer_IR", ["optic_DMS", "optic_SOS"], "bipod_01_F_snd"], "", "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr", "H_HelmetSpecB"]],
     ["Sniper",          ["srifle_GM6_F",   [["optic_LRPS", "optic_SOS"], "bipod_01_F_snd"], "",            "U_B_GhillieSuit",        "V_Chestrig_rgr",         "-"]],
     ["Pilot",           ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "",                       "",                       ""]]
 ];
@@ -420,15 +417,15 @@ CQ_classNvg = "NVGoggles";
 CQ_arsenalGates = [
     [["Launcher", "MissileLauncher", "RocketLauncher"], ["Light Anti-Tank", "Heavy Anti-Tank", "Anti-Air"]],
     [["MachineGun"],                                    ["Autorifleman"]],
-    [["SniperRifle"],                                   ["Marksman", "Sniper"]],
+    [["SniperRifle"],                                   ["Sniper"]],
     [["GL"],                                            ["Squad Leader", "Grenadier"]],
     [["Medikit"],                                       ["Medic"]],
     [["Toolkit"],                                       ["Engineer"]],
     [["MineDetector"],                                  ["Engineer"]],
     [["LaserDesignator", "@Laserdesignator"],           ["Squad Leader"]],
-    [["@Rangefinder"],                                  ["Squad Leader", "Marksman", "Sniper", "Light Anti-Tank", "Heavy Anti-Tank", "Anti-Air"]],
-    [["UAVTerminal", "@UAV_01_backpack", "@UAV_06"],    ["Squad Leader", "Engineer"]],
-    [["@Ghillie"],                                      ["Marksman", "Sniper"]],
+    [["@Rangefinder"],                                  ["Squad Leader", "Sniper", "Light Anti-Tank", "Heavy Anti-Tank", "Anti-Air"]],
+    [["UAVTerminal", "@UAV_"],                          []],        // no drones for soldiers: only MAGPIE flies them
+    [["@Ghillie"],                                      ["Sniper"]],
     [["@PilotHelmet", "@PilotCoveralls", "@HeliPilotCoveralls"], ["Pilot"]]
 ];
 CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
