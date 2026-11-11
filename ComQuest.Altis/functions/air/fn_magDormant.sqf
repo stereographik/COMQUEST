@@ -111,7 +111,8 @@ private _gap = CQ_magDormantGap;
 {
     if !(side _x in [east, resistance]) then { continue };
     private _o = vehicle leader _x;
-    if (!alive _o || { _o isKindOf "Air" } || { _o isKindOf "Ship" }) then { continue };
+    if (!alive _o || { _o isKindOf "Air" } || { _o isKindOf "Ship" } || { _o isKindOf "StaticWeapon" }) then { continue };
+    if ((leader _x) getVariable ["CQ_outpost", false]) then { continue };      // the corridor outpost's jammer keeps the sleepers asleep
     private _pos = getPosATL _o;
     if ((_pos select 2) > 5 || { surfaceIsWater _pos }) then { continue };     // still under a parachute, or at sea
     private _ci = floor ((_pos select 0) / _gap);

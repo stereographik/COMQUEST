@@ -312,7 +312,7 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "They've changed their keys. Decryption is over: back to the old ways."]],
         [["CROSSROAD", "We've lost the decryption. It was nice while it lasted."]]
     ]],
-    ["opSpotted", [
+    ["magOpSpotted", [
         [["MAGPIE", "Something on the corridor is jamming me. And there's anti-air with it. I can only give you a rough area, and I'm keeping my birds clear."]],
         [["MAGPIE", "They've got a jammer out there, near their landing corridor. Rough area on your map, nothing better. Their Titans keep me at a distance."]]
     ]],
@@ -322,7 +322,7 @@ CQ_story = createHashMapFromArray [
     ]],
     ["jamOff", [
         [["CROSSROAD", "Jammer down at the corridor outpost. MAGPIE can see around it again."]],
-        [["MAGPIE", "Jamming's gone. Lovely. I can see what's sitting on that hill now."]]
+        [["CROSSROAD", "The jamming's gone. MAGPIE has her eyes back on that hill."]]
     ]],
     ["counterJam", [
         [["CROSSROAD", "The techs reverse-engineered their kit from that crate. Their outpost's jamming won't hide it from us any more."]]
@@ -440,7 +440,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "decryptEnd", "opSpotted", "opExact", "jamOff", "counterJam", "opFallen"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen"];
 
 CQ_uiCardX = 19;                          // px from the screen's left edge to the card (its border then lines up with the vehicle panel, ~16 px)
 CQ_uiCardY = 300;                         // px from the top: first card (below the map screen's menu)

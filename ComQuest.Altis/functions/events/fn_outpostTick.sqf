@@ -58,7 +58,7 @@ if (_op get "spotted") then {
         default { "exact" };
     };
     if (_want != (_op get "mark")) then {
-        if ((_op get "mark") == "") then { ["opSpotted", []] call CQ_fnc_say };
+        if ((_op get "mark") == "") then { ["magOpSpotted", []] call CQ_fnc_say };
         if ((_op get "mark") == "rough" && { _want == "exact" }) then { ["opExact", []] call CQ_fnc_say };
         _op set ["mark", _want];
         deleteMarker "cq_op"; deleteMarker "cq_op_icon";
