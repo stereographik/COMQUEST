@@ -201,7 +201,7 @@ CQ_objMaxSlope = 0.2;                    // ...and flat: max height difference r
 // Enemy HQ codenames (famous real operation names), one picked at random per HQ, never twice in a
 // game; messages and markers show "NAME (root)", "NAME (P1)"... (rank in the network, CQ_fnc_objName)
 CQ_aoRadius = 1000;                      // m: red circle hatched in black around every built enemy HQ (gone when it falls)
-CQ_hqMarkerType = "auto";                // enemy HQ marker icon: "auto" = the shield icon found in the game config (logged), or a CfgMarkers class name
+CQ_hqMarkerType = "loc_radio";           // enemy HQ marker icon (CfgMarkers class)
 CQ_hqNames = ["ROLLING THUNDER", "URGENT FURY", "OVERLORD", "AVALANCHE", "RED DAWN", "KILLER",
     "MASHER", "JUNIPER COBRA", "HERCULES", "CARTHAGE", "EAGLE CLAW", "BEASTMASTER"];
 // Enemy squad callsigns (real aviator callsigns, aggressive ones), given in this order to every
