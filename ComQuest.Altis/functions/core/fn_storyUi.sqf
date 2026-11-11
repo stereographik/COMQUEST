@@ -80,6 +80,7 @@ CQ_uiLoop = true;
             // photo grid under the text: [ctrl, dx, dy, w, h] relative to the text block
             private _extra = [];
             private _cams = [];
+            private _pics = [];
             if (_photos isNotEqualTo []) then {
                 private _cell = CQ_magPhotoPx;                 // square thumbnail
                 private _cw = round (_cell * CQ_magPhotoAspect); // the picture at the camera's own ratio, centre-cropped to the square
@@ -103,7 +104,11 @@ CQ_uiLoop = true;
                     // live camera while the card is shown (CQ_fnc_magPhoto); none -> the editor preview
                     private _cam = ["start", [_id]] call CQ_fnc_magPhoto;
                     if (!isNull _cam) then { _cams pushBack _cam };
-                    _pic ctrlSetText (if (!isNull _cam) then { format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _id mod CQ_magPhotoSlots, CQ_magPhotoPx] } else { [_prev, getText (_cfg >> "picture")] select (_prev == "") });
+                    // the full-screen map stops the 3D scene, so the cameras render nothing there:
+                    // the preview shows while the map is open, the live photo once it is closed
+                    private _still = [_prev, getText (_cfg >> "picture")] select (_prev == "");
+                    if (!isNull _cam) then { _pics pushBack [_pic, format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _id mod CQ_magPhotoSlots, CQ_magPhotoPx], _still] };
+                    _pic ctrlSetText (if (!isNull _cam && { !visibleMap }) then { format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _id mod CQ_magPhotoSlots, CQ_magPhotoPx] } else { _still });
                     private _name = _d ctrlCreate ["RscText", -1];
                     _name ctrlSetText getText (_cfg >> "displayName");
                     _name ctrlSetFont "PuristaLight";
@@ -118,7 +123,7 @@ CQ_uiLoop = true;
             };
             private _ctrls = [_bg, _iconBg, _icon, _txtC];
             { _x ctrlSetFade 1; _x ctrlCommit 0 } forEach (_ctrls + (_extra apply { _x select 0 }));
-            CQ_uiCards pushBack [_ctrls, _h, time + 6 + 0.05 * count _txt + 3 * count _photos, _extra, _cams];
+            CQ_uiCards pushBack [_ctrls, _h, time + 6 + 0.05 * count _txt + 3 * count _photos, _extra, _cams, _pics];
             call _layout;
             { _x ctrlSetFade 0; _x ctrlCommit 0.25 } forEach (_ctrls + (_extra apply { _x select 0 }));
         };
@@ -132,6 +137,14 @@ CQ_uiLoop = true;
             CQ_uiCards = CQ_uiCards - _old;
             call _layout;
         };
+        // photos: preview while the map is open, live picture in the 3D view
+        {
+            {
+                _x params ["_pc", "_live", "_still"];
+                private _want = [_live, _still] select visibleMap;
+                if (ctrlText _pc != _want) then { _pc ctrlSetText _want };
+            } forEach (_x param [5, []]);
+        } forEach CQ_uiCards;
         sleep 0.25;
     };
 };
