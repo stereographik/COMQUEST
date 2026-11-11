@@ -4,7 +4,7 @@
     Loaded on every machine (server and clients) before init, by CQ_fnc_settings.
 */
 
-CQ_debug = true;                         // test settings (short stages, debug labels); the host starts with all logs in chat. Debug panel: host + logged-in admins only, always
+CQ_debug = false;                        // test settings (short stages, debug labels); the host starts with all logs in chat. Debug panel: host + logged-in admins only, always
 CQ_playerView = true;                    // final player view by default: no debug chat, cards or markers (toggle in the debug panel)
 CQ_debugCards = false;                   // debug phase messages as orange cards too (story lines use the cards)
 // log lines starting with one of these words go to "Show all friendly logs", every other one to "Show all enemy logs"
@@ -120,7 +120,7 @@ CQ_assaultBreach = 70;                   // ...and this close, the infantry stor
 
 // --- nGD: the enemy radio network ("break the net, take the net") -------------
 CQ_netEvery = 10;                        // s between two network updates (links, isolation, map)
-CQ_netCoverBase = 20000;                 // m: MAGPIE identifies enemies this close to the base... (TEST: 20000 = whole island; normal 7000)
+CQ_netCoverBase = 7000;                  // m: MAGPIE identifies enemies this close to the base...
 CQ_netCoverRelay = 4000;                 // ...or this close to a relay we hold (nothing beyond: no data link)
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
 CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up
@@ -132,7 +132,7 @@ CQ_buildSlowNear = 0.5;                  // construction speed while players are
 CQ_fullPowerPlayers = 24;
 CQ_scaleMin = 0.35;                      // fewest players: 35 % of the infantry cap, waves up to twice as slow
 CQ_testFullPower = false;                // TEST: play as if CQ_fullPowerPlayers were connected (debug panel toggle)
-CQ_testMagDirect = true;                 // TEST ONLY, set false before merging to main: the two Sentinels fly straight to the first enemy HQ site instead of their search circuits
+CQ_testMagDirect = false;                // TEST ONLY, set false before merging to main: the two Sentinels fly straight to the first enemy HQ site instead of their search circuits
 
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 6;                         // root insertions in a campaign (victory after the last one)
