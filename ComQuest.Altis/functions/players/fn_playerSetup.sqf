@@ -76,6 +76,23 @@ player addAction ["<t color='#918C3B'>Teleport to the squad respawn vehicle</t>"
     { ["use", player] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 5.5, true, true, "",
     "vehicle _this == _this && { _this distance2D CQ_musterPos < CQ_rspBaseRange } && { private _rv = group _this getVariable ['CQ_rspVeh', objNull]; alive _rv && { (_rv getVariable ['CQ_rspLeft', 0]) > 0 } }"];
 
+// Radio tower hack (CQ_fnc_towerHack): on the player, not on the tower (a lattice tower is hard
+// to aim at): an Engineer within CQ_hackRange of an enemy tower holds it for CQ_hackTime s
+[player,
+    "<t color='#918C3B'>Hack radio tower</t>",
+    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
+    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
+    "_this == _target && { vehicle _this == _this } && { (_this getVariable ['CQ_class', '']) == 'Engineer' } && { ((nearestObjects [_this, ['Land_TTowerBig_2_F'], CQ_hackRange]) findIf { alive _x && { _x getVariable ['CQ_hackable', false] } }) > -1 }",
+    "alive _caller && { ((nearestObjects [_caller, ['Land_TTowerBig_2_F'], CQ_hackRange]) findIf { alive _x && { _x getVariable ['CQ_hackable', false] } }) > -1 }",
+    {}, {},
+    {
+        params ["", "_caller"];
+        private _t = (nearestObjects [_caller, ["Land_TTowerBig_2_F"], CQ_hackRange]) select { alive _x && { _x getVariable ["CQ_hackable", false] } };
+        if (_t isNotEqualTo []) then { [_t select 0, _caller] remoteExec ["CQ_fnc_towerHack", 2] };
+    },
+    {}, [], CQ_hackTime, 10, false, false
+] call BIS_fnc_holdActionAdd;
+
 // nGD: engineers put a friendly relay on the tower site of a fallen enemy HQ (CQ_fnc_relayDeploy)
 player addAction ["<t color='#918C3B'>Deploy relay (take over the node)</t>",
     { [player] remoteExec ["CQ_fnc_relayDeploy", 2] }, nil, 6, true, true, "",

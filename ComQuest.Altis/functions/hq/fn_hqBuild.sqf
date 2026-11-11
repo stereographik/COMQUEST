@@ -214,17 +214,16 @@ if (!isNull _tower) then {
 call _wait;
 private _radio = ["Land_TTowerBig_2_F", _sites select 1, 0, true] call _placeAt;
 // the tower is never blown up: it is hacked by an engineer (CQ_fnc_towerHack) and becomes our relay
-_radio addEventHandler ["HandleDamage", { damage (_this select 0) }];
-[_radio,
-    "<t color='#918C3B'>Hack radio tower</t>",
-    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
-    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
-    "(_this getVariable ['CQ_class', '']) == 'Engineer' && { _this distance2D _target < CQ_hackRange } && { alive _target } && { !(_target getVariable ['CQ_hacked', false]) }",
-    "_caller distance2D _target < CQ_hackRange && { alive _caller }",
-    {}, {},
-    { params ["_target", "_caller"]; [_target, _caller] remoteExec ["CQ_fnc_towerHack", 2] },
-    {}, [], CQ_hackTime, 10, true, false
-] remoteExec ["BIS_fnc_holdActionAdd", 0, _radio];
+_radio addEventHandler ["HandleDamage", {
+    params ["_o", "", "", "_src", "", "", "_inst"];
+    private _w = [_inst, _src] select (isNull _inst);
+    if (isPlayer _w && { time > (_o getVariable ["CQ_hintT", 0]) }) then {
+        _o setVariable ["CQ_hintT", time + 20];
+        "Radio tower: it can't be destroyed. An Engineer must hack it (hold 20 s at its foot)." remoteExec ["hint", _w];
+    };
+    damage _o
+}];
+_radio setVariable ["CQ_hackable", true, true];      // engineers get "Hack radio tower" near it (CQ_fnc_playerSetup)
 // heavily guarded: a squad of its own around the tower (scaled, out of the AI caps)
 if (!isNull _radio) then {
     private _gg = createGroup [east, true];
