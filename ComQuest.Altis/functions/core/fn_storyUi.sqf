@@ -81,19 +81,23 @@ CQ_uiLoop = true;
             private _extra = [];
             private _cams = [];
             if (_photos isNotEqualTo []) then {
-                private _cell = CQ_magPhotoPx;                 // thumbnail height
-                private _cw = round (_cell * CQ_magPhotoAspect); // ...and width: the camera's own ratio, not squeezed
-                private _cols = floor ((CQ_uiCardWidth - 44 - 16 + 6) / (_cw + 6)) max 1;
+                private _cell = CQ_magPhotoPx;                 // square thumbnail
+                private _cw = round (_cell * CQ_magPhotoAspect); // the picture at the camera's own ratio, centre-cropped to the square
+                private _cols = 4;
                 private _g = 6;
                 private _lab = 16;
                 private _top = _h - 4 * _py;
                 {
                     _x params ["_id", "_cls"];
-                    private _cx = (_forEachIndex mod _cols) * (_cw + _g) * _px;
+                    private _cx = (_forEachIndex mod _cols) * (_cell + _g) * _px;
                     private _cy = _top + (floor (_forEachIndex / _cols)) * (_cell + _lab + _g) * _py;
                     private _frame = _d ctrlCreate ["RscText", -1];
                     _frame ctrlSetBackgroundColor (CQ_ui get "inset");
-                    private _pic = _d ctrlCreate ["RscPicture", -1];
+                    // square window (a controls group clips its children) over the wider picture
+                    private _win = _d ctrlCreate ["RscControlsGroupNoScrollbars", -1];
+                    private _pic = _d ctrlCreate ["RscPicture", -1, _win];
+                    _pic ctrlSetPosition [-((_cw - _cell) / 2) * _px, 0, _cw * _px, _cell * _py];
+                    _pic ctrlCommit 0;
                     private _cfg = configFile >> "CfgVehicles" >> _cls;
                     private _prev = getText (_cfg >> "editorPreview");
                     // live camera while the card is shown (CQ_fnc_magPhoto); none -> the editor preview
@@ -105,9 +109,9 @@ CQ_uiLoop = true;
                     _name ctrlSetFont "PuristaLight";
                     _name ctrlSetFontHeight (13 * _py);
                     _name ctrlSetTextColor [0.95, 0.94, 0.87, 1];
-                    _extra pushBack [_frame, _cx - 1 * _px, _cy - 1 * _py, (_cw + 2) * _px, (_cell + 2) * _py];
-                    _extra pushBack [_pic, _cx, _cy, _cw * _px, _cell * _py];
-                    _extra pushBack [_name, _cx, _cy + _cell * _py, _cw * _px, _lab * _py];
+                    _extra pushBack [_frame, _cx - 1 * _px, _cy - 1 * _py, (_cell + 2) * _px, (_cell + 2) * _py];
+                    _extra pushBack [_win, _cx, _cy, _cell * _px, _cell * _py];
+                    _extra pushBack [_name, _cx, _cy + _cell * _py, _cell * _px, _lab * _py];
                 } forEach _photos;
                 private _rows = ceil ((count _photos) / _cols);
                 _h = _top + _rows * (_cell + _lab + _g) * _py + 4 * _py;

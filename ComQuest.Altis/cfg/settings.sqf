@@ -515,8 +515,8 @@ CQ_magPhotoFov = 0.25;                   // camera field of view (zoom)
 CQ_magPhotoFill = 0.8;                   // the vehicle's bounding sphere fills this share of the frame
 // (a photo is a live thumbnail: its camera exists only while the report card is on screen)
 CQ_testMagPhotos = true;                 // TEST ONLY, set false before merging to main: each Sentinel taking off photographs the friendly units at the base as a report
-CQ_magPhotoPx = 128;                     // thumbnail height on the card, px
-CQ_magPhotoAspect = 4 / 3;               // thumbnail width / height: the camera renders this ratio into the square texture (1 = square; raise it if things still look too thin)
+CQ_magPhotoPx = 128;                     // square thumbnail size on the card, px
+CQ_magPhotoAspect = 4 / 3;               // the camera's own ratio (it renders it squeezed into the square texture): the picture is unsqueezed to it, then centre-cropped to the square (raise it if things still look too thin)
 CQ_magMarkerTime = 10;                   // s the report dots stay on the map
 CQ_magDetectEvery = 4;                   // s between two detection passes
 CQ_magPlanEvery = 90;                    // s between two flight plans of a drone
