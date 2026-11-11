@@ -377,19 +377,60 @@ CQ_classes = [
 // Everyone also gets a P07 with 3 mags and the CQ_basicKit items.
 CQ_classKit = createHashMapFromArray [
     ["Rifleman",        [10, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_AssaultPack_mcamo"]],
-    ["Squad Leader",    [10, 0, [["HandGrenade", 2], ["SmokeShell", 4], ["SmokeShellBlue", 2], ["SmokeShellGreen", 2], ["SmokeShellRed", 1], ["1Rnd_HE_Grenade_shell", 6], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
+    ["Squad Leader",    [10, 0, [["HandGrenade", 2], ["SmokeShell", 4], ["SmokeShellBlue", 2], ["SmokeShellGreen", 2], ["SmokeShellRed", 1], ["1Rnd_HE_Grenade_shell", 6], ["FirstAidKit", 2], ["Laserbatteries", 2], ["Laserdesignator", 1]], "B_AssaultPack_mcamo"]],
     ["Medic",           [10, 0, [["Medikit", 1], ["FirstAidKit", 18], ["SmokeShell", 6], ["HandGrenade", 2]], "B_Kitbag_mcamo"]],
     ["Grenadier",       [10, 0, [["1Rnd_HE_Grenade_shell", 14], ["1Rnd_Smoke_Grenade_shell", 4], ["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
     ["Autorifleman",    [6, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
     ["Light Anti-Tank", [8, 3, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
-    ["Heavy Anti-Tank", [8, 3, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
+    ["Heavy Anti-Tank", [8, 2, [["Titan_AP", 1], ["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
     ["Anti-Air",        [8, 3, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
     ["Engineer",        [10, 0, [["ToolKit", 1], ["MineDetector", 1], ["DemoCharge_Remote_Mag", 3], ["SatchelCharge_Remote_Mag", 1], ["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
     ["Marksman",        [10, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
     ["Sniper",          [9, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
-    ["Pilot",           [5, 0, [["SmokeShellBlue", 2], ["FirstAidKit", 2], ["ToolKit", 1]], ""]]
+    ["Pilot",           [5, 0, [["SmokeShellBlue", 2], ["FirstAidKit", 2]], ""]]
 ];
 CQ_classSidearm = ["hgun_P07_F", "16Rnd_9x21_Mag", 3];
+// Class gear (CQ_fnc_classKit), applied over the vanilla loadout before the kit above:
+// [primary, [attachment choices, ...], launcher, uniform, vest, headgear]
+//   attachment choice: one class or a list (the first that exists, is not DLC and fits the weapon)
+//   "" keeps the vanilla item, "-" removes it. Anything tagged DLC is skipped (vanilla kept).
+// Everyone also gets CQ_classNvg. Suppressors on every weapon that takes one.
+private _mx = ["muzzle_snds_H", "acc_pointer_IR"];
+CQ_classGear = createHashMapFromArray [
+    ["Rifleman",        ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Squad Leader",    ["arifle_MX_GL_F", _mx + ["optic_Arco"],                   "",                       "U_B_CombatUniform_mcam", "V_PlateCarrierGL_rgr",   "H_HelmetSpecB"]],
+    ["Medic",           ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Grenadier",       ["arifle_MX_GL_F", _mx + ["optic_Arco"],                   "",                       "U_B_CombatUniform_mcam", "V_PlateCarrierGL_rgr",   "H_HelmetSpecB"]],
+    ["Autorifleman",    ["LMG_Mk200_F",    ["muzzle_snds_H_MG", "acc_pointer_IR", "optic_Hamr", "bipod_01_F_snd"], "", "U_B_CombatUniform_mcam", "V_PlateCarrierSpec_rgr", "H_HelmetSpecB"]],
+    ["Light Anti-Tank", ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_NLAW_F",          "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Heavy Anti-Tank", ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_B_Titan_short_F", "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Anti-Air",        ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_B_Titan_F",       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Engineer",        ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Marksman",        ["srifle_EBR_F",   ["muzzle_snds_B", "acc_pointer_IR", ["optic_DMS", "optic_SOS"], "bipod_01_F_snd"], "", "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr", "H_HelmetSpecB"]],
+    ["Sniper",          ["srifle_GM6_F",   [["optic_LRPS", "optic_SOS"], "bipod_01_F_snd"], "",            "U_B_GhillieSuit",        "V_Chestrig_rgr",         "-"]],
+    ["Pilot",           ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "",                       "",                       ""]]
+];
+CQ_classNvg = "NVGoggles";
+// Arsenal (open to everyone, CQ_fnc_arsenalOpen): role gear is only offered to its classes
+// [tags, classes allowed]. A tag is an item type from BIS_fnc_itemType (either part), or:
+//   "GL"      rifles with a grenade launcher
+//   "@name"   items whose class name contains "name" (case ignored)
+// Magazines are never gated (rockets, missiles, belts, charges...): anyone carries ammo for the squad.
+// The class's own starting loadout stays usable whatever the gates (it is on the player).
+CQ_arsenalGates = [
+    [["Launcher", "MissileLauncher", "RocketLauncher"], ["Light Anti-Tank", "Heavy Anti-Tank", "Anti-Air"]],
+    [["MachineGun"],                                    ["Autorifleman"]],
+    [["SniperRifle"],                                   ["Marksman", "Sniper"]],
+    [["GL"],                                            ["Squad Leader", "Grenadier"]],
+    [["Medikit"],                                       ["Medic"]],
+    [["Toolkit"],                                       ["Engineer"]],
+    [["MineDetector"],                                  ["Engineer"]],
+    [["LaserDesignator", "@Laserdesignator"],           ["Squad Leader"]],
+    [["@Rangefinder"],                                  ["Squad Leader", "Marksman", "Sniper"]],
+    [["UAVTerminal", "@UAV_01_backpack", "@UAV_06"],    ["Squad Leader", "Engineer"]],
+    [["@Ghillie"],                                      ["Marksman", "Sniper"]],
+    [["@PilotHelmet", "@PilotCoveralls", "@HeliPilotCoveralls"], ["Pilot"]]
+];
 CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
 CQ_classChangeRange = 2;                 // classes are changed inside the HQ compound walls (+ this margin, m)
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads

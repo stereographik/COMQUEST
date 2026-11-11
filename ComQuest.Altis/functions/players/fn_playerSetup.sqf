@@ -138,7 +138,7 @@ if (isNil "CQ_arsenalReady") then {
         {
             _x addAction [
                 format ["<t color='#918C3B'>Arsenal (%1 equipment)</t>", _x getVariable ["CQ_squadBox", ""]],
-                { ["Open", true] spawn BIS_fnc_arsenal },
+                { [] spawn CQ_fnc_arsenalOpen },
                 nil, 6, true, true, "", "true", 6
             ];
         } forEach CQ_arsenalBoxes;

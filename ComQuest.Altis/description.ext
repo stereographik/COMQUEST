@@ -265,6 +265,7 @@ class CfgFunctions
             class setClass {};
             class basicKit {};
             class classKit {};
+            class arsenalOpen {};
             class adrenalineSurge {};
             class intro {};
             class applyTraits {};
