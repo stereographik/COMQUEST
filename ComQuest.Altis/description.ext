@@ -158,6 +158,7 @@ class CfgFunctions
             class netScale {};
             class relaySites {};
             class relayDeploy {};
+            class towerHack {};
             class hqTick {};
             class hqStatusMarker {};
             class hqNerves {};
@@ -192,6 +193,18 @@ class CfgFunctions
             class fieldResupplyTry {};
             class fieldResupply {};
             class ammoFlight {};
+        };
+
+        class events
+        {
+            file = "functions\events";
+            class crashTick {};
+            class crashStart {};
+            class crashSecure {};
+            class crashRoam {};
+            class crashDrop {};
+            class outpostBuild {};
+            class outpostTick {};
         };
 
         class air

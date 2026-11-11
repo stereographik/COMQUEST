@@ -141,7 +141,7 @@ if (_hubId > -1 && { !CQ_ammoFlightActive } && { (_hub get "stock") < CQ_hubLowS
     ["Main HQ #%1 low on ammo (%2): supply flight brought forward", [_hubId, round (_hub get "stock")]] call CQ_fnc_log;
 };
 if (_hubId > -1 && { !_hubIso } && { !CQ_ammoFlightActive } && { CQ_nextAmmoFlight > 0 } && { time >= CQ_nextAmmoFlight }) then {
-    CQ_nextAmmoFlight = time + CQ_ammoFlightInterval;
+    CQ_nextAmmoFlight = time + CQ_ammoFlightInterval + ([0, CQ_opSupplyDelay] select ((missionNamespace getVariable ["CQ_corridorLost", -1]) == _hubId));   // corridor outpost lost: later
     CQ_ammoFlightActive = true;
     [_hub] spawn CQ_fnc_ammoFlight;
 };

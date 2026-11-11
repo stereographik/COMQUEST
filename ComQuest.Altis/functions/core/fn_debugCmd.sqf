@@ -7,6 +7,7 @@
     Carrier and forces:   root, flight, carrierMinus, carrierFull, killAll
     Story:                actNext, sitrep, storyReset
     MAGPIE:               magReport, magLaunch, magKill
+    Events:               crash, tpCrash, decrypt, crashOut, opBuild, opKill, opJam, tpOp
     Player (the caller):  heal, tpBase, tpHq, points, vehFix
     Base and world:       vehReset, defRebuild, time1, noon, night, clearWx
     View:                 playerView (the game as a final player sees it: no debug output)
@@ -19,7 +20,7 @@ if !(_caller == 2 || { (admin _caller) == 2 }) exitWith {};     // host or logge
 private _p = (allPlayers select { owner _x == _caller }) param [0, objNull];
 private _hq = CQ_hqs getOrDefault [_id, createHashMap];
 private _msg = "";
-private _needHq = _cmd in ["next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq"];
+private _needHq = _cmd in ["hack", "tpTower", "next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq"];
 
 if (_needHq && { count _hq == 0 }) then {
     _msg = "Select an HQ in the list first";
@@ -93,6 +94,10 @@ if (_needHq && { count _hq == 0 }) then {
             private _r = _hq getOrDefault ["depot", objNull];
             if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: depot destroyed", _id] } else { _msg = format ["HQ #%1 has no depot", _id] };
         };
+        case "hack": {
+            private _r = _hq getOrDefault ["radio", objNull];
+            if (alive _r) then { [_r, _p] call CQ_fnc_towerHack; _msg = format ["HQ #%1: radio tower hacked, it is our relay", _id] } else { _msg = format ["HQ #%1 has no standing radio tower", _id] };
+        };
         case "tanker": {
             private _r = _hq getOrDefault ["tanker", objNull];
             if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: fuel tanker destroyed (%2 fuel points lost)", _id, round (_hq getOrDefault ["fuel", 0])] } else { _msg = format ["HQ #%1 has no fuel tanker", _id] };
@@ -118,6 +123,57 @@ if (_needHq && { count _hq == 0 }) then {
         case "sitrep": { CQ_sitrepT = -1e6; CQ_storyQuietUntil = -1; CQ_actNext = 0; _msg = "SITREP on the next story tick" };
         case "storyReset": { CQ_storyCrossroadT = -1e6; CQ_storyQuietUntil = -1; CQ_storyLast = createHashMap; _msg = "speech budget, silence and cooldowns reset" };
         case "magReport": { CQ_magReportT = -1e6; CQ_magNext = 0; _msg = "MAGPIE report on the next tick (only if something is new)" };
+        case "crash": {
+            CQ_crashLastT = time;
+            _msg = if (call CQ_fnc_crashStart) then { format ["crash site placed at %1", mapGridPosition CQ_crashPos] } else { "no crash site found, try again" };
+        };
+        case "tpCrash": {
+            if (isNil "CQ_crashPos") then { _msg = "no crash yet" } else {
+                if (!isNull _p) then {
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, CQ_crashPos getPos [400, CQ_crashPos getDir CQ_basePos]] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
+                    _msg = "teleported 400 m from the crash site";
+                };
+            };
+        };
+        case "crashOut": {
+            // skip the countdown: contact now if none yet, time already up -> the carrier drops at once
+            if (isNil "CQ_crashState" || { CQ_crashState get "secured" } || { CQ_crashState get "dropped" }) then { _msg = "no crash waiting for its drop" } else {
+                if ((CQ_crashState get "contactT") < 0) then { CQ_crashAlarm = true; publicVariable "CQ_crashAlarm" };
+                CQ_crashState set ["contactT", time - CQ_crashTimer - 1];
+                CQ_crashState set ["warned", true];
+                call CQ_fnc_crashDrop;
+                _msg = format ["crash countdown skipped: the carrier drops now (dropped %1)", CQ_crashState get "dropped"];
+            };
+        };
+        case "opBuild": {
+            if (!isNil "CQ_outpostState") then { _msg = "the outpost already exists" } else {
+                private _hs = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
+                private _site = if (_hs isEqualTo []) then { CQ_coastPoint getPos [1500, CQ_coastPoint getDir CQ_basePos] } else { (([_hs, [], { _x get "id" }] call BIS_fnc_sortBy) select 0) get "pos" };
+                [_site] spawn CQ_fnc_outpostBuild;
+                _msg = format ["corridor outpost being built toward %1 (see the log)", mapGridPosition _site];
+            };
+        };
+        case "opKill": {
+            if (isNil "CQ_outpostState") then { _msg = "no outpost" } else {
+                { if (alive _x && { _x distance2D (CQ_outpostState get "pos") < 300 }) then { _x setDamage 1 } } forEach (CQ_outpostState get "men");
+                _msg = "outpost garrison killed (gunboats spared)";
+            };
+        };
+        case "opJam": {
+            if (isNil "CQ_outpostState") then { _msg = "no outpost" } else { (CQ_outpostState get "jammer") setDamage 1; _msg = "outpost jammer destroyed" };
+        };
+        case "tpOp": {
+            if (isNil "CQ_outpostState") then { _msg = "no outpost" } else {
+                if (!isNull _p) then {
+                    private _q = (CQ_outpostState get "pos") getPos [600, (CQ_outpostState get "pos") getDir CQ_basePos];
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, _q] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
+                    _msg = "teleported 600 m from the outpost (base side)";
+                };
+            };
+        };
+        case "decrypt": { [objNull] call CQ_fnc_crashSecure; _msg = format ["decryption on for %1 s", CQ_crashDecrypt] };
         case "magLaunch": {
             { if (!alive (_x get "veh")) then { _x set ["due", time] } } forEach CQ_mag;
             CQ_magNext = 0; _msg = "missing drones launch now";
@@ -133,6 +189,18 @@ if (_needHq && { count _hq == 0 }) then {
                 [_p] remoteExec ["moveOut", _p];
                 [_p] spawn { params ["_p"]; sleep 0.5; _p setPosATL CQ_musterPos };
                 _msg = "teleported to the base";
+            };
+        };
+        case "tpTower": {
+            private _r = _hq getOrDefault ["radio", objNull];
+            if (isNull _r) then { _r = _hq getOrDefault ["radioHacked", objNull] };
+            if (isNull _r) then { _msg = format ["HQ #%1 has no radio tower yet", _id] } else {
+                if (!isNull _p) then {
+                    private _t = (getPosATL _r) getPos [9, (getPosATL _r) getDir (_hq get "pos")];
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, _t] spawn { params ["_p", "_t"]; sleep 0.5; _p setPosATL [_t select 0, _t select 1, 0] };
+                    _msg = format ["teleported to the foot of HQ #%1's radio tower", _id];
+                };
             };
         };
         case "tpHq": {

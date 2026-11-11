@@ -22,6 +22,12 @@ private _range = (_r0 + CQ_magDormantAlt * _rk) min _rmax;
 // forget the lost woken Darters (the replacement is queued in CQ_magDormantDead by CQ_fnc_magTick)
 CQ_mag = CQ_mag select { !((_x getOrDefault ["role", ""]) == "dormant" && { _x get "lost" }) };
 
+// known anti-air (a Tigris MAGPIE identified recently, the corridor outpost once spotted): a point
+// within CQ_magAaAvoid of it stays asleep, it would only wake to be shot down
+private _aaKnown = ((values CQ_magSeen) select { alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } && { (typeOf (_x select 0)) in CQ_magAaClasses } }) apply { _x select 3 };
+if (!isNil "CQ_outpostState" && { CQ_outpostState get "spotted" } && { !(CQ_outpostState get "fallen") }) then { _aaKnown pushBack (missionNamespace getVariable ["CQ_opMarkPos", CQ_outpostState get "pos"]) };
+private _aaSafe = { params ["_p"]; (_aaKnown findIf { _x distance2D _p < CQ_magAaAvoid }) == -1 };
+
 private _awake = { count (CQ_mag select { (_x getOrDefault ["role", ""]) == "dormant" && { alive (_x get "veh") } }) };
 
 // wake the point _k: a Darter takes off there and gets away from _from (an object or a position)
@@ -93,7 +99,8 @@ private _keep = [];
     _x params ["_dp", "_t"];
     if (time - _t < CQ_magDormantReplace || { (call _awake) >= CQ_magDormantMax } || { count CQ_magDormantPts == 0 }) then { _keep pushBack _x; continue };
     private _best = []; private _bd = 1e9;
-    { private _d = _y distance2D _dp; if (_d < _bd) then { _bd = _d; _best = _x } } forEach CQ_magDormantPts;
+    { private _d = _y distance2D _dp; if (_d < _bd && { [_y] call _aaSafe }) then { _bd = _d; _best = _x } } forEach CQ_magDormantPts;
+    if (_best isEqualTo []) then { _keep pushBack _x; continue };          // every point left is under known anti-air
     [_best, _dp, format ["replaces a Darter lost %1 m away", round _bd]] call _wake;
 } forEach CQ_magDormantDead;
 CQ_magDormantDead = _keep;
@@ -104,7 +111,8 @@ private _gap = CQ_magDormantGap;
 {
     if !(side _x in [east, resistance]) then { continue };
     private _o = vehicle leader _x;
-    if (!alive _o || { _o isKindOf "Air" } || { _o isKindOf "Ship" }) then { continue };
+    if (!alive _o || { _o isKindOf "Air" } || { _o isKindOf "Ship" } || { _o isKindOf "StaticWeapon" }) then { continue };
+    if ((leader _x) getVariable ["CQ_outpost", false]) then { continue };      // the corridor outpost's jammer keeps the sleepers asleep
     private _pos = getPosATL _o;
     if ((_pos select 2) > 5 || { surfaceIsWater _pos }) then { continue };     // still under a parachute, or at sea
     private _ci = floor ((_pos select 0) / _gap);
@@ -114,7 +122,7 @@ private _gap = CQ_magDormantGap;
         for "_dj" from -1 to 1 do {
             private _k = [_ci + _di, _cj + _dj];
             private _p = CQ_magDormantPts getOrDefault [_k, []];
-            if (_p isNotEqualTo [] && { _p distance2D _pos < CQ_magDormantWake }) exitWith { _hit = _k };
+            if (_p isNotEqualTo [] && { _p distance2D _pos < CQ_magDormantWake } && { [_p] call _aaSafe }) exitWith { _hit = _k };
         };
         if (_hit isNotEqualTo []) exitWith {};
     };

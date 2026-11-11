@@ -38,6 +38,8 @@ private _mk = {
     _c ctrlCommit 0;
     _c
 };
+// dark backdrop behind the whole window (readability over the game view)
+(["RscText", -1, [_X - 0.01, _Y - 0.01, _W + 0.02, _H + 0.02]] call _mk) ctrlSetBackgroundColor [0, 0, 0, 0.8];
 (["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor (CQ_ui get "panel");
 (["RscText", -1, [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
 private _tabS = ["RscButton", 7090, [_X + 0.01, _Y + 0.004, _W * 0.18, _L], "SQUADS"] call _mk;

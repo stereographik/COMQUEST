@@ -53,6 +53,20 @@ for "_i" from 0 to _segs - 1 do {
     _bars pushBack _b;
 };
 private _all = [_bg, _edge, _lbl, _pct] + _bars;
+// crash event: "enemy securing device" under the panel while the hidden countdown runs (CQ_crashAlarm)
+private _alBg = ["RscText", 0, _H + 4, _W, 24] call _mk;
+_alBg ctrlSetBackgroundColor [0.098, 0.094, 0.07, 0.75];
+private _alIc = ["RscPicture", 8, _H + 6, 20, 20] call _mk;
+_alIc ctrlSetText "\A3\ui_f\data\igui\cfg\simpleTasks\types\danger_ca.paa";
+_alIc ctrlSetTextColor [0.729, 0.224, 0.173, 1];
+private _alTx = ["RscText", 32, _H + 6, _W - 36, 20] call _mk;
+_alTx ctrlSetFont "PuristaMedium";
+_alTx ctrlSetFontHeight (14 * _ph);
+_alTx ctrlSetTextColor [0.729, 0.224, 0.173, 1];
+_alTx ctrlSetText "ENEMY SECURING DEVICE";
+private _al = [_alBg, _alIc, _alTx];
+{ _x ctrlShow false } forEach _al;
+private _alShown = false;
 
 private _shown = -1;
 private _disp = 0;
@@ -67,7 +81,21 @@ while { true } do {
         _shown = [0, 1] select _on;
         _lastV = -2;                                       // redraw once shown again
     };
+    private _alOn = _on && { missionNamespace getVariable ["CQ_crashAlarm", false] };
+    if (_alOn != _alShown) then { _alShown = _alOn; { _x ctrlShow _alOn } forEach _al };
     if (!_on) then { continue };
+
+    // corridor outpost jammer: noise instead of a reading near it
+    private _jp = missionNamespace getVariable ["CQ_opJamPos", []];
+    if ((missionNamespace getVariable ["CQ_opJam", false]) && { _jp isNotEqualTo [] } && { player distance2D _jp < CQ_opJamRadius * 1.5 }) then {
+        _lastV = -3;
+        _lbl ctrlSetText "JAMMED";
+        _lbl ctrlSetTextColor [0.729, 0.224, 0.173, 1];
+        _edge ctrlSetBackgroundColor [0.729, 0.224, 0.173, 0.9];
+        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='0.6' color='#BA392C'>??</t>";
+        { _x ctrlSetBackgroundColor ([_offColor, [0.729, 0.224, 0.173, 0.4 + random 0.5]] select (random 1 < 0.5)) } forEach _bars;
+        continue;
+    };
 
     // closest active emitter
     private _src = [];

@@ -213,12 +213,42 @@ if (!isNull _tower) then {
 // Stage 3 - radio tower, so the HQ can talk to the network
 call _wait;
 private _radio = ["Land_TTowerBig_2_F", _sites select 1, 0, true] call _placeAt;
-[_radio] call _engineerOnly;
+// the tower is never blown up: it is hacked by an engineer (CQ_fnc_towerHack) and becomes our relay
+_radio addEventHandler ["HandleDamage", { damage (_this select 0) }];
+[_radio,
+    "<t color='#918C3B'>Hack radio tower</t>",
+    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
+    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
+    "(_this getVariable ['CQ_class', '']) == 'Engineer' && { _this distance2D _target < CQ_hackRange } && { alive _target } && { !(_target getVariable ['CQ_hacked', false]) }",
+    "_caller distance2D _target < CQ_hackRange && { alive _caller }",
+    {}, {},
+    { params ["_target", "_caller"]; [_target, _caller] remoteExec ["CQ_fnc_towerHack", 2] },
+    {}, [], CQ_hackTime, 10, true, false
+] remoteExec ["BIS_fnc_holdActionAdd", 0, _radio];
+// heavily guarded: a squad of its own around the tower (scaled, out of the AI caps)
+if (!isNull _radio) then {
+    private _gg = createGroup [east, true];
+    _gg setGroupIdGlobal [format ["Tower guard %1", _id]];
+    private _n = (round (count CQ_towerGuard * ((missionNamespace getVariable ["CQ_scale", 1]) max 0.5))) min count CQ_towerGuard;
+    for "_i" from 0 to _n - 1 do {
+        private _p = (getPosATL _radio) getPos [12 + random 10, _i * 360 / _n];
+        private _u = _gg createUnit [CQ_towerGuard select _i, [_p select 0, _p select 1, 0], [], 0, "NONE"];
+        _u setSkill CQ_towerGuardSkill;
+        _u setVariable ["CQ_noCap", true, true];
+    };
+    [units _gg] call CQ_fnc_unitPrep;
+    _gg setBehaviour "AWARE"; _gg setCombatMode "RED";
+    _gg enableDynamicSimulation false;
+    [_gg, getPosATL _radio, 35] call BIS_fnc_taskDefend;
+    (_hq get "support") pushBack _gg;
+    ["HQ #%1: radio tower guarded by %2 men", [_id, count units _gg]] call CQ_fnc_log;
+};
 _radio setVariable ["CQ_objType", "Radio tower"];
 _radio setVariable ["CQ_hqId", _id];
 _hq set ["radio", _radio];
 if (!isNull _radio) then { _hq set ["radioPos", getPosATL _radio] };     // nGD: where a relay can go once the HQ falls
 _radio addEventHandler ["Killed", {
+    if ((_this select 0) getVariable ["CQ_hacked", false]) exitWith {};          // our relay by then (CQ_fnc_relayDeploy logic)
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
     if (isNil "_hq") exitWith {};
     ["Radio tower destroyed", format ["HQ #%1 is cut off from the network", _hq get "id"]] call CQ_fnc_announce;

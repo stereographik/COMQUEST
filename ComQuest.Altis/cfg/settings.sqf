@@ -119,12 +119,82 @@ CQ_assaultRange = 3500;                  // an HQ this close to the player base 
 CQ_assaultSweep = 300;                   // assault groups this close to the command post sweep the base (COMBAT, SAD)
 CQ_assaultBreach = 70;                   // ...and this close, the infantry storms the command post after Colonel Harlan
 
+// --- Event: enemy transport crash (CQ_fnc_crashTick / crashStart / crashSecure / crashRoam) -----
+// A CSAT transport goes down between the base and an enemy HQ: wreck, a crate of enemy comms
+// gear and CQ_crashSurvivors guarding it. Their first contact with us starts a hidden
+// CQ_crashTimer s countdown (a "securing device" warning under the signal panel); if the crate
+// is not secured by then, the carrier paradrops one of CQ_crashDropClasses with a squad, which
+// roams around the site for CQ_crashRoam s, then joins the nearest enemy HQ. A player reaching
+// the crate secures it (no condition): CQ_crashDecrypt s of decryption = MAGPIE sees everywhere
+// and every enemy HQ and radio tower is shown on the map.
+// When: the front has not moved (no HQ built, fallen or launched, no relay) for CQ_crashStagnant
+// s; at most every CQ_crashCooldown s; plus a CQ_crashEarlyChance chance of one in the first
+// CQ_crashEarlyWindow s. Debug panel: Trigger crash / Teleport to crash / Decrypt now.
+CQ_crash = true;
+CQ_crashStagnant = 1200;                 // s without any front change
+CQ_crashCooldown = 2400;                 // s between two crashes (40 min)
+CQ_crashEarlyChance = 0.1;               // chance of a crash in the first CQ_crashEarlyWindow s
+CQ_crashEarlyWindow = 900;               // s (15 min)
+CQ_crashSiteFrac = [0.35, 0.65];         // site between the base (0) and an enemy HQ (1)
+CQ_crashPlayerGap = 800;                 // m: never right next to a player
+CQ_crashWrecks = ["Land_Wreck_Plane_Transport_01_F", "Land_Wreck_Heli_Attack_02_F", "Land_UWreck_Heli_Attack_02_F"];   // first that exists
+CQ_crashCrate = "Box_East_Support_F";
+CQ_crashSurvivors = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_LAT_F", "O_Soldier_F"];
+CQ_crashSkill = 0.75;                    // survivors: sharp
+CQ_crashTimer = 600;                     // s after their first contact before the carrier drops help
+CQ_crashWarn = 120;                      // s before the drop: CROSSROAD warns
+CQ_crashDropClasses = ["I_LT_01_cannon_F", "O_APC_Tracked_02_cannon_F", "O_APC_Wheeled_02_rcws_v2_F", "I_APC_Wheeled_03_cannon_F"];   // Nyx, Kamysh, Marid, Gorgon (DLC ones skipped)
+CQ_crashDropSquad = ["O_Soldier_TL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_Soldier_F"];   // in its cargo seats
+CQ_crashRoam = 600;                      // s the dropped vehicle roams around the site
+CQ_crashRoamR = [150, 900];              // m: roaming radius, close -> large -> close
+CQ_crashDecrypt = 720;                   // s of decryption (12 min)
+
+// --- Corridor outpost (CQ_fnc_outpostBuild / CQ_fnc_outpostTick), first HQ only ----------------
+// With the first HQ's insertion the enemy holds the land corridor between the coast (CQ_coastPoint)
+// and that HQ: on its highest open spot that best sees the flight corridor (or an Altis military
+// post found there), a watchtower, CQ_opAA, CQ_opHMG, a mortar and a barricaded squad; 2 gunboats
+// patrol the coast. Out of the AI caps, never reinforced. Its jammer (destroyable) hides it:
+// MAGPIE only gets a rough area (black hatched circle, ~CQ_opFuzz m off) and identifies nothing
+// within CQ_opJamRadius; the crash crate (reverse engineering, permanent) or the jammer's
+// destruction gives the exact position. Its AA shoots MAGPIE: she keeps clear once it is spotted.
+// The mortar only fires on players its tower watcher sees (delay + spread). When the outpost falls
+// (no man left), flights to that HQ come the long way round and its resupply is CQ_opSupplyDelay s later.
+CQ_outpost = true;
+CQ_opHqGap = 150;                        // m kept from the HQ site
+CQ_opFlat = 5;                           // m of height difference allowed over the 40 x 40 m footprint
+CQ_opReuse = ["Land_Cargo_Patrol_V1_F", "Land_Cargo_Patrol_V2_F", "Land_Cargo_Patrol_V3_F", "Land_Cargo_Tower_V1_F", "Land_Cargo_Tower_V2_F", "Land_Cargo_Tower_V3_F", "Land_BagBunker_Tower_F"];   // existing posts reused when on the corridor
+CQ_opTower = "Land_Cargo_Patrol_V1_F";
+CQ_opJammer = ["Land_TTowerSmall_2_F", "Land_TTowerSmall_1_F"];   // first that exists
+CQ_opAA = ["O_static_AA_F", "O_static_AA_F"];
+CQ_opHMG = ["O_HMG_01_high_F", "O_HMG_01_high_F"];   // each on its own HMG tower (cargo patrol tower), as at the HQs
+CQ_opMortar = "O_Mortar_01_F";
+CQ_opWatcher = "O_spotter_F";
+CQ_opSquad = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_soldier_M_F", "O_Soldier_GL_F", "O_Soldier_F", "O_Soldier_F", "O_Soldier_AR_F"];   // scaled with CQ_scale
+CQ_opSkill = 0.7;
+CQ_opBoat = "O_Boat_Armed_01_hmg_F";
+CQ_opBoats = 2;
+CQ_opJamRadius = 600;                    // m: MAGPIE identifies nothing in there while the jammer works
+CQ_opFuzz = [250, 750];                  // m: the rough area's centre is this far off the outpost
+CQ_opFuzzR = 900;                        // m: radius of the rough area (the outpost is inside)
+CQ_opAlert = 900;                        // m: what one man of the post sees, every man of it knows (shared by radio)
+CQ_opHear = 250;                         // m: a player this close is heard even unseen
+CQ_opMortarRange = 1500;                 // m: the mortar only fires on players this close
+CQ_opMortarDelay = [30, 60];             // s between the watcher spotting a player and the rounds
+CQ_opMortarSpread = 60;                  // m around the target
+CQ_opMortarEvery = 90;                   // s between two salvos
+CQ_opSupplyDelay = 600;                  // s added to that HQ's resupply flights once the outpost fell
+CQ_opDetour = 4000;                      // m: flights to that HQ start this far sideways (the long way round)
+
 // --- nGD: the enemy radio network ("break the net, take the net") -------------
 CQ_netEvery = 10;                        // s between two network updates (links, isolation, map)
 CQ_netCoverBase = 7000;                  // m: MAGPIE identifies enemies this close to the base...
 CQ_netCoverRelay = 4000;                 // ...or this close to a relay we hold (nothing beyond: no data link)
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
 CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up
+CQ_hackTime = 20;                        // s an engineer holds "Hack radio tower" at its foot: the tower becomes our relay (no demolition)
+CQ_hackRange = 15;                       // m from the tower's centre
+CQ_towerGuard = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_soldier_M_F", "O_Soldier_GL_F", "O_Soldier_F", "O_Soldier_AR_F", "O_Soldier_F"];   // its own guard squad (scaled, out of the AI caps)
+CQ_towerGuardSkill = 0.65;
 CQ_relayRange = 30;                      // m from a fallen tower site to deploy a relay
 CQ_relayRetakeRange = 4000;              // the nearest enemy HQ this close sends a squad to destroy a new relay
 CQ_lowStockShare = 0.2;                  // HQ marker shows [low ammo] under this share of its depot cap

@@ -11,6 +11,11 @@ private _hid = _hub get "id";
 private _dest = _hub get "pos";
 private _start = if (!isNil "CQ_carrierPos") then { CQ_carrierPos getPos [400, CQ_carrierPos getDir _dest] }
     else { _dest getPos [CQ_insertionSpawnDistance, (_dest getDir CQ_basePos) + 180] };
+if ((missionNamespace getVariable ["CQ_corridorLost", -1]) == _hid) then {
+    // the corridor outpost fell: the long way round, from far to the side
+    _start = _start getPos [CQ_opDetour, (_start getDir _dest) + selectRandom [-90, 90]];
+    ["Ammo flight: corridor lost, HQ #%1 resupplied the long way round", [_hid]] call CQ_fnc_log;
+};
 private _heading = _start getDir _dest;
 
 ([CQ_ammoFlightClass, [_start select 0, _start select 1, 0], _heading, true, CQ_heightTroops] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];

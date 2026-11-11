@@ -5,7 +5,7 @@
     CQ_maxInfantry cap is checked against this.
 */
 {
-    alive _x && { side group _x == east } && {
+    alive _x && { side group _x == east } && { !(_x getVariable ["CQ_outpost", false]) } && { !(_x getVariable ["CQ_noCap", false]) } && {
         private _v = vehicle _x;
         _v == _x || { (assignedVehicleRole _x) param [0, ""] == "cargo" }
     }

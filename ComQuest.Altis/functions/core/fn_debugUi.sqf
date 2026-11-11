@@ -54,90 +54,101 @@ uiNamespace setVariable ["CQ_dbgSel", {
 
 // ---- right: categories of buttons
 // [label, command]; command "!x" = local action, else sent to the server
+// [category, [[subcategory, [[label, command], ...]], ...]]; command "!x" = local action, else sent to the server
 private _cats = [
-    ["ENEMY HQ (selected)", [
-        ["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"],
-        ["Kill commander", "killCmd"], ["Capture commander", "capture"], ["Destroy radio tower", "tower"],
-        ["Destroy depot", "depot"], ["Destroy fuel tanker", "tanker"], ["Destroy whole HQ", "destroy"], ["Reinforcement wave now", "wave"]
+    ["ENEMY HQ  (select one in the list)", [
+        ["Phase", [["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"], ["Reinforcement wave", "wave"]]],
+        ["Objectives", [["Kill commander", "killCmd"], ["Capture commander", "capture"], ["Hack radio tower", "hack"], ["Destroy radio tower", "tower"],
+                        ["Destroy depot", "depot"], ["Destroy fuel tanker", "tanker"], ["Destroy whole HQ", "destroy"]]],
+        ["Go there", [["Teleport near HQ", "tpHq"], ["Teleport to radio tower", "tpTower"]]]
     ]],
-    ["CARRIER & ENEMY FORCES", [
-        ["Landing now", "root"], ["Supply flight now", "flight"], ["Carrier -1 HQ", "carrierMinus"],
-        ["Carrier full", "carrierFull"], ["Kill all enemies", "killAll"], ["Full power (4 full squads)", "!fullPower"]
+    ["ENEMY FORCES", [
+        ["Carrier", [["Landing now", "root"], ["Supply flight now", "flight"], ["Carrier -1 HQ", "carrierMinus"], ["Carrier full", "carrierFull"]]],
+        ["Forces", [["Kill all enemies", "killAll"], ["Full power", "!fullPower"]]]
     ]],
-    ["STORY & RADIO", [
-        ["Next act", "actNext"], ["SITREP now", "sitrep"], ["Reset speech budget", "storyReset"]
+    ["EVENTS", [
+        ["Crash", [["Trigger crash", "crash"], ["Retrieve (timer out)", "crashOut"], ["Decrypt now", "decrypt"], ["Teleport to crash", "tpCrash"]]],
+        ["Outpost", [["Build", "opBuild"], ["Jammer off", "opJam"], ["Destroy", "opKill"], ["Teleport to outpost", "tpOp"]]]
     ]],
-    ["MAGPIE (UAV)", [
-        ["Report now", "magReport"], ["Launch missing drones", "magLaunch"], ["Shoot down drones", "magKill"]
+    ["FRIENDLY", [
+        ["MAGPIE", [["Report now", "magReport"], ["Launch missing", "magLaunch"], ["Shoot down drones", "magKill"]]],
+        ["Player", [["Heal me", "heal"], ["God mode", "!god"], ["Arsenal here", "!arsenal"], ["+500 squad points", "points"],
+                    ["Fix my vehicle", "vehFix"], ["Teleport to base", "tpBase"]]],
+        ["Base", [["Depot reset", "vehReset"], ["Rebuild defences", "defRebuild"]]]
     ]],
-    ["PLAYER", [
-        ["Heal me", "heal"], ["Teleport to base", "tpBase"], ["Teleport to selected HQ", "tpHq"],
-        ["God mode", "!god"], ["Arsenal here", "!arsenal"], ["+500 squad points", "points"],
-        ["Repair / refuel my vehicle", "vehFix"]
+    ["WORLD & STORY", [
+        ["Time, weather", [["+1 hour", "time1"], ["Noon", "noon"], ["Night", "night"], ["Clear weather", "clearWx"]]],
+        ["Story", [["Next act", "actNext"], ["SITREP now", "sitrep"], ["Reset speech budget", "storyReset"]]]
     ]],
-    ["BASE & WORLD", [
-        ["Depot: stock + cooldowns reset", "vehReset"], ["Rebuild base defences", "defRebuild"], ["+1 hour", "time1"],
-        ["Noon", "noon"], ["Night", "night"], ["Clear weather", "clearWx"]
-    ]],
-    ["MAP OVERLAY, LOGS & VIEW", [
-        ["Enemies on map", "!mapEnemy"], ["Friendlies on map", "!mapFriend"], ["HQ sites on map", "!mapHq"],
-        ["Show all enemy logs", "!logEnemy"], ["Show all friendly logs", "!logFriend"], ["FINAL PLAYER VIEW", "!playerView"]
+    ["VIEW & LOGS", [
+        ["Map", [["Enemies", "!mapEnemy"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"]]],
+        ["Logs, view", [["All enemy logs", "!logEnemy"], ["All friendly logs", "!logFriend"], ["FINAL PLAYER VIEW", "!playerView"]]]
     ]]
 ];
 private _rx = _X + 0.03 + _lw;
 private _rw = _W - (_rx - _X) - 0.015;
-private _cols = 3;
-private _bw = (_rw - (_cols - 1) * 0.008) / _cols;
+private _sw = _rw * 0.15;                              // subcategory label column
+private _cols = 4;
+private _bx = _rx + _sw;
+private _bw = (_rw - _sw - (_cols - 1) * 0.006) / _cols;
 private _y = _Y + _L * 1.3;
 private _toggles = [];
 {
-    _x params ["_cat", "_btns"];
+    _x params ["_cat", "_subs"];
     private _h = ["RscText", -1, [_rx, _y, _rw, _L * 0.8], _cat] call _mk;
     _h ctrlSetFont "PuristaMedium";
     _h ctrlSetTextColor (CQ_ui get "accent");
-    _y = _y + _L * 0.85;
+    (["RscText", -1, [_rx, _y + _L * 0.8, _rw, 0.002]] call _mk) ctrlSetBackgroundColor (CQ_ui get "accent");
+    _y = _y + _L * 0.9;
     {
-        _x params ["_label", "_cmd"];
-        private _c = _forEachIndex mod _cols;
-        if (_c == 0 && { _forEachIndex > 0 }) then { _y = _y + _L * 1.05 };
-        private _b = ["RscButton", -1, [_rx + _c * (_bw + 0.008), _y, _bw, _L * 0.95], _label] call _mk;
-        _b setVariable ["CQ_cmd", _cmd];
-        _b setVariable ["CQ_label", _label];
-        if ((_cmd select [0, 1]) == "!" && { _cmd != "!arsenal" }) then { _toggles pushBack _b };
-        _b ctrlAddEventHandler ["ButtonClick", {
-            params ["_ctrl"];
-            private _cmd = _ctrl getVariable ["CQ_cmd", ""];
-            switch (_cmd) do {
-                case "!mapEnemy": { CQ_dbgShowEnemy = !CQ_dbgShowEnemy };
-                case "!mapFriend": { CQ_dbgShowFriend = !CQ_dbgShowFriend };
-                case "!mapHq": { CQ_dbgShowHq = !CQ_dbgShowHq };
-                case "!fullPower": {
-                    private _on = !(missionNamespace getVariable ["CQ_testFullPower", false]);
-                    CQ_testFullPower = _on;        // label right away; the server applies it
-                    ["fullPower", [0, 1] select _on] remoteExec ["CQ_fnc_debugCmd", 2];
+        _x params ["_sub", "_btns"];
+        private _sl = ["RscText", -1, [_rx, _y, _sw, _L * 0.95], _sub] call _mk;
+        _sl ctrlSetTextColor (CQ_ui get "muted");
+        _sl ctrlSetFontHeight (_L * 0.7);
+        {
+            _x params ["_label", "_cmd"];
+            private _c = _forEachIndex mod _cols;
+            if (_c == 0 && { _forEachIndex > 0 }) then { _y = _y + _L * 1.02 };
+            private _b = ["RscButton", -1, [_bx + _c * (_bw + 0.006), _y, _bw, _L * 0.95], _label] call _mk;
+            _b setVariable ["CQ_cmd", _cmd];
+            _b setVariable ["CQ_label", _label];
+            if ((_cmd select [0, 1]) == "!" && { _cmd != "!arsenal" }) then { _toggles pushBack _b };
+            _b ctrlAddEventHandler ["ButtonClick", {
+                params ["_ctrl"];
+                private _cmd = _ctrl getVariable ["CQ_cmd", ""];
+                switch (_cmd) do {
+                    case "!mapEnemy": { CQ_dbgShowEnemy = !CQ_dbgShowEnemy };
+                    case "!mapFriend": { CQ_dbgShowFriend = !CQ_dbgShowFriend };
+                    case "!mapHq": { CQ_dbgShowHq = !CQ_dbgShowHq };
+                    case "!fullPower": {
+                        private _on = !(missionNamespace getVariable ["CQ_testFullPower", false]);
+                        CQ_testFullPower = _on;        // label right away; the server applies it
+                        ["fullPower", [0, 1] select _on] remoteExec ["CQ_fnc_debugCmd", 2];
+                    };
+                    case "!logEnemy";
+                    case "!logFriend": {
+                        private _f = +(missionNamespace getVariable ["CQ_myLogs", [false, false]]);
+                        private _i = [0, 1] select (_cmd == "!logFriend");
+                        _f set [_i, !(_f select _i)];
+                        CQ_myLogs = _f;                // label right away; the server answers with the same value
+                        ["logs", ([0, 1] select (_f select 0)) + ([0, 2] select (_f select 1))] remoteExec ["CQ_fnc_debugCmd", 2];
+                    };
+                    case "!god": { CQ_dbgGod = !CQ_dbgGod; player allowDamage !CQ_dbgGod; if (vehicle player != player) then { (vehicle player) allowDamage !CQ_dbgGod } };
+                    case "!playerView": {
+                        private _on = !(missionNamespace getVariable ["CQ_playerView", false]);
+                        if (_on) then { CQ_dbgShowEnemy = false; CQ_dbgShowFriend = false; CQ_dbgShowHq = false; CQ_dbgGod = false; player allowDamage true };
+                        CQ_playerView = _on;       // label right away; the server publishes the same value
+                        ["playerView", [0, 1] select _on] remoteExec ["CQ_fnc_debugCmd", 2];
+                    };
+                    case "!arsenal": { (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) closeDisplay 1; ["Open", true] spawn BIS_fnc_arsenal };
+                    default { [_cmd, call (uiNamespace getVariable "CQ_dbgSel")] remoteExec ["CQ_fnc_debugCmd", 2] };
                 };
-                case "!logEnemy";
-                case "!logFriend": {
-                    private _f = +(missionNamespace getVariable ["CQ_myLogs", [false, false]]);
-                    private _i = [0, 1] select (_cmd == "!logFriend");
-                    _f set [_i, !(_f select _i)];
-                    CQ_myLogs = _f;                // label right away; the server answers with the same value
-                    ["logs", ([0, 1] select (_f select 0)) + ([0, 2] select (_f select 1))] remoteExec ["CQ_fnc_debugCmd", 2];
-                };
-                case "!god": { CQ_dbgGod = !CQ_dbgGod; player allowDamage !CQ_dbgGod; if (vehicle player != player) then { (vehicle player) allowDamage !CQ_dbgGod } };
-                case "!playerView": {
-                    private _on = !(missionNamespace getVariable ["CQ_playerView", false]);
-                    if (_on) then { CQ_dbgShowEnemy = false; CQ_dbgShowFriend = false; CQ_dbgShowHq = false; CQ_dbgGod = false; player allowDamage true };
-                    CQ_playerView = _on;       // label right away; the server publishes the same value
-                    ["playerView", [0, 1] select _on] remoteExec ["CQ_fnc_debugCmd", 2];
-                };
-                case "!arsenal": { (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) closeDisplay 1; ["Open", true] spawn BIS_fnc_arsenal };
-                default { [_cmd, call (uiNamespace getVariable "CQ_dbgSel")] remoteExec ["CQ_fnc_debugCmd", 2] };
-            };
-            call (uiNamespace getVariable ["CQ_dbgToggleLabels", {}]);
-        }];
-    } forEach _btns;
-    _y = _y + _L * 1.25;
+                call (uiNamespace getVariable ["CQ_dbgToggleLabels", {}]);
+            }];
+        } forEach _btns;
+        _y = _y + _L * 1.1;
+    } forEach _subs;
+    _y = _y + _L * 0.3;
 } forEach _cats;
 uiNamespace setVariable ["CQ_dbgToggles", _toggles];
 uiNamespace setVariable ["CQ_dbgToggleLabels", {

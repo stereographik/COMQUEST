@@ -167,9 +167,14 @@ private _dRelays = ((CQ_mag select { (_x getOrDefault ["role", ""]) == "dormant"
 private _covered = {
     params ["_p"];
     (_p distance2D CQ_basePos) < CQ_netCoverBase
+    || { time < (missionNamespace getVariable ["CQ_decryptUntil", -1]) }       // crash event: decryption
     || { ((missionNamespace getVariable ["CQ_relays", []]) findIf { alive (_x select 1) && { _p distance2D (_x select 2) < CQ_netCoverRelay } }) > -1 }
     || { CQ_magDormantRelay && { (_dRelays findIf { _p distance2D _x < CQ_netCoverRelay }) > -1 } }
 };
+// corridor outpost (CQ_fnc_outpostTick): its jammer hides everything around it; a drone within
+// sensor range of it only learns that something is there (CQ_outpostState "spotted": the rough area)
+private _opJam = missionNamespace getVariable ["CQ_opJam", false];
+private _opPos = missionNamespace getVariable ["CQ_opJamPos", []];
 if (time >= CQ_magDetectT) then {
     CQ_magDetectT = time + CQ_magDetectEvery;
     {
@@ -185,6 +190,11 @@ if (time >= CQ_magDetectT) then {
         {
             private _o = _x;
             if (!alive _o || { !(side _o in [east, resistance]) }) then { continue };
+            if (_o getVariable ["CQ_outpost", false] && { !isNil "CQ_outpostState" } && { !(CQ_outpostState get "spotted") } && { _o distance2D (CQ_outpostState get "pos") < 300 }) then {
+                CQ_outpostState set ["spotted", true];
+                ["MAGPIE: %1 picked up the corridor outpost (%2)", [_v getVariable ["CQ_magName", "a drone"], ["exact", "jammed: rough area only"] select _opJam]] call CQ_fnc_log;
+            };
+            if (_opJam && { _o distance2D _opPos < CQ_opJamRadius }) then { continue };      // jammed: nothing identified
             if !([_o] call _covered) then { continue };      // nGD: no data link out there, nothing identified
             private _k = hashValue _o;
             private _rec = CQ_magSeen getOrDefault [_k, []];
@@ -247,6 +257,10 @@ if (time >= CQ_magDetectT) then {
 private _aa = ((values CQ_magSeen) select {
     time - (_x select 2) < CQ_magMemory && { alive (_x select 0) } && { (typeOf (_x select 0)) in CQ_magAaClasses }
 }) apply { _x select 3 };
+// the corridor outpost's Titans, once it is spotted: kept clear of like a Tigris (rough area while jammed)
+if (!isNil "CQ_outpostState" && { CQ_outpostState get "spotted" } && { !(CQ_outpostState get "fallen") } && { ((CQ_outpostState get "aa") findIf { alive _x && { alive gunner _x } }) > -1 }) then {
+    _aa pushBack (missionNamespace getVariable ["CQ_opMarkPos", CQ_outpostState get "pos"]);
+};
 private _aaOk = { params ["_p"]; (_aa findIf { _x distance2D _p < CQ_magAaAvoid }) == -1 };
 private _aaPush = {
     params ["_p"];
