@@ -94,6 +94,24 @@ if (isNil "CQ_squadKeyBound") then {
     };
 };
 
+// Earplugs: one scroll menu entry + the End key, toggles the game sound down to CQ_earplugLevel
+CQ_fnc_earplugs = {
+    CQ_earplugs = !(missionNamespace getVariable ["CQ_earplugs", false]);
+    1 fadeSound ([1, CQ_earplugLevel] select CQ_earplugs);
+    hintSilent (["Earplugs out", "Earplugs in"] select CQ_earplugs);
+};
+player addAction ["<t color='#918C3B'>Earplugs (End)</t>", { call CQ_fnc_earplugs }, nil, 0.59, false, true, "", "_this == _target"];
+if (isNil "CQ_earplugKeyBound") then {
+    CQ_earplugKeyBound = true;
+    [] spawn {
+        waitUntil { sleep 0.5; !isNull (findDisplay 46) };
+        (findDisplay 46) displayAddEventHandler ["KeyDown", {
+            params ["", "_key", "_shift", "_ctrl", "_alt"];
+            if (_key == 207 && { !_shift && !_ctrl && !_alt }) then { call CQ_fnc_earplugs; true } else { false };   // 207 = End
+        }];
+    };
+};
+
 // Debug panel: F3 (also in the U menu), for debug missions, the host and logged-in admins
 if (isNil "CQ_debugKeyBound") then {
     CQ_debugKeyBound = true;

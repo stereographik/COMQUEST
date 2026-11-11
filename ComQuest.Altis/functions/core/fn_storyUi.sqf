@@ -29,9 +29,9 @@ CQ_uiLoop = true;
     private _y0 = safezoneY + 250 * _py;
     private _w = CQ_uiCardWidth * _px;
     private _ic = 44 * _px;                     // icon column
-    private _gap = (6 + 2 * CQ_uiCardBorder) * _py;
-    private _bpx = CQ_uiCardBorder * _px;
-    private _bpy = CQ_uiCardBorder * _py;
+    private _bMax = CQ_uiCardBorder;
+    { _bMax = _bMax max _y } forEach CQ_uiCardBorderPx;
+    private _gap = (6 + 2 * _bMax) * _py;
     private _pad = 8 * _px;
     private _icons = createHashMapFromArray [
         ["CROSSROAD", "\A3\ui_f\data\igui\cfg\simpleTasks\types\radio_ca.paa"],
@@ -47,7 +47,10 @@ CQ_uiLoop = true;
             _x params ["_ctrls", "_h", "_t", ["_extra", []]];
             _ctrls params ["_bg", "_iconBg", "_icon", "_txtC", ["_frm", controlNull]];
             // border: a slightly bigger plate behind the card (CQ_uiCardBorder px all round)
-            if (!isNull _frm) then { _frm ctrlSetPosition [_x0 - _bpx, _y - _bpy, _w + 2 * _bpx, _h + 2 * _bpy] };
+            if (!isNull _frm) then {
+                private _b = _frm getVariable ["CQ_b", CQ_uiCardBorder];    // per speaker (CQ_uiCardBorderPx)
+                _frm ctrlSetPosition [_x0 - _b * _px, _y - _b * _py, _w + 2 * _b * _px, _h + 2 * _b * _py];
+            };
             _bg ctrlSetPosition [_x0, _y, _w, _h];
             _iconBg ctrlSetPosition [_x0, _y, _ic, _h];
             _icon ctrlSetPosition [_x0 + (_ic - 26 * _px) / 2, _y + (_h - 26 * _py) / 2, 26 * _px, 26 * _py];
@@ -68,6 +71,7 @@ CQ_uiLoop = true;
             (CQ_uiQueue deleteAt 0) params ["_who", "_txt", ["_photos", []]];
             private _frm = _d ctrlCreate ["RscText", -1];        // border plate, created first: drawn under the card
             _frm ctrlSetBackgroundColor (CQ_uiCardBorderColors getOrDefault [_who, CQ_uiCardBorderColor]);   // colour per speaker
+            _frm setVariable ["CQ_b", CQ_uiCardBorderPx getOrDefault [_who, CQ_uiCardBorder]];         // thickness per speaker
             private _bg = _d ctrlCreate ["RscText", -1];
             _bg ctrlSetBackgroundColor (CQ_ui get "panel");
             private _iconBg = _d ctrlCreate ["RscText", -1];

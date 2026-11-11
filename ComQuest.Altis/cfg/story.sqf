@@ -402,6 +402,8 @@ CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4"
 CQ_uiCardWidth = 620;                     // notification card width in pixels (message text block ~560 px)
 CQ_uiCardBorder = 3;                      // notification card border thickness in pixels (0 = none)
 CQ_uiCardBorderColor = [0.569, 0.549, 0.231, 1];   // olive #918C3B (default)
+// border thickness per speaker, in pixels (others: CQ_uiCardBorder)
+CQ_uiCardBorderPx = createHashMapFromArray [["COMHAT", 6]];
 // border colour per speaker
 CQ_uiCardBorderColors = createHashMapFromArray [
     ["COMHAT", [0.85, 0.68, 0.21, 1]],       // gold
