@@ -39,6 +39,14 @@ _v allowDamage false;            // no damage while it settles on the pad
 clearWeaponCargoGlobal _v; clearMagazineCargoGlobal _v; clearItemCargoGlobal _v; clearBackpackCargoGlobal _v;
 _v addItemCargoGlobal ["FirstAidKit", 4];
 _v setVariable ["CQ_depotGroup", _g, true];
+// who destroyed it (MPKilled fires on every machine, also when a player drives it): logged by CQ_fnc_depotTick
+_v addMPEventHandler ["MPKilled", {
+    params ["_v", "_k", "_i"];
+    if (!isServer) exitWith {};
+    private _who = if (isNull _i) then { _k } else { _i };
+    _v setVariable ["CQ_killedBy", if (isNull _who || { _who == _v }) then { "crash or unknown" } else {
+        format ["%1 (%2, %3)", [name _who, typeOf _who] select (_who isKindOf "AllVehicles" && { !(_who isKindOf "CAManBase") }), typeOf vehicle _who, side group _who] }];
+}];
 CQ_depotVehs pushBack _v;
 publicVariable "CQ_depotVehs";
 

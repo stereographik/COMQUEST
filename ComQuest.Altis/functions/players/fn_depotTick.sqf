@@ -3,7 +3,7 @@
     Keeps the depot stock (CQ_depotVehs) honest:
       - destroyed: out of the list at once, so its slot is back in stock immediately
       - abandoned: empty and still for CQ_vehAbandonDelay s with no player within 200 m:
-        deleted, back in stock
+        deleted, back in stock (never a squad respawn vehicle)
     Polling on purpose: a vehicle driven by a player is local to him, where a Killed event
     handler added by the server would not fire.
 */
@@ -15,7 +15,8 @@ private _keep = [];
     if (isNull _v) then { continue };
     private _name = getText (configOf _v >> "displayName");
     if (!alive _v) then {
-        ["Depot: %1 destroyed, slot back in stock", [typeOf _v]] call CQ_fnc_log;
+        ["Depot: %1 destroyed at %2 by %3%4, slot back in stock", [typeOf _v, mapGridPosition _v, _v getVariable ["CQ_killedBy", "unknown"],
+            ["", " (it was a squad respawn vehicle)"] select ((allGroups findIf { (_x getVariable ["CQ_rspVeh", objNull]) == _v }) > -1)]] call CQ_fnc_log;
         if (time - (missionNamespace getVariable ["CQ_baseVehLostT", -1e6]) > 300) then {
             CQ_baseVehLostT = time;
             ["baseVehLost", [_name]] call CQ_fnc_say;
@@ -23,7 +24,8 @@ private _keep = [];
         continue;
     };
     private _empty = ({ alive _x } count crew _v) == 0;
-    if (_empty && { speed _v < 1 }) then {
+    private _rsp = (allGroups findIf { (_x getVariable ["CQ_rspVeh", objNull]) == _v }) > -1;   // a squad respawn vehicle is never "abandoned"
+    if (_empty && { speed _v < 1 } && { !_rsp }) then {
         private _t = _v getVariable ["CQ_abandonT", -1];
         if (_t < 0) then { _v setVariable ["CQ_abandonT", serverTime]; _t = serverTime };
         if (serverTime - _t >= CQ_vehAbandonDelay && { (allPlayers findIf { alive _x && { _x distance _v < 200 } }) == -1 }) then {
