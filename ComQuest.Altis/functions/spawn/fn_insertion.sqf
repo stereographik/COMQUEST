@@ -311,7 +311,20 @@ while { true } do {
 
         // debug FULL HQ NOW: the troops are put on the ground at once, the helis stay in the sky
         if (_state in ["fly", "landing"] && { _hq getOrDefault ["dbgDrop", false] }) then {
-            { unassignVehicle _x; moveOut _x; _x setPosATL ((_e get "lz") getPos [3 + random 12, random 360]) } forEach _pass;
+            {
+                // out of the heli (still high in the sky), then set down once really out: protected meanwhile
+                _x allowDamage false;
+                unassignVehicle _x;
+                moveOut _x;
+                [_x, (_e get "lz") getPos [3 + random 12, random 360]] spawn {
+                    params ["_u", "_p"];
+                    waitUntil { sleep 0.1; vehicle _u == _u };
+                    _u setVelocity [0, 0, 0];
+                    _u setPosATL [_p select 0, _p select 1, 0];
+                    sleep 3;
+                    _u allowDamage true;
+                };
+            } forEach _pass;
             ["Enemy troops landed", format ["HQ #%1: %2 soldiers put on the ground (debug)", _id, count _pass]] call CQ_fnc_announce;
             _e set ["state", "unloaded"];
             _e set ["t", time];
