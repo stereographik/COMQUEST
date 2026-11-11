@@ -20,7 +20,7 @@ private _hqs = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
 private _site = [];
 for "_try" from 1 to 8 do {
     private _c = if (_hqs isEqualTo []) then {
-        CQ_basePos getPos [4000 + random 3000, random 360]
+        CQ_basePos getPos [4000 + random 3000, (CQ_basePos getDir CQ_carrierPos) - 30 + random 60]   // no HQ: toward the carrier
     } else {
         private _h = selectRandom _hqs;
         private _f = (CQ_crashSiteFrac select 0) + random ((CQ_crashSiteFrac select 1) - (CQ_crashSiteFrac select 0));
