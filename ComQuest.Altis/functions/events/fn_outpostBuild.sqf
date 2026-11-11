@@ -90,7 +90,19 @@ private _jcls = CQ_opJammer param [CQ_opJammer findIf { isClass (configFile >> "
 private _jammer = [_jcls, 16, 90] call _put;
 private _aa = []; private _hmg = [];
 { _aa pushBack ([_x, 13, [-40, 40] select _forEachIndex] call _put) } forEach CQ_opAA;
-{ _hmg pushBack ([_x, 13, [-140, 140] select _forEachIndex] call _put) } forEach CQ_opHMG;
+// HMG towers (as the HQ's): a cargo patrol tower with the raised HMG on its platform
+{
+    private _a = [-140, 140] select _forEachIndex;
+    private _tw = [CQ_opTower, 18, _a, _f + _a + 180] call _put;
+    private _bp = _tw buildingPos 0;
+    if (_bp isEqualTo [0, 0, 0]) then { _bp = (getPosATL _tw) vectorAdd [0, 0, 4.3] };
+    private _h = createVehicle [_x, [0, 0, 0], [], 0, "CAN_COLLIDE"];
+    _h setDir (_f + _a);
+    _h setPosATL _bp;
+    _h allowDamage false;
+    _objs pushBack _h;
+    _hmg pushBack _h;
+} forEach CQ_opHMG;
 private _mortar = [CQ_opMortar, 11, 180] call _put;
 {
     private _s = _x;
@@ -98,7 +110,7 @@ private _mortar = [CQ_opMortar, 11, 180] call _put;
     private _bag = createVehicle ["Land_BagFence_Round_F", [_bp select 0, _bp select 1, 0], [], 0, "CAN_COLLIDE"];
     _bag setDir (_f + 180);
     _objs pushBack _bag;
-} forEach (_aa + _hmg);
+} forEach _aa;
 [_objs] spawn { params ["_o"]; sleep 8; { if (!isNull _x) then { _x allowDamage true } } forEach _o };
 
 // crews: every static, CSAT gunners
