@@ -29,15 +29,18 @@ private _now = time;
             if (_hq get "secureStarted") then { ["fallenEarly", [[_id] call CQ_fnc_objName]] call CQ_fnc_say };
         };
     } else {
+        // nGD: an HQ falls when its radio tower is down and its commander is killed or captured;
+        // the other objectives (AA, HMG, depot, tanker) are optional tactical targets
         private _cmdGone = !alive (_hq get "commander") || { _hq get "cmdCaptured" };
-        private _standing = (_hq get "installations") select { alive _x };
-        if (_cmdGone && { _standing isEqualTo [] }) then {
+        if (_cmdGone && { !alive (_hq get "radio") }) then {
             _hq set ["state", "Destroyed"];
             { deleteMarker _x } forEach (_hq get "markers");
             if (_hq get "buildDone") then { [_hq] call CQ_fnc_hqNerves };
     [_hq] call CQ_fnc_hqStatusMarker;
             ["Enemy HQ destroyed", format ["HQ #%1 has fallen. Enemy AI left on the map: %2", _id, call CQ_fnc_enemyCount]] call CQ_fnc_announce;
             ["fallen", [[_id] call CQ_fnc_objName, { (_x get "state") in CQ_activeStates } count (values CQ_hqs)]] call CQ_fnc_say;
+            if (isNil "CQ_relays") then { CQ_relays = [] };
+            call CQ_fnc_relaySites;          // an engineer can now put a relay on its tower site
         };
     };
     _state = _hq get "state";

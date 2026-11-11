@@ -38,6 +38,16 @@ player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [
 call CQ_fnc_heatMapClient;   // MAGPIE heatmap under everything else
 call CQ_fnc_rangeMapClient;   // range map: ground the seen enemies can fire on (drawn by magMapClient)
 call CQ_fnc_magMapClient;    // MAGPIE drones + enemies in their sight, live on the map
+// version, branch and build stamp, tiny at the bottom right of the screen
+[] spawn {
+    disableSerialization;
+    waitUntil { sleep 0.5; !isNull findDisplay 46 };
+    private _c = (findDisplay 46) ctrlCreate ["RscStructuredText", -1];
+    _c ctrlSetPosition [safeZoneX + safeZoneW - 0.52, safeZoneY + safeZoneH - 0.03, 0.51, 0.028];
+    _c ctrlSetStructuredText parseText format ["<t align='right' font='PuristaLight' size='0.7' color='#73F2F1DF'>ComQuest %1  ·  %2  ·  %3</t>",
+        CQ_version, missionNamespace getVariable ["CQ_branch", "?"], CQ_build];
+    _c ctrlCommit 0;
+};
 call CQ_fnc_debugMap;
 
 ["Welcome to ComQuest (%1)", [roleDescription player]] call CQ_fnc_log;

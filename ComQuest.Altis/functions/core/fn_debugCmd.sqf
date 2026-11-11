@@ -93,6 +93,10 @@ if (_needHq && { count _hq == 0 }) then {
             private _r = _hq getOrDefault ["depot", objNull];
             if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: depot destroyed", _id] } else { _msg = format ["HQ #%1 has no depot", _id] };
         };
+        case "tanker": {
+            private _r = _hq getOrDefault ["tanker", objNull];
+            if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: fuel tanker destroyed (%2 fuel points lost)", _id, round (_hq getOrDefault ["fuel", 0])] } else { _msg = format ["HQ #%1 has no fuel tanker", _id] };
+        };
         case "wave": { _hq set ["nextWaveT", time]; _msg = format ["HQ #%1: reinforcement wave requested (state %2)", _id, _hq get "state"] };
         case "carrierMinus": {
             CQ_carrierLeft = ((missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs]) - 1) max 0;
@@ -164,6 +168,13 @@ if (_needHq && { count _hq == 0 }) then {
         case "defRebuild": {
             { [_x] call CQ_fnc_baseDefBuild; _x set ["lostT", -1] } forEach CQ_baseDefs;
             _msg = format ["%1 base defence spots rebuilt", count CQ_baseDefs];
+        };
+        case "fullPower": {
+            CQ_testFullPower = _id == 1;
+            publicVariable "CQ_testFullPower";
+            CQ_netNext = 0;
+            call CQ_fnc_netScale;
+            _msg = format ["full power %1: enemy factor %2, infantry cap %3, wave every %4 s", ["OFF", "ON"] select CQ_testFullPower, CQ_scale, CQ_maxInfantry, CQ_waveInterval];
         };
         case "logs": {
             if (isNil "CQ_logSubs") then { CQ_logSubs = createHashMap };

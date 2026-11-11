@@ -21,8 +21,8 @@ private _srcId = _src get "id";
 _src set ["lastContactT", time];
 // No radio tower (not built yet, or destroyed): nobody hears the call. Only the HQ's own
 // forces and the squads close to the contact respond.
-private _srcRadio = alive (_src get "radio");
-private _noRadioWhy = ["radio tower destroyed", "no radio tower yet"] select (isNull (_src get "radio"));
+private _srcRadio = alive (_src get "radio") && { !(_src getOrDefault ["isolated", false]) };   // nGD: isolated = cut off, nobody hears it
+private _noRadioWhy = if (alive (_src get "radio")) then { "cut off from the network" } else { ["radio tower destroyed", "no radio tower yet"] select (isNull (_src get "radio")) };
 
 ["Enemy contact reported", format ["HQ #%1 spotted friendlies near grid %2, calling reinforcements", _srcId, mapGridPosition _pos]] call CQ_fnc_announce;
 ["contact", [format ["HQ%1", _srcId]], _src] call CQ_fnc_say;   // arg only keys the cooldown
@@ -65,7 +65,7 @@ _air = [_air, [], { (_x get "veh") distance2D _pos }, "ASCEND"] call BIS_fnc_sor
 
     private _d = (_hq get "pos") distance2D _pos;
     private _linked = _srcRadio
-        && { alive (_hq get "radio") }
+        && { alive (_hq get "radio") } && { !(_hq getOrDefault ["isolated", false]) }
         && { (_hq get "pos") distance2D (_src get "pos") <= CQ_commsRange };
     if (!_isSrc && !_linked) then { continue };
 
@@ -152,7 +152,7 @@ if (_srcRadio && { (_src get "parent") == -1 } && { time - (_src get "rootDefend
                 if (count _r == 0) exitWith {};
             };
             (_r getOrDefault ["parent", -1]) == _srcId
-        } && { alive (_x get "radio") }
+        } && { alive (_x get "radio") } && { !(_x getOrDefault ["isolated", false]) }
     };
     {
         private _kid = _x;

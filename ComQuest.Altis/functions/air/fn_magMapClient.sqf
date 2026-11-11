@@ -48,6 +48,20 @@ CQ_echoes = [];
                 _map drawRectangle [[_x0, _y0], _h, _h, 0, [_cr, _cg, _cb, _a min 0.6], "#(rgb,8,8,3)color(1,1,1,1)"];
             } forEach (missionNamespace getVariable ["CQ_rangeAgg", createHashMap]);
         };
+        // nGD: the enemy radio network (CQ_fnc_netTick) and our MAGPIE coverage
+        (missionNamespace getVariable ["CQ_netPub", []]) params [["_nNodes", []], ["_nLinks", []], ["_nTrunk", []], ["_nRelays", []], ["_nBase", 0]];
+        if (_nBase > 0) then { _map drawEllipse [CQ_basePos, _nBase, _nBase, 0, [0.25, 0.55, 1, 0.35], ""] };
+        {
+            _x params ["_rp", "_rr"];
+            _map drawEllipse [_rp, _rr, _rr, 0, [0.25, 0.55, 1, 0.35], ""];
+            _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], _rp, 22, 22, 0, "RELAY", 1, 0.035, "PuristaMedium", "right"];
+        } forEach _nRelays;
+        {
+            _x params ["_a", "_b", "_ok"];
+            _map drawLine [_a, _b, [[0.45, 0.45, 0.42, 0.8], CQ_echoColor + [0.9]] select _ok];
+        } forEach _nLinks;
+        // trunk: a stub from each root HQ toward the carrier (its position stays unknown)
+        { _x params ["_a", "_b"]; _map drawLine [_a, _a getPos [CQ_netTrunkStub, _a getDir _b], CQ_echoColor + [0.9]] } forEach _nTrunk;
         private _now = time;
         {
             _x params ["_p", "_t"];

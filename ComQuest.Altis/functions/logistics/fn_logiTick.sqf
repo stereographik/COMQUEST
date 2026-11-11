@@ -99,8 +99,10 @@ if (_hubId != CQ_hubId) then {
     } forEach (_home get "vehicles");
 } forEach _active;
 
+// nGD: a main HQ cut off from the network neither receives flights nor sends trucks
+private _hubIso = _hubId > -1 && { _hub getOrDefault ["isolated", false] };
 // ---- 4 delivery requests (trucks leave the main HQ)
-if (_hubId > -1) then {
+if (_hubId > -1 && { !_hubIso }) then {
     private _linked = [_hub, _built] call CQ_fnc_hqLinks;
     {
         private _h = _x;
@@ -138,7 +140,7 @@ if (_hubId > -1 && { !CQ_ammoFlightActive } && { (_hub get "stock") < CQ_hubLowS
     CQ_nextAmmoFlight = time + CQ_hubLowFlightDelay;
     ["Main HQ #%1 low on ammo (%2): supply flight brought forward", [_hubId, round (_hub get "stock")]] call CQ_fnc_log;
 };
-if (_hubId > -1 && { !CQ_ammoFlightActive } && { CQ_nextAmmoFlight > 0 } && { time >= CQ_nextAmmoFlight }) then {
+if (_hubId > -1 && { !_hubIso } && { !CQ_ammoFlightActive } && { CQ_nextAmmoFlight > 0 } && { time >= CQ_nextAmmoFlight }) then {
     CQ_nextAmmoFlight = time + CQ_ammoFlightInterval;
     CQ_ammoFlightActive = true;
     [_hub] spawn CQ_fnc_ammoFlight;

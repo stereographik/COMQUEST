@@ -15,7 +15,9 @@
       before MAGPIE's first contact the two Sentinels fly their search circuits instead
                                 (CQ_magPatrol: shared trunk from the base, then a loop flown over and over)
     Report (every CQ_magReportEvery s, if anything is new): a MAGPIE card with the count of new
-    identifications by kind and the HQ news, and dots on every player's map for 10 s.
+    identifications by kind and the HQ news, and dots on every player's map for 10 s. Every
+    new vehicle identified is photographed by the drone (CQ_fnc_magPhoto) and the report shows
+    the photos in a grid under the summary.
 */
 if (time < CQ_magNext) exitWith {};
 CQ_magNext = time + 5;
@@ -40,10 +42,21 @@ private _cat = {
 // start point); the next one spawns once it is airborne (> 30 m). A lost drone comes back after
 // CQ_magRespawn s.
 CQ_magRunway params ["_rp", "_hdg"];
-private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault ["pad", -1]) > -1 }) };
+private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault ["pad", -1]) > -1 || { (_this getOrDefault ["role", ""]) == "dormant" } }) };
 {
     private _m = _x;
     private _v = _m get "veh";
+    if (!isNull _v && { !alive _v } && { !(_m get "lost") } && { (_m getOrDefault ["role", ""]) == "dormant" }) then {
+        // a woken dormant Darter: no respawn on the field, the nearest point left replaces it (CQ_fnc_magDormant)
+        _m set ["lost", true];
+        _m set ["phase", "none"];
+        _m set ["due", 1e12];
+        CQ_magDormantDead pushBack [getPosATL _v, time];
+        CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
+        publicVariable "CQ_magVehs";
+        ["MAGPIE: %1 lost at %2, a dormant point nearby replaces it in %3 s", [_m get "name", mapGridPosition _v, CQ_magDormantReplace]] call CQ_fnc_log;
+    };
+    if ((_m getOrDefault ["role", ""]) == "dormant") then { if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 }; continue };
     if (!isNull _v && { !alive _v } && { !(_m get "lost") }) then {
         _m set ["lost", true];
         _m set ["phase", "none"];
@@ -147,6 +160,16 @@ private _flying = CQ_mag select { alive (_x get "veh") && { (_x getOrDefault ["p
 // identified with a chance per pass (CQ_magSpotChance by kind): it takes several passes to see
 // everything. A contact already identified is tracked while it stays in line of sight: those
 // are the live enemy positions every player sees on the map (CQ_magVisible).
+// nGD: MAGPIE only identifies what lies inside her coverage: CQ_netCoverBase around the base and
+// CQ_netCoverRelay around every relay we hold (CQ_fnc_relayDeploy). Drones still fly anywhere.
+// woken dormant Darters in the air relay the data link too
+private _dRelays = ((CQ_mag select { (_x getOrDefault ["role", ""]) == "dormant" && { alive (_x get "veh") } && { ((getPosATL (_x get "veh")) select 2) > 40 } }) apply { getPosATL (_x get "veh") });
+private _covered = {
+    params ["_p"];
+    (_p distance2D CQ_basePos) < CQ_netCoverBase
+    || { ((missionNamespace getVariable ["CQ_relays", []]) findIf { alive (_x select 1) && { _p distance2D (_x select 2) < CQ_netCoverRelay } }) > -1 }
+    || { CQ_magDormantRelay && { (_dRelays findIf { _p distance2D _x < CQ_netCoverRelay }) > -1 } }
+};
 if (time >= CQ_magDetectT) then {
     CQ_magDetectT = time + CQ_magDetectEvery;
     {
@@ -162,6 +185,7 @@ if (time >= CQ_magDetectT) then {
         {
             private _o = _x;
             if (!alive _o || { !(side _o in [east, resistance]) }) then { continue };
+            if !([_o] call _covered) then { continue };      // nGD: no data link out there, nothing identified
             private _k = hashValue _o;
             private _rec = CQ_magSeen getOrDefault [_k, []];
             if (_rec isNotEqualTo [] && { time - (_rec select 2) < CQ_magDetectEvery - 1 }) then { continue };   // another drone just saw it
@@ -171,7 +195,13 @@ if (time >= CQ_magDetectT) then {
             if (_rec isEqualTo []) then {
                 private _c = [_o] call _cat;
                 if (random 1 > ([CQ_magSpotChance getOrDefault [_c, 0.3], CQ_huntSpotChance] select (_o getVariable ["CQ_hunter", false]))) then { continue };   // not identified this pass
-                CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false]];
+                CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false, [round getDir _o, round speed _o]]];   // + heading and speed when identified
+                // a new vehicle: the drone takes its photo (rendered on every client) for the next report
+                if (CQ_magPhotos && { count CQ_magPhotoPend < CQ_magPhotoMax }) then {
+                    CQ_magPhotoN = CQ_magPhotoN + 1;
+                    CQ_magPhotoPend pushBack [CQ_magPhotoN, typeOf _o];
+                    ["shot", [CQ_magPhotoN, _o, _v]] remoteExec ["CQ_fnc_magPhoto", 0];
+                };
                 private _fp = missionNamespace getVariable ["CQ_magFocus", []];
                 // the focus (and the end of the Sentinels' search circuits) needs a contact on the
                 // ground: an insertion helicopter passing by is not a position to encircle
@@ -195,6 +225,7 @@ if (time >= CQ_magDetectT) then {
             private _h = _y;
             if !((_h get "state") in CQ_activeStates) then { continue };
             if ((_h get "pos") distance2D _v > _r) then { continue };
+            if !([_h get "pos"] call _covered) then { continue };
             if !(terrainIntersectASL [_eye, AGLToASL ((_h get "pos") vectorAdd [0, 0, 3])]) then {
                 private _id = _h get "id";
                 if !(_id in CQ_magHqSeen) then { CQ_magHqSeen set [_id, -2] };   // -2: seen, not reported yet
@@ -286,7 +317,7 @@ private _focusOn = _focus isNotEqualTo [];
 if (_focusOn) then {
     _focus = [_focus select 0, _focus select 1, 0];
     CQ_magRingR = (CQ_magRingStart - CQ_magRingShrink * (time - CQ_magFocusT) / 60) max CQ_magRingMin;
-    private _ring = [_flying, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;
+    private _ring = [_flying select { !(_x getOrDefault ["flee", false]) }, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;   // a woken Darter getting away joins once clear
     private _n = count _ring;
     private _step = 360 / (_n max 1);
     private _rot = (time - CQ_magFocusT) * CQ_magRingTurn;
@@ -403,7 +434,7 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
 {
     private _m = _x;
     private _v = _m get "veh";
-    if (_focusOn || { (_m getOrDefault ["role", ""]) == "chain" }) then { continue };
+    if (_focusOn || { (_m getOrDefault ["role", ""]) == "chain" } || { _m getOrDefault ["flee", false] }) then { continue };
     if (((getPosATL _v) select 2) < 40 && { time - (_m get "planT") < 300 }) then { continue };
     private _tgt = _m get "target";
     private _arrived = (_m get "explore") && { _tgt isNotEqualTo [] } && { _v distance2D _tgt < 500 };
@@ -413,6 +444,28 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     // search circuit until the first contact: trunk + loop the first time, then the loop again
     // each time it is flown (a replacement drone starts from the trunk again)
     private _route = CQ_magPatrol getOrDefault [_m get "name", []];
+    // TEST OVERRIDE (CQ_testMagDirect, test branches only): before the first contact the two
+    // Sentinels skip their search circuits and loiter straight over the first enemy HQ site
+    // (known as soon as the insertion is planned)
+    if (CQ_testMagDirect && { _route isNotEqualTo [] } && { isNil "CQ_magContactMade" }) then {
+        private _hs = [(values CQ_hqs) select { (_x get "state") in CQ_activeStates }, [], { _x get "id" }] call BIS_fnc_sortBy;
+        if (_hs isEqualTo []) exitWith {};
+        private _h = _hs select 0;
+        if ((_m getOrDefault ["directHq", -1]) == (_h get "id") && { (_m getOrDefault ["patrolVeh", objNull]) == _v }) exitWith { _route = [] };
+        _m set ["directHq", _h get "id"];
+        _m set ["patrolVeh", _v];
+        _m set ["planT", time];
+        [_gr] call CQ_fnc_clearWaypoints;
+        _v flyInHeight (_m get "alt");
+        private _wp = _gr addWaypoint [_h get "pos", 0];
+        _wp setWaypointType "LOITER";
+        _wp setWaypointLoiterType "CIRCLE_L";
+        _wp setWaypointLoiterRadius (800 * (_m get "scale"));
+        _gr setCurrentWaypoint _wp;
+        _route = [];
+        ["MAGPIE TEST: %1 flies straight to %2 at %3", [_m get "name", [_h get "id"] call CQ_fnc_objName, mapGridPosition (_h get "pos")]] call CQ_fnc_log;
+    };
+    if (CQ_testMagDirect && { _route isEqualTo [] } && { isNil "CQ_magContactMade" } && { (_m getOrDefault ["directHq", -1]) > -1 }) then { continue };
     if (_route isNotEqualTo [] && { isNil "CQ_magContactMade" }) then {
         private _on = (_m getOrDefault ["patrolVeh", objNull]) == _v;
         if (_on && { currentWaypoint _gr < count waypoints _gr }) then { continue };
@@ -562,6 +615,31 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
             { if ((_row select _forEachIndex) > 0) then { _cells = _cells + format ["   <img size='0.75' image='%1'/> %2", _x, _row select _forEachIndex] } } forEach _ico;
             _rich = _rich + format ["<br/><t size='0.78' font='PuristaMedium' color='#A6A381'>%1</t><t size='0.8' color='#F2F1DF'>%2</t>", _x, _cells];
         } forEach _order;
+        // every enemy vehicle identified and still alive, by GROUND / AIR:
+        // [type] [hdg:heading when spotted] [spd:speed when spotted]
+        private _vehs = (values CQ_magSeen) select { alive (_x select 0) && { (_x select 4) != "inf" } };
+        _vehs = [_vehs, [], { _x select 1 }] call BIS_fnc_sortBy;
+        {
+            _x params ["_title", "_list"];
+            if (_list isEqualTo []) then { continue };
+            _rich = _rich + format ["<br/><t size='0.72' font='PuristaMedium' color='#918C3B'>%1 (%2)</t>", _title, count _list];
+            {
+                (_x param [6, [0, 0]]) params ["_hdg", "_spd"];
+                private _h = str (_hdg mod 360);
+                while { count _h < 3 } do { _h = "0" + _h };     // 3 digits: 045
+                _rich = _rich + format ["<br/><t size='0.72' color='#F2F1DF'>[%1] </t><t size='0.72' color='#A6A381'>[hdg:%2] [spd:%3 km/h]</t>",
+                    getText (configOf (_x select 0) >> "displayName"), _h, _spd];
+            } forEach (_list select [0, CQ_magReportVehMax]);
+            if (count _list > CQ_magReportVehMax) then { _rich = _rich + format ["<br/><t size='0.7' color='#A6A381'>+%1 more</t>", count _list - CQ_magReportVehMax] };
+        } forEach [
+            ["GROUND", _vehs select { (_x select 4) != "air" }],
+            ["AIR", _vehs select { (_x select 4) == "air" }]
+        ];
+        // photo grid under the report: "<ph>id:class,...</ph>" (read by CQ_fnc_storyClient)
+        if (CQ_magPhotoPend isNotEqualTo []) then {
+            _rich = _rich + "<ph>" + ((CQ_magPhotoPend apply { format ["%1:%2", _x select 0, _x select 1] }) joinString ",") + "</ph>";
+            CQ_magPhotoPend = [];
+        };
         ["magReport", [_rich]] call CQ_fnc_say;
         ["MAGPIE report: %1 new identifications, %2 HQ news, areas %3", [_new, count _news, _order]] call CQ_fnc_log;
     };

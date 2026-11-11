@@ -44,12 +44,14 @@ _pm setMarkerColor "ColorWEST";
 _pm setMarkerText "UAV field";
 ["MAGPIE: Darter field at %1 (%2 pads)", [mapGridPosition _pad, count CQ_magPads]] call CQ_fnc_log;
 
+// land clear of the coast facing the carrier group (allaroundisland: toward the carrier, any side)
 CQ_magEastOk = {
     params ["_p"];
     !surfaceIsWater _p && {
+        private _b = _p getDir CQ_carrierPos;
         private _ok = true;
-        { if (surfaceIsWater (_p getPos [_x select 0, _x select 1])) exitWith { _ok = false } }
-            forEach [[CQ_magCoastGap * 0.5, 90], [CQ_magCoastGap, 90], [CQ_magCoastGap, 45], [CQ_magCoastGap, 135]];
+        { if (surfaceIsWater (_p getPos [_x select 0, _b + (_x select 1)])) exitWith { _ok = false } }
+            forEach [[CQ_magCoastGap * 0.5, 0], [CQ_magCoastGap, 0], [CQ_magCoastGap, -45], [CQ_magCoastGap, 45]];
         _ok
     }
 };
@@ -62,6 +64,8 @@ for "_x" from _x0 + CQ_magCell / 2 to _x1 step CQ_magCell do {
     };
 };
 CQ_magSeen = createHashMap;               // hashValue -> [object, firstT, lastT, pos, cat, reported]
+CQ_magPhotoN = 0;                        // photos taken (CQ_fnc_magPhoto); the slot is CQ_magPhotoN mod CQ_magPhotoSlots
+CQ_magPhotoPend = [];                    // [id, class] photographed since the last report
 CQ_magHqSeen = createHashMap;             // hq id -> last reported stage (-1 = site only)
 CQ_magReportT = time;
 CQ_magDetectT = 0;
@@ -94,6 +98,20 @@ private _pi = 0;
 CQ_magChainX = (CQ_basePos select 0) + 1000;      // the line starts just east of the base
 CQ_magChainT = time;
 CQ_magChainSlots = [];
+// dormant Darters (CQ_fnc_magDormant): grid cell [i, j] -> point, on land, clear of the base
+CQ_magDormantPts = createHashMap;
+if (CQ_magDormant) then {
+    private _g = CQ_magDormantGap;
+    for "_i" from 0 to floor (worldSize / _g) - 1 do {
+        for "_j" from 0 to floor (worldSize / _g) - 1 do {
+            private _p = [(_i + 0.5) * _g, (_j + 0.5) * _g, 0];
+            if (!surfaceIsWater _p && { _p distance2D CQ_basePos > CQ_magDormantBase }) then { CQ_magDormantPts set [[_i, _j], _p] };
+        };
+    };
+};
+CQ_magDormantN = 0;                       // woken so far (names)
+CQ_magDormantDead = [];                   // [death position, time] waiting for a replacement
+["MAGPIE: %1 dormant Darter points (every %2 m)", [count CQ_magDormantPts, CQ_magDormantGap]] call CQ_fnc_log;
 CQ_magFocus = [];             // encirclement focus (first contact)
 CQ_magFocusT = 0;
 CQ_magFocusNew = 0;

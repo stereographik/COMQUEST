@@ -95,7 +95,7 @@ while { true } do {
         _lbl ctrlSetText "NO SIGNAL";
         _lbl ctrlSetTextColor (CQ_ui get "dim");
         _edge ctrlSetBackgroundColor [0.478, 0.471, 0.376, 0.9];
-        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='1.05' color='#7A7860'>--</t>";
+        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='0.6' color='#7A7860'>--</t>";
         { _x ctrlSetBackgroundColor _offColor } forEach _bars;
     } else {
         _disp = _disp + (_target - _disp) * 0.4;          // smooth the needle
@@ -106,7 +106,7 @@ while { true } do {
         _lbl ctrlSetTextColor (CQ_ui get "muted");
         _edge ctrlSetBackgroundColor (CQ_ui get "accent");
         _pct ctrlSetStructuredText parseText format [
-            "<t align='right'><t font='PuristaSemibold' size='1.25' color='#F2F1DF'>%1</t><t font='PuristaLight' size='0.85' color='#A6A381'> %%</t></t>", _v];
+            "<t align='right'><t font='PuristaSemibold' size='0.65' color='#F2F1DF'>%1</t><t font='PuristaLight' size='0.5' color='#A6A381'> %%</t></t>", _v];
         private _n = round (_disp * _segs);
         {
             _x ctrlSetBackgroundColor ([_offColor, [0.949, 0.945, 0.875, 0.55 + 0.45 * (_forEachIndex / _segs)]] select (_forEachIndex < _n));

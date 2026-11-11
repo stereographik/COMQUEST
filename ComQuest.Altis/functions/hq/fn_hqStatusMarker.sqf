@@ -46,8 +46,9 @@ private _ma = format ["cq_ao_%1", _id];
 private _mh = format ["cq_aoh_%1", _id];
 if (markerType _m == "") then {
     createMarker [_m, _hq get "pos"];
-    _m setMarkerType "mil_dot";
-    _m setMarkerSize [0.6, 0.6];
+    // CQ_hqMarkerType (a CfgMarkers class); a plain dot if that class does not exist
+    _m setMarkerType ([CQ_hqMarkerType, "mil_dot"] select !(isClass (configFile >> "CfgMarkers" >> CQ_hqMarkerType)));
+    _m setMarkerSize [0.8, 0.8];
     _m setMarkerColor "ColorOPFOR";
     createMarker [_mh, _hq get "pos"];
     _mh setMarkerShape "ELLIPSE";
@@ -72,6 +73,11 @@ private _txt = if ((_hq get "state") == "Destroyed") then {
         default { "alive" };
     };
     private _all = _hq get "installations";
-    format ["[%1][%2][%3/%4 objectives]", [_id] call CQ_fnc_objName, _cmd, { !alive _x } count _all, count _all]
+    // nGD: what the network does to it
+    private _tags = "";
+    if (_hq getOrDefault ["isolated", false]) then { _tags = _tags + "[isolated]" };
+    if ((_hq getOrDefault ["stock", 0]) < CQ_lowStockShare * (_hq getOrDefault ["cap", 1])) then { _tags = _tags + "[low ammo]" };
+    format ["[%1][%2][tower %5][%3/%4 objectives]%6", [_id] call CQ_fnc_objName, _cmd, { !alive _x } count _all, count _all,
+        ["down", "up"] select (alive (_hq get "radio")), _tags]
 };
 if (markerText _m != _txt) then { _m setMarkerText _txt };

@@ -20,6 +20,16 @@ private _rep = {
     };
     _out + _s
 };
+// MAGPIE's photo grid: "<ph>id:class,...</ph>" taken out of the text, given to the card
+private _photos = [];
+private _pa = _txt find "<ph>";
+if (_pa > -1) then {
+    private _pb = _txt find "</ph>";
+    _photos = ((_txt select [_pa + 4, _pb - _pa - 4]) splitString ",") apply { private _p = _x splitString ":"; [parseNumber (_p select 0), _p select 1] };
+    _txt = (_txt select [0, _pa]) + (_txt select [_pb + 5]);
+    // only targets still alive: no wrecks, no bodies (CQ_fnc_magPhoto keeps who was photographed)
+    _photos = _photos select { alive ((((missionNamespace getVariable ["CQ_magPhotoInfo", createHashMap]) getOrDefault [_x select 0, []]) param [0, objNull])) };
+};
 private _rich = _txt find "<rich>" > -1;
 _txt = [_txt, "<rich>", ""] call _rep;
 private _plain = _txt;
@@ -40,7 +50,10 @@ switch (_who) do {
         if ((toUpper _txt) find "FLASH" == 0) then { playSound "CQ_alarm" };
     };
     case "MAGPIE": {
-        ["MAGPIE", [_txt, "<rich>" + _txt] select _rich] call CQ_fnc_storyUi;
+        ["MAGPIE", [_txt, "<rich>" + _txt] select _rich, _photos] call CQ_fnc_storyUi;
+        if (_photos isNotEqualTo []) then {
+            _plain = _plain + " | Photos: " + ((_photos apply { getText (configFile >> "CfgVehicles" >> (_x select 1) >> "displayName") }) joinString ", ");
+        };
         systemChat format ["MAGPIE: %1", _plain];
     };
     default {

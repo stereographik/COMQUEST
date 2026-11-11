@@ -29,7 +29,7 @@ CQ_story = createHashMapFromArray [
     // [] - mission start (act 1 opening)
     ["carrier", [
         [["CROSSROAD", "CROSSROAD to all stations. CSAT has parked a carrier group offshore. They didn't come for the beaches."], ["CROSSROAD", "Get your stuff up fast, soldiers. Pick your class and kit at the base, grab a ride, and find out where they intend to land."]],
-        [["CROSSROAD", "CROSSROAD to all stations. Enemy carrier group off the east coast. They intend to stay. We intend otherwise."], ["CROSSROAD", "Get your stuff up fast, soldiers. Pick your class and kit at the base, grab a ride, and find out where they intend to land."]],
+        [["CROSSROAD", "CROSSROAD to all stations. Enemy carrier group off our coast. They intend to stay. We intend otherwise."], ["CROSSROAD", "Get your stuff up fast, soldiers. Pick your class and kit at the base, grab a ride, and find out where they intend to land."]],
         [["CROSSROAD", "Good morning, all stations. CSAT has brought a carrier and a great deal of confidence. Let's relieve them of both."], ["CROSSROAD", "Get your stuff up fast, soldiers. Pick your class and kit at the base, grab a ride, and find out where they intend to land."]]
     ]],
     // [] - act openings
@@ -276,6 +276,27 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "FLASH. Enemy force inbound on the base. All units return and defend."]],
         [["CROSSROAD", "FLASH, FLASH. The airfield is under threat. Everyone back. Now."]]
     ]],
+    // nGD [hq name] - an enemy HQ cut off from its network
+    ["netCut", [
+        [["CROSSROAD", "%1 just went dark on their net. No reinforcements will reach it. Finish it."]],
+        [["CROSSROAD", "That's %1 cut off. They're on their own now. They'll dig in, so go in heavy."]],
+        [["CROSSROAD", "Network break at %1. Nothing gets in, nothing gets out. Good work."]]
+    ]],
+    // nGD [hq name, km] - a built HQ close enough to assault the base
+    ["baseThreat", [
+        [["CROSSROAD", "%1 sits %2 km from the airfield. Close enough to come for me. Deal with it, or get ready to defend."]],
+        [["CROSSROAD", "Heads up: %1 is %2 km out. Their next wave comes here, not west."]]
+    ]],
+    // nGD [hq name] - a relay put up on a fallen HQ's tower site
+    ["relayUp", [
+        [["CROSSROAD", "Relay up on the ruins of %1. MAGPIE has eyes out there now."]],
+        [["CROSSROAD", "Good. %1 is our node now. Expect them to want it back."]]
+    ]],
+    // nGD [] - a friendly relay destroyed
+    ["relayLost", [
+        [["CROSSROAD", "We've lost a relay. MAGPIE is blind out there again."]],
+        [["CROSSROAD", "Relay down. Somebody go put it back."]]
+    ]],
     // [] - assault infantry storming the command post
     ["breach", [
         [["CROSSROAD", "They're at my door. I'd appreciate company. Armed company."]],
@@ -376,9 +397,22 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "fallen", "fallenEarly"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly"];
 
+CQ_uiCardX = 19;                          // px from the screen's left edge to the card (its border then lines up with the vehicle panel, ~16 px)
+CQ_uiCardY = 300;                         // px from the top: first card (below the map screen's menu)
+CQ_uiCardTime = createHashMapFromArray [["MAGPIE", 6]];   // s on screen per speaker (others: 6 s + length of the text)
 CQ_uiCardWidth = 620;                     // notification card width in pixels (message text block ~560 px)
+CQ_uiCardBorder = 3;                      // notification card border thickness in pixels (0 = none)
+CQ_uiCardBorderColor = [0.569, 0.549, 0.231, 1];   // olive #918C3B (default)
+// border thickness per speaker, in pixels (others: CQ_uiCardBorder)
+CQ_uiCardBorderPx = createHashMapFromArray [["COMHAT", 6]];
+// border colour per speaker
+CQ_uiCardBorderColors = createHashMapFromArray [
+    ["COMHAT", [0.85, 0.68, 0.21, 1]],       // gold
+    ["CROSSROAD", [0.78, 0.78, 0.76, 1]],    // light grey
+    ["MAGPIE", [0.569, 0.549, 0.231, 1]]     // olive (as before)
+];
 CQ_uiCardMax = 5;                         // cards on screen at once (more wait in line)
 CQ_storyLineGap = 4;          // seconds between two lines of the same message
 CQ_storyCooldown = 20;        // the same message about the same objective at most every 20 s

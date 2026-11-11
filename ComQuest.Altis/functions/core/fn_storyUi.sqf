@@ -5,14 +5,17 @@
     grey / white), docked on the left of the screen 50 px from the edge, the first card
     250 px from the top. A card is a horizontal block: speaker icon | speaker name + message.
     Several cards stack downward; when one expires the ones below slide up.
-    Settings: CQ_uiCardWidth (px), CQ_uiCardMax.
+    MAGPIE reports can carry photos ([[id, class], ...], CQ_fnc_magPhoto): a grid of 128 px
+    thumbnails (4 per row, vehicle name under each) under the text. Without Picture-in-Picture
+    the vehicle's editor preview is shown instead.
+    Settings: CQ_uiCardWidth (px), CQ_uiCardMax, CQ_magPhotoPx.
 */
-params ["_who", "_txt"];
+params ["_who", "_txt", ["_photos", []]];
 if (!hasInterface) exitWith {};
 disableSerialization;
 
 if (isNil "CQ_uiCards") then { CQ_uiCards = [] };
-CQ_uiQueue = (missionNamespace getVariable ["CQ_uiQueue", []]) + [[_who, _txt]];
+CQ_uiQueue = (missionNamespace getVariable ["CQ_uiQueue", []]) + [[_who, _txt, _photos]];
 if (!isNil "CQ_uiLoop") exitWith {};
 CQ_uiLoop = true;
 
@@ -22,11 +25,13 @@ CQ_uiLoop = true;
     private _d = findDisplay 46;
     private _px = pixelW;
     private _py = pixelH;
-    private _x0 = safezoneX + 50 * _px;
-    private _y0 = safezoneY + 250 * _py;
+    private _x0 = safezoneX + CQ_uiCardX * _px;
+    private _y0 = safezoneY + CQ_uiCardY * _py;
     private _w = CQ_uiCardWidth * _px;
     private _ic = 44 * _px;                     // icon column
-    private _gap = 6 * _py;
+    private _bMax = CQ_uiCardBorder;
+    { _bMax = _bMax max _y } forEach CQ_uiCardBorderPx;
+    private _gap = (6 + 2 * _bMax) * _py;
     private _pad = 8 * _px;
     private _icons = createHashMapFromArray [
         ["CROSSROAD", "\A3\ui_f\data\igui\cfg\simpleTasks\types\radio_ca.paa"],
@@ -39,12 +44,22 @@ CQ_uiLoop = true;
     private _layout = {
         private _y = _y0;
         {
-            _x params ["_ctrls", "_h"];
-            _ctrls params ["_bg", "_iconBg", "_icon", "_txtC"];
+            _x params ["_ctrls", "_h", "_t", ["_extra", []]];
+            _ctrls params ["_bg", "_iconBg", "_icon", "_txtC", ["_frm", controlNull]];
+            // border: a slightly bigger plate behind the card (CQ_uiCardBorder px all round)
+            if (!isNull _frm) then {
+                private _b = _frm getVariable ["CQ_b", CQ_uiCardBorder];    // per speaker (CQ_uiCardBorderPx)
+                _frm ctrlSetPosition [_x0 - _b * _px, _y - _b * _py, _w + 2 * _b * _px, _h + 2 * _b * _py];
+            };
             _bg ctrlSetPosition [_x0, _y, _w, _h];
             _iconBg ctrlSetPosition [_x0, _y, _ic, _h];
             _icon ctrlSetPosition [_x0 + (_ic - 26 * _px) / 2, _y + (_h - 26 * _py) / 2, 26 * _px, 26 * _py];
             _txtC ctrlSetPosition [_x0 + _ic + _pad, _y + 5 * _py, _w - _ic - 2 * _pad, _h - 8 * _py];
+            {
+                _x params ["_c", "_dx", "_dy", "_cw", "_chh"];
+                _c ctrlSetPosition [_x0 + _ic + _pad + _dx, _y + _dy, _cw, _chh];
+                _c ctrlCommit 0.2;
+            } forEach _extra;
             { _x ctrlCommit 0.2 } forEach _ctrls;
             _y = _y + _h + _gap;
         } forEach CQ_uiCards;
@@ -53,7 +68,10 @@ CQ_uiLoop = true;
     while { true } do {
         // new messages -> new cards at the bottom of the stack
         while { (CQ_uiQueue isNotEqualTo []) && { count CQ_uiCards < CQ_uiCardMax } } do {
-            (CQ_uiQueue deleteAt 0) params ["_who", "_txt"];
+            (CQ_uiQueue deleteAt 0) params ["_who", "_txt", ["_photos", []]];
+            private _frm = _d ctrlCreate ["RscText", -1];        // border plate, created first: drawn under the card
+            _frm ctrlSetBackgroundColor (CQ_uiCardBorderColors getOrDefault [_who, CQ_uiCardBorderColor]);   // colour per speaker
+            _frm setVariable ["CQ_b", CQ_uiCardBorderPx getOrDefault [_who, CQ_uiCardBorder]];         // thickness per speaker
             private _bg = _d ctrlCreate ["RscText", -1];
             _bg ctrlSetBackgroundColor (CQ_ui get "panel");
             private _iconBg = _d ctrlCreate ["RscText", -1];
@@ -69,21 +87,86 @@ CQ_uiLoop = true;
             _txtC ctrlSetPosition [_x0 + _ic + _pad, -1, _w - _ic - 2 * _pad, 0.05];
             _txtC ctrlCommit 0;
             private _h = ((ctrlTextHeight _txtC) + 12 * _py) max (40 * _py);
-            private _ctrls = [_bg, _iconBg, _icon, _txtC];
-            { _x ctrlSetFade 1; _x ctrlCommit 0 } forEach _ctrls;
-            CQ_uiCards pushBack [_ctrls, _h, time + 6 + 0.05 * count _txt];
+            // photo grid under the text: [ctrl, dx, dy, w, h] relative to the text block
+            private _extra = [];
+            private _cams = [];
+            private _pics = [];
+            if (_photos isNotEqualTo []) then {
+                private _cell = CQ_magPhotoPx;                 // square thumbnail
+                private _cw = round (_cell * CQ_magPhotoAspect); // the picture at the camera's own ratio, centre-cropped to the square
+                private _g = 4 + 2 * CQ_magPhotoBorder;   // room for the frames between two thumbnails
+                // as many per row as the text block holds (card width - icon column - padding), frames included
+                private _cols = floor ((CQ_uiCardWidth - 44 - 16 - 2 * CQ_magPhotoBorder + _g) / (_cell + _g)) max 1;
+                private _lab = 13;
+                private _top = _h - 4 * _py + CQ_magPhotoBorder * _py;
+                {
+                    _x params ["_id", "_cls"];
+                    private _cx = (CQ_magPhotoBorder + (_forEachIndex mod _cols) * (_cell + _g)) * _px;
+                    private _cy = _top + (floor (_forEachIndex / _cols)) * (_cell + _lab + _g) * _py;
+                    private _frame = _d ctrlCreate ["RscText", -1];
+                    _frame ctrlSetBackgroundColor (CQ_ui get "inset");
+                    // square window (a controls group clips its children) over the wider picture
+                    private _win = _d ctrlCreate ["RscControlsGroupNoScrollbars", -1];
+                    private _pic = _d ctrlCreate ["RscPicture", -1, _win];
+                    _pic ctrlSetPosition [-((_cw - _cell) / 2) * _px, 0, _cw * _px, _cell * _py];
+                    _pic ctrlCommit 0;
+                    private _cfg = configFile >> "CfgVehicles" >> _cls;
+                    private _prev = getText (_cfg >> "editorPreview");
+                    // the drone's view of the target (CQ_fnc_magPhoto camera, started once the map is
+                    // closed: no 3D rendering on the map); the editor preview meanwhile / without PiP
+                    private _still = [_prev, getText (_cfg >> "picture")] select (_prev == "");
+                    _pic ctrlSetText _still;
+                    _pics pushBack [_pic, _id, _still, objNull, [_frame, _win, _name]];
+                    private _name = _d ctrlCreate ["RscText", -1];
+                    _name ctrlSetText getText (_cfg >> "displayName");
+                    _name ctrlSetFont "PuristaLight";
+                    _name ctrlSetFontHeight (11 * _py);
+                    _name ctrlSetTextColor [0.95, 0.94, 0.87, 1];
+                    private _bw = CQ_magPhotoBorder;
+                    _extra pushBack [_frame, _cx - _bw * _px, _cy - _bw * _py, (_cell + 2 * _bw) * _px, (_cell + 2 * _bw) * _py];
+                    _extra pushBack [_win, _cx, _cy, _cell * _px, _cell * _py];
+                    _extra pushBack [_name, _cx, _cy + _cell * _py, _cell * _px, _lab * _py];
+                } forEach _photos;
+                private _rows = ceil ((count _photos) / _cols);
+                _h = _top + _rows * (_cell + _lab + _g) * _py + 4 * _py;
+            };
+            private _ctrls = [_bg, _iconBg, _icon, _txtC, _frm];
+            { _x ctrlSetFade 1; _x ctrlCommit 0 } forEach (_ctrls + (_extra apply { _x select 0 }));
+            CQ_uiCards pushBack [_ctrls, _h, time + (CQ_uiCardTime getOrDefault [_who, 6 + 0.05 * count _txt + 3 * count _photos]), _extra, _cams, _pics];   // fixed time per speaker, else by length
             call _layout;
-            { _x ctrlSetFade 0; _x ctrlCommit 0.25 } forEach _ctrls;
+            { _x ctrlSetFade 0; _x ctrlCommit 0.25 } forEach (_ctrls + (_extra apply { _x select 0 }));
         };
         // expired cards fade out, the rest slide up
         private _old = CQ_uiCards select { time > (_x select 2) };
         if (_old isNotEqualTo []) then {
-            { { _x ctrlSetFade 1; _x ctrlCommit 0.4 } forEach (_x select 0) } forEach _old;
+            { { _x ctrlSetFade 1; _x ctrlCommit 0.4 } forEach ((_x select 0) + ((_x param [3, []]) apply { _x select 0 })) } forEach _old;
             sleep 0.4;
-            { { ctrlDelete _x } forEach (_x select 0) } forEach _old;
+            { { ctrlDelete _x } forEach ((_x select 0) + ((_x param [3, []]) apply { _x select 0 })) } forEach _old;
+            { { ["stop", [_x select 3]] call CQ_fnc_magPhoto } forEach (_x param [5, []]) } forEach _old;     // photo cameras off with their card
             CQ_uiCards = CQ_uiCards - _old;
             call _layout;
         };
+        // photos: the camera starts once the map is closed; the preview shows while it is open
+        {
+            {
+                _x params ["_pc", "_pid", "_still", "_cam", ["_cell", []]];
+                // the target died while the card is up: its thumbnail goes (no wrecks)
+                if (!alive (((missionNamespace getVariable ["CQ_magPhotoInfo", createHashMap]) getOrDefault [_pid, []]) param [0, objNull])) then {
+                    if (!isNull _cam) then { ["stop", [_cam]] call CQ_fnc_magPhoto; _x set [3, objNull] };
+                    for "_ci" from 0 to (count _cell) - 1 do {
+                        private _cc = _cell select _ci;
+                        if (!isNil "_cc" && { !isNull _cc } && { ctrlFade _cc < 1 }) then { _cc ctrlSetFade 1; _cc ctrlCommit 0.3 };
+                    };
+                    continue;
+                };
+                if (isNull _cam && { !visibleMap }) then {
+                    _cam = ["start", [_pid]] call CQ_fnc_magPhoto;
+                    _x set [3, _cam];
+                };
+                private _want = if (!isNull _cam && { !visibleMap }) then { format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _pid mod CQ_magPhotoSlots, CQ_magPhotoPx] } else { _still };
+                if (ctrlText _pc != _want) then { _pc ctrlSetText _want };
+            } forEach (_x param [5, []]);
+        } forEach CQ_uiCards;
         sleep 0.25;
     };
 };

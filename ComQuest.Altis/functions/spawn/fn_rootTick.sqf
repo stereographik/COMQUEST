@@ -1,7 +1,7 @@
 /*
     CQ_fnc_rootTick  (server, director task)
-    Launches a root insertion every CQ_rootInterval s, CQ_maxRoots in total, landing on the
-    east coast 1.5-4 km inland near the carrier (debug option: 1st one at the runway end). To launch the next one now, run on the
+    Launches a root insertion every CQ_rootInterval s, CQ_maxRoots in total: the first one at the
+    carrier site's paired first HQ position, the next ones 1.5-4 km inland from the coast facing the carrier (debug option: 1st one at the runway end). To launch the next one now, run on the
     server from the debug console:  CQ_nextRootTime = 0;
 */
 if (CQ_rootsLaunched >= CQ_maxRoots) exitWith {};
@@ -24,19 +24,24 @@ private _site = if (CQ_rootsLaunched == 0 && CQ_debugFirstAtRunway) then {
     ["TEST OVERRIDE: first HQ site %1 (%2 m from the base)", [if (_s isEqualTo []) then { "none" } else { mapGridPosition _s }, if (_s isEqualTo []) then { -1 } else { round (_s distance2D CQ_basePos) }]] call CQ_fnc_log;
     _s
 } else {
-    // The very first HQ is a beachhead: straight west of the carrier, close to the shore
-    private _first = CQ_rootsLaunched == 0;
-    private _inland = [CQ_rootInland, CQ_firstRootInland] select _first;
-    // A coast point near the carrier's, then inland (westward cone) from it
-    private _y = if (_first) then { CQ_coastPoint select 1 } else { (CQ_coastPoint select 1) - CQ_rootCoastSpread + random (2 * CQ_rootCoastSpread) };
-    private _coast = [];
-    for "_x" from (worldSize - 200) to (worldSize * 0.5) step -100 do {
-        if (getTerrainHeightASL [_x, _y] > 0) exitWith { _coast = [_x, _y, 0] };
-    };
-    if (_coast isEqualTo []) then { _coast = CQ_coastPoint };
-    private _s = [_coast, _inland select 0, _inland select 1, true, 40, _coast getDir CQ_basePos, [60, 75] select _first] call CQ_fnc_findSite;
-    if (_first && { _s isNotEqualTo [] }) then { ["Beachhead site %1 m from the shore (grid %2)", [round (_s distance2D _coast), mapGridPosition _s]] call CQ_fnc_log };
-    _s
+    // allaroundisland: the very first HQ goes to the carrier site's paired position (CQ_firstHqPos);
+    // later ones land inland from a coast point near the carrier's line to the island
+    if (CQ_rootsLaunched == 0) then {
+        private _s = [CQ_firstHqPos, CQ_firstRootInland select 0, CQ_firstRootInland select 1, true, 40] call CQ_fnc_findSite;
+        if (_s isEqualTo []) then { _s = [CQ_firstHqPos, 0, 1200, true, 40] call CQ_fnc_findSite };
+        if (_s isNotEqualTo []) then { ["Beachhead site %1 m from the planned first HQ position (grid %2)", [round (_s distance2D CQ_firstHqPos), mapGridPosition _s]] call CQ_fnc_log };
+        _s
+    } else {
+        private _dir = CQ_carrierPos getDir CQ_coastPoint;
+        private _start = CQ_carrierPos getPos [random (2 * CQ_rootCoastSpread) - CQ_rootCoastSpread, _dir + 90];
+        private _coast = [];
+        for "_d" from 0 to 12000 step 100 do {
+            private _p = _start getPos [_d, _dir];
+            if (getTerrainHeightASL _p > 0) exitWith { _coast = [_p select 0, _p select 1, 0] };
+        };
+        if (_coast isEqualTo []) then { _coast = CQ_coastPoint };
+        [_coast, CQ_rootInland select 0, CQ_rootInland select 1, true, 40, _coast getDir CQ_basePos, 60] call CQ_fnc_findSite
+    }
 } };
 
 if (_site isEqualTo []) exitWith {

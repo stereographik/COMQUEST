@@ -3,10 +3,23 @@
 */
 ["ComQuest server init (milestone 3: HQ network + ammo logistics)"] call CQ_fnc_log;
 
+// Start at dawn: CQ_startAfterSunrise minutes after the sun rises on Altis at the mission date
+// (BIS_fnc_sunriseSunsetTime: real sunrise for this date and latitude); the server's date is
+// synced to every player
+if (CQ_startAtDawn) then {
+    private _sun = (date call BIS_fnc_sunriseSunsetTime) select 0;
+    if (_sun >= 0) then {
+        private _t = _sun + CQ_startAfterSunrise / 60;
+        date params ["_yy", "_mo", "_dd"];
+        setDate [_yy, _mo, _dd, floor _t, round ((_t % 1) * 60)];
+        ["Start at dawn: sunrise %1, mission starts %2", [[_sun, "HH:MM"] call BIS_fnc_timeToString, [_t, "HH:MM"] call BIS_fnc_timeToString]] call CQ_fnc_log;
+    };
+};
+
 enableDynamicSimulationSystem true;   // AI far from players stops simulating (used from milestone 2)
 
 call CQ_fnc_baseSetup;
-call CQ_fnc_carrierSetup;           // CSAT carrier off the east coast: every insertion starts there
+call CQ_fnc_carrierSetup;           // CSAT carrier at one of the sites around Altis: every insertion starts there
 
 // Vehicle depots: no vehicle at start, players request them (CQ_fnc_depotSpawn)
 CQ_depotVehs = [];
@@ -84,9 +97,12 @@ addMissionEventHandler ["EntityKilled", {
     ["engineer"] spawn CQ_fnc_specialTeam;
     ["groupWatch", CQ_fnc_groupWatch] call CQ_fnc_directorAddTask;
     ["assault", CQ_fnc_assaultTick] call CQ_fnc_directorAddTask;
+    ["weather", CQ_fnc_weatherTick] call CQ_fnc_directorAddTask;
+    ["net", CQ_fnc_netTick] call CQ_fnc_directorAddTask;
     call CQ_fnc_statsInit;
     call CQ_fnc_magInit;
     ["magpie", CQ_fnc_magTick] call CQ_fnc_directorAddTask;
+    ["magDormant", CQ_fnc_magDormant] call CQ_fnc_directorAddTask;
     ["tigris", CQ_fnc_tigrisTick] call CQ_fnc_directorAddTask;
     ["heatmap", CQ_fnc_heatTick] call CQ_fnc_directorAddTask;
     CQ_act = 1;

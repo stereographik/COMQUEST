@@ -126,6 +126,7 @@ class CfgFunctions
             class clearWaypoints {};
             class aliveCount {};
             class debugMap {};
+            class weatherTick {};
             class debugCmd {};
             class debugUi {};
             class uiStyle {};
@@ -153,6 +154,10 @@ class CfgFunctions
             class callReinf {};
             class hqSplit {};
             class assaultTick {};
+            class netTick {};
+            class netScale {};
+            class relaySites {};
+            class relayDeploy {};
             class hqTick {};
             class hqStatusMarker {};
             class hqNerves {};
@@ -194,6 +199,8 @@ class CfgFunctions
             file = "functions\air";
             class magInit {};
             class magTick {};
+            class magDormant {};
+            class magPhoto {};
             class magMarks {};
             class magMapClient {};
             class rangeMapClient {};
@@ -258,6 +265,7 @@ class CfgFunctions
             class setClass {};
             class basicKit {};
             class classKit {};
+            class arsenalOpen {};
             class adrenalineSurge {};
             class intro {};
             class applyTraits {};

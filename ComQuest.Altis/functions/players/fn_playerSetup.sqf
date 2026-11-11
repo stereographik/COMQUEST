@@ -76,6 +76,11 @@ player addAction ["<t color='#918C3B'>Teleport to the squad respawn vehicle</t>"
     { ["use", player] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 5.5, true, true, "",
     "vehicle _this == _this && { _this distance2D CQ_musterPos < CQ_rspBaseRange } && { private _rv = group _this getVariable ['CQ_rspVeh', objNull]; alive _rv && { (_rv getVariable ['CQ_rspLeft', 0]) > 0 } }"];
 
+// nGD: engineers put a friendly relay on the tower site of a fallen enemy HQ (CQ_fnc_relayDeploy)
+player addAction ["<t color='#918C3B'>Deploy relay (take over the node)</t>",
+    { [player] remoteExec ["CQ_fnc_relayDeploy", 2] }, nil, 6, true, true, "",
+    "vehicle _this == _this && { (_this getVariable ['CQ_class', '']) == 'Engineer' } && { ((missionNamespace getVariable ['CQ_relaySites', []]) findIf { _this distance2D (_x select 1) < CQ_relayRange }) > -1 }"];
+
 // Hub menu (squads, class, stats, shop, debug): U key + one scroll menu entry (re-added on every respawn)
 player addAction ["<t color='#918C3B'>Menu (U)</t>", { [] spawn CQ_fnc_menuUi }, nil, 0.6, false, true, "", "_this == _target"];
 if (isNil "CQ_squadKeyBound") then {
@@ -85,6 +90,24 @@ if (isNil "CQ_squadKeyBound") then {
         (findDisplay 46) displayAddEventHandler ["KeyDown", {
             params ["", "_key", "_shift", "_ctrl", "_alt"];
             if (_key == 22 && { !_shift && !_ctrl && !_alt }) then { [] spawn CQ_fnc_menuUi; true } else { false };   // 22 = U: the hub menu
+        }];
+    };
+};
+
+// Earplugs: one scroll menu entry + the End key, toggles the game sound down to CQ_earplugLevel
+CQ_fnc_earplugs = {
+    CQ_earplugs = !(missionNamespace getVariable ["CQ_earplugs", false]);
+    1 fadeSound ([1, CQ_earplugLevel] select CQ_earplugs);
+    hintSilent (["Earplugs out", "Earplugs in"] select CQ_earplugs);
+};
+player addAction ["<t color='#918C3B'>Earplugs (End)</t>", { call CQ_fnc_earplugs }, nil, 0.59, false, true, "", "_this == _target"];
+if (isNil "CQ_earplugKeyBound") then {
+    CQ_earplugKeyBound = true;
+    [] spawn {
+        waitUntil { sleep 0.5; !isNull (findDisplay 46) };
+        (findDisplay 46) displayAddEventHandler ["KeyDown", {
+            params ["", "_key", "_shift", "_ctrl", "_alt"];
+            if (_key == 207 && { !_shift && !_ctrl && !_alt }) then { call CQ_fnc_earplugs; true } else { false };   // 207 = End
         }];
     };
 };
@@ -115,7 +138,7 @@ if (isNil "CQ_arsenalReady") then {
         {
             _x addAction [
                 format ["<t color='#918C3B'>Arsenal (%1 equipment)</t>", _x getVariable ["CQ_squadBox", ""]],
-                { ["Open", true] spawn BIS_fnc_arsenal },
+                { [] spawn CQ_fnc_arsenalOpen },
                 nil, 6, true, true, "", "true", 6
             ];
         } forEach CQ_arsenalBoxes;

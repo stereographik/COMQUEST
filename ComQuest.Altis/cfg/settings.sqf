@@ -4,11 +4,11 @@
     Loaded on every machine (server and clients) before init, by CQ_fnc_settings.
 */
 
-CQ_debug = true;                         // test settings (short stages, debug labels); the host starts with all logs in chat. Debug panel: host + logged-in admins only, always
+CQ_debug = false;                        // test settings (short stages, debug labels); the host starts with all logs in chat. Debug panel: host + logged-in admins only, always
 CQ_playerView = true;                    // final player view by default: no debug chat, cards or markers (toggle in the debug panel)
 CQ_debugCards = false;                   // debug phase messages as orange cards too (story lines use the cards)
 // log lines starting with one of these words go to "Show all friendly logs", every other one to "Show all enemy logs"
-CQ_logFriendlyRx = "(MAGPIE|Sentinel|Squads?|Base|Depot|Vehicle|Respawn|Shop|Score|Player|Muster|Grass|Friendly|Billboard|Redeploy|Repair|Runway|Supply crate|Auto-fill|Heatmap|Intro|Safe|Range|Kit|Story|STORY).*";
+CQ_logFriendlyRx = "(MAGPIE|Sentinel|Squads?|Base|Depot|Vehicle|Respawn|Shop|Score|Player|Muster|Grass|Friendly|Billboard|Redeploy|Repair|Runway|Supply crate|Auto-fill|Heatmap|Intro|Safe|Range|Kit|Story|STORY|Weather|Start).*";
 
 // --- Director -------------------------------------------------------------
 CQ_logVerbose = false;                   // true: also log every drone route / ring / Tigris lock (chatty .rpt)
@@ -60,29 +60,80 @@ CQ_vehAbandonDelay = 900;                // depot vehicle empty and still this l
 CQ_opNotifyGap = 20;                     // "Objectives updated, check map": at most one notification every 20 s
 CQ_rspCredits = 10;                      // squad respawn vehicle: teleports a vehicle gives before it stops being a respawn point
 CQ_rspBaseRange = 150;                   // ...teleports leave from within this of the base muster point
+CQ_earplugLevel = 0.08;                  // earplugs (End key / scroll menu): game sound volume while they are in
 CQ_depotMaxPerSquad = 2;                 // depot vehicles out at the same time per squad
 CQ_depotCooldown = [["light", 120], ["truck", 180], ["air", 300]];   // s before the same player can request again, by type taken
 CQ_depotRange = 10;                      // metres from the depot furniture to use it
 CQ_depotReturnRange = 30;                // a vehicle this close to a depot (or its pad) can be returned
 CQ_depotPadGap = 24;                     // depot helipad distance behind the repair point (away from the runway)
 
-// --- Enemy origin: a carrier off the east coast -------------------------------
+// --- Start time: always at dawn, in the first rays of the rising sun
+CQ_startAtDawn = true;
+CQ_startAfterSunrise = 6;                // minutes after sunrise (low golden light)
+
+// --- Weather (CQ_fnc_weatherTick). Delays and transitions in real seconds
+CQ_wxChangeEvery = [900, 1800];          // a change every 15-30 min
+CQ_wxBadChance = 0.10;                   // chance a change brings cloudy or cloudy + rain (else clear <-> partly cloudy)
+CQ_wxTransition = [60, 120];             // every transition takes 1-2 min (never under 1 min)
+CQ_wxRainMax = 240;                      // a rain never lasts more than 4 min (fade in + hold + fade out)
+CQ_wxRainLevel = 0.6;
+CQ_wxFogMorning = [0.2, 0.012, 0];       // light morning fog [density, decay, base]
+CQ_wxFogGoneHour = 11;                   // in-game hour when the fog has slowly faded out
+
+// --- Enemy origin: a carrier off the coast of Altis ----------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
-// >>> TEST OVERRIDE (branch m8-heatmap only, REMOVE before merging to main) <<<
+// >>> TEST OVERRIDE (test branches only, set to false before merging to main) <<<
 // carrier at the map's mid-height, first HQ next to Charkia (looked up by name)
 CQ_testOverride = false;
 CQ_testFirstHqTown = "Charkia";
 CQ_testFirstHqPos = [18300, 15300, 0];   // around Charkia: search centre and fallback
-CQ_coastBand = [9000, 23000];            // latitudes (y) where the carrier can appear
-CQ_carrierOffshore = 3000;               // metres out from the coast (deeper water if needed)
+// allaroundisland: 16 precomputed carrier sites all around the island (deep water ~2.7 km off the coast,
+// away from steep cliffs), each with its paired first HQ site (flat, open, near the shore, 3-5.5 km away).
+// Every game picks one at random, never the one of the previous game (remembered in the server profile).
+// [[carrier x, y], [first HQ x, y]]
+CQ_carrierSites = [
+    [[14612, 26312], [14288, 23012]],    // C1  north
+    [[17188, 25012], [16188, 21462]],    // C2
+    [[20488, 24238], [22662, 21512]],    // C3
+    [[23762, 27362], [23912, 23788]],    // C4
+    [[28312, 28562], [27862, 25288]],    // C5  north-east tip
+    [[27812, 17438], [25388, 19638]],    // C6  east
+    [[26538, 13862], [24112, 15688]],    // C7
+    [[25012, 11088], [21712, 11362]],    // C8
+    [[25988,  7188], [22462,  7162]],    // C9
+    [[21838,  2112], [21562,  5962]],    // C10 south-east
+    [[16588,  4238], [18762,  6362]],    // C11 south
+    [[11662,  3662], [ 9862,  8788]],    // C12
+    [[ 4862,  6762], [ 7288, 11338]],    // C13 south-west
+    [[ 1512, 15862], [ 4912, 14712]],    // C14 west
+    [[ 3962, 25312], [ 8912, 22938]],    // C15 north-west
+    [[11162, 25688], [11912, 22588]]     // C16 north
+];
+CQ_carrierSiteForce = -1;                // >= 0: always this site (index in CQ_carrierSites), for tests
 CQ_rootInland = [1500, 4000];            // root insertions land this far inland from a coast point
-CQ_firstRootInland = [600, 2000];        // the very first one is a beachhead: within 2 km of the shore, west of the carrier
-CQ_rootCoastSpread = 4000;               // ...picked up to this far north/south of the carrier's coast point
+CQ_firstRootInland = [0, 400];           // the very first one: within 400 m of the site's paired first HQ position
+CQ_rootCoastSpread = 4000;               // later ones: a coast point up to this far either side of the carrier's line to the island
 CQ_childSpread = 70;                     // child HQs head toward the player base, +/- this many degrees
 CQ_waveSpread = 60;                      // waves arrive from the carrier side of the HQ, +/- degrees
 CQ_assaultRange = 3500;                  // an HQ this close to the player base assaults it instead of colonising
 CQ_assaultSweep = 300;                   // assault groups this close to the command post sweep the base (COMBAT, SAD)
 CQ_assaultBreach = 70;                   // ...and this close, the infantry storms the command post after Colonel Harlan
+
+// --- nGD: the enemy radio network ("break the net, take the net") -------------
+CQ_netEvery = 10;                        // s between two network updates (links, isolation, map)
+CQ_netCoverBase = 7000;                  // m: MAGPIE identifies enemies this close to the base...
+CQ_netCoverRelay = 4000;                 // ...or this close to a relay we hold (nothing beyond: no data link)
+CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
+CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up
+CQ_relayRange = 30;                      // m from a fallen tower site to deploy a relay
+CQ_relayRetakeRange = 4000;              // the nearest enemy HQ this close sends a squad to destroy a new relay
+CQ_lowStockShare = 0.2;                  // HQ marker shows [low ammo] under this share of its depot cap
+CQ_buildSlowNear = 0.5;                  // construction speed while players are near / just after contact (was a full stop)
+// player scaling (CQ_fnc_netScale): full power = 4 full squads
+CQ_fullPowerPlayers = 24;
+CQ_scaleMin = 0.35;                      // fewest players: 35 % of the infantry cap, waves up to twice as slow
+CQ_testFullPower = true;                 // TEST: play as if CQ_fullPowerPlayers were connected (debug panel toggle)
+CQ_testMagDirect = false;                // TEST ONLY, set false before merging to main: the two Sentinels fly straight to the first enemy HQ site instead of their search circuits
 
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 6;                         // root insertions in a campaign (victory after the last one)
@@ -188,6 +239,7 @@ CQ_objMaxSlope = 0.2;                    // ...and flat: max height difference r
 // Enemy HQ codenames (famous real operation names), one picked at random per HQ, never twice in a
 // game; messages and markers show "NAME (root)", "NAME (P1)"... (rank in the network, CQ_fnc_objName)
 CQ_aoRadius = 1000;                      // m: red circle hatched in black around every built enemy HQ (gone when it falls)
+CQ_hqMarkerType = "loc_radio";           // enemy HQ marker icon (CfgMarkers class)
 CQ_hqNames = ["ROLLING THUNDER", "URGENT FURY", "OVERLORD", "AVALANCHE", "RED DAWN", "KILLER",
     "MASHER", "JUNIPER COBRA", "HERCULES", "CARTHAGE", "EAGLE CLAW", "BEASTMASTER"];
 // Enemy squad callsigns (real aviator callsigns, aggressive ones), given in this order to every
@@ -299,7 +351,7 @@ CQ_startAfterIntro = 5;                  // s after the FIRST player's intro: th
 CQ_introPlace = "ALTIS  ·  AEGEAN SEA  ·  AAC AIRFIELD";   // typed on black before the shots, under the time and date
 CQ_introTypeDelay = 0.06;               // s per typed letter
 CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
-CQ_menuScreen = [0.4053, 0.4023, 0.7100, 0.5479];   // its blue screen zone in the picture (fractions)
+CQ_menuScreen = [0.4102, 0.4062, 0.7070, 0.5410];   // its green screen zone in the picture (fractions), under the status bar, right of the icon column
 CQ_bleedOut = 300;                       // s a downed player waits for a medic (ReviveBleedOutDelay in description.ext)
 CQ_surgeChance = 0.10;                   // adrenalineSurge: chance for a downed medic to get up on his own over the whole wait
 CQ_bleedMedicRange = 500;                // BLEEDOUT (give up and respawn) only allowed with no medic this close
@@ -316,7 +368,6 @@ CQ_classes = [
     ["Heavy Anti-Tank", "B_soldier_AT_F",   [],                                  2],
     ["Anti-Air",        "B_soldier_AA_F",   [],                                  2],
     ["Engineer",        "B_engineer_F",     ["Engineer", "explosiveSpecialist"], 4],
-    ["Marksman",        "B_soldier_M_F",    [],                                  2],
     ["Sniper",          "B_sniper_F",       [],                                  2],
     ["Pilot",           "B_Helipilot_F",    [],                                  4]
 ];
@@ -325,19 +376,58 @@ CQ_classes = [
 // Everyone also gets a P07 with 3 mags and the CQ_basicKit items.
 CQ_classKit = createHashMapFromArray [
     ["Rifleman",        [10, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_AssaultPack_mcamo"]],
-    ["Squad Leader",    [10, 0, [["HandGrenade", 2], ["SmokeShell", 4], ["SmokeShellBlue", 2], ["SmokeShellGreen", 2], ["SmokeShellRed", 1], ["1Rnd_HE_Grenade_shell", 6], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
+    ["Squad Leader",    [10, 0, [["HandGrenade", 2], ["SmokeShell", 4], ["SmokeShellBlue", 2], ["SmokeShellGreen", 2], ["SmokeShellRed", 1], ["1Rnd_HE_Grenade_shell", 6], ["FirstAidKit", 2], ["Laserbatteries", 2], ["Laserdesignator", 1]], "B_AssaultPack_mcamo"]],
     ["Medic",           [10, 0, [["Medikit", 1], ["FirstAidKit", 18], ["SmokeShell", 6], ["HandGrenade", 2]], "B_Kitbag_mcamo"]],
     ["Grenadier",       [10, 0, [["1Rnd_HE_Grenade_shell", 14], ["1Rnd_Smoke_Grenade_shell", 4], ["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
     ["Autorifleman",    [6, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
     ["Light Anti-Tank", [8, 3, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
-    ["Heavy Anti-Tank", [8, 3, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
+    ["Heavy Anti-Tank", [8, 2, [["Titan_AP", 1], ["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
     ["Anti-Air",        [8, 3, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Carryall_mcamo"]],
     ["Engineer",        [10, 0, [["ToolKit", 1], ["MineDetector", 1], ["DemoCharge_Remote_Mag", 3], ["SatchelCharge_Remote_Mag", 1], ["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2]], "B_Kitbag_mcamo"]],
-    ["Marksman",        [10, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
     ["Sniper",          [9, 0, [["HandGrenade", 2], ["SmokeShell", 2], ["FirstAidKit", 2], ["Rangefinder", 1]], "B_AssaultPack_mcamo"]],
-    ["Pilot",           [5, 0, [["SmokeShellBlue", 2], ["FirstAidKit", 2], ["ToolKit", 1]], ""]]
+    ["Pilot",           [5, 0, [["SmokeShellBlue", 2], ["FirstAidKit", 2]], ""]]
 ];
 CQ_classSidearm = ["hgun_P07_F", "16Rnd_9x21_Mag", 3];
+// Class gear (CQ_fnc_classKit), applied over the vanilla loadout before the kit above:
+// [primary, [attachment choices, ...], launcher, uniform, vest, headgear]
+//   attachment choice: one class or a list (the first that exists, is not DLC and fits the weapon)
+//   "" keeps the vanilla item, "-" removes it. Anything tagged DLC is skipped (vanilla kept).
+// Everyone also gets CQ_classNvg. Suppressors on every weapon that takes one.
+private _mx = ["muzzle_snds_H", "acc_pointer_IR"];
+CQ_classGear = createHashMapFromArray [
+    ["Rifleman",        ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Squad Leader",    ["arifle_MX_GL_F", _mx + ["optic_Arco"],                   "",                       "U_B_CombatUniform_mcam", "V_PlateCarrierGL_rgr",   "H_HelmetSpecB"]],
+    ["Medic",           ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Grenadier",       ["arifle_MX_GL_F", _mx + ["optic_Arco"],                   "",                       "U_B_CombatUniform_mcam", "V_PlateCarrierGL_rgr",   "H_HelmetSpecB"]],
+    ["Autorifleman",    ["LMG_Mk200_F",    ["muzzle_snds_H_MG", "acc_pointer_IR", "optic_Hamr", "bipod_01_F_snd"], "", "U_B_CombatUniform_mcam", "V_PlateCarrierSpec_rgr", "H_HelmetSpecB"]],
+    ["Light Anti-Tank", ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_NLAW_F",          "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Heavy Anti-Tank", ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_B_Titan_short_F", "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Anti-Air",        ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_B_Titan_F",       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Engineer",        ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Sniper",          ["srifle_GM6_F",   [["optic_LRPS", "optic_SOS"], "bipod_01_F_snd"], "",            "U_B_GhillieSuit",        "V_Chestrig_rgr",         "-"]],
+    ["Pilot",           ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "",                       "",                       ""]]
+];
+CQ_classNvg = "NVGoggles";
+// Arsenal (open to everyone, CQ_fnc_arsenalOpen): role gear is only offered to its classes
+// [tags, classes allowed]. A tag is an item type from BIS_fnc_itemType (either part), or:
+//   "GL"      rifles with a grenade launcher
+//   "@name"   items whose class name contains "name" (case ignored)
+// Magazines are never gated (rockets, missiles, belts, charges...): anyone carries ammo for the squad.
+// The class's own starting loadout stays usable whatever the gates (it is on the player).
+CQ_arsenalGates = [
+    [["Launcher", "MissileLauncher", "RocketLauncher"], ["Light Anti-Tank", "Heavy Anti-Tank", "Anti-Air"]],
+    [["MachineGun"],                                    ["Autorifleman"]],
+    [["SniperRifle"],                                   ["Sniper"]],
+    [["GL"],                                            ["Squad Leader", "Grenadier"]],
+    [["Medikit"],                                       ["Medic"]],
+    [["Toolkit"],                                       ["Engineer"]],
+    [["MineDetector"],                                  ["Engineer"]],
+    [["LaserDesignator", "@Laserdesignator"],           ["Squad Leader"]],
+    [["@Rangefinder"],                                  ["Squad Leader", "Sniper", "Light Anti-Tank", "Heavy Anti-Tank", "Anti-Air"]],
+    [["UAVTerminal", "@UAV_"],                          []],        // no drones for soldiers: only MAGPIE flies them
+    [["@Ghillie"],                                      ["Sniper"]],
+    [["@PilotHelmet", "@PilotCoveralls", "@HeliPilotCoveralls"], ["Pilot"]]
+];
 CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
 CQ_classChangeRange = 2;                 // classes are changed inside the HQ compound walls (+ this margin, m)
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads
@@ -494,12 +584,26 @@ CQ_magPadGap = 12;                       // m between two Darter pads
 CQ_magStuckTime = 20;                    // s still on the ground before a drone is nudged forward
 CQ_magRespawn = 480;                     // s before a lost drone is replaced (8 min), on the runway
 CQ_magReportEvery = 120;                 // s between two MAGPIE reports (only if something is new)
+// MAGPIE photos: every new enemy (vehicle or soldier) identified is photographed along the drone's line of
+// sight (render to texture, 64x64) and shown in a grid under the next report
+CQ_magReportVehMax = 8;                  // MAGPIE report: vehicle lines listed per category (GROUND / AIR), then "+N more"
+CQ_magPhotos = false;                    // photo grid under MAGPIE reports (off: text reports only, no cameras)
+CQ_magPhotoMax = 8;                      // photos per report at most (4 per row)
+CQ_magPhotoSlots = 24;                   // render textures reused in turn (cq_ph_0..23)
+CQ_magPhotoFov = 0.7;                    // camera field of view (zoom) for the stills
+CQ_magPhotoDist = 12;                    // m from a vehicle, along the drone's line of sight
+CQ_magPhotoDistInf = 3;                  // m from a soldier
+// (a thumbnail is the drone's view of the target while the card is on screen: Arma clears a render
+// texture once its camera is gone, so a frozen still is not possible; the preview shows while the map is open)
+CQ_magPhotoBorder = 3;                   // frame thickness around each thumbnail, px
+CQ_magPhotoPx = 64;                      // square thumbnail size on the card and render texture size, px
+CQ_magPhotoAspect = 4 / 3;               // the camera's own ratio (it renders it squeezed into the square texture): the picture is unsqueezed to it, then centre-cropped to the square (raise it if things still look too thin)
 CQ_magMarkerTime = 10;                   // s the report dots stay on the map
 CQ_magDetectEvery = 4;                   // s between two detection passes
 CQ_magPlanEvery = 90;                    // s between two flight plans of a drone
 // scan chain: CQ_magChainCount extra Darters fan out from the base to a north-south line and
 // sweep it east across the island, spread over the land at each step (no slot over the sea)
-CQ_magChainCount = 9;
+CQ_magChainCount = 0;                    // allaroundisland: replaced by the dormant Darters below
 CQ_magChainAlt = 250;                    // m
 CQ_magChainStep = 600;                   // m the line moves east each step
 CQ_magChainStepTime = 90;                // s max per step (moves on earlier once 70 % of the chain is in place)
@@ -515,8 +619,23 @@ CQ_magCentreEvery = 30;                 // s: the encirclement centre is re-eval
 CQ_magClusterR = 600;                    // m: positions this close form a group
 CQ_magCentreMove = 300;                  // m: the drones re-route only if the centre moves more than this
 CQ_magFocusQuiet = 300;                  // s without a new contact in the ring (once tight) -> next focus
-CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (the carrier group)
-CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
+CQ_magCoastGap = 1500;                   // keep this far from the coast facing the carrier group
+CQ_magArea = [1500, 1500, 29500, 29500]; // area she sweeps: all of Altis [xmin, ymin, xmax, ymax]
+// Dormant Darters (CQ_fnc_magDormant): MAGPIE has Darters grounded all over the island, every
+// CQ_magDormantGap m on land (coordinates only, no objects). A ground enemy passing within
+// CQ_magDormantWake m of one wakes it: a Darter takes off right there, first gets away from the
+// enemy to more than 80 % of its sensor range, then joins the fleet. Each point wakes once.
+// A woken Darter destroyed is replaced from the nearest point left, after CQ_magDormantReplace s.
+// Woken Darters also relay MAGPIE's data link (CQ_netCoverRelay around them).
+CQ_magDormant = true;
+CQ_magDormantGap = 500;                  // m between two points (grid)
+CQ_magDormantWake = 500;                 // m: a ground enemy this close wakes the point
+CQ_magDormantBase = 2500;                // m: no point this close to the player base
+CQ_magDormantMax = 6;                    // woken Darters alive at once, at most
+CQ_magDormantAlt = 250;                  // m flight altitude (sensor ~600 m)
+CQ_magDormantFlee = 0.9;                 // flee until this fraction of the sensor range from the enemy (> 80 %)
+CQ_magDormantReplace = 60;               // s before a destroyed woken Darter is replaced
+CQ_magDormantRelay = true;               // woken Darters extend the data link like a relay
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
 CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2, max 2400 m (Darter ~600, Sentinel_Argos ~1380, Sentinel_Hermes ~2100)
