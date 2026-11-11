@@ -399,6 +399,9 @@ CQ_story = createHashMapFromArray [
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
 CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly"];
 
+CQ_uiCardX = 19;                          // px from the screen's left edge to the card (its border then lines up with the vehicle panel, ~16 px)
+CQ_uiCardY = 300;                         // px from the top: first card (below the map screen's menu)
+CQ_uiCardTime = createHashMapFromArray [["MAGPIE", 6]];   // s on screen per speaker (others: 6 s + length of the text)
 CQ_uiCardWidth = 620;                     // notification card width in pixels (message text block ~560 px)
 CQ_uiCardBorder = 3;                      // notification card border thickness in pixels (0 = none)
 CQ_uiCardBorderColor = [0.569, 0.549, 0.231, 1];   // olive #918C3B (default)

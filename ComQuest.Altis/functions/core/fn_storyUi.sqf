@@ -25,8 +25,8 @@ CQ_uiLoop = true;
     private _d = findDisplay 46;
     private _px = pixelW;
     private _py = pixelH;
-    private _x0 = safezoneX + 50 * _px;
-    private _y0 = safezoneY + 250 * _py;
+    private _x0 = safezoneX + CQ_uiCardX * _px;
+    private _y0 = safezoneY + CQ_uiCardY * _py;
     private _w = CQ_uiCardWidth * _px;
     private _ic = 44 * _px;                     // icon column
     private _bMax = CQ_uiCardBorder;
@@ -132,7 +132,7 @@ CQ_uiLoop = true;
             };
             private _ctrls = [_bg, _iconBg, _icon, _txtC, _frm];
             { _x ctrlSetFade 1; _x ctrlCommit 0 } forEach (_ctrls + (_extra apply { _x select 0 }));
-            CQ_uiCards pushBack [_ctrls, _h, time + 6 + 0.05 * count _txt + 3 * count _photos, _extra, _cams, _pics];
+            CQ_uiCards pushBack [_ctrls, _h, time + (CQ_uiCardTime getOrDefault [_who, 6 + 0.05 * count _txt + 3 * count _photos]), _extra, _cams, _pics];   // fixed time per speaker, else by length
             call _layout;
             { _x ctrlSetFade 0; _x ctrlCommit 0.25 } forEach (_ctrls + (_extra apply { _x select 0 }));
         };
