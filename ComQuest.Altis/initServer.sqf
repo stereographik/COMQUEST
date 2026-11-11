@@ -3,6 +3,19 @@
 */
 ["ComQuest server init (milestone 3: HQ network + ammo logistics)"] call CQ_fnc_log;
 
+// Start at dawn: CQ_startAfterSunrise minutes after the sun rises on Altis at the mission date
+// (BIS_fnc_sunriseSunsetTime: real sunrise for this date and latitude); the server's date is
+// synced to every player
+if (CQ_startAtDawn) then {
+    private _sun = (date call BIS_fnc_sunriseSunsetTime) select 0;
+    if (_sun >= 0) then {
+        private _t = _sun + CQ_startAfterSunrise / 60;
+        date params ["_yy", "_mo", "_dd"];
+        setDate [_yy, _mo, _dd, floor _t, round ((_t % 1) * 60)];
+        ["Start at dawn: sunrise %1, mission starts %2", [[_sun, "HH:MM"] call BIS_fnc_timeToString, [_t, "HH:MM"] call BIS_fnc_timeToString]] call CQ_fnc_log;
+    };
+};
+
 enableDynamicSimulationSystem true;   // AI far from players stops simulating (used from milestone 2)
 
 call CQ_fnc_baseSetup;

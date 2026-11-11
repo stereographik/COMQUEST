@@ -66,6 +66,10 @@ CQ_depotRange = 10;                      // metres from the depot furniture to u
 CQ_depotReturnRange = 30;                // a vehicle this close to a depot (or its pad) can be returned
 CQ_depotPadGap = 24;                     // depot helipad distance behind the repair point (away from the runway)
 
+// --- Start time: always at dawn, in the first rays of the rising sun
+CQ_startAtDawn = true;
+CQ_startAfterSunrise = 6;                // minutes after sunrise (low golden light)
+
 // --- Enemy origin: a carrier off the east coast -------------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
 // >>> TEST OVERRIDE (branch m8-heatmap only, REMOVE before merging to main) <<<
