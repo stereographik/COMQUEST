@@ -55,32 +55,8 @@ if (!isNil "CQ_crashState" && { !(CQ_crashState get "secured") }) then {
     } else {
         private _left = CQ_crashTimer - (time - (_s get "contactT"));
         if (!(_s get "warned") && { _left <= CQ_crashWarn }) then { _s set ["warned", true]; ["crashLate", []] call CQ_fnc_say };
-        if (!(_s get "dropped") && { _left <= 0 }) then {
-            _s set ["dropped", true];
-            CQ_crashAlarm = false; publicVariable "CQ_crashAlarm";
-            private _ok = CQ_crashDropClasses select { isClass (configFile >> "CfgVehicles" >> _x) && { getText (configFile >> "CfgVehicles" >> _x >> "DLC") == "" } };
-            if (_ok isEqualTo []) exitWith { ["Crash event: no drop vehicle available (all DLC?)"] call CQ_fnc_log };
-            private _cls = selectRandom _ok;
-            private _site = _s get "pos";
-            ["Crash event: time is up, the carrier drops a %1 on the wreck", [_cls]] call CQ_fnc_log;
-            ["crashDrop", []] call CQ_fnc_say;
-            [_cls, _site getPos [120, random 360], compile format ["
-                params ['_v'];
-                [_v] call CQ_fnc_crewVehicle;
-                [_v, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit;
-                private _g = group effectiveCommander _v;
-                {
-                    if ((_v emptyPositions 'cargo') < 1) exitWith {};
-                    private _u = _g createUnit [_x, getPosATL _v, [], 5, 'NONE'];
-                    [[_u]] call CQ_fnc_unitPrep;
-                    _u moveInCargo _v;
-                } forEach CQ_crashDropSquad;
-                _g setBehaviour 'AWARE';
-                _g setCombatMode 'RED';
-                _g enableDynamicSimulation false;
-                [_v, %1] spawn CQ_fnc_crashRoam;
-            ", _site], "Crash"] spawn CQ_fnc_paraDropVehicle;
-        };
+        if (time - (_s getOrDefault ["logT", -1e6]) > 60) then { _s set ["logT", time]; ["Crash event: %1 s before the carrier drops", [round (_left max 0)]] call CQ_fnc_log };
+        if (!(_s get "dropped") && { _left <= 0 }) then { call CQ_fnc_crashDrop };
     };
 };
 

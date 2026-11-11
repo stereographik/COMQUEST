@@ -138,8 +138,8 @@ if (_needHq && { count _hq == 0 }) then {
                 if ((CQ_crashState get "contactT") < 0) then { CQ_crashAlarm = true; publicVariable "CQ_crashAlarm" };
                 CQ_crashState set ["contactT", time - CQ_crashTimer - 1];
                 CQ_crashState set ["warned", true];
-                CQ_crashNext = 0;
-                _msg = "crash countdown skipped: the carrier drops now";
+                call CQ_fnc_crashDrop;
+                _msg = format ["crash countdown skipped: the carrier drops now (dropped %1)", CQ_crashState get "dropped"];
             };
         };
         case "decrypt": { [objNull] call CQ_fnc_crashSecure; _msg = format ["decryption on for %1 s", CQ_crashDecrypt] };

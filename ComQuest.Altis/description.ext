@@ -201,6 +201,7 @@ class CfgFunctions
             class crashStart {};
             class crashSecure {};
             class crashRoam {};
+            class crashDrop {};
         };
 
         class air
