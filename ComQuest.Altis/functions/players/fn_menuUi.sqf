@@ -4,7 +4,7 @@
       SQUADS / CLASS / STATS   -> CQ_fnc_squadUi (its three tabs)
       VEHICLE SHOP             -> CQ_fnc_shopUi (browse anywhere; buying needs the shop terminal)
       VEHICLE DEPOT            -> CQ_fnc_depotUi (browse anywhere; requests need a depot)
-      DEBUG PANEL              -> CQ_fnc_debugUi (debug missions, the host and logged-in admins)
+      DEBUG PANEL              -> CQ_fnc_debugUi (the host and logged-in admins only)
     U or Esc closes it; U again inside a window closes that window (debug panel included).
 */
 if (!hasInterface) exitWith {};
@@ -16,7 +16,7 @@ private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
 uiNamespace setVariable ["CQ_menuDisplay", _d];
 _d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];
 
-private _admin = CQ_debug || { isServer } || { (call BIS_fnc_admin) > 0 };
+private _admin = isServer || { (call BIS_fnc_admin) == 2 };      // host or logged-in admin (#login), even in debug missions
 private _nearShop = !isNil "CQ_shopTerminal" && { player distance CQ_shopTerminal <= CQ_shopRange + 4 };
 private _items = [
     ["SQUADS", "Join, create, invite, leave", { ["squads"] spawn CQ_fnc_squadUi }],

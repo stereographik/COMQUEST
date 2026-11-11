@@ -4,9 +4,11 @@
     Loaded on every machine (server and clients) before init, by CQ_fnc_settings.
 */
 
-CQ_debug = true;                         // log to systemChat as well as the .rpt
+CQ_debug = true;                         // test settings (short stages, debug labels); the host starts with all logs in chat. Debug panel: host + logged-in admins only, always
 CQ_playerView = true;                    // final player view by default: no debug chat, cards or markers (toggle in the debug panel)
 CQ_debugCards = false;                   // debug phase messages as orange cards too (story lines use the cards)
+// log lines starting with one of these words go to "Show all friendly logs", every other one to "Show all enemy logs"
+CQ_logFriendlyRx = "(MAGPIE|Sentinel|Squads?|Base|Depot|Vehicle|Respawn|Shop|Score|Player|Muster|Grass|Friendly|Billboard|Redeploy|Repair|Runway|Supply crate|Auto-fill|Heatmap|Intro|Safe|Range|Kit|Story|STORY).*";
 
 // --- Director -------------------------------------------------------------
 CQ_logVerbose = false;                   // true: also log every drone route / ring / Tigris lock (chatty .rpt)

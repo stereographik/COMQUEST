@@ -1,7 +1,8 @@
 /*
     CQ_fnc_debugCmd  (server, from the debug panel CQ_fnc_debugUi)
     [_cmd, _hqId] remoteExec ["CQ_fnc_debugCmd", 2];
-    Allowed for debug missions, the host and logged-in admins.
+    Allowed for the host and logged-in admins only.
+    Logs:                 logs (id = 1 enemy + 2 friendly: which log lines the caller gets in chat)
     Enemy HQ (selected):  next, ammo, fuel, killCmd, capture, tower, depot, destroy, wave
     Carrier and forces:   root, flight, carrierMinus, carrierFull, killAll
     Story:                actNext, sitrep, storyReset
@@ -14,7 +15,7 @@
 */
 params [["_cmd", "list"], ["_id", -1]];
 private _caller = remoteExecutedOwner;
-if !(CQ_debug || { _caller == 2 } || { (admin _caller) > 0 }) exitWith {};
+if !(_caller == 2 || { (admin _caller) == 2 }) exitWith {};     // host or logged-in admin only
 private _p = (allPlayers select { owner _x == _caller }) param [0, objNull];
 private _hq = CQ_hqs getOrDefault [_id, createHashMap];
 private _msg = "";
@@ -163,6 +164,13 @@ if (_needHq && { count _hq == 0 }) then {
         case "defRebuild": {
             { [_x] call CQ_fnc_baseDefBuild; _x set ["lostT", -1] } forEach CQ_baseDefs;
             _msg = format ["%1 base defence spots rebuilt", count CQ_baseDefs];
+        };
+        case "logs": {
+            if (isNil "CQ_logSubs") then { CQ_logSubs = createHashMap };
+            private _f = [(_id mod 2) == 1, _id >= 2];
+            if (_f isEqualTo [false, false]) then { CQ_logSubs deleteAt _caller } else { CQ_logSubs set [_caller, _f] };
+            [missionNamespace, ["CQ_myLogs", _f]] remoteExec ["setVariable", _caller];
+            _msg = format ["enemy logs %1, friendly logs %2", ["OFF", "ON"] select (_f select 0), ["OFF", "ON"] select (_f select 1)];
         };
         case "playerView": {
             CQ_playerView = _id == 1;        // the panel sends the wanted state (1 on, 0 off)

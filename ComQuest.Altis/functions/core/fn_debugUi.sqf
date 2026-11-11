@@ -1,13 +1,13 @@
 /*
     CQ_fnc_debugUi  (client)  F3, or the scroll action "Debug panel"
-    Who: debug missions (CQ_debug), the host, or a logged-in admin.
+    Who: the host or a logged-in admin (#login) only, also in debug missions (voted admins: no).
     Left: enemy HQ list (select one for the HQ buttons) and a status block.
     Right: buttons by category. Server commands go through CQ_fnc_debugCmd; a few are local
     (map overlays, god mode, arsenal). Toggles show their state in their label.
     Refreshes every 3 s while open.
 */
 if (!hasInterface) exitWith {};
-if !(CQ_debug || { isServer } || { (call BIS_fnc_admin) > 0 }) exitWith { hint "Debug panel: host or admin only" };
+if !(isServer || { (call BIS_fnc_admin) == 2 }) exitWith { hint "Debug panel: host or logged-in admin only" };
 disableSerialization;
 if (!isNull (uiNamespace getVariable ["CQ_dbgDisplay", displayNull])) exitWith {};
 call CQ_fnc_debugMap;     // makes sure the map overlay exists (toggles below)
@@ -79,9 +79,9 @@ private _cats = [
         ["Depot: stock + cooldowns reset", "vehReset"], ["Rebuild base defences", "defRebuild"], ["+1 hour", "time1"],
         ["Noon", "noon"], ["Night", "night"], ["Clear weather", "clearWx"]
     ]],
-    ["MAP OVERLAY & VIEW", [
+    ["MAP OVERLAY, LOGS & VIEW", [
         ["Enemies on map", "!mapEnemy"], ["Friendlies on map", "!mapFriend"], ["HQ sites on map", "!mapHq"],
-        ["FINAL PLAYER VIEW", "!playerView"]
+        ["Show all enemy logs", "!logEnemy"], ["Show all friendly logs", "!logFriend"], ["FINAL PLAYER VIEW", "!playerView"]
     ]]
 ];
 private _rx = _X + 0.03 + _lw;
@@ -111,6 +111,14 @@ private _toggles = [];
                 case "!mapEnemy": { CQ_dbgShowEnemy = !CQ_dbgShowEnemy };
                 case "!mapFriend": { CQ_dbgShowFriend = !CQ_dbgShowFriend };
                 case "!mapHq": { CQ_dbgShowHq = !CQ_dbgShowHq };
+                case "!logEnemy";
+                case "!logFriend": {
+                    private _f = +(missionNamespace getVariable ["CQ_myLogs", [false, false]]);
+                    private _i = [0, 1] select (_cmd == "!logFriend");
+                    _f set [_i, !(_f select _i)];
+                    CQ_myLogs = _f;                // label right away; the server answers with the same value
+                    ["logs", ([0, 1] select (_f select 0)) + ([0, 2] select (_f select 1))] remoteExec ["CQ_fnc_debugCmd", 2];
+                };
                 case "!god": { CQ_dbgGod = !CQ_dbgGod; player allowDamage !CQ_dbgGod; if (vehicle player != player) then { (vehicle player) allowDamage !CQ_dbgGod } };
                 case "!playerView": {
                     private _on = !(missionNamespace getVariable ["CQ_playerView", false]);
@@ -134,6 +142,8 @@ uiNamespace setVariable ["CQ_dbgToggleLabels", {
             case "!mapEnemy": { CQ_dbgShowEnemy };
             case "!mapFriend": { CQ_dbgShowFriend };
             case "!mapHq": { CQ_dbgShowHq };
+            case "!logEnemy": { (missionNamespace getVariable ["CQ_myLogs", [false, false]]) select 0 };
+            case "!logFriend": { (missionNamespace getVariable ["CQ_myLogs", [false, false]]) select 1 };
             case "!god": { CQ_dbgGod };
             case "!playerView": { missionNamespace getVariable ["CQ_playerView", false] };
             default { false };

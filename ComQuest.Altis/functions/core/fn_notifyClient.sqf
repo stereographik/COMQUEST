@@ -6,4 +6,4 @@ params [["_title", "", [""]], ["_text", "", [""]]];
 if (!hasInterface) exitWith {};
 
 if (CQ_debugCards) then { ["CQ_Phase", [_title, _text]] call BIS_fnc_showNotification };
-systemChat format ["[DEBUG] %1: %2", _title, _text];
+// the chat line comes from CQ_fnc_log (PHASE | ...)

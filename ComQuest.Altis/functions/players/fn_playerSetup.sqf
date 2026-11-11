@@ -96,7 +96,7 @@ if (isNil "CQ_debugKeyBound") then {
         waitUntil { sleep 0.5; !isNull (findDisplay 46) };
         (findDisplay 46) displayAddEventHandler ["KeyDown", {
             params ["", "_key"];
-            if (_key == 61 && { CQ_debug || { isServer } || { (call BIS_fnc_admin) > 0 } }) then { [] spawn CQ_fnc_debugUi; true } else { false };   // 61 = F3
+            if (_key == 61 && { isServer || { (call BIS_fnc_admin) == 2 } }) then { [] spawn CQ_fnc_debugUi; true } else { false };   // 61 = F3
         }];
     };
 };
