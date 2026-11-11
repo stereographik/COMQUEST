@@ -37,8 +37,8 @@ player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [
 [] spawn CQ_fnc_statsClient; // shots, heals, distances, time played
 call CQ_fnc_heatMapClient;   // MAGPIE heatmap under everything else
 call CQ_fnc_rangeMapClient;   // range map: ground the seen enemies can fire on (drawn by magMapClient)
-call CQ_fnc_magMapClient;
-call CQ_fnc_rankBoard;
+call CQ_fnc_magMapClient;    // MAGPIE drones + enemies in their sight, live on the map
+call CQ_fnc_rankBoard;       // squad ranking under the base billboard banner
 // version, branch and build stamp, tiny at the bottom right of the screen
 [] spawn {
     disableSerialization;
@@ -48,7 +48,7 @@ call CQ_fnc_rankBoard;
     _c ctrlSetStructuredText parseText format ["<t align='right' font='PuristaLight' size='0.7' color='#73F2F1DF'>ComQuest %1  ·  %2  ·  %3</t>",
         CQ_version, missionNamespace getVariable ["CQ_branch", "?"], CQ_build];
     _c ctrlCommit 0;
-};       // squad ranking under the base billboard banner    // MAGPIE drones + enemies in their sight, live on the map
+};
 call CQ_fnc_debugMap;
 
 ["Welcome to ComQuest (%1)", [roleDescription player]] call CQ_fnc_log;
