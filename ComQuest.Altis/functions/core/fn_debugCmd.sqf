@@ -20,7 +20,7 @@ if !(_caller == 2 || { (admin _caller) == 2 }) exitWith {};     // host or logge
 private _p = (allPlayers select { owner _x == _caller }) param [0, objNull];
 private _hq = CQ_hqs getOrDefault [_id, createHashMap];
 private _msg = "";
-private _needHq = _cmd in ["hack", "next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq"];
+private _needHq = _cmd in ["hack", "tpTower", "next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq"];
 
 if (_needHq && { count _hq == 0 }) then {
     _msg = "Select an HQ in the list first";
@@ -189,6 +189,18 @@ if (_needHq && { count _hq == 0 }) then {
                 [_p] remoteExec ["moveOut", _p];
                 [_p] spawn { params ["_p"]; sleep 0.5; _p setPosATL CQ_musterPos };
                 _msg = "teleported to the base";
+            };
+        };
+        case "tpTower": {
+            private _r = _hq getOrDefault ["radio", objNull];
+            if (isNull _r) then { _r = _hq getOrDefault ["radioHacked", objNull] };
+            if (isNull _r) then { _msg = format ["HQ #%1 has no radio tower yet", _id] } else {
+                if (!isNull _p) then {
+                    private _t = (getPosATL _r) getPos [9, (getPosATL _r) getDir (_hq get "pos")];
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, _t] spawn { params ["_p", "_t"]; sleep 0.5; _p setPosATL [_t select 0, _t select 1, 0] };
+                    _msg = format ["teleported to the foot of HQ #%1's radio tower", _id];
+                };
             };
         };
         case "tpHq": {
