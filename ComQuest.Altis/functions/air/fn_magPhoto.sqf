@@ -1,55 +1,91 @@
 /*
-    CQ_fnc_magPhoto  (client, from CQ_fnc_magTick through remoteExec, every machine)
-    ["shot", [_id, _target, _drone]] call CQ_fnc_magPhoto;
-    The still photo MAGPIE takes the moment a drone identifies a new enemy (vehicle or soldier),
-    shown in a grid under her next report (CQ_fnc_storyUi):
-      - angle: the drone's own line of sight to the target
-      - distance: CQ_magPhotoDist (12 m) from a vehicle, CQ_magPhotoDistInf (3 m) from a soldier
-      - the camera renders into "cq_ph_<slot>" for CQ_magPhotoShot s, then is removed: the
-        texture keeps that frame (a still, not a live view)
-    No picture is possible while the full-screen map is open (no 3D rendering there): the shot
-    waits in the queue and is taken as soon as the map is closed, from the same drone angle,
-    if the target is still alive and the shot is not older than CQ_magPhotoMaxDelay s. Without
-    Picture-in-Picture, or too late, the card shows the editor preview of the class instead
-    (CQ_magPhotoOk: id -> true once the shot was taken; an open card swaps to the photo then).
-    One camera at a time (queue).
+    CQ_fnc_magPhoto  (client)
+    MAGPIE's photos of the enemies her drones identify, shown in a grid under her next report
+    (CQ_fnc_storyUi). Arma clears a render-to-texture surface as soon as its camera is removed
+    (a frozen still turns black), so each thumbnail is a camera that exists only while its
+    report card is on screen:
+      ["shot", [_id, _target, _drone]]   from CQ_fnc_magTick (remoteExec, every machine), the
+          moment the drone identifies the target: remembers the target, the drone's line of
+          sight to it (unit vector) and where it stood (CQ_magPhotoInfo: id -> [obj, dir, pos])
+      ["start", [_id]] -> camera or objNull   CQ_fnc_storyUi, card on screen and map closed:
+          camera on that line of sight, CQ_magPhotoDist (12 m) from a vehicle,
+          CQ_magPhotoDistInf (3 m) from a soldier, rendering into "cq_ph_<slot>"; it follows the
+          target (camSetPos every frame, aim locked on it); target dead or gone: it stays on
+          the spot where the target was seen
+      ["stop", [_cam]]   CQ_fnc_storyUi, card gone
+    Without Picture-in-Picture: objNull (the card shows the editor preview).
 */
 params ["_mode", ["_args", []]];
-if (!hasInterface) exitWith {};
-if (isNil "CQ_magPhotoOk") then { CQ_magPhotoOk = createHashMap };
-if (isNil "CQ_magPhotoQ") then { CQ_magPhotoQ = [] };
-if (_mode != "shot") exitWith {};
-_args params ["_id", "_o", ["_drone", objNull]];
-if (isNull _o) exitWith {};
-private _from = if (!isNull _drone) then { getPosASLVisual _drone } else { (getPosASLVisual _o) vectorAdd [0, -60, 80] };
-CQ_magPhotoQ pushBack [_id, _o, _from, time];
-if (!isNil "CQ_magPhotoLoop") exitWith {};
-CQ_magPhotoLoop = true;
-[] spawn {
-    while { CQ_magPhotoQ isNotEqualTo [] } do {
-        // map open: no 3D rendering, the shots wait until it is closed
-        if (visibleMap) then { sleep 0.5; continue };
-        (CQ_magPhotoQ deleteAt 0) params ["_id", "_o", "_from", "_t0"];
-        if (isNull _o || { !alive _o } || { !isPiPEnabled } || { time - _t0 > CQ_magPhotoMaxDelay }) then { continue };
-        private _rtt = format ["cq_ph_%1", _id mod CQ_magPhotoSlots];
+if (!hasInterface) exitWith { objNull };
+if (isNil "CQ_magPhotoInfo") then { CQ_magPhotoInfo = createHashMap };
+if (isNil "CQ_magPhotoCams") then { CQ_magPhotoCams = [] };
+
+// where the camera stands for a target: centre of the target + dir x distance, above the ground
+private _camPos = {
+    params ["_o", "_dir", "_spot"];
+    private _tgt = if (alive _o) then {
+        private _bb = boundingBoxReal _o;
+        _o modelToWorldVisualWorld (((_bb select 0) vectorAdd (_bb select 1)) vectorMultiply 0.5)
+    } else { _spot };
+    private _d = [CQ_magPhotoDist, CQ_magPhotoDistInf] select (!isNull _o && { _o isKindOf "CAManBase" });
+    private _p = _tgt vectorAdd (_dir vectorMultiply _d);
+    private _g = getTerrainHeightASL _p;
+    if ((_p select 2) < _g + 1.5) then { _p set [2, _g + 1.5] };
+    [_p, _tgt]
+};
+
+if (isNil "CQ_magPhotoCamPos") then { CQ_magPhotoCamPos = _camPos };   // for the frame handler
+
+switch (_mode) do {
+    case "shot": {
+        _args params ["_id", "_o", ["_drone", objNull]];
+        if (isNull _o) exitWith { objNull };
         private _bb = boundingBoxReal _o;
         private _tgt = _o modelToWorldVisualWorld (((_bb select 0) vectorAdd (_bb select 1)) vectorMultiply 0.5);
-        private _dist = [CQ_magPhotoDist, CQ_magPhotoDistInf] select (_o isKindOf "CAManBase");
-        private _pos = _tgt vectorAdd ((vectorNormalized (_from vectorDiff _tgt)) vectorMultiply _dist);
-        private _g = getTerrainHeightASL _pos;
-        if ((_pos select 2) < _g + 1.5) then { _pos set [2, _g + 1.5] };
-        private _cam = "camera" camCreate (ASLToAGL _pos);
+        private _from = if (!isNull _drone) then { getPosASLVisual _drone } else { _tgt vectorAdd [0, -60, 80] };
+        CQ_magPhotoInfo set [_id, [_o, vectorNormalized (_from vectorDiff _tgt), _tgt]];
+        objNull
+    };
+    case "start": {
+        _args params ["_id"];
+        private _info = CQ_magPhotoInfo getOrDefault [_id, []];
+        if (_info isEqualTo [] || { !isPiPEnabled }) exitWith { objNull };
+        private _rtt = format ["cq_ph_%1", _id mod CQ_magPhotoSlots];
+        (_info call _camPos) params ["_p", "_t"];
+        private _cam = "camera" camCreate (ASLToAGL _p);
+        _cam setVariable ["CQ_ph", _info + [_rtt]];
         _cam cameraEffect ["Internal", "Back", _rtt];
-        _cam camSetPos (ASLToAGL _pos);
-        _cam camSetTarget (ASLToAGL _tgt);
+        _cam camSetPos (ASLToAGL _p);
+        if (alive (_info select 0)) then { _cam camSetTarget (_info select 0) } else { _cam camSetTarget (ASLToAGL _t) };
         _cam camSetFov CQ_magPhotoFov;
         _cam camCommit 0;
         _rtt setPiPEffect [0];
-        sleep CQ_magPhotoShot;            // a few frames: the scene streams in, the texture is drawn
-        private _ok = !visibleMap;
-        _cam cameraEffect ["Terminate", "Back", _rtt];
-        camDestroy _cam;
-        if (_ok) then { CQ_magPhotoOk set [_id, true] } else { CQ_magPhotoQ pushBack [_id, _o, _from, _t0] };   // map opened mid-shot: again later
+        CQ_magPhotoCams pushBack _cam;
+        // one frame handler keeps every photo camera on its target
+        if (isNil "CQ_magPhotoEh") then {
+            CQ_magPhotoEh = addMissionEventHandler ["EachFrame", {
+                CQ_magPhotoCams = CQ_magPhotoCams select { !isNull _x };
+                {
+                    private _i = _x getVariable ["CQ_ph", []];
+                    if (_i isEqualTo [] || { !alive (_i select 0) }) then { continue };   // dead: stays where it was seen
+                    ((_i select [0, 3]) call (missionNamespace getVariable "CQ_magPhotoCamPos")) params ["_p"];
+                    _x camSetPos (ASLToAGL _p);
+                    _x camCommit 0;
+                } forEach CQ_magPhotoCams;
+                if (CQ_magPhotoCams isEqualTo []) then {
+                    removeMissionEventHandler ["EachFrame", CQ_magPhotoEh];
+                    CQ_magPhotoEh = nil;
+                };
+            }];
+        };
+        _cam
     };
-    CQ_magPhotoLoop = nil;
+    case "stop": {
+        _args params ["_cam"];
+        if (isNull _cam) exitWith { objNull };
+        _cam cameraEffect ["Terminate", "Back", (_cam getVariable ["CQ_ph", [0, 0, 0, ""]]) select 3];
+        camDestroy _cam;
+        objNull
+    };
+    default { objNull };
 };

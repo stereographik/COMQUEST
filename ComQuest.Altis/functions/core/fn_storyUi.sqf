@@ -90,13 +90,14 @@ CQ_uiLoop = true;
             if (_photos isNotEqualTo []) then {
                 private _cell = CQ_magPhotoPx;                 // square thumbnail
                 private _cw = round (_cell * CQ_magPhotoAspect); // the picture at the camera's own ratio, centre-cropped to the square
-                private _cols = floor ((CQ_uiCardWidth - 60 + 6) / (_cell + 6)) max 1;   // as many as the text block holds
                 private _g = 4 + 2 * CQ_magPhotoBorder;   // room for the frames between two thumbnails
+                // as many per row as the text block holds (card width - icon column - padding), frames included
+                private _cols = floor ((CQ_uiCardWidth - 44 - 16 - 2 * CQ_magPhotoBorder + _g) / (_cell + _g)) max 1;
                 private _lab = 13;
                 private _top = _h - 4 * _py + CQ_magPhotoBorder * _py;
                 {
                     _x params ["_id", "_cls"];
-                    private _cx = (_forEachIndex mod _cols) * (_cell + _g) * _px;
+                    private _cx = (CQ_magPhotoBorder + (_forEachIndex mod _cols) * (_cell + _g)) * _px;
                     private _cy = _top + (floor (_forEachIndex / _cols)) * (_cell + _lab + _g) * _py;
                     private _frame = _d ctrlCreate ["RscText", -1];
                     _frame ctrlSetBackgroundColor (CQ_ui get "inset");
@@ -107,11 +108,11 @@ CQ_uiLoop = true;
                     _pic ctrlCommit 0;
                     private _cfg = configFile >> "CfgVehicles" >> _cls;
                     private _prev = getText (_cfg >> "editorPreview");
-                    // the still taken when the drone spotted it (CQ_fnc_magPhoto); none -> the editor preview
+                    // the drone's view of the target (CQ_fnc_magPhoto camera, started once the map is
+                    // closed: no 3D rendering on the map); the editor preview meanwhile / without PiP
                     private _still = [_prev, getText (_cfg >> "picture")] select (_prev == "");
-                    private _ok = (missionNamespace getVariable ["CQ_magPhotoOk", createHashMap]) getOrDefault [_id, false];
-                    _pic ctrlSetText (if (_ok) then { format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _id mod CQ_magPhotoSlots, CQ_magPhotoPx] } else { _still });
-                    if (!_ok) then { _pics pushBack [_pic, _id] };      // a delayed shot (map was open) replaces the preview when it is taken
+                    _pic ctrlSetText _still;
+                    _pics pushBack [_pic, _id, _still, objNull];
                     private _name = _d ctrlCreate ["RscText", -1];
                     _name ctrlSetText getText (_cfg >> "displayName");
                     _name ctrlSetFont "PuristaLight";
@@ -137,17 +138,20 @@ CQ_uiLoop = true;
             { { _x ctrlSetFade 1; _x ctrlCommit 0.4 } forEach ((_x select 0) + ((_x param [3, []]) apply { _x select 0 })) } forEach _old;
             sleep 0.4;
             { { ctrlDelete _x } forEach ((_x select 0) + ((_x param [3, []]) apply { _x select 0 })) } forEach _old;
+            { { ["stop", [_x select 3]] call CQ_fnc_magPhoto } forEach (_x param [5, []]) } forEach _old;     // photo cameras off with their card
             CQ_uiCards = CQ_uiCards - _old;
             call _layout;
         };
-        // delayed photos (CQ_fnc_magPhoto): swap the preview for the picture once it is taken
+        // photos: the camera starts once the map is closed; the preview shows while it is open
         {
             {
-                _x params ["_pc", "_pid"];
-                if ((missionNamespace getVariable ["CQ_magPhotoOk", createHashMap]) getOrDefault [_pid, false]) then {
-                    private _want = format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _pid mod CQ_magPhotoSlots, CQ_magPhotoPx];
-                    if (ctrlText _pc != _want) then { _pc ctrlSetText _want };
+                _x params ["_pc", "_pid", "_still", "_cam"];
+                if (isNull _cam && { !visibleMap }) then {
+                    _cam = ["start", [_pid]] call CQ_fnc_magPhoto;
+                    _x set [3, _cam];
                 };
+                private _want = if (!isNull _cam && { !visibleMap }) then { format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _pid mod CQ_magPhotoSlots, CQ_magPhotoPx] } else { _still };
+                if (ctrlText _pc != _want) then { _pc ctrlSetText _want };
             } forEach (_x param [5, []]);
         } forEach CQ_uiCards;
         sleep 0.25;

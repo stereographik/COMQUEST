@@ -531,9 +531,8 @@ CQ_magPhotoSlots = 24;                   // render textures reused in turn (cq_p
 CQ_magPhotoFov = 0.7;                    // camera field of view (zoom) for the stills
 CQ_magPhotoDist = 12;                    // m from a vehicle, along the drone's line of sight
 CQ_magPhotoDistInf = 3;                  // m from a soldier
-CQ_magPhotoMaxDelay = 120;               // s: a shot delayed by an open map is still taken within this, else the preview stays
-CQ_magPhotoShot = 0.6;                   // s the camera renders before it is removed (the texture keeps that frame)
-// (a photo is a still taken the moment the drone identifies the target; none while the map is open)
+// (a thumbnail is the drone's view of the target while the card is on screen: Arma clears a render
+// texture once its camera is gone, so a frozen still is not possible; the preview shows while the map is open)
 CQ_magPhotoBorder = 3;                   // frame thickness around each thumbnail, px
 CQ_magPhotoPx = 64;                      // square thumbnail size on the card and render texture size, px
 CQ_magPhotoAspect = 4 / 3;               // the camera's own ratio (it renders it squeezed into the square texture): the picture is unsqueezed to it, then centre-cropped to the square (raise it if things still look too thin)
