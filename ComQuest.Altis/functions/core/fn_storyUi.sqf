@@ -67,7 +67,7 @@ CQ_uiLoop = true;
         while { (CQ_uiQueue isNotEqualTo []) && { count CQ_uiCards < CQ_uiCardMax } } do {
             (CQ_uiQueue deleteAt 0) params ["_who", "_txt", ["_photos", []]];
             private _frm = _d ctrlCreate ["RscText", -1];        // border plate, created first: drawn under the card
-            _frm ctrlSetBackgroundColor CQ_uiCardBorderColor;
+            _frm ctrlSetBackgroundColor (CQ_uiCardBorderColors getOrDefault [_who, CQ_uiCardBorderColor]);   // colour per speaker
             private _bg = _d ctrlCreate ["RscText", -1];
             _bg ctrlSetBackgroundColor (CQ_ui get "panel");
             private _iconBg = _d ctrlCreate ["RscText", -1];
