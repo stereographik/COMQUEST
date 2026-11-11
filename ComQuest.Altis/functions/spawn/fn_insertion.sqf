@@ -309,14 +309,6 @@ while { true } do {
             continue;
         };
 
-        // debug FULL HQ NOW: the troops are put on the ground at once, the helis stay in the sky
-        if (_state in ["fly", "landing"] && { _hq getOrDefault ["dbgDrop", false] }) then {
-            { unassignVehicle _x; moveOut _x; _x setPosATL ((_e get "lz") getPos [3 + random 12, random 360]) } forEach _pass;
-            ["Enemy troops landed", format ["HQ #%1: %2 soldiers put on the ground (debug)", _id, count _pass]] call CQ_fnc_announce;
-            _e set ["state", "unloaded"];
-            _e set ["t", time];
-            continue;
-        };
         switch (_state) do {
             case "fly": {
                 if (_heli distance2D (_e get "lz") < 500) then {

@@ -74,7 +74,7 @@ if (_needHq && { count _hq == 0 }) then {
             // HQ stands, then skips every wait (perimeter, each build stage) until it is fully built
             if (!isNil "CQ_dbgFullHq") then { _msg = "a full HQ build is already running" } else {
                 CQ_dbgFullHq = true;
-                _msg = "full HQ: troops put on the ground at once, every build stage skipped (watch the log)";
+                _msg = "full HQ: landing (if needed), then every build stage skipped (watch the log)";
                 [] spawn {
                     private _t0 = time;
                     private _act = { [(values CQ_hqs) select { (_x get "state") in CQ_activeStates && { !(_x get "buildDone") } }, [], { _x get "id" }] call BIS_fnc_sortBy };
@@ -83,7 +83,6 @@ if (_needHq && { count _hq == 0 }) then {
                     private _l = call _act;
                     if (_l isEqualTo []) exitWith { CQ_dbgFullHq = nil; ["DEBUG full HQ: no landing came (carrier empty or infantry cap?)"] call CQ_fnc_log };
                     private _hq = _l select 0;
-                    _hq set ["dbgDrop", true];          // troops straight to the ground, helis stay up (CQ_fnc_insertion)
                     ["DEBUG full HQ: building HQ #%1 at %2", [_hq get "id", mapGridPosition (_hq get "pos")]] call CQ_fnc_log;
                     while { !(_hq get "buildDone") && { (_hq get "state") in CQ_activeStates } && { time - _t0 < 900 } } do {
                         switch (_hq get "state") do {
