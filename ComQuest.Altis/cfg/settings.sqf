@@ -99,7 +99,7 @@ CQ_assaultBreach = 70;                   // ...and this close, the infantry stor
 
 // --- nGD: the enemy radio network ("break the net, take the net") -------------
 CQ_netEvery = 10;                        // s between two network updates (links, isolation, map)
-CQ_netCoverBase = 7000;                  // m: MAGPIE identifies enemies this close to the base...
+CQ_netCoverBase = 20000;                 // m: MAGPIE identifies enemies this close to the base... (TEST: 20000 = whole island; normal 7000)
 CQ_netCoverRelay = 4000;                 // ...or this close to a relay we hold (nothing beyond: no data link)
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
 CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up
