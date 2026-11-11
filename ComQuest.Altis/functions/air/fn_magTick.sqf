@@ -15,7 +15,9 @@
       before MAGPIE's first contact the two Sentinels fly their search circuits instead
                                 (CQ_magPatrol: shared trunk from the base, then a loop flown over and over)
     Report (every CQ_magReportEvery s, if anything is new): a MAGPIE card with the count of new
-    identifications by kind and the HQ news, and dots on every player's map for 10 s.
+    identifications by kind and the HQ news, and dots on every player's map for 10 s. Every
+    new vehicle identified is photographed by the drone (CQ_fnc_magPhoto) and the report shows
+    the photos in a grid under the summary.
 */
 if (time < CQ_magNext) exitWith {};
 CQ_magNext = time + 5;
@@ -172,6 +174,12 @@ if (time >= CQ_magDetectT) then {
                 private _c = [_o] call _cat;
                 if (random 1 > ([CQ_magSpotChance getOrDefault [_c, 0.3], CQ_huntSpotChance] select (_o getVariable ["CQ_hunter", false]))) then { continue };   // not identified this pass
                 CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false]];
+                // a new vehicle: the drone takes its photo (rendered on every client) for the next report
+                if (_c != "inf" && { count CQ_magPhotoPend < CQ_magPhotoMax }) then {
+                    CQ_magPhotoN = CQ_magPhotoN + 1;
+                    CQ_magPhotoPend pushBack [CQ_magPhotoN, typeOf _o];
+                    [CQ_magPhotoN, _o, _v] remoteExec ["CQ_fnc_magPhoto", 0];
+                };
                 private _fp = missionNamespace getVariable ["CQ_magFocus", []];
                 // the focus (and the end of the Sentinels' search circuits) needs a contact on the
                 // ground: an insertion helicopter passing by is not a position to encircle
@@ -562,6 +570,11 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
             { if ((_row select _forEachIndex) > 0) then { _cells = _cells + format ["   <img size='0.75' image='%1'/> %2", _x, _row select _forEachIndex] } } forEach _ico;
             _rich = _rich + format ["<br/><t size='0.78' font='PuristaMedium' color='#A6A381'>%1</t><t size='0.8' color='#F2F1DF'>%2</t>", _x, _cells];
         } forEach _order;
+        // photo grid under the report: "<ph>id:class,...</ph>" (read by CQ_fnc_storyClient)
+        if (CQ_magPhotoPend isNotEqualTo []) then {
+            _rich = _rich + "<ph>" + ((CQ_magPhotoPend apply { format ["%1:%2", _x select 0, _x select 1] }) joinString ",") + "</ph>";
+            CQ_magPhotoPend = [];
+        };
         ["magReport", [_rich]] call CQ_fnc_say;
         ["MAGPIE report: %1 new identifications, %2 HQ news, areas %3", [_new, count _news, _order]] call CQ_fnc_log;
     };

@@ -494,6 +494,16 @@ CQ_magPadGap = 12;                       // m between two Darter pads
 CQ_magStuckTime = 20;                    // s still on the ground before a drone is nudged forward
 CQ_magRespawn = 480;                     // s before a lost drone is replaced (8 min), on the runway
 CQ_magReportEvery = 120;                 // s between two MAGPIE reports (only if something is new)
+// MAGPIE photos: every new enemy vehicle identified is photographed along the drone's line of
+// sight (render to texture, 128x128) and shown in a grid under the next report
+CQ_magPhotoMax = 8;                      // photos per report at most (4 per row)
+CQ_magPhotoSlots = 24;                   // render textures reused in turn (cq_ph_0..23)
+CQ_magPhotoFov = 0.25;                   // camera field of view (zoom)
+CQ_magPhotoFill = 0.8;                   // the vehicle's bounding sphere fills this share of the frame
+CQ_magPhotoShot = 0.5;                   // s the camera renders before the picture is kept
+CQ_magPhotoFreeze = true;                // true: camera removed after the shot (still photo); false: live until CQ_magPhotoLife s
+CQ_magPhotoLife = 180;
+CQ_magPhotoPx = 128;                     // thumbnail size on the card, px
 CQ_magMarkerTime = 10;                   // s the report dots stay on the map
 CQ_magDetectEvery = 4;                   // s between two detection passes
 CQ_magPlanEvery = 90;                    // s between two flight plans of a drone

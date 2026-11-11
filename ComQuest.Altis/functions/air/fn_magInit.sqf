@@ -62,6 +62,8 @@ for "_x" from _x0 + CQ_magCell / 2 to _x1 step CQ_magCell do {
     };
 };
 CQ_magSeen = createHashMap;               // hashValue -> [object, firstT, lastT, pos, cat, reported]
+CQ_magPhotoN = 0;                        // photos taken (CQ_fnc_magPhoto); the slot is CQ_magPhotoN mod CQ_magPhotoSlots
+CQ_magPhotoPend = [];                    // [id, class] photographed since the last report
 CQ_magHqSeen = createHashMap;             // hq id -> last reported stage (-1 = site only)
 CQ_magReportT = time;
 CQ_magDetectT = 0;
