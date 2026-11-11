@@ -98,6 +98,7 @@ addMissionEventHandler ["EntityKilled", {
     ["groupWatch", CQ_fnc_groupWatch] call CQ_fnc_directorAddTask;
     ["assault", CQ_fnc_assaultTick] call CQ_fnc_directorAddTask;
     ["weather", CQ_fnc_weatherTick] call CQ_fnc_directorAddTask;
+    ["net", CQ_fnc_netTick] call CQ_fnc_directorAddTask;
     call CQ_fnc_statsInit;
     call CQ_fnc_magInit;
     ["magpie", CQ_fnc_magTick] call CQ_fnc_directorAddTask;

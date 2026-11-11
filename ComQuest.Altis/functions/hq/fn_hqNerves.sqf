@@ -25,7 +25,7 @@ private _lost = ({ !alive _x } count _all) + ([0, 1] select _cmdGone);
 // ---- level (never goes down)
 private _lvl = _hq getOrDefault ["nerv", 0];
 private _want = switch (true) do {
-    case (_cmdGone || { _lost >= 3 }): { 4 };
+    case (_cmdGone || { _lost >= 3 } || { _hq getOrDefault ["isolated", false] }): { 4 };   // nGD: cut off -> dig in
     case (_lost == 2): { 3 };
     case (_lost == 1): { 2 };
     case ((_hq get "lastContactT") > (_hq getOrDefault ["builtT", 0])): { 1 };

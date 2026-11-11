@@ -154,6 +154,10 @@ class CfgFunctions
             class callReinf {};
             class hqSplit {};
             class assaultTick {};
+            class netTick {};
+            class netScale {};
+            class relaySites {};
+            class relayDeploy {};
             class hqTick {};
             class hqStatusMarker {};
             class hqNerves {};

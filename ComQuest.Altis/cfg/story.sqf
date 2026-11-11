@@ -276,6 +276,27 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "FLASH. Enemy force inbound on the base. All units return and defend."]],
         [["CROSSROAD", "FLASH, FLASH. The airfield is under threat. Everyone back. Now."]]
     ]],
+    // nGD [hq name] - an enemy HQ cut off from its network
+    ["netCut", [
+        [["CROSSROAD", "%1 just went dark on their net. No reinforcements will reach it. Finish it."]],
+        [["CROSSROAD", "That's %1 cut off. They're on their own now. They'll dig in, so go in heavy."]],
+        [["CROSSROAD", "Network break at %1. Nothing gets in, nothing gets out. Good work."]]
+    ]],
+    // nGD [hq name, km] - a built HQ close enough to assault the base
+    ["baseThreat", [
+        [["CROSSROAD", "%1 sits %2 km from the airfield. Close enough to come for me. Deal with it, or get ready to defend."]],
+        [["CROSSROAD", "Heads up: %1 is %2 km out. Their next wave comes here, not west."]]
+    ]],
+    // nGD [hq name] - a relay put up on a fallen HQ's tower site
+    ["relayUp", [
+        [["CROSSROAD", "Relay up on the ruins of %1. MAGPIE has eyes out there now."]],
+        [["CROSSROAD", "Good. %1 is our node now. Expect them to want it back."]]
+    ]],
+    // nGD [] - a friendly relay destroyed
+    ["relayLost", [
+        [["CROSSROAD", "We've lost a relay. MAGPIE is blind out there again."]],
+        [["CROSSROAD", "Relay down. Somebody go put it back."]]
+    ]],
     // [] - assault infantry storming the command post
     ["breach", [
         [["CROSSROAD", "They're at my door. I'd appreciate company. Armed company."]],
@@ -376,7 +397,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "fallen", "fallenEarly"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly"];
 
 CQ_uiCardWidth = 620;                     // notification card width in pixels (message text block ~560 px)
 CQ_uiCardMax = 5;                         // cards on screen at once (more wait in line)

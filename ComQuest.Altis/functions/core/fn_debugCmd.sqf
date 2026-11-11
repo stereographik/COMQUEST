@@ -165,6 +165,13 @@ if (_needHq && { count _hq == 0 }) then {
             { [_x] call CQ_fnc_baseDefBuild; _x set ["lostT", -1] } forEach CQ_baseDefs;
             _msg = format ["%1 base defence spots rebuilt", count CQ_baseDefs];
         };
+        case "fullPower": {
+            CQ_testFullPower = _id == 1;
+            publicVariable "CQ_testFullPower";
+            CQ_netNext = 0;
+            call CQ_fnc_netScale;
+            _msg = format ["full power %1: enemy factor %2, infantry cap %3, wave every %4 s", ["OFF", "ON"] select CQ_testFullPower, CQ_scale, CQ_maxInfantry, CQ_waveInterval];
+        };
         case "logs": {
             if (isNil "CQ_logSubs") then { CQ_logSubs = createHashMap };
             private _f = [(_id mod 2) == 1, _id >= 2];

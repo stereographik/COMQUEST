@@ -97,6 +97,21 @@ CQ_assaultRange = 3500;                  // an HQ this close to the player base 
 CQ_assaultSweep = 300;                   // assault groups this close to the command post sweep the base (COMBAT, SAD)
 CQ_assaultBreach = 70;                   // ...and this close, the infantry storms the command post after Colonel Harlan
 
+// --- nGD: the enemy radio network ("break the net, take the net") -------------
+CQ_netEvery = 10;                        // s between two network updates (links, isolation, map)
+CQ_netCoverBase = 7000;                  // m: MAGPIE identifies enemies this close to the base...
+CQ_netCoverRelay = 4000;                 // ...or this close to a relay we hold (nothing beyond: no data link)
+CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
+CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up
+CQ_relayRange = 30;                      // m from a fallen tower site to deploy a relay
+CQ_relayRetakeRange = 4000;              // the nearest enemy HQ this close sends a squad to destroy a new relay
+CQ_lowStockShare = 0.2;                  // HQ marker shows [low ammo] under this share of its depot cap
+CQ_buildSlowNear = 0.5;                  // construction speed while players are near / just after contact (was a full stop)
+// player scaling (CQ_fnc_netScale): full power = 4 full squads
+CQ_fullPowerPlayers = 24;
+CQ_scaleMin = 0.35;                      // fewest players: 35 % of the infantry cap, waves up to twice as slow
+CQ_testFullPower = false;                // TEST: play as if CQ_fullPowerPlayers were connected (debug panel toggle)
+
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 6;                         // root insertions in a campaign (victory after the last one)
 CQ_rootInterval = 3600;                  // seconds between root insertions

@@ -149,6 +149,13 @@ private _flying = CQ_mag select { alive (_x get "veh") && { (_x getOrDefault ["p
 // identified with a chance per pass (CQ_magSpotChance by kind): it takes several passes to see
 // everything. A contact already identified is tracked while it stays in line of sight: those
 // are the live enemy positions every player sees on the map (CQ_magVisible).
+// nGD: MAGPIE only identifies what lies inside her coverage: CQ_netCoverBase around the base and
+// CQ_netCoverRelay around every relay we hold (CQ_fnc_relayDeploy). Drones still fly anywhere.
+private _covered = {
+    params ["_p"];
+    (_p distance2D CQ_basePos) < CQ_netCoverBase
+    || { ((missionNamespace getVariable ["CQ_relays", []]) findIf { alive (_x select 1) && { _p distance2D (_x select 2) < CQ_netCoverRelay } }) > -1 }
+};
 if (time >= CQ_magDetectT) then {
     CQ_magDetectT = time + CQ_magDetectEvery;
     {
@@ -164,6 +171,7 @@ if (time >= CQ_magDetectT) then {
         {
             private _o = _x;
             if (!alive _o || { !(side _o in [east, resistance]) }) then { continue };
+            if !([_o] call _covered) then { continue };      // nGD: no data link out there, nothing identified
             private _k = hashValue _o;
             private _rec = CQ_magSeen getOrDefault [_k, []];
             if (_rec isNotEqualTo [] && { time - (_rec select 2) < CQ_magDetectEvery - 1 }) then { continue };   // another drone just saw it
@@ -203,6 +211,7 @@ if (time >= CQ_magDetectT) then {
             private _h = _y;
             if !((_h get "state") in CQ_activeStates) then { continue };
             if ((_h get "pos") distance2D _v > _r) then { continue };
+            if !([_h get "pos"] call _covered) then { continue };
             if !(terrainIntersectASL [_eye, AGLToASL ((_h get "pos") vectorAdd [0, 0, 3])]) then {
                 private _id = _h get "id";
                 if !(_id in CQ_magHqSeen) then { CQ_magHqSeen set [_id, -2] };   // -2: seen, not reported yet

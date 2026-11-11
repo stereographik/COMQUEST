@@ -130,10 +130,13 @@ private _wait = {
         sleep 1;
         private _fight = (time - (_hq get "lastContactT") < CQ_buildPauseAfterContact)
             || { ((_c nearEntities [["CAManBase", "LandVehicle", "Air"], CQ_buildPauseRange]) findIf { alive _x && { side group _x == west } }) > -1 };
+        // nGD: players near or a recent contact slow the work down (CQ_buildSlowNear) instead of
+        // stopping it: hanging around a site is no longer a pause button, the build is a race
         if (_fight) then {
-            if (!_paused) then { _paused = true; ["HQ #%1: construction paused, battle at the site", [_id]] call CQ_fnc_log };
+            if (!_paused) then { _paused = true; ["HQ #%1: construction slowed down, battle at the site", [_id]] call CQ_fnc_log };
+            _left = _left - CQ_buildSlowNear;
         } else {
-            if (_paused) then { _paused = false; ["HQ #%1: construction resumes", [_id]] call CQ_fnc_log };
+            if (_paused) then { _paused = false; ["HQ #%1: construction back to full speed", [_id]] call CQ_fnc_log };
             _left = _left - 1;
         };
         _left <= 0 || { _hq get "skipStage" }
@@ -214,6 +217,7 @@ private _radio = ["Land_TTowerBig_2_F", _sites select 1, 0, true] call _placeAt;
 _radio setVariable ["CQ_objType", "Radio tower"];
 _radio setVariable ["CQ_hqId", _id];
 _hq set ["radio", _radio];
+if (!isNull _radio) then { _hq set ["radioPos", getPosATL _radio] };     // nGD: where a relay can go once the HQ falls
 _radio addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
     if (isNil "_hq") exitWith {};

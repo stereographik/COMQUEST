@@ -73,6 +73,11 @@ private _txt = if ((_hq get "state") == "Destroyed") then {
         default { "alive" };
     };
     private _all = _hq get "installations";
-    format ["[%1][%2][%3/%4 objectives]", [_id] call CQ_fnc_objName, _cmd, { !alive _x } count _all, count _all]
+    // nGD: what the network does to it
+    private _tags = "";
+    if (_hq getOrDefault ["isolated", false]) then { _tags = _tags + "[isolated]" };
+    if ((_hq getOrDefault ["stock", 0]) < CQ_lowStockShare * (_hq getOrDefault ["cap", 1])) then { _tags = _tags + "[low ammo]" };
+    format ["[%1][%2][tower %5][%3/%4 objectives]%6", [_id] call CQ_fnc_objName, _cmd, { !alive _x } count _all, count _all,
+        ["down", "up"] select (alive (_hq get "radio")), _tags]
 };
 if (markerText _m != _txt) then { _m setMarkerText _txt };

@@ -62,7 +62,7 @@ private _cats = [
     ]],
     ["CARRIER & ENEMY FORCES", [
         ["Landing now", "root"], ["Supply flight now", "flight"], ["Carrier -1 HQ", "carrierMinus"],
-        ["Carrier full", "carrierFull"], ["Kill all enemies", "killAll"]
+        ["Carrier full", "carrierFull"], ["Kill all enemies", "killAll"], ["Full power (4 full squads)", "!fullPower"]
     ]],
     ["STORY & RADIO", [
         ["Next act", "actNext"], ["SITREP now", "sitrep"], ["Reset speech budget", "storyReset"]
@@ -111,6 +111,11 @@ private _toggles = [];
                 case "!mapEnemy": { CQ_dbgShowEnemy = !CQ_dbgShowEnemy };
                 case "!mapFriend": { CQ_dbgShowFriend = !CQ_dbgShowFriend };
                 case "!mapHq": { CQ_dbgShowHq = !CQ_dbgShowHq };
+                case "!fullPower": {
+                    private _on = !(missionNamespace getVariable ["CQ_testFullPower", false]);
+                    CQ_testFullPower = _on;        // label right away; the server applies it
+                    ["fullPower", [0, 1] select _on] remoteExec ["CQ_fnc_debugCmd", 2];
+                };
                 case "!logEnemy";
                 case "!logFriend": {
                     private _f = +(missionNamespace getVariable ["CQ_myLogs", [false, false]]);
@@ -142,6 +147,7 @@ uiNamespace setVariable ["CQ_dbgToggleLabels", {
             case "!mapEnemy": { CQ_dbgShowEnemy };
             case "!mapFriend": { CQ_dbgShowFriend };
             case "!mapHq": { CQ_dbgShowHq };
+            case "!fullPower": { missionNamespace getVariable ["CQ_testFullPower", false] };
             case "!logEnemy": { (missionNamespace getVariable ["CQ_myLogs", [false, false]]) select 0 };
             case "!logFriend": { (missionNamespace getVariable ["CQ_myLogs", [false, false]]) select 1 };
             case "!god": { CQ_dbgGod };

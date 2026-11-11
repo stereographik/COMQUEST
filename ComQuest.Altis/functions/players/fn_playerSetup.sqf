@@ -76,6 +76,11 @@ player addAction ["<t color='#918C3B'>Teleport to the squad respawn vehicle</t>"
     { ["use", player] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 5.5, true, true, "",
     "vehicle _this == _this && { _this distance2D CQ_musterPos < CQ_rspBaseRange } && { private _rv = group _this getVariable ['CQ_rspVeh', objNull]; alive _rv && { (_rv getVariable ['CQ_rspLeft', 0]) > 0 } }"];
 
+// nGD: engineers put a friendly relay on the tower site of a fallen enemy HQ (CQ_fnc_relayDeploy)
+player addAction ["<t color='#918C3B'>Deploy relay (take over the node)</t>",
+    { [player] remoteExec ["CQ_fnc_relayDeploy", 2] }, nil, 6, true, true, "",
+    "vehicle _this == _this && { (_this getVariable ['CQ_class', '']) == 'Engineer' } && { ((missionNamespace getVariable ['CQ_relaySites', []]) findIf { _this distance2D (_x select 1) < CQ_relayRange }) > -1 }"];
+
 // Hub menu (squads, class, stats, shop, debug): U key + one scroll menu entry (re-added on every respawn)
 player addAction ["<t color='#918C3B'>Menu (U)</t>", { [] spawn CQ_fnc_menuUi }, nil, 0.6, false, true, "", "_this == _target"];
 if (isNil "CQ_squadKeyBound") then {
