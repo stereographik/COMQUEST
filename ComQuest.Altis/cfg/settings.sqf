@@ -426,7 +426,7 @@ CQ_arsenalGates = [
     [["Toolkit"],                                       ["Engineer"]],
     [["MineDetector"],                                  ["Engineer"]],
     [["LaserDesignator", "@Laserdesignator"],           ["Squad Leader"]],
-    [["@Rangefinder"],                                  ["Squad Leader", "Marksman", "Sniper"]],
+    [["@Rangefinder"],                                  ["Squad Leader", "Marksman", "Sniper", "Light Anti-Tank", "Heavy Anti-Tank", "Anti-Air"]],
     [["UAVTerminal", "@UAV_01_backpack", "@UAV_06"],    ["Squad Leader", "Engineer"]],
     [["@Ghillie"],                                      ["Marksman", "Sniper"]],
     [["@PilotHelmet", "@PilotCoveralls", "@HeliPilotCoveralls"], ["Pilot"]]
