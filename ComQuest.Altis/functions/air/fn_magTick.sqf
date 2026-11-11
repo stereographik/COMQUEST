@@ -119,6 +119,27 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         _m set ["planT", -1e6];                             // first route right away
         ["MAGPIE: %1 airborne after %2 s", [_m get "name", round (time - (_m get "rollT"))]] call CQ_fnc_log;
         if ((_m get "name") find "Sentinel" == 0) then { ["magLaunch", [(_m get "name") splitString "_" joinString " "]] call CQ_fnc_say };
+        // TEST ONLY (CQ_testMagPhotos, remove before merging to main): each Sentinel taking off
+        // photographs the friendly vehicles and players around the base at once, as a report
+        if (CQ_testMagPhotos && { (_m get "name") find "Sentinel" == 0 }) then {
+            private _subj = (allPlayers select { alive _x }) + ((CQ_basePos nearEntities [["LandVehicle", "Air", "StaticWeapon"], 1500]) select {
+                alive _x && { !(_x getVariable ["CQ_magpie", false]) } && { _x != _v } });
+            _subj = _subj select [0, CQ_magPhotoMax];
+            private _ph = [];
+            {
+                CQ_magPhotoN = CQ_magPhotoN + 1;
+                _ph pushBack format ["%1:%2", CQ_magPhotoN, typeOf _x];
+                ["shot", [CQ_magPhotoN, _x, _v]] remoteExec ["CQ_fnc_magPhoto", 0];
+            } forEach _subj;
+            if (_ph isNotEqualTo []) then {
+                [_ph, _m get "name"] spawn {
+                    params ["_ph", "_n"];
+                    sleep 2;     // the "shot" messages reach every client first
+                    ["magReport", [format ["<rich><br/><t size='0.8' color='#F2F1DF'>TEST: %1 photographs friendly units at the base.</t><ph>%2</ph>", _n splitString "_" joinString " ", _ph joinString ","]]] call CQ_fnc_say;
+                };
+                ["MAGPIE TEST: %1 photographed %2 friendly units", [_m get "name", count _ph]] call CQ_fnc_log;
+            };
+        };
     };
 } forEach CQ_mag;
 // take-off clearance: the waiting drone nearest the take-off spot, once nobody is rolling
@@ -178,7 +199,7 @@ if (time >= CQ_magDetectT) then {
                 if (_c != "inf" && { count CQ_magPhotoPend < CQ_magPhotoMax }) then {
                     CQ_magPhotoN = CQ_magPhotoN + 1;
                     CQ_magPhotoPend pushBack [CQ_magPhotoN, typeOf _o];
-                    [CQ_magPhotoN, _o, _v] remoteExec ["CQ_fnc_magPhoto", 0];
+                    ["shot", [CQ_magPhotoN, _o, _v]] remoteExec ["CQ_fnc_magPhoto", 0];
                 };
                 private _fp = missionNamespace getVariable ["CQ_magFocus", []];
                 // the focus (and the end of the Sentinels' search circuits) needs a contact on the

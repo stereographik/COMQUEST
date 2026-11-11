@@ -79,6 +79,7 @@ CQ_uiLoop = true;
             private _h = ((ctrlTextHeight _txtC) + 12 * _py) max (40 * _py);
             // photo grid under the text: [ctrl, dx, dy, w, h] relative to the text block
             private _extra = [];
+            private _cams = [];
             if (_photos isNotEqualTo []) then {
                 private _cell = CQ_magPhotoPx;
                 private _cols = 4;
@@ -94,7 +95,10 @@ CQ_uiLoop = true;
                     private _pic = _d ctrlCreate ["RscPicture", -1];
                     private _cfg = configFile >> "CfgVehicles" >> _cls;
                     private _prev = getText (_cfg >> "editorPreview");
-                    _pic ctrlSetText (if (isPiPEnabled) then { format ["#(argb,128,128,1)r2t(cq_ph_%1,1.0)", _id mod CQ_magPhotoSlots] } else { [_prev, getText (_cfg >> "picture")] select (_prev == "") });
+                    // live camera while the card is shown (CQ_fnc_magPhoto); none -> the editor preview
+                    private _cam = ["start", [_id]] call CQ_fnc_magPhoto;
+                    if (!isNull _cam) then { _cams pushBack _cam };
+                    _pic ctrlSetText (if (!isNull _cam) then { format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _id mod CQ_magPhotoSlots, CQ_magPhotoPx] } else { [_prev, getText (_cfg >> "picture")] select (_prev == "") });
                     private _name = _d ctrlCreate ["RscText", -1];
                     _name ctrlSetText getText (_cfg >> "displayName");
                     _name ctrlSetFont "PuristaLight";
@@ -109,7 +113,7 @@ CQ_uiLoop = true;
             };
             private _ctrls = [_bg, _iconBg, _icon, _txtC];
             { _x ctrlSetFade 1; _x ctrlCommit 0 } forEach (_ctrls + (_extra apply { _x select 0 }));
-            CQ_uiCards pushBack [_ctrls, _h, time + 6 + 0.05 * count _txt + 3 * count _photos, _extra];
+            CQ_uiCards pushBack [_ctrls, _h, time + 6 + 0.05 * count _txt + 3 * count _photos, _extra, _cams];
             call _layout;
             { _x ctrlSetFade 0; _x ctrlCommit 0.25 } forEach (_ctrls + (_extra apply { _x select 0 }));
         };
@@ -119,6 +123,7 @@ CQ_uiLoop = true;
             { { _x ctrlSetFade 1; _x ctrlCommit 0.4 } forEach ((_x select 0) + ((_x param [3, []]) apply { _x select 0 })) } forEach _old;
             sleep 0.4;
             { { ctrlDelete _x } forEach ((_x select 0) + ((_x param [3, []]) apply { _x select 0 })) } forEach _old;
+            { { ["stop", [_x]] call CQ_fnc_magPhoto } forEach (_x param [4, []]) } forEach _old;     // photo cameras off with their card
             CQ_uiCards = CQ_uiCards - _old;
             call _layout;
         };
