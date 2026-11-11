@@ -7,6 +7,7 @@
     Carrier and forces:   root, flight, carrierMinus, carrierFull, killAll
     Story:                actNext, sitrep, storyReset
     MAGPIE:               magReport, magLaunch, magKill
+    Events:               crash, tpCrash, decrypt
     Player (the caller):  heal, tpBase, tpHq, points, vehFix
     Base and world:       vehReset, defRebuild, time1, noon, night, clearWx
     View:                 playerView (the game as a final player sees it: no debug output)
@@ -118,6 +119,20 @@ if (_needHq && { count _hq == 0 }) then {
         case "sitrep": { CQ_sitrepT = -1e6; CQ_storyQuietUntil = -1; CQ_actNext = 0; _msg = "SITREP on the next story tick" };
         case "storyReset": { CQ_storyCrossroadT = -1e6; CQ_storyQuietUntil = -1; CQ_storyLast = createHashMap; _msg = "speech budget, silence and cooldowns reset" };
         case "magReport": { CQ_magReportT = -1e6; CQ_magNext = 0; _msg = "MAGPIE report on the next tick (only if something is new)" };
+        case "crash": {
+            CQ_crashLastT = time;
+            _msg = if (call CQ_fnc_crashStart) then { format ["crash site placed at %1", mapGridPosition CQ_crashPos] } else { "no crash site found, try again" };
+        };
+        case "tpCrash": {
+            if (isNil "CQ_crashPos") then { _msg = "no crash yet" } else {
+                if (!isNull _p) then {
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, CQ_crashPos getPos [400, CQ_crashPos getDir CQ_basePos]] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
+                    _msg = "teleported 400 m from the crash site";
+                };
+            };
+        };
+        case "decrypt": { [objNull] call CQ_fnc_crashSecure; _msg = format ["decryption on for %1 s", CQ_crashDecrypt] };
         case "magLaunch": {
             { if (!alive (_x get "veh")) then { _x set ["due", time] } } forEach CQ_mag;
             CQ_magNext = 0; _msg = "missing drones launch now";

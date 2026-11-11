@@ -194,6 +194,15 @@ class CfgFunctions
             class ammoFlight {};
         };
 
+        class events
+        {
+            file = "functions\events";
+            class crashTick {};
+            class crashStart {};
+            class crashSecure {};
+            class crashRoam {};
+        };
+
         class air
         {
             file = "functions\air";

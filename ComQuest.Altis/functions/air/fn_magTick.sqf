@@ -167,6 +167,7 @@ private _dRelays = ((CQ_mag select { (_x getOrDefault ["role", ""]) == "dormant"
 private _covered = {
     params ["_p"];
     (_p distance2D CQ_basePos) < CQ_netCoverBase
+    || { time < (missionNamespace getVariable ["CQ_decryptUntil", -1]) }       // crash event: decryption
     || { ((missionNamespace getVariable ["CQ_relays", []]) findIf { alive (_x select 1) && { _p distance2D (_x select 2) < CQ_netCoverRelay } }) > -1 }
     || { CQ_magDormantRelay && { (_dRelays findIf { _p distance2D _x < CQ_netCoverRelay }) > -1 } }
 };

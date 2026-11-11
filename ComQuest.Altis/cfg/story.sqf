@@ -288,6 +288,30 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "Heads up: %1 is %2 km out. Their next wave comes here, not west."]]
     ]],
     // nGD [hq name] - a relay put up on a fallen HQ's tower site
+    ["crashDown", [
+        [["CROSSROAD", "All stations, a CSAT transport just went down at grid %1. It was carrying their comms gear. We want that crate."]],
+        [["CROSSROAD", "CSAT lost a transport at grid %1. Crash site, survivors, and a crate of their radio kit. Go get it."]]
+    ]],
+    ["crashContact", [
+        [["COMHAT", "...crash site under fire, requesting extraction support from the carrier..."], ["CROSSROAD", "They've called the carrier. You don't have long. Take that crate."]],
+        [["COMHAT", "...survivors engaged at the wreck, carrier, send help..."], ["CROSSROAD", "The carrier knows. Something's coming. Grab the crate and go."]]
+    ]],
+    ["crashLate", [
+        [["CROSSROAD", "Two minutes, maybe less, before their help arrives at the wreck."]],
+        [["CROSSROAD", "Hurry up at the crash site. Their carrier is about to drop something nasty."]]
+    ]],
+    ["crashDrop", [
+        [["COMHAT", "...package inbound to the wreck, armour on the ground shortly..."], ["CROSSROAD", "Armour dropping on the crash site. The crate is still there. Your call."]],
+        [["CROSSROAD", "Too slow: their carrier dropped armour on the wreck. The crate is still up for grabs."]]
+    ]],
+    ["crashSecured", [
+        [["CROSSROAD", "%1 has the crate. The techs are on it... we're in their network. MAGPIE sees everything for a while."]],
+        [["CROSSROAD", "Crate secured by %1. Decrypting now: every HQ and tower they have is on your map."]]
+    ]],
+    ["decryptEnd", [
+        [["CROSSROAD", "They've changed their keys. Decryption is over: back to the old ways."]],
+        [["CROSSROAD", "We've lost the decryption. It was nice while it lasted."]]
+    ]],
     ["relayUp", [
         [["CROSSROAD", "Relay up on the ruins of %1. MAGPIE has eyes out there now."]],
         [["CROSSROAD", "Good. %1 is our node now. Expect them to want it back."]]
@@ -397,7 +421,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "decryptEnd"];
 
 CQ_uiCardX = 19;                          // px from the screen's left edge to the card (its border then lines up with the vehicle panel, ~16 px)
 CQ_uiCardY = 300;                         // px from the top: first card (below the map screen's menu)

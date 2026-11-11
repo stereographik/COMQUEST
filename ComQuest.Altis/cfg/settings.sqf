@@ -119,6 +119,36 @@ CQ_assaultRange = 3500;                  // an HQ this close to the player base 
 CQ_assaultSweep = 300;                   // assault groups this close to the command post sweep the base (COMBAT, SAD)
 CQ_assaultBreach = 70;                   // ...and this close, the infantry storms the command post after Colonel Harlan
 
+// --- Event: enemy transport crash (CQ_fnc_crashTick / crashStart / crashSecure / crashRoam) -----
+// A CSAT transport goes down between the base and an enemy HQ: wreck, a crate of enemy comms
+// gear and CQ_crashSurvivors guarding it. Their first contact with us starts a hidden
+// CQ_crashTimer s countdown (a "securing device" warning under the signal panel); if the crate
+// is not secured by then, the carrier paradrops one of CQ_crashDropClasses with a squad, which
+// roams around the site for CQ_crashRoam s, then joins the nearest enemy HQ. A player reaching
+// the crate secures it (no condition): CQ_crashDecrypt s of decryption = MAGPIE sees everywhere
+// and every enemy HQ and radio tower is shown on the map.
+// When: the front has not moved (no HQ built, fallen or launched, no relay) for CQ_crashStagnant
+// s; at most every CQ_crashCooldown s; plus a CQ_crashEarlyChance chance of one in the first
+// CQ_crashEarlyWindow s. Debug panel: Trigger crash / Teleport to crash / Decrypt now.
+CQ_crash = true;
+CQ_crashStagnant = 1200;                 // s without any front change
+CQ_crashCooldown = 2400;                 // s between two crashes (40 min)
+CQ_crashEarlyChance = 0.1;               // chance of a crash in the first CQ_crashEarlyWindow s
+CQ_crashEarlyWindow = 900;               // s (15 min)
+CQ_crashSiteFrac = [0.35, 0.65];         // site between the base (0) and an enemy HQ (1)
+CQ_crashPlayerGap = 800;                 // m: never right next to a player
+CQ_crashWrecks = ["Land_Wreck_Plane_Transport_01_F", "Land_Wreck_Heli_Attack_02_F", "Land_UWreck_Heli_Attack_02_F"];   // first that exists
+CQ_crashCrate = "Box_East_Support_F";
+CQ_crashSurvivors = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_LAT_F", "O_Soldier_F"];
+CQ_crashSkill = 0.75;                    // survivors: sharp
+CQ_crashTimer = 600;                     // s after their first contact before the carrier drops help
+CQ_crashWarn = 120;                      // s before the drop: CROSSROAD warns
+CQ_crashDropClasses = ["I_LT_01_cannon_F", "O_APC_Tracked_02_cannon_F", "O_APC_Wheeled_02_rcws_v2_F", "I_APC_Wheeled_03_cannon_F"];   // Nyx, Kamysh, Marid, Gorgon (DLC ones skipped)
+CQ_crashDropSquad = ["O_Soldier_TL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_Soldier_F"];   // in its cargo seats
+CQ_crashRoam = 600;                      // s the dropped vehicle roams around the site
+CQ_crashRoamR = [150, 900];              // m: roaming radius, close -> large -> close
+CQ_crashDecrypt = 720;                   // s of decryption (12 min)
+
 // --- nGD: the enemy radio network ("break the net, take the net") -------------
 CQ_netEvery = 10;                        // s between two network updates (links, isolation, map)
 CQ_netCoverBase = 7000;                  // m: MAGPIE identifies enemies this close to the base...
