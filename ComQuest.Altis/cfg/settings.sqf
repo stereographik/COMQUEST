@@ -534,6 +534,7 @@ CQ_magPhotoSlots = 24;                   // render textures reused in turn (cq_p
 CQ_magPhotoFov = 0.25;                   // camera field of view (zoom)
 CQ_magPhotoFill = 0.8;                   // the vehicle's bounding sphere fills this share of the frame
 // (a photo is a live thumbnail: its camera exists only while the report card is on screen)
+CQ_magPhotoBorder = 3;                   // frame thickness around each thumbnail, px
 CQ_magPhotoPx = 64;                      // square thumbnail size on the card and render texture size, px
 CQ_magPhotoAspect = 4 / 3;               // the camera's own ratio (it renders it squeezed into the square texture): the picture is unsqueezed to it, then centre-cropped to the square (raise it if things still look too thin)
 CQ_magMarkerTime = 10;                   // s the report dots stay on the map

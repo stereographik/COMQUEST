@@ -29,7 +29,9 @@ CQ_uiLoop = true;
     private _y0 = safezoneY + 250 * _py;
     private _w = CQ_uiCardWidth * _px;
     private _ic = 44 * _px;                     // icon column
-    private _gap = 6 * _py;
+    private _gap = (6 + 2 * CQ_uiCardBorder) * _py;
+    private _bpx = CQ_uiCardBorder * _px;
+    private _bpy = CQ_uiCardBorder * _py;
     private _pad = 8 * _px;
     private _icons = createHashMapFromArray [
         ["CROSSROAD", "\A3\ui_f\data\igui\cfg\simpleTasks\types\radio_ca.paa"],
@@ -43,7 +45,9 @@ CQ_uiLoop = true;
         private _y = _y0;
         {
             _x params ["_ctrls", "_h", "_t", ["_extra", []]];
-            _ctrls params ["_bg", "_iconBg", "_icon", "_txtC"];
+            _ctrls params ["_bg", "_iconBg", "_icon", "_txtC", ["_frm", controlNull]];
+            // border: a slightly bigger plate behind the card (CQ_uiCardBorder px all round)
+            if (!isNull _frm) then { _frm ctrlSetPosition [_x0 - _bpx, _y - _bpy, _w + 2 * _bpx, _h + 2 * _bpy] };
             _bg ctrlSetPosition [_x0, _y, _w, _h];
             _iconBg ctrlSetPosition [_x0, _y, _ic, _h];
             _icon ctrlSetPosition [_x0 + (_ic - 26 * _px) / 2, _y + (_h - 26 * _py) / 2, 26 * _px, 26 * _py];
@@ -62,6 +66,8 @@ CQ_uiLoop = true;
         // new messages -> new cards at the bottom of the stack
         while { (CQ_uiQueue isNotEqualTo []) && { count CQ_uiCards < CQ_uiCardMax } } do {
             (CQ_uiQueue deleteAt 0) params ["_who", "_txt", ["_photos", []]];
+            private _frm = _d ctrlCreate ["RscText", -1];        // border plate, created first: drawn under the card
+            _frm ctrlSetBackgroundColor CQ_uiCardBorderColor;
             private _bg = _d ctrlCreate ["RscText", -1];
             _bg ctrlSetBackgroundColor (CQ_ui get "panel");
             private _iconBg = _d ctrlCreate ["RscText", -1];
@@ -85,9 +91,9 @@ CQ_uiLoop = true;
                 private _cell = CQ_magPhotoPx;                 // square thumbnail
                 private _cw = round (_cell * CQ_magPhotoAspect); // the picture at the camera's own ratio, centre-cropped to the square
                 private _cols = floor ((CQ_uiCardWidth - 60 + 6) / (_cell + 6)) max 1;   // as many as the text block holds
-                private _g = 6;
+                private _g = 4 + 2 * CQ_magPhotoBorder;   // room for the frames between two thumbnails
                 private _lab = 13;
-                private _top = _h - 4 * _py;
+                private _top = _h - 4 * _py + CQ_magPhotoBorder * _py;
                 {
                     _x params ["_id", "_cls"];
                     private _cx = (_forEachIndex mod _cols) * (_cell + _g) * _px;
@@ -114,14 +120,15 @@ CQ_uiLoop = true;
                     _name ctrlSetFont "PuristaLight";
                     _name ctrlSetFontHeight (11 * _py);
                     _name ctrlSetTextColor [0.95, 0.94, 0.87, 1];
-                    _extra pushBack [_frame, _cx - 1 * _px, _cy - 1 * _py, (_cell + 2) * _px, (_cell + 2) * _py];
+                    private _bw = CQ_magPhotoBorder;
+                    _extra pushBack [_frame, _cx - _bw * _px, _cy - _bw * _py, (_cell + 2 * _bw) * _px, (_cell + 2 * _bw) * _py];
                     _extra pushBack [_win, _cx, _cy, _cell * _px, _cell * _py];
                     _extra pushBack [_name, _cx, _cy + _cell * _py, _cell * _px, _lab * _py];
                 } forEach _photos;
                 private _rows = ceil ((count _photos) / _cols);
                 _h = _top + _rows * (_cell + _lab + _g) * _py + 4 * _py;
             };
-            private _ctrls = [_bg, _iconBg, _icon, _txtC];
+            private _ctrls = [_bg, _iconBg, _icon, _txtC, _frm];
             { _x ctrlSetFade 1; _x ctrlCommit 0 } forEach (_ctrls + (_extra apply { _x select 0 }));
             CQ_uiCards pushBack [_ctrls, _h, time + 6 + 0.05 * count _txt + 3 * count _photos, _extra, _cams, _pics];
             call _layout;
