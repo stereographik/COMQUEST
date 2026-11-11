@@ -9,16 +9,15 @@
           sight to it (unit vector) and where it stood (CQ_magPhotoInfo: id -> [obj, dir, pos])
       ["start", [_id]] -> camera or objNull   CQ_fnc_storyUi, card on screen and map closed:
           camera on that line of sight, CQ_magPhotoDist (12 m) from a vehicle,
-          CQ_magPhotoDistInf (3 m) from a soldier, rendering into "cq_ph_<slot>"; it follows the
-          target (camSetPos every frame, aim locked on it); target dead or gone: it stays on
-          the spot where the target was seen
+          CQ_magPhotoDistInf (3 m) from a soldier, placed where the target is when the card
+          appears, then never moved: a still frame (Arma has no way to freeze a render texture,
+          only to keep its camera motionless)
       ["stop", [_cam]]   CQ_fnc_storyUi, card gone
     Without Picture-in-Picture: objNull (the card shows the editor preview).
 */
 params ["_mode", ["_args", []]];
 if (!hasInterface) exitWith { objNull };
 if (isNil "CQ_magPhotoInfo") then { CQ_magPhotoInfo = createHashMap };
-if (isNil "CQ_magPhotoCams") then { CQ_magPhotoCams = [] };
 
 // where the camera stands for a target: centre of the target + dir x distance, above the ground
 private _camPos = {
@@ -33,8 +32,6 @@ private _camPos = {
     if ((_p select 2) < _g + 1.5) then { _p set [2, _g + 1.5] };
     [_p, _tgt]
 };
-
-if (isNil "CQ_magPhotoCamPos") then { CQ_magPhotoCamPos = _camPos };   // for the frame handler
 
 switch (_mode) do {
     case "shot": {
@@ -56,28 +53,11 @@ switch (_mode) do {
         _cam setVariable ["CQ_ph", _info + [_rtt]];
         _cam cameraEffect ["Internal", "Back", _rtt];
         _cam camSetPos (ASLToAGL _p);
-        if (alive (_info select 0)) then { _cam camSetTarget (_info select 0) } else { _cam camSetTarget (ASLToAGL _t) };
+        _cam camSetTarget (ASLToAGL _t);       // aimed at a point, not the object: the frame never pans
         _cam camSetFov CQ_magPhotoFov;
         _cam camCommit 0;
         _rtt setPiPEffect [0];
-        CQ_magPhotoCams pushBack _cam;
-        // one frame handler keeps every photo camera on its target
-        if (isNil "CQ_magPhotoEh") then {
-            CQ_magPhotoEh = addMissionEventHandler ["EachFrame", {
-                CQ_magPhotoCams = CQ_magPhotoCams select { !isNull _x };
-                {
-                    private _i = _x getVariable ["CQ_ph", []];
-                    if (_i isEqualTo [] || { !alive (_i select 0) }) then { continue };   // dead: stays where it was seen
-                    ((_i select [0, 3]) call (missionNamespace getVariable "CQ_magPhotoCamPos")) params ["_p"];
-                    _x camSetPos (ASLToAGL _p);
-                    _x camCommit 0;
-                } forEach CQ_magPhotoCams;
-                if (CQ_magPhotoCams isEqualTo []) then {
-                    removeMissionEventHandler ["EachFrame", CQ_magPhotoEh];
-                    CQ_magPhotoEh = nil;
-                };
-            }];
-        };
+        // fixed from here on: no panning, a still frame (only the target itself may move in it)
         _cam
     };
     case "stop": {

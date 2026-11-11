@@ -149,7 +149,10 @@ CQ_uiLoop = true;
                 // the target died while the card is up: its thumbnail goes (no wrecks)
                 if (!alive (((missionNamespace getVariable ["CQ_magPhotoInfo", createHashMap]) getOrDefault [_pid, []]) param [0, objNull])) then {
                     if (!isNull _cam) then { ["stop", [_cam]] call CQ_fnc_magPhoto; _x set [3, objNull] };
-                    { if (ctrlFade _x < 1) then { _x ctrlSetFade 1; _x ctrlCommit 0.3 } } forEach _cell;
+                    for "_ci" from 0 to (count _cell) - 1 do {
+                        private _cc = _cell select _ci;
+                        if (!isNil "_cc" && { !isNull _cc } && { ctrlFade _cc < 1 }) then { _cc ctrlSetFade 1; _cc ctrlCommit 0.3 };
+                    };
                     continue;
                 };
                 if (isNull _cam && { !visibleMap }) then {
