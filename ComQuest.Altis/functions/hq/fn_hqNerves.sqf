@@ -20,7 +20,7 @@ private _id = _hq get "id";
 private _c = _hq get "pos";
 private _all = _hq get "installations";
 private _cmdGone = !alive (_hq get "commander") || { _hq getOrDefault ["cmdCaptured", false] };
-private _lost = ({ !alive _x } count _all) + ([0, 1] select _cmdGone);
+private _lost = ({ !alive _x || { _x getVariable ["CQ_hacked", false] } } count _all) + ([0, 1] select _cmdGone);
 
 // ---- level (never goes down)
 private _lvl = _hq getOrDefault ["nerv", 0];

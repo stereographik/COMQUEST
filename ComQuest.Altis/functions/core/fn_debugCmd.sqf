@@ -20,7 +20,7 @@ if !(_caller == 2 || { (admin _caller) == 2 }) exitWith {};     // host or logge
 private _p = (allPlayers select { owner _x == _caller }) param [0, objNull];
 private _hq = CQ_hqs getOrDefault [_id, createHashMap];
 private _msg = "";
-private _needHq = _cmd in ["next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq"];
+private _needHq = _cmd in ["hack", "next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq"];
 
 if (_needHq && { count _hq == 0 }) then {
     _msg = "Select an HQ in the list first";
@@ -93,6 +93,10 @@ if (_needHq && { count _hq == 0 }) then {
         case "depot": {
             private _r = _hq getOrDefault ["depot", objNull];
             if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: depot destroyed", _id] } else { _msg = format ["HQ #%1 has no depot", _id] };
+        };
+        case "hack": {
+            private _r = _hq getOrDefault ["radio", objNull];
+            if (alive _r) then { [_r, _p] call CQ_fnc_towerHack; _msg = format ["HQ #%1: radio tower hacked, it is our relay", _id] } else { _msg = format ["HQ #%1 has no standing radio tower", _id] };
         };
         case "tanker": {
             private _r = _hq getOrDefault ["tanker", objNull];

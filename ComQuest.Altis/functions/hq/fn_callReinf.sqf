@@ -22,7 +22,12 @@ _src set ["lastContactT", time];
 // No radio tower (not built yet, or destroyed): nobody hears the call. Only the HQ's own
 // forces and the squads close to the contact respond.
 private _srcRadio = alive (_src get "radio") && { !(_src getOrDefault ["isolated", false]) };   // nGD: isolated = cut off, nobody hears it
-private _noRadioWhy = if (alive (_src get "radio")) then { "cut off from the network" } else { ["radio tower destroyed", "no radio tower yet"] select (isNull (_src get "radio")) };
+private _noRadioWhy = switch (true) do {
+    case (alive (_src get "radio")): { "cut off from the network" };
+    case (!isNull (_src getOrDefault ["radioHacked", objNull])): { "radio tower hacked" };
+    case (isNull (_src get "radio")): { "no radio tower yet" };
+    default { "radio tower destroyed" };
+};
 
 ["Enemy contact reported", format ["HQ #%1 spotted friendlies near grid %2, calling reinforcements", _srcId, mapGridPosition _pos]] call CQ_fnc_announce;
 ["contact", [format ["HQ%1", _srcId]], _src] call CQ_fnc_say;   // arg only keys the cooldown

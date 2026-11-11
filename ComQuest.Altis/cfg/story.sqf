@@ -331,6 +331,10 @@ CQ_story = createHashMapFromArray [
         [["COMHAT", "...corridor outpost lost, flights rerouting wide, resupply delayed..."], ["CROSSROAD", "Their corridor outpost is down. Their flights take the long way round now: resupply about %1 minutes late."]],
         [["CROSSROAD", "Outpost taken. They've lost their landing corridor: expect their supply flights %1 minutes late, from a new direction."]]
     ]],
+    ["towerHacked", [
+        [["CROSSROAD", "%1's radio tower is ours: hacked, and relaying for MAGPIE. Expect them to want it back."]],
+        [["CROSSROAD", "Nice work on %1's tower. Their network just lost a node, and we gained one."]]
+    ]],
     ["relayUp", [
         [["CROSSROAD", "Relay up on the ruins of %1. MAGPIE has eyes out there now."]],
         [["CROSSROAD", "Good. %1 is our node now. Expect them to want it back."]]
@@ -440,7 +444,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen", "towerHacked"];
 
 CQ_uiCardX = 19;                          // px from the screen's left edge to the card (its border then lines up with the vehicle panel, ~16 px)
 CQ_uiCardY = 300;                         // px from the top: first card (below the map screen's menu)

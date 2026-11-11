@@ -22,7 +22,7 @@ if (isNil "CQ_objMarkDone") then { CQ_objMarkDone = [] };
     private _o = _x;
     private _om = format ["cq_obj_%1_%2", _id, _forEachIndex];
     if (_om in CQ_objMarkDone) then { continue };
-    if (!alive _o) then {
+    if (!alive _o || { _o getVariable ["CQ_hacked", false] }) then {
         deleteMarker _om;
         CQ_objMarkDone pushBack _om;
         continue;
@@ -77,7 +77,7 @@ private _txt = if ((_hq get "state") == "Destroyed") then {
     private _tags = "";
     if (_hq getOrDefault ["isolated", false]) then { _tags = _tags + "[isolated]" };
     if ((_hq getOrDefault ["stock", 0]) < CQ_lowStockShare * (_hq getOrDefault ["cap", 1])) then { _tags = _tags + "[low ammo]" };
-    format ["[%1][%2][tower %5][%3/%4 objectives]%6", [_id] call CQ_fnc_objName, _cmd, { !alive _x } count _all, count _all,
+    format ["[%1][%2][tower %5][%3/%4 objectives]%6", [_id] call CQ_fnc_objName, _cmd, { !alive _x || { _x getVariable ["CQ_hacked", false] } } count _all, count _all,
         ["down", "up"] select (alive (_hq get "radio")), _tags]
 };
 if (markerText _m != _txt) then { _m setMarkerText _txt };

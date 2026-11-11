@@ -57,7 +57,7 @@ uiNamespace setVariable ["CQ_dbgSel", {
 private _cats = [
     ["ENEMY HQ (selected)", [
         ["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"],
-        ["Kill commander", "killCmd"], ["Capture commander", "capture"], ["Destroy radio tower", "tower"],
+        ["Kill commander", "killCmd"], ["Capture commander", "capture"], ["Destroy radio tower", "tower"], ["Hack radio tower", "hack"],
         ["Destroy depot", "depot"], ["Destroy fuel tanker", "tanker"], ["Destroy whole HQ", "destroy"], ["Reinforcement wave now", "wave"]
     ]],
     ["CARRIER & ENEMY FORCES", [
