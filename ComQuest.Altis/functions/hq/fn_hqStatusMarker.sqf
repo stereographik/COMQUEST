@@ -46,8 +46,22 @@ private _ma = format ["cq_ao_%1", _id];
 private _mh = format ["cq_aoh_%1", _id];
 if (markerType _m == "") then {
     createMarker [_m, _hq get "pos"];
-    _m setMarkerType "mil_dot";
-    _m setMarkerSize [0.6, 0.6];
+    // the shield icon (CQ_hqMarkerType; "auto" = the first marker class whose icon is a shield /
+    // defend picture, found once in the game config and logged), else a plain dot
+    if (isNil "CQ_hqMarkerCls") then {
+        CQ_hqMarkerCls = CQ_hqMarkerType;
+        if (CQ_hqMarkerCls == "auto") then {
+            private _hit = ("getNumber (_x >> 'scope') > 0" configClasses (configFile >> "CfgMarkers")) select {
+                private _ic = toLower getText (_x >> "icon");
+                _ic find "shield" > -1 || { _ic find "defend" > -1 }
+            };
+            CQ_hqMarkerCls = if (_hit isEqualTo []) then { "mil_dot" } else { configName (_hit select 0) };
+            ["HQ markers: shield icon -> %1 (icon %2; candidates %3)", [CQ_hqMarkerCls,
+                if (_hit isEqualTo []) then { "none found" } else { getText ((_hit select 0) >> "icon") }, _hit apply { configName _x }]] call CQ_fnc_log;
+        };
+    };
+    _m setMarkerType CQ_hqMarkerCls;
+    _m setMarkerSize [0.8, 0.8];
     _m setMarkerColor "ColorOPFOR";
     createMarker [_mh, _hq get "pos"];
     _mh setMarkerShape "ELLIPSE";
