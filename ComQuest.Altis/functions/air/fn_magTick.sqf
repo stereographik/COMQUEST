@@ -183,7 +183,7 @@ if (time >= CQ_magDetectT) then {
                 if (random 1 > ([CQ_magSpotChance getOrDefault [_c, 0.3], CQ_huntSpotChance] select (_o getVariable ["CQ_hunter", false]))) then { continue };   // not identified this pass
                 CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false]];
                 // a new vehicle: the drone takes its photo (rendered on every client) for the next report
-                if (count CQ_magPhotoPend < CQ_magPhotoMax) then {
+                if (CQ_magPhotos && { count CQ_magPhotoPend < CQ_magPhotoMax }) then {
                     CQ_magPhotoN = CQ_magPhotoN + 1;
                     CQ_magPhotoPend pushBack [CQ_magPhotoN, typeOf _o];
                     ["shot", [CQ_magPhotoN, _o, _v]] remoteExec ["CQ_fnc_magPhoto", 0];
