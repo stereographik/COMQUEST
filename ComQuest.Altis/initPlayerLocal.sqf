@@ -43,13 +43,10 @@ call CQ_fnc_rankBoard;
 [] spawn {
     disableSerialization;
     waitUntil { sleep 0.5; !isNull findDisplay 46 };
-    private _c = (findDisplay 46) ctrlCreate ["RscText", -1];
-    _c ctrlSetPosition [safeZoneX + safeZoneW - 0.42, safeZoneY + safeZoneH - 0.028, 0.41, 0.026];
-    _c ctrlSetFont "PuristaLight";
-    _c ctrlSetFontHeight 0.022;
-    _c ctrlSetTextColor [0.95, 0.94, 0.87, 0.45];
-    _c ctrlSetText format ["ComQuest %1  ·  %2  ·  %3", CQ_version, missionNamespace getVariable ["CQ_branch", "?"], CQ_build];
-    _c ctrlSetStyle 1;     // right aligned
+    private _c = (findDisplay 46) ctrlCreate ["RscStructuredText", -1];
+    _c ctrlSetPosition [safeZoneX + safeZoneW - 0.52, safeZoneY + safeZoneH - 0.03, 0.51, 0.028];
+    _c ctrlSetStructuredText parseText format ["<t align='right' font='PuristaLight' size='0.7' color='#73F2F1DF'>ComQuest %1  ·  %2  ·  %3</t>",
+        CQ_version, missionNamespace getVariable ["CQ_branch", "?"], CQ_build];
     _c ctrlCommit 0;
 };       // squad ranking under the base billboard banner    // MAGPIE drones + enemies in their sight, live on the map
 call CQ_fnc_debugMap;
