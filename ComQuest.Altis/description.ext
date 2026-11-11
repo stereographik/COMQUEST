@@ -126,6 +126,7 @@ class CfgFunctions
             class clearWaypoints {};
             class aliveCount {};
             class debugMap {};
+            class weatherTick {};
             class debugCmd {};
             class debugUi {};
             class uiStyle {};

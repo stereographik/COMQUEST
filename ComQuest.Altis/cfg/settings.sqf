@@ -8,7 +8,7 @@ CQ_debug = true;                         // test settings (short stages, debug l
 CQ_playerView = true;                    // final player view by default: no debug chat, cards or markers (toggle in the debug panel)
 CQ_debugCards = false;                   // debug phase messages as orange cards too (story lines use the cards)
 // log lines starting with one of these words go to "Show all friendly logs", every other one to "Show all enemy logs"
-CQ_logFriendlyRx = "(MAGPIE|Sentinel|Squads?|Base|Depot|Vehicle|Respawn|Shop|Score|Player|Muster|Grass|Friendly|Billboard|Redeploy|Repair|Runway|Supply crate|Auto-fill|Heatmap|Intro|Safe|Range|Kit|Story|STORY).*";
+CQ_logFriendlyRx = "(MAGPIE|Sentinel|Squads?|Base|Depot|Vehicle|Respawn|Shop|Score|Player|Muster|Grass|Friendly|Billboard|Redeploy|Repair|Runway|Supply crate|Auto-fill|Heatmap|Intro|Safe|Range|Kit|Story|STORY|Weather|Start).*";
 
 // --- Director -------------------------------------------------------------
 CQ_logVerbose = false;                   // true: also log every drone route / ring / Tigris lock (chatty .rpt)
@@ -69,6 +69,15 @@ CQ_depotPadGap = 24;                     // depot helipad distance behind the re
 // --- Start time: always at dawn, in the first rays of the rising sun
 CQ_startAtDawn = true;
 CQ_startAfterSunrise = 6;                // minutes after sunrise (low golden light)
+
+// --- Weather (CQ_fnc_weatherTick). Delays and transitions in real seconds
+CQ_wxChangeEvery = [900, 1800];          // a change every 15-30 min
+CQ_wxBadChance = 0.10;                   // chance a change brings cloudy or cloudy + rain (else clear <-> partly cloudy)
+CQ_wxTransition = [60, 120];             // every transition takes 1-2 min (never under 1 min)
+CQ_wxRainMax = 240;                      // a rain never lasts more than 4 min (fade in + hold + fade out)
+CQ_wxRainLevel = 0.6;
+CQ_wxFogMorning = [0.2, 0.012, 0];       // light morning fog [density, decay, base]
+CQ_wxFogGoneHour = 11;                   // in-game hour when the fog has slowly faded out
 
 // --- Enemy origin: a carrier off the east coast -------------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
