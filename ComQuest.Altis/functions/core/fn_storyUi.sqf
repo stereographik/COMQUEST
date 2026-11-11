@@ -112,7 +112,7 @@ CQ_uiLoop = true;
                     // closed: no 3D rendering on the map); the editor preview meanwhile / without PiP
                     private _still = [_prev, getText (_cfg >> "picture")] select (_prev == "");
                     _pic ctrlSetText _still;
-                    _pics pushBack [_pic, _id, _still, objNull];
+                    _pics pushBack [_pic, _id, _still, objNull, [_frame, _win, _name]];
                     private _name = _d ctrlCreate ["RscText", -1];
                     _name ctrlSetText getText (_cfg >> "displayName");
                     _name ctrlSetFont "PuristaLight";
@@ -145,7 +145,13 @@ CQ_uiLoop = true;
         // photos: the camera starts once the map is closed; the preview shows while it is open
         {
             {
-                _x params ["_pc", "_pid", "_still", "_cam"];
+                _x params ["_pc", "_pid", "_still", "_cam", ["_cell", []]];
+                // the target died while the card is up: its thumbnail goes (no wrecks)
+                if (!alive (((missionNamespace getVariable ["CQ_magPhotoInfo", createHashMap]) getOrDefault [_pid, []]) param [0, objNull])) then {
+                    if (!isNull _cam) then { ["stop", [_cam]] call CQ_fnc_magPhoto; _x set [3, objNull] };
+                    { if (ctrlFade _x < 1) then { _x ctrlSetFade 1; _x ctrlCommit 0.3 } } forEach _cell;
+                    continue;
+                };
                 if (isNull _cam && { !visibleMap }) then {
                     _cam = ["start", [_pid]] call CQ_fnc_magPhoto;
                     _x set [3, _cam];

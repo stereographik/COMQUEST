@@ -27,6 +27,8 @@ if (_pa > -1) then {
     private _pb = _txt find "</ph>";
     _photos = ((_txt select [_pa + 4, _pb - _pa - 4]) splitString ",") apply { private _p = _x splitString ":"; [parseNumber (_p select 0), _p select 1] };
     _txt = (_txt select [0, _pa]) + (_txt select [_pb + 5]);
+    // only targets still alive: no wrecks, no bodies (CQ_fnc_magPhoto keeps who was photographed)
+    _photos = _photos select { alive ((((missionNamespace getVariable ["CQ_magPhotoInfo", createHashMap]) getOrDefault [_x select 0, []]) param [0, objNull])) };
 };
 private _rich = _txt find "<rich>" > -1;
 _txt = [_txt, "<rich>", ""] call _rep;
