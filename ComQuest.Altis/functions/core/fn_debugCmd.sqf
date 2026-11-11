@@ -196,7 +196,8 @@ if (_needHq && { count _hq == 0 }) then {
             if (isNull _r) then { _r = _hq getOrDefault ["radioHacked", objNull] };
             if (isNull _r) then { _msg = format ["HQ #%1 has no radio tower yet", _id] } else {
                 if (!isNull _p) then {
-                    private _t = (getPosATL _r) getPos [9, (getPosATL _r) getDir (_hq get "pos")];
+                    private _tm = _r getVariable ["CQ_terminal", objNull];
+                    private _t = if (isNull _tm) then { (getPosATL _r) getPos [9, (getPosATL _r) getDir (_hq get "pos")] } else { (getPosATL _tm) getPos [2, getDir _tm] };
                     [_p] remoteExec ["moveOut", _p];
                     [_p, _t] spawn { params ["_p", "_t"]; sleep 0.5; _p setPosATL [_t select 0, _t select 1, 0] };
                     _msg = format ["teleported to the foot of HQ #%1's radio tower", _id];

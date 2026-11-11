@@ -223,7 +223,32 @@ _radio addEventHandler ["HandleDamage", {
     };
     damage _o
 }];
-_radio setVariable ["CQ_hackable", true, true];      // engineers get "Hack radio tower" near it (CQ_fnc_playerSetup)
+_radio setVariable ["CQ_hackable", true, true];
+// the hack is done like defusing a bomb: on a field terminal at the tower's foot, it opens while
+// an Engineer works on it (CQ_hackTime s, interrupted if he moves away or is hit)
+if (!isNull _radio) then {
+    private _tp = (getPosATL _radio) getPos [6, (getPosATL _radio) getDir _c];
+    _tp = [_tp select 0, _tp select 1, 0];
+    private _term = createVehicle ["Land_DataTerminal_01_F", _tp, [], 0, "CAN_COLLIDE"];
+    _term setDir ((_tp getDir (getPosATL _radio)) + 180);
+    _term setVectorUp surfaceNormal _tp;
+    _term allowDamage false;
+    _term setVariable ["CQ_tower", _radio, true];
+    _radio setVariable ["CQ_terminal", _term, true];
+    (_hq get "objects") pushBack _term;
+    [_term,
+        "<t color='#BA392C'>Hack radio tower</t>",
+        "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
+        "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
+        "(_this getVariable ['CQ_class', '']) == 'Engineer' && { _this distance _target < 3 } && { (_target getVariable ['CQ_tower', objNull]) getVariable ['CQ_hackable', false] }",
+        "_caller distance _target < 3 && { alive _caller } && { lifeState _caller != 'INCAPACITATED' }",
+        { params ["_target"]; [_target, 3] call BIS_fnc_dataTerminalAnimate },
+        {},
+        { params ["_target", "_caller"]; [_target getVariable ["CQ_tower", objNull], _caller] remoteExec ["CQ_fnc_towerHack", 2] },
+        { params ["_target"]; [_target, 0] call BIS_fnc_dataTerminalAnimate },
+        [], CQ_hackTime, 1000, false, false
+    ] remoteExec ["BIS_fnc_holdActionAdd", 0, _term];
+};
 // heavily guarded: a squad of its own around the tower (scaled, out of the AI caps)
 if (!isNull _radio) then {
     private _gg = createGroup [east, true];

@@ -76,22 +76,22 @@ player addAction ["<t color='#918C3B'>Teleport to the squad respawn vehicle</t>"
     { ["use", player] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 5.5, true, true, "",
     "vehicle _this == _this && { _this distance2D CQ_musterPos < CQ_rspBaseRange } && { private _rv = group _this getVariable ['CQ_rspVeh', objNull]; alive _rv && { (_rv getVariable ['CQ_rspLeft', 0]) > 0 } }"];
 
-// Radio tower hack (CQ_fnc_towerHack): on the player, not on the tower (a lattice tower is hard
-// to aim at): an Engineer within CQ_hackRange of an enemy tower holds it for CQ_hackTime s
-[player,
-    "<t color='#918C3B'>Hack radio tower</t>",
-    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
-    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
-    "_this == _target && { vehicle _this == _this } && { (_this getVariable ['CQ_class', '']) == 'Engineer' } && { ((nearestObjects [_this, ['Land_TTowerBig_2_F'], CQ_hackRange]) findIf { alive _x && { _x getVariable ['CQ_hackable', false] } }) > -1 }",
-    "alive _caller && { ((nearestObjects [_caller, ['Land_TTowerBig_2_F'], CQ_hackRange]) findIf { alive _x && { _x getVariable ['CQ_hackable', false] } }) > -1 }",
-    {}, {},
-    {
-        params ["", "_caller"];
-        private _t = (nearestObjects [_caller, ["Land_TTowerBig_2_F"], CQ_hackRange]) select { alive _x && { _x getVariable ["CQ_hackable", false] } };
-        if (_t isNotEqualTo []) then { [_t select 0, _caller] remoteExec ["CQ_fnc_towerHack", 2] };
-    },
-    {}, [], CQ_hackTime, 10, false, false
-] call BIS_fnc_holdActionAdd;
+// Radio tower hack: done on the field terminal at the tower's foot (CQ_fnc_hqBuild). Near a
+// tower that can be hacked, a short reminder of who can do it
+if (isNil "CQ_hackHintLoop") then {
+    CQ_hackHintLoop = true;
+    [] spawn {
+        private _last = objNull;
+        while { true } do {
+            sleep 2;
+            private _t = (nearestObjects [player, ["Land_TTowerBig_2_F"], 30]) select { _x getVariable ["CQ_hackable", false] };
+            if (_t isEqualTo [] || { (_t select 0) == _last }) then { continue };
+            _last = _t select 0;
+            hint (["Enemy radio tower: an ENGINEER can hack it on the field terminal at its foot (hold 20 s).",
+                   "Enemy radio tower: go to the field terminal at its foot and hold 'Hack radio tower' (20 s)."] select ((player getVariable ["CQ_class", ""]) == "Engineer"));
+        };
+    };
+};
 
 // nGD: engineers put a friendly relay on the tower site of a fallen enemy HQ (CQ_fnc_relayDeploy)
 player addAction ["<t color='#918C3B'>Deploy relay (take over the node)</t>",

@@ -42,10 +42,13 @@ _close ctrlAddEventHandler ["ButtonClick", { (uiNamespace getVariable ["CQ_dbgDi
 
 // ---- top: status + HQ list
 private _lw = _W - 0.027;
-private _status = ["RscStructuredText", 9001, [_X + 0.015, _Y + _L * 1.3, _lw, _L * 5.2]] call _mk;
+private _status = ["RscStructuredText", 9001, [_X + 0.015, _Y + _L * 1.2, _lw, _L * 4.4]] call _mk;
 _status ctrlSetBackgroundColor (CQ_ui get "inset");
-(["RscText", -1, [_X + 0.015, _Y + _L * 6.6, _lw, _L * 0.8], "ENEMY HQs  (select one for the HQ buttons)"] call _mk) ctrlSetTextColor (CQ_ui get "muted");
-private _list = ["RscListBox", 9000, [_X + 0.015, _Y + _L * 7.4, _lw, _L * 6.5]] call _mk;
+private _lt = ["RscText", -1, [_X + 0.015, _Y + _L * 5.7, _lw, _L * 0.7], "ENEMY HQs  (select one for the HQ buttons)"] call _mk;
+_lt ctrlSetTextColor (CQ_ui get "muted");
+_lt ctrlSetFontHeight (_L * 0.6);
+private _list = ["RscListBox", 9000, [_X + 0.015, _Y + _L * 6.4, _lw, _L * 4.8]] call _mk;
+_list ctrlSetFontHeight (_L * 0.62);
 
 uiNamespace setVariable ["CQ_dbgSel", {
     private _lb = (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) displayCtrl 9000;
@@ -57,72 +60,71 @@ uiNamespace setVariable ["CQ_dbgSel", {
 // [label, command]; command "!x" = local action, else sent to the server
 // [category, [[subcategory, [[label, command], ...]], ...]]; command "!x" = local action, else sent to the server
 private _cats = [
-    ["ENEMY HQ  (select one in the list)", [
-        ["Phase", [["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"], ["Reinforcement wave", "wave"]]],
-        ["Objectives", [["Kill commander", "killCmd"], ["Capture commander", "capture"], ["Hack radio tower", "hack"], ["Destroy radio tower", "tower"],
-                        ["Destroy depot", "depot"], ["Destroy fuel tanker", "tanker"], ["Destroy whole HQ", "destroy"]]],
-        ["Go there", [["Teleport near HQ", "tpHq"], ["Teleport to radio tower", "tpTower"]]]
+    ["TELEPORTERS", [
+        ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Crash site", "tpCrash"], ["Outpost", "tpOp"], ["Base", "tpBase"]]]
+    ]],
+    ["MAP VISIBILITY", [
+        ["Show", [["Enemies", "!mapEnemy"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"]]]
+    ]],
+    ["ENEMY HQ  (selected in the list)", [
+        ["Phase", [["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"], ["Reinf. wave", "wave"]]],
+        ["Objectives", [["Kill cmdr", "killCmd"], ["Capture cmdr", "capture"], ["Hack tower", "hack"], ["Destroy tower", "tower"],
+                        ["Destroy depot", "depot"], ["Destroy tanker", "tanker"], ["Destroy HQ", "destroy"]]]
     ]],
     ["ENEMY FORCES", [
-        ["Carrier", [["Landing now", "root"], ["Supply flight now", "flight"], ["Carrier -1 HQ", "carrierMinus"], ["Carrier full", "carrierFull"]]],
+        ["Carrier", [["Landing now", "root"], ["Supply flight", "flight"], ["Carrier -1 HQ", "carrierMinus"], ["Carrier full", "carrierFull"]]],
         ["Forces", [["Kill all enemies", "killAll"], ["Full power", "!fullPower"]]]
     ]],
     ["EVENTS", [
-        ["Crash", [["Trigger crash", "crash"], ["Retrieve (timer out)", "crashOut"], ["Decrypt now", "decrypt"], ["Teleport to crash", "tpCrash"]]],
-        ["Outpost", [["Build", "opBuild"], ["Jammer off", "opJam"], ["Destroy", "opKill"], ["Teleport to outpost", "tpOp"]]]
+        ["Crash", [["Trigger crash", "crash"], ["Timer out", "crashOut"], ["Decrypt now", "decrypt"]]],
+        ["Outpost", [["Build", "opBuild"], ["Jammer off", "opJam"], ["Destroy", "opKill"]]]
     ]],
     ["FRIENDLY", [
-        ["MAGPIE", [["Report now", "magReport"], ["Launch missing", "magLaunch"], ["Shoot down drones", "magKill"]]],
-        ["Player", [["Heal me", "heal"], ["God mode", "!god"], ["Arsenal here", "!arsenal"], ["+500 squad points", "points"],
-                    ["Fix my vehicle", "vehFix"], ["Teleport to base", "tpBase"]]],
-        ["Base", [["Depot reset", "vehReset"], ["Rebuild defences", "defRebuild"]]]
+        ["MAGPIE", [["Report now", "magReport"], ["Launch missing", "magLaunch"], ["Shoot down", "magKill"]]],
+        ["Player", [["Heal me", "heal"], ["God mode", "!god"], ["Arsenal", "!arsenal"], ["+500 points", "points"], ["Fix vehicle", "vehFix"]]],
+        ["Base", [["Depot reset", "vehReset"], ["Rebuild def.", "defRebuild"]]]
     ]],
     ["WORLD & STORY", [
         ["Time, weather", [["+1 hour", "time1"], ["Noon", "noon"], ["Night", "night"], ["Clear weather", "clearWx"]]],
-        ["Story", [["Next act", "actNext"], ["SITREP now", "sitrep"], ["Reset speech budget", "storyReset"]]]
+        ["Story", [["Next act", "actNext"], ["SITREP now", "sitrep"], ["Reset speech", "storyReset"]]]
     ]],
-    ["VIEW & LOGS", [
-        ["Map", [["Enemies", "!mapEnemy"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"]]],
-        ["Logs, view", [["All enemy logs", "!logEnemy"], ["All friendly logs", "!logFriend"], ["FINAL PLAYER VIEW", "!playerView"]]]
+    ["LOGS & VIEW", [
+        ["Logs, view", [["Enemy logs", "!logEnemy"], ["Friendly logs", "!logFriend"], ["PLAYER VIEW", "!playerView"]]]
     ]]
 ];
-// ---- below: the buttons, in a scrolling group (2 columns, subcategory label above its buttons)
-private _gy = _Y + _L * 14.2;
-private _grp = _d ctrlCreate ["RscControlsGroup", -1];
-_grp ctrlSetPosition [_X + 0.012, _gy, _W - 0.016, _H - (_gy - _Y) - 0.008];
-_grp ctrlCommit 0;
-private _mkG = {
-    params ["_cls", "_pos", ["_txt", ""]];
-    private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), -1, _grp];
-    [_c, _cls] call CQ_fnc_uiStyle;
-    _c ctrlSetPosition _pos;
-    if (_txt != "") then { _c ctrlSetText _txt };
-    _c ctrlCommit 0;
-    _c
-};
-private _rw = _W - 0.016 - 0.03;                       // room for the scrollbar
-private _cols = 2;
-private _bw = (_rw - (_cols - 1) * 0.006) / _cols;
-private _y = 0;
+// ---- below: the buttons, sized to fit the free height (no scrollbar): a subcategory label column,
+// then 3 small buttons per row
+private _top = _Y + _L * 11.5;
+private _rowsN = 0; private _subsN = 0;
+{ { _rowsN = _rowsN + ceil (count (_x select 1) / 3); _subsN = _subsN + 1 } forEach (_x select 1) } forEach _cats;
+private _u = (((_Y + _H - 0.01) - _top) / (_rowsN + 1.35 * count _cats + 0.15 * _subsN)) min 0.03;   // one row
+private _fh = _u * 0.78;                                   // font height
+private _rx = _X + 0.012;
+private _rw = _W - 0.02;
+private _sw = _rw * 0.2;
+private _cols = 3;
+private _bw = (_rw - _sw - (_cols - 1) * 0.004) / _cols;
+private _y = _top;
 private _toggles = [];
 {
     _x params ["_cat", "_subs"];
-    private _h = ["RscText", [0, _y, _rw, _L * 0.8], _cat] call _mkG;
+    private _h = ["RscText", -1, [_rx, _y, _rw, _u], _cat] call _mk;
     _h ctrlSetFont "PuristaMedium";
+    _h ctrlSetFontHeight _fh;
     _h ctrlSetTextColor (CQ_ui get "accent");
-    (["RscText", [0, _y + _L * 0.8, _rw, 0.002]] call _mkG) ctrlSetBackgroundColor (CQ_ui get "accent");
-    _y = _y + _L * 0.9;
+    (["RscText", -1, [_rx, _y + _u, _rw, 0.002]] call _mk) ctrlSetBackgroundColor (CQ_ui get "accent");
+    _y = _y + _u * 1.15;
     {
         _x params ["_sub", "_btns"];
-        private _sl = ["RscText", [0, _y, _rw, _L * 0.7], _sub] call _mkG;
+        private _sl = ["RscText", -1, [_rx, _y, _sw, _u * 0.95], _sub] call _mk;
         _sl ctrlSetTextColor (CQ_ui get "muted");
-        _sl ctrlSetFontHeight (_L * 0.62);
-        _y = _y + _L * 0.7;
+        _sl ctrlSetFontHeight (_fh * 0.9);
         {
             _x params ["_label", "_cmd"];
             private _c = _forEachIndex mod _cols;
-            if (_c == 0 && { _forEachIndex > 0 }) then { _y = _y + _L * 1.02 };
-            private _b = ["RscButton", [_c * (_bw + 0.006), _y, _bw, _L * 0.95], _label] call _mkG;
+            if (_c == 0 && { _forEachIndex > 0 }) then { _y = _y + _u };
+            private _b = ["RscButton", -1, [_rx + _sw + _c * (_bw + 0.004), _y, _bw, _u * 0.92], _label] call _mk;
+            _b ctrlSetFontHeight _fh;
             _b setVariable ["CQ_cmd", _cmd];
             _b setVariable ["CQ_label", _label];
             if ((_cmd select [0, 1]) == "!" && { _cmd != "!arsenal" }) then { _toggles pushBack _b };
@@ -159,9 +161,9 @@ private _toggles = [];
                 call (uiNamespace getVariable ["CQ_dbgToggleLabels", {}]);
             }];
         } forEach _btns;
-        _y = _y + _L * 1.15;
+        _y = _y + _u * 1.15;
     } forEach _subs;
-    _y = _y + _L * 0.3;
+    _y = _y + _u * 0.2;
 } forEach _cats;
 uiNamespace setVariable ["CQ_dbgToggles", _toggles];
 uiNamespace setVariable ["CQ_dbgToggleLabels", {
