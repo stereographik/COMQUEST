@@ -430,6 +430,28 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     // search circuit until the first contact: trunk + loop the first time, then the loop again
     // each time it is flown (a replacement drone starts from the trunk again)
     private _route = CQ_magPatrol getOrDefault [_m get "name", []];
+    // TEST OVERRIDE (CQ_testMagDirect, test branches only): before the first contact the two
+    // Sentinels skip their search circuits and loiter straight over the first enemy HQ site
+    // (known as soon as the insertion is planned)
+    if (CQ_testMagDirect && { _route isNotEqualTo [] } && { isNil "CQ_magContactMade" }) then {
+        private _hs = [(values CQ_hqs) select { (_x get "state") in CQ_activeStates }, [], { _x get "id" }] call BIS_fnc_sortBy;
+        if (_hs isEqualTo []) exitWith {};
+        private _h = _hs select 0;
+        if ((_m getOrDefault ["directHq", -1]) == (_h get "id") && { (_m getOrDefault ["patrolVeh", objNull]) == _v }) exitWith { _route = [] };
+        _m set ["directHq", _h get "id"];
+        _m set ["patrolVeh", _v];
+        _m set ["planT", time];
+        [_gr] call CQ_fnc_clearWaypoints;
+        _v flyInHeight (_m get "alt");
+        private _wp = _gr addWaypoint [_h get "pos", 0];
+        _wp setWaypointType "LOITER";
+        _wp setWaypointLoiterType "CIRCLE_L";
+        _wp setWaypointLoiterRadius (800 * (_m get "scale"));
+        _gr setCurrentWaypoint _wp;
+        _route = [];
+        ["MAGPIE TEST: %1 flies straight to %2 at %3", [_m get "name", [_h get "id"] call CQ_fnc_objName, mapGridPosition (_h get "pos")]] call CQ_fnc_log;
+    };
+    if (CQ_testMagDirect && { _route isEqualTo [] } && { isNil "CQ_magContactMade" } && { (_m getOrDefault ["directHq", -1]) > -1 }) then { continue };
     if (_route isNotEqualTo [] && { isNil "CQ_magContactMade" }) then {
         private _on = (_m getOrDefault ["patrolVeh", objNull]) == _v;
         if (_on && { currentWaypoint _gr < count waypoints _gr }) then { continue };
