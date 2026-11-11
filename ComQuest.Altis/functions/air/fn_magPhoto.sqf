@@ -40,9 +40,14 @@ switch (_mode) do {
         private _rad = (vectorMagnitude (((_bb select 1) vectorDiff (_bb select 0)) vectorMultiply 0.5)) max 1.5;
         private _dist = _rad / ((tan (deg (CQ_magPhotoFov / 2))) * CQ_magPhotoFill);
         private _tgt = _o modelToWorldVisualWorld _ctr;
-        private _cam = "camera" camCreate (ASLToAGL (_tgt vectorAdd (_u vectorMultiply _dist)));
+        private _p0 = _tgt vectorAdd (_u vectorMultiply _dist);
+        private _cam = "camera" camCreate (ASLToAGL _p0);
         _cam setVariable ["CQ_ph", [_o, _u vectorMultiply _dist, _ctr, _rtt]];
         _cam cameraEffect ["Internal", "Back", _rtt];
+        // camera commands only (camSetPos / camSetTarget + camCommit): setPos* on a camera is
+        // overridden by its committed state and it ends up staring at the sky
+        _cam camSetPos (ASLToAGL _p0);
+        _cam camSetTarget _o;              // locked on the vehicle: follows it by itself
         _cam camSetFov CQ_magPhotoFov;
         _cam camCommit 0;
         _rtt setPiPEffect [0];
@@ -58,8 +63,7 @@ switch (_mode) do {
                     private _p = _t vectorAdd _off;
                     private _g = getTerrainHeightASL _p;
                     if ((_p select 2) < _g + 2) then { _p set [2, _g + 2] };
-                    _x setPosASL _p;
-                    _x camSetTarget (ASLToAGL _t);
+                    _x camSetPos (ASLToAGL _p);
                     _x camCommit 0;
                 } forEach CQ_magPhotoCams;
                 if (CQ_magPhotoCams isEqualTo []) then {
