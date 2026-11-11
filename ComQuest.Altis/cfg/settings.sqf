@@ -508,14 +508,13 @@ CQ_magStuckTime = 20;                    // s still on the ground before a drone
 CQ_magRespawn = 480;                     // s before a lost drone is replaced (8 min), on the runway
 CQ_magReportEvery = 120;                 // s between two MAGPIE reports (only if something is new)
 // MAGPIE photos: every new enemy vehicle identified is photographed along the drone's line of
-// sight (render to texture, 128x128) and shown in a grid under the next report
+// sight (render to texture, 64x64) and shown in a grid under the next report
 CQ_magPhotoMax = 8;                      // photos per report at most (4 per row)
 CQ_magPhotoSlots = 24;                   // render textures reused in turn (cq_ph_0..23)
 CQ_magPhotoFov = 0.25;                   // camera field of view (zoom)
 CQ_magPhotoFill = 0.8;                   // the vehicle's bounding sphere fills this share of the frame
 // (a photo is a live thumbnail: its camera exists only while the report card is on screen)
-CQ_testMagPhotos = true;                 // TEST ONLY, set false before merging to main: each Sentinel taking off photographs the friendly units at the base as a report
-CQ_magPhotoPx = 128;                     // square thumbnail size on the card, px
+CQ_magPhotoPx = 64;                      // square thumbnail size on the card and render texture size, px
 CQ_magPhotoAspect = 4 / 3;               // the camera's own ratio (it renders it squeezed into the square texture): the picture is unsqueezed to it, then centre-cropped to the square (raise it if things still look too thin)
 CQ_magMarkerTime = 10;                   // s the report dots stay on the map
 CQ_magDetectEvery = 4;                   // s between two detection passes

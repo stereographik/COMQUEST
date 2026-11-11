@@ -83,9 +83,9 @@ CQ_uiLoop = true;
             if (_photos isNotEqualTo []) then {
                 private _cell = CQ_magPhotoPx;                 // square thumbnail
                 private _cw = round (_cell * CQ_magPhotoAspect); // the picture at the camera's own ratio, centre-cropped to the square
-                private _cols = 4;
+                private _cols = floor ((CQ_uiCardWidth - 60 + 6) / (_cell + 6)) max 1;   // as many as the text block holds
                 private _g = 6;
-                private _lab = 16;
+                private _lab = 13;
                 private _top = _h - 4 * _py;
                 {
                     _x params ["_id", "_cls"];
@@ -107,7 +107,7 @@ CQ_uiLoop = true;
                     private _name = _d ctrlCreate ["RscText", -1];
                     _name ctrlSetText getText (_cfg >> "displayName");
                     _name ctrlSetFont "PuristaLight";
-                    _name ctrlSetFontHeight (13 * _py);
+                    _name ctrlSetFontHeight (11 * _py);
                     _name ctrlSetTextColor [0.95, 0.94, 0.87, 1];
                     _extra pushBack [_frame, _cx - 1 * _px, _cy - 1 * _py, (_cell + 2) * _px, (_cell + 2) * _py];
                     _extra pushBack [_win, _cx, _cy, _cell * _px, _cell * _py];
