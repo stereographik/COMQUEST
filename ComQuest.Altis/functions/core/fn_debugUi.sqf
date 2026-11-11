@@ -58,7 +58,7 @@ private _cats = [
     ["ENEMY HQ (selected)", [
         ["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"],
         ["Kill commander", "killCmd"], ["Capture commander", "capture"], ["Destroy radio tower", "tower"],
-        ["Destroy depot", "depot"], ["Destroy whole HQ", "destroy"], ["Reinforcement wave now", "wave"]
+        ["Destroy depot", "depot"], ["Destroy fuel tanker", "tanker"], ["Destroy whole HQ", "destroy"], ["Reinforcement wave now", "wave"]
     ]],
     ["CARRIER & ENEMY FORCES", [
         ["Landing now", "root"], ["Supply flight now", "flight"], ["Carrier -1 HQ", "carrierMinus"],
