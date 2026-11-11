@@ -524,13 +524,15 @@ CQ_magPadGap = 12;                       // m between two Darter pads
 CQ_magStuckTime = 20;                    // s still on the ground before a drone is nudged forward
 CQ_magRespawn = 480;                     // s before a lost drone is replaced (8 min), on the runway
 CQ_magReportEvery = 120;                 // s between two MAGPIE reports (only if something is new)
-// MAGPIE photos: every new enemy vehicle identified is photographed along the drone's line of
+// MAGPIE photos: every new enemy (vehicle or soldier) identified is photographed along the drone's line of
 // sight (render to texture, 64x64) and shown in a grid under the next report
 CQ_magPhotoMax = 8;                      // photos per report at most (4 per row)
 CQ_magPhotoSlots = 24;                   // render textures reused in turn (cq_ph_0..23)
-CQ_magPhotoFov = 0.25;                   // camera field of view (zoom)
-CQ_magPhotoFill = 0.8;                   // the vehicle's bounding sphere fills this share of the frame
-// (a photo is a live thumbnail: its camera exists only while the report card is on screen)
+CQ_magPhotoFov = 0.7;                    // camera field of view (zoom) for the stills
+CQ_magPhotoDist = 12;                    // m from a vehicle, along the drone's line of sight
+CQ_magPhotoDistInf = 3;                  // m from a soldier
+CQ_magPhotoShot = 0.6;                   // s the camera renders before it is removed (the texture keeps that frame)
+// (a photo is a still taken the moment the drone identifies the target; none while the map is open)
 CQ_magPhotoBorder = 3;                   // frame thickness around each thumbnail, px
 CQ_magPhotoPx = 64;                      // square thumbnail size on the card and render texture size, px
 CQ_magPhotoAspect = 4 / 3;               // the camera's own ratio (it renders it squeezed into the square texture): the picture is unsqueezed to it, then centre-cropped to the square (raise it if things still look too thin)

@@ -107,14 +107,10 @@ CQ_uiLoop = true;
                     _pic ctrlCommit 0;
                     private _cfg = configFile >> "CfgVehicles" >> _cls;
                     private _prev = getText (_cfg >> "editorPreview");
-                    // live camera while the card is shown (CQ_fnc_magPhoto); none -> the editor preview
-                    private _cam = ["start", [_id]] call CQ_fnc_magPhoto;
-                    if (!isNull _cam) then { _cams pushBack _cam };
-                    // the full-screen map stops the 3D scene, so the cameras render nothing there:
-                    // the preview shows while the map is open, the live photo once it is closed
+                    // the still taken when the drone spotted it (CQ_fnc_magPhoto); none -> the editor preview
                     private _still = [_prev, getText (_cfg >> "picture")] select (_prev == "");
-                    if (!isNull _cam) then { _pics pushBack [_pic, format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _id mod CQ_magPhotoSlots, CQ_magPhotoPx], _still] };
-                    _pic ctrlSetText (if (!isNull _cam && { !visibleMap }) then { format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _id mod CQ_magPhotoSlots, CQ_magPhotoPx] } else { _still });
+                    private _ok = (missionNamespace getVariable ["CQ_magPhotoOk", createHashMap]) getOrDefault [_id, false];
+                    _pic ctrlSetText (if (_ok) then { format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _id mod CQ_magPhotoSlots, CQ_magPhotoPx] } else { _still });
                     private _name = _d ctrlCreate ["RscText", -1];
                     _name ctrlSetText getText (_cfg >> "displayName");
                     _name ctrlSetFont "PuristaLight";
@@ -140,18 +136,9 @@ CQ_uiLoop = true;
             { { _x ctrlSetFade 1; _x ctrlCommit 0.4 } forEach ((_x select 0) + ((_x param [3, []]) apply { _x select 0 })) } forEach _old;
             sleep 0.4;
             { { ctrlDelete _x } forEach ((_x select 0) + ((_x param [3, []]) apply { _x select 0 })) } forEach _old;
-            { { ["stop", [_x]] call CQ_fnc_magPhoto } forEach (_x param [4, []]) } forEach _old;     // photo cameras off with their card
             CQ_uiCards = CQ_uiCards - _old;
             call _layout;
         };
-        // photos: preview while the map is open, live picture in the 3D view
-        {
-            {
-                _x params ["_pc", "_live", "_still"];
-                private _want = [_live, _still] select visibleMap;
-                if (ctrlText _pc != _want) then { _pc ctrlSetText _want };
-            } forEach (_x param [5, []]);
-        } forEach CQ_uiCards;
         sleep 0.25;
     };
 };
