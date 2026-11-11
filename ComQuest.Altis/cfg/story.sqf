@@ -312,6 +312,25 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "They've changed their keys. Decryption is over: back to the old ways."]],
         [["CROSSROAD", "We've lost the decryption. It was nice while it lasted."]]
     ]],
+    ["opSpotted", [
+        [["MAGPIE", "Something on the corridor is jamming me. And there's anti-air with it. I can only give you a rough area, and I'm keeping my birds clear."]],
+        [["MAGPIE", "They've got a jammer out there, near their landing corridor. Rough area on your map, nothing better. Their Titans keep me at a distance."]]
+    ]],
+    ["opExact", [
+        [["CROSSROAD", "Their jammer can't hide the corridor outpost any more. It's marked exactly on your maps."]],
+        [["CROSSROAD", "Got it: exact position of their corridor outpost is on the map."]]
+    ]],
+    ["jamOff", [
+        [["CROSSROAD", "Jammer down at the corridor outpost. MAGPIE can see around it again."]],
+        [["MAGPIE", "Jamming's gone. Lovely. I can see what's sitting on that hill now."]]
+    ]],
+    ["counterJam", [
+        [["CROSSROAD", "The techs reverse-engineered their kit from that crate. Their outpost's jamming won't hide it from us any more."]]
+    ]],
+    ["opFallen", [
+        [["COMHAT", "...corridor outpost lost, flights rerouting wide, resupply delayed..."], ["CROSSROAD", "Their corridor outpost is down. Their flights take the long way round now: resupply about %1 minutes late."]],
+        [["CROSSROAD", "Outpost taken. They've lost their landing corridor: expect their supply flights %1 minutes late, from a new direction."]]
+    ]],
     ["relayUp", [
         [["CROSSROAD", "Relay up on the ruins of %1. MAGPIE has eyes out there now."]],
         [["CROSSROAD", "Good. %1 is our node now. Expect them to want it back."]]
@@ -421,7 +440,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "decryptEnd"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "decryptEnd", "opSpotted", "opExact", "jamOff", "counterJam", "opFallen"];
 
 CQ_uiCardX = 19;                          // px from the screen's left edge to the card (its border then lines up with the vehicle panel, ~16 px)
 CQ_uiCardY = 300;                         // px from the top: first card (below the map screen's menu)

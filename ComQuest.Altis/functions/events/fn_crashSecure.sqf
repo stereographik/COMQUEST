@@ -23,3 +23,8 @@ private _who = if (isNull _p) then { "Command" } else { name _p };
 if (!isNull _p) then { [_p, 100, "crash crate"] call CQ_fnc_scoreAdd };
 ["Crash event: crate secured by %1, decryption for %2 s", [_who, CQ_crashDecrypt]] call CQ_fnc_log;
 ["crashSecured", [_who]] call CQ_fnc_say;
+// reverse engineering (permanent): the corridor outpost's jammer no longer hides it
+if !(missionNamespace getVariable ["CQ_counterJam", false]) then {
+    CQ_counterJam = true; publicVariable "CQ_counterJam";
+    if (!isNil "CQ_op" && { !(CQ_op get "fallen") } && { alive (CQ_op get "jammer") }) then { ["counterJam", []] call CQ_fnc_say };
+};

@@ -149,6 +149,40 @@ CQ_crashRoam = 600;                      // s the dropped vehicle roams around t
 CQ_crashRoamR = [150, 900];              // m: roaming radius, close -> large -> close
 CQ_crashDecrypt = 720;                   // s of decryption (12 min)
 
+// --- Corridor outpost (CQ_fnc_outpostBuild / CQ_fnc_outpostTick), first HQ only ----------------
+// With the first HQ's insertion the enemy holds the land corridor between the coast (CQ_coastPoint)
+// and that HQ: on its highest open spot that best sees the flight corridor (or an Altis military
+// post found there), a watchtower, CQ_opAA, CQ_opHMG, a mortar and a barricaded squad; 2 gunboats
+// patrol the coast. Out of the AI caps, never reinforced. Its jammer (destroyable) hides it:
+// MAGPIE only gets a rough area (black hatched circle, ~CQ_opFuzz m off) and identifies nothing
+// within CQ_opJamRadius; the crash crate (reverse engineering, permanent) or the jammer's
+// destruction gives the exact position. Its AA shoots MAGPIE: she keeps clear once it is spotted.
+// The mortar only fires on players its tower watcher sees (delay + spread). When the outpost falls
+// (no man left), flights to that HQ come the long way round and its resupply is CQ_opSupplyDelay s later.
+CQ_outpost = true;
+CQ_opHqGap = 150;                        // m kept from the HQ site
+CQ_opFlat = 5;                           // m of height difference allowed over the 40 x 40 m footprint
+CQ_opReuse = ["Land_Cargo_Patrol_V1_F", "Land_Cargo_Patrol_V2_F", "Land_Cargo_Patrol_V3_F", "Land_Cargo_Tower_V1_F", "Land_Cargo_Tower_V2_F", "Land_Cargo_Tower_V3_F", "Land_BagBunker_Tower_F"];   // existing posts reused when on the corridor
+CQ_opTower = "Land_Cargo_Patrol_V1_F";
+CQ_opJammer = ["Land_TTowerSmall_2_F", "Land_TTowerSmall_1_F"];   // first that exists
+CQ_opAA = ["O_static_AA_F", "O_static_AA_F"];
+CQ_opHMG = ["O_HMG_01_high_F", "O_HMG_01_high_F"];
+CQ_opMortar = "O_Mortar_01_F";
+CQ_opWatcher = "O_spotter_F";
+CQ_opSquad = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_soldier_M_F", "O_Soldier_GL_F", "O_Soldier_F", "O_Soldier_F", "O_Soldier_AR_F"];   // scaled with CQ_scale
+CQ_opSkill = 0.7;
+CQ_opBoat = "O_Boat_Armed_01_hmg_F";
+CQ_opBoats = 2;
+CQ_opJamRadius = 600;                    // m: MAGPIE identifies nothing in there while the jammer works
+CQ_opFuzz = [250, 750];                  // m: the rough area's centre is this far off the outpost
+CQ_opFuzzR = 900;                        // m: radius of the rough area (the outpost is inside)
+CQ_opMortarRange = 1500;                 // m: the mortar only fires on players this close
+CQ_opMortarDelay = [30, 60];             // s between the watcher spotting a player and the rounds
+CQ_opMortarSpread = 60;                  // m around the target
+CQ_opMortarEvery = 90;                   // s between two salvos
+CQ_opSupplyDelay = 600;                  // s added to that HQ's resupply flights once the outpost fell
+CQ_opDetour = 4000;                      // m: flights to that HQ start this far sideways (the long way round)
+
 // --- nGD: the enemy radio network ("break the net, take the net") -------------
 CQ_netEvery = 10;                        // s between two network updates (links, isolation, map)
 CQ_netCoverBase = 7000;                  // m: MAGPIE identifies enemies this close to the base...

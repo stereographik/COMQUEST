@@ -85,6 +85,18 @@ while { true } do {
     if (_alOn != _alShown) then { _alShown = _alOn; { _x ctrlShow _alOn } forEach _al };
     if (!_on) then { continue };
 
+    // corridor outpost jammer: noise instead of a reading near it
+    private _jp = missionNamespace getVariable ["CQ_opJamPos", []];
+    if ((missionNamespace getVariable ["CQ_opJam", false]) && { _jp isNotEqualTo [] } && { player distance2D _jp < CQ_opJamRadius * 1.5 }) then {
+        _lastV = -3;
+        _lbl ctrlSetText "JAMMED";
+        _lbl ctrlSetTextColor [0.729, 0.224, 0.173, 1];
+        _edge ctrlSetBackgroundColor [0.729, 0.224, 0.173, 0.9];
+        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='0.6' color='#BA392C'>??</t>";
+        { _x ctrlSetBackgroundColor ([_offColor, [0.729, 0.224, 0.173, 0.4 + random 0.5]] select (random 1 < 0.5)) } forEach _bars;
+        continue;
+    };
+
     // closest active emitter
     private _src = [];
     private _bestD = 1e10;

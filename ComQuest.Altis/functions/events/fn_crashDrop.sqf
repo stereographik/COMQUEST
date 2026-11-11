@@ -23,10 +23,9 @@ CQ_crashDropSite = _site;
     [_v, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit;
     private _g = group effectiveCommander _v;
     {
-        if ((_v emptyPositions "cargo") < 1) exitWith {};
         private _u = _g createUnit [_x, getPosATL _v, [], 5, "NONE"];
         [[_u]] call CQ_fnc_unitPrep;
-        _u moveInCargo _v;
+        if !(_u moveInAny _v) exitWith { deleteVehicle _u };        // no seat left (cargo and firing-from-vehicle seats)
     } forEach CQ_crashDropSquad;
     _g setBehaviour "AWARE";
     _g setCombatMode "RED";
