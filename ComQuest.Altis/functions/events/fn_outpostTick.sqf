@@ -36,6 +36,24 @@ if !(_op get "fallen") then {
     };
 };
 
+// ---- alert: what one man of the post knows, the whole post knows (radio); a player within
+// CQ_opHear m is heard even unseen. Then everyone is in COMBAT and the gunners turn to him.
+if !(_op get "fallen") then {
+    private _men = (_op get "men") select { alive _x && { _x distance2D _pos < 400 } };
+    if (_men isNotEqualTo []) then {
+        private _close = allPlayers select { alive _x && { side group _x == west } && { _x distance2D _pos < CQ_opAlert } };
+        private _known = _close select { private _p = _x; _x distance2D _pos < CQ_opHear || { (_men findIf { _x knowsAbout _p > 1 }) > -1 } };
+        if (_known isNotEqualTo []) then {
+            { private _m = _x; { _m reveal [_x, 2.5] } forEach _known } forEach _men;
+            if !(_op getOrDefault ["alerted", false]) then {
+                _op set ["alerted", true];
+                { (group _x) setBehaviour "COMBAT" } forEach _men;
+                ["Outpost: alerted (%1 player(s) known within %2 m)", [count _known, CQ_opAlert]] call CQ_fnc_log;
+            };
+        };
+    };
+};
+
 // ---- jammer
 private _jam = alive (_op get "jammer") && { !(missionNamespace getVariable ["CQ_counterJam", false]) } && { !(_op get "fallen") };
 if (_jam != (_op get "jam")) then {

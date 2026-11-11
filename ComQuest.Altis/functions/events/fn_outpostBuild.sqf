@@ -119,17 +119,25 @@ private _watcher = _g createUnit [CQ_opWatcher, _center, [], 0, "NONE"];
 if (_bps isNotEqualTo []) then { _watcher setPosATL (_bps deleteAt 0) };
 _watcher disableAI "PATH";
 private _n = (round (count CQ_opSquad * ((missionNamespace getVariable ["CQ_scale", 1]) max 0.5))) min count CQ_opSquad;
+// one more man in the tower, the others on the rim of the hilltop (25-35 m out, facing out):
+// from the summit itself the slopes are dead ground, from the rim they are seen
 for "_i" from 0 to _n - 1 do {
     private _u = _g createUnit [CQ_opSquad select _i, _center, [], 0, "NONE"];
-    if (_bps isNotEqualTo []) then { _u setPosATL (_bps deleteAt 0) } else {
-        private _p = _center getPos [7 + random 8, _f + (_i * 360 / _n)];
+    if (_i == 0 && { _bps isNotEqualTo [] }) then { _u setPosATL (_bps deleteAt 0) } else {
+        private _a = _f + (_i * 360 / _n);
+        private _p = _center getPos [25 + random 10, _a];
         _u setPosATL [_p select 0, _p select 1, 0];
+        _u setDir _a;
+        _u setUnitPos "MIDDLE";
     };
     _u disableAI "PATH";
-    _u setUnitPos "MIDDLE";
 };
 [units _g] call CQ_fnc_unitPrep;
-{ _x setSkill CQ_opSkill; _men pushBack _x } forEach units _g;
+{
+    _x setSkill CQ_opSkill;
+    _x setSkill ["spotDistance", 0.9]; _x setSkill ["spotTime", 0.85]; _x setSkill ["courage", 1];
+    _men pushBack _x;
+} forEach units _g;
 _g setBehaviour "AWARE"; _g setCombatMode "RED";
 _g enableDynamicSimulation false;
 
