@@ -68,7 +68,7 @@ private _cats = [
         ["Next act", "actNext"], ["SITREP now", "sitrep"], ["Reset speech budget", "storyReset"]
     ]],
     ["EVENTS", [
-        ["Trigger crash", "crash"], ["Teleport to crash", "tpCrash"], ["Decrypt now", "decrypt"]
+        ["Trigger crash", "crash"], ["Teleport to crash", "tpCrash"], ["Decrypt now", "decrypt"], ["Retrieve (timer out)", "crashOut"]
     ]],
     ["MAGPIE (UAV)", [
         ["Report now", "magReport"], ["Launch missing drones", "magLaunch"], ["Shoot down drones", "magKill"]

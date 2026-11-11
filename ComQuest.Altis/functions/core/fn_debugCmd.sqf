@@ -7,7 +7,7 @@
     Carrier and forces:   root, flight, carrierMinus, carrierFull, killAll
     Story:                actNext, sitrep, storyReset
     MAGPIE:               magReport, magLaunch, magKill
-    Events:               crash, tpCrash, decrypt
+    Events:               crash, tpCrash, decrypt, crashOut
     Player (the caller):  heal, tpBase, tpHq, points, vehFix
     Base and world:       vehReset, defRebuild, time1, noon, night, clearWx
     View:                 playerView (the game as a final player sees it: no debug output)
@@ -130,6 +130,16 @@ if (_needHq && { count _hq == 0 }) then {
                     [_p, CQ_crashPos getPos [400, CQ_crashPos getDir CQ_basePos]] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
                     _msg = "teleported 400 m from the crash site";
                 };
+            };
+        };
+        case "crashOut": {
+            // skip the countdown: contact now if none yet, time already up -> the carrier drops at once
+            if (isNil "CQ_crashState" || { CQ_crashState get "secured" } || { CQ_crashState get "dropped" }) then { _msg = "no crash waiting for its drop" } else {
+                if ((CQ_crashState get "contactT") < 0) then { CQ_crashAlarm = true; publicVariable "CQ_crashAlarm" };
+                CQ_crashState set ["contactT", time - CQ_crashTimer - 1];
+                CQ_crashState set ["warned", true];
+                CQ_crashNext = 0;
+                _msg = "crash countdown skipped: the carrier drops now";
             };
         };
         case "decrypt": { [objNull] call CQ_fnc_crashSecure; _msg = format ["decryption on for %1 s", CQ_crashDecrypt] };
