@@ -531,6 +531,7 @@ CQ_magPhotoSlots = 24;                   // render textures reused in turn (cq_p
 CQ_magPhotoFov = 0.7;                    // camera field of view (zoom) for the stills
 CQ_magPhotoDist = 12;                    // m from a vehicle, along the drone's line of sight
 CQ_magPhotoDistInf = 3;                  // m from a soldier
+CQ_magPhotoMaxDelay = 120;               // s: a shot delayed by an open map is still taken within this, else the preview stays
 CQ_magPhotoShot = 0.6;                   // s the camera renders before it is removed (the texture keeps that frame)
 // (a photo is a still taken the moment the drone identifies the target; none while the map is open)
 CQ_magPhotoBorder = 3;                   // frame thickness around each thumbnail, px

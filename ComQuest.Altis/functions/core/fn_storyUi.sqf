@@ -111,6 +111,7 @@ CQ_uiLoop = true;
                     private _still = [_prev, getText (_cfg >> "picture")] select (_prev == "");
                     private _ok = (missionNamespace getVariable ["CQ_magPhotoOk", createHashMap]) getOrDefault [_id, false];
                     _pic ctrlSetText (if (_ok) then { format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _id mod CQ_magPhotoSlots, CQ_magPhotoPx] } else { _still });
+                    if (!_ok) then { _pics pushBack [_pic, _id] };      // a delayed shot (map was open) replaces the preview when it is taken
                     private _name = _d ctrlCreate ["RscText", -1];
                     _name ctrlSetText getText (_cfg >> "displayName");
                     _name ctrlSetFont "PuristaLight";
@@ -139,6 +140,16 @@ CQ_uiLoop = true;
             CQ_uiCards = CQ_uiCards - _old;
             call _layout;
         };
+        // delayed photos (CQ_fnc_magPhoto): swap the preview for the picture once it is taken
+        {
+            {
+                _x params ["_pc", "_pid"];
+                if ((missionNamespace getVariable ["CQ_magPhotoOk", createHashMap]) getOrDefault [_pid, false]) then {
+                    private _want = format ["#(argb,%2,%2,1)r2t(cq_ph_%1,1.0)", _pid mod CQ_magPhotoSlots, CQ_magPhotoPx];
+                    if (ctrlText _pc != _want) then { _pc ctrlSetText _want };
+                };
+            } forEach (_x param [5, []]);
+        } forEach CQ_uiCards;
         sleep 0.25;
     };
 };

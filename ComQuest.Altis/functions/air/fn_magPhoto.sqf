@@ -7,9 +7,11 @@
       - distance: CQ_magPhotoDist (12 m) from a vehicle, CQ_magPhotoDistInf (3 m) from a soldier
       - the camera renders into "cq_ph_<slot>" for CQ_magPhotoShot s, then is removed: the
         texture keeps that frame (a still, not a live view)
-    No picture is possible while the full-screen map is open (no 3D rendering there) or without
-    Picture-in-Picture: the photo is then marked as missing and the card shows the editor
-    preview of the class instead (CQ_magPhotoOk: id -> true when the shot was taken).
+    No picture is possible while the full-screen map is open (no 3D rendering there): the shot
+    waits in the queue and is taken as soon as the map is closed, from the same drone angle,
+    if the target is still alive and the shot is not older than CQ_magPhotoMaxDelay s. Without
+    Picture-in-Picture, or too late, the card shows the editor preview of the class instead
+    (CQ_magPhotoOk: id -> true once the shot was taken; an open card swaps to the photo then).
     One camera at a time (queue).
 */
 params ["_mode", ["_args", []]];
@@ -20,13 +22,15 @@ if (_mode != "shot") exitWith {};
 _args params ["_id", "_o", ["_drone", objNull]];
 if (isNull _o) exitWith {};
 private _from = if (!isNull _drone) then { getPosASLVisual _drone } else { (getPosASLVisual _o) vectorAdd [0, -60, 80] };
-CQ_magPhotoQ pushBack [_id, _o, _from];
+CQ_magPhotoQ pushBack [_id, _o, _from, time];
 if (!isNil "CQ_magPhotoLoop") exitWith {};
 CQ_magPhotoLoop = true;
 [] spawn {
     while { CQ_magPhotoQ isNotEqualTo [] } do {
-        (CQ_magPhotoQ deleteAt 0) params ["_id", "_o", "_from"];
-        if (isNull _o || { !isPiPEnabled } || { visibleMap }) then { continue };   // no 3D rendering: no picture
+        // map open: no 3D rendering, the shots wait until it is closed
+        if (visibleMap) then { sleep 0.5; continue };
+        (CQ_magPhotoQ deleteAt 0) params ["_id", "_o", "_from", "_t0"];
+        if (isNull _o || { !alive _o } || { !isPiPEnabled } || { time - _t0 > CQ_magPhotoMaxDelay }) then { continue };
         private _rtt = format ["cq_ph_%1", _id mod CQ_magPhotoSlots];
         private _bb = boundingBoxReal _o;
         private _tgt = _o modelToWorldVisualWorld (((_bb select 0) vectorAdd (_bb select 1)) vectorMultiply 0.5);
@@ -45,7 +49,7 @@ CQ_magPhotoLoop = true;
         private _ok = !visibleMap;
         _cam cameraEffect ["Terminate", "Back", _rtt];
         camDestroy _cam;
-        if (_ok) then { CQ_magPhotoOk set [_id, true] };
+        if (_ok) then { CQ_magPhotoOk set [_id, true] } else { CQ_magPhotoQ pushBack [_id, _o, _from, _t0] };   // map opened mid-shot: again later
     };
     CQ_magPhotoLoop = nil;
 };
