@@ -67,7 +67,7 @@ private _cats = [
         ["Show", [["Enemies", "!mapEnemy"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"]]]
     ]],
     ["ENEMY HQ  (selected in the list)", [
-        ["Phase", [["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"], ["Reinf. wave", "wave"]]],
+        ["Phase", [["FULL HQ NOW", "fullHq"], ["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"], ["Reinf. wave", "wave"]]],
         ["Objectives", [["Kill cmdr", "killCmd"], ["Capture cmdr", "capture"], ["Hack tower", "hack"], ["Destroy tower", "tower"],
                         ["Destroy depot", "depot"], ["Destroy tanker", "tanker"], ["Destroy HQ", "destroy"]]]
     ]],

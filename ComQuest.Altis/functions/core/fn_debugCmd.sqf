@@ -69,6 +69,34 @@ if (_needHq && { count _hq == 0 }) then {
             };
             _msg = format ["HQ #%1 destroyed (debug)", _id];
         };
+        case "fullHq": {
+            // the next HQ complete with every objective and its troops: launches the landing if no
+            // HQ stands, then skips every wait (perimeter, each build stage) until it is fully built
+            if (!isNil "CQ_dbgFullHq") then { _msg = "a full HQ build is already running" } else {
+                CQ_dbgFullHq = true;
+                _msg = "full HQ: landing (if needed), then every build stage skipped (watch the log)";
+                [] spawn {
+                    private _t0 = time;
+                    private _act = { [(values CQ_hqs) select { (_x get "state") in CQ_activeStates && { !(_x get "buildDone") } }, [], { _x get "id" }] call BIS_fnc_sortBy };
+                    if ((call _act) isEqualTo []) then { CQ_nextRootTime = 0 };
+                    waitUntil { sleep 2; (call _act) isNotEqualTo [] || { time - _t0 > 120 } };
+                    private _l = call _act;
+                    if (_l isEqualTo []) exitWith { CQ_dbgFullHq = nil; ["DEBUG full HQ: no landing came (carrier empty or infantry cap?)"] call CQ_fnc_log };
+                    private _hq = _l select 0;
+                    ["DEBUG full HQ: building HQ #%1 at %2", [_hq get "id", mapGridPosition (_hq get "pos")]] call CQ_fnc_log;
+                    while { !(_hq get "buildDone") && { (_hq get "state") in CQ_activeStates } && { time - _t0 < 900 } } do {
+                        switch (_hq get "state") do {
+                            case "Securing": { if (_hq get "secureStarted") then { _hq set ["stateT", time - CQ_secureTimeout - 1] } };
+                            case "Installing": { _hq set ["skipStage", true] };
+                            default {};
+                        };
+                        sleep 3;
+                    };
+                    CQ_dbgFullHq = nil;
+                    ["DEBUG full HQ: HQ #%1 %2 after %3 s", [_hq get "id", ["NOT finished (state " + (_hq get "state") + ")", "fully built"] select (_hq get "buildDone"), round (time - _t0)]] call CQ_fnc_log;
+                };
+            };
+        };
         case "root": {
             if (CQ_rootsLaunched < CQ_maxRoots) then {
                 CQ_nextRootTime = 0;
