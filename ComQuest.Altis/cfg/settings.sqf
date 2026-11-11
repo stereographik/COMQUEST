@@ -81,9 +81,9 @@ CQ_wxFogGoneHour = 11;                   // in-game hour when the fog has slowly
 
 // --- Enemy origin: a carrier off the east coast -------------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
-// >>> TEST OVERRIDE (branch m8-heatmap only, REMOVE before merging to main) <<<
+// >>> TEST OVERRIDE (test branches only, set to false before merging to main) <<<
 // carrier at the map's mid-height, first HQ next to Charkia (looked up by name)
-CQ_testOverride = false;
+CQ_testOverride = true;
 CQ_testFirstHqTown = "Charkia";
 CQ_testFirstHqPos = [18300, 15300, 0];   // around Charkia: search centre and fallback
 CQ_coastBand = [9000, 23000];            // latitudes (y) where the carrier can appear
