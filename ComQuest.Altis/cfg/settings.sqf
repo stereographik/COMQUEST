@@ -79,18 +79,39 @@ CQ_wxRainLevel = 0.6;
 CQ_wxFogMorning = [0.2, 0.012, 0];       // light morning fog [density, decay, base]
 CQ_wxFogGoneHour = 11;                   // in-game hour when the fog has slowly faded out
 
-// --- Enemy origin: a carrier off the east coast -------------------------------
+// --- Enemy origin: a carrier off the coast of Altis ----------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
 // >>> TEST OVERRIDE (test branches only, set to false before merging to main) <<<
 // carrier at the map's mid-height, first HQ next to Charkia (looked up by name)
 CQ_testOverride = true;
 CQ_testFirstHqTown = "Charkia";
 CQ_testFirstHqPos = [18300, 15300, 0];   // around Charkia: search centre and fallback
-CQ_coastBand = [9000, 23000];            // latitudes (y) where the carrier can appear
-CQ_carrierOffshore = 3000;               // metres out from the coast (deeper water if needed)
+// allaroundisland: 16 precomputed carrier sites all around the island (deep water ~2.7 km off the coast,
+// away from steep cliffs), each with its paired first HQ site (flat, open, near the shore, 3-5.5 km away).
+// Every game picks one at random, never the one of the previous game (remembered in the server profile).
+// [[carrier x, y], [first HQ x, y]]
+CQ_carrierSites = [
+    [[14612, 26312], [14288, 23012]],    // C1  north
+    [[17188, 25012], [16188, 21462]],    // C2
+    [[20488, 24238], [22662, 21512]],    // C3
+    [[23762, 27362], [23912, 23788]],    // C4
+    [[28312, 28562], [27862, 25288]],    // C5  north-east tip
+    [[27812, 17438], [25388, 19638]],    // C6  east
+    [[26538, 13862], [24112, 15688]],    // C7
+    [[25012, 11088], [21712, 11362]],    // C8
+    [[25988,  7188], [22462,  7162]],    // C9
+    [[21838,  2112], [21562,  5962]],    // C10 south-east
+    [[16588,  4238], [18762,  6362]],    // C11 south
+    [[11662,  3662], [ 9862,  8788]],    // C12
+    [[ 4862,  6762], [ 7288, 11338]],    // C13 south-west
+    [[ 1512, 15862], [ 4912, 14712]],    // C14 west
+    [[ 3962, 25312], [ 8912, 22938]],    // C15 north-west
+    [[11162, 25688], [11912, 22588]]     // C16 north
+];
+CQ_carrierSiteForce = -1;                // >= 0: always this site (index in CQ_carrierSites), for tests
 CQ_rootInland = [1500, 4000];            // root insertions land this far inland from a coast point
-CQ_firstRootInland = [600, 2000];        // the very first one is a beachhead: within 2 km of the shore, west of the carrier
-CQ_rootCoastSpread = 4000;               // ...picked up to this far north/south of the carrier's coast point
+CQ_firstRootInland = [0, 400];           // the very first one: within 400 m of the site's paired first HQ position
+CQ_rootCoastSpread = 4000;               // later ones: a coast point up to this far either side of the carrier's line to the island
 CQ_childSpread = 70;                     // child HQs head toward the player base, +/- this many degrees
 CQ_waveSpread = 60;                      // waves arrive from the carrier side of the HQ, +/- degrees
 CQ_assaultRange = 3500;                  // an HQ this close to the player base assaults it instead of colonising
@@ -543,7 +564,7 @@ CQ_magDetectEvery = 4;                   // s between two detection passes
 CQ_magPlanEvery = 90;                    // s between two flight plans of a drone
 // scan chain: CQ_magChainCount extra Darters fan out from the base to a north-south line and
 // sweep it east across the island, spread over the land at each step (no slot over the sea)
-CQ_magChainCount = 9;
+CQ_magChainCount = 0;                    // allaroundisland: replaced by the dormant Darters below
 CQ_magChainAlt = 250;                    // m
 CQ_magChainStep = 600;                   // m the line moves east each step
 CQ_magChainStepTime = 90;                // s max per step (moves on earlier once 70 % of the chain is in place)
@@ -559,8 +580,23 @@ CQ_magCentreEvery = 30;                 // s: the encirclement centre is re-eval
 CQ_magClusterR = 600;                    // m: positions this close form a group
 CQ_magCentreMove = 300;                  // m: the drones re-route only if the centre moves more than this
 CQ_magFocusQuiet = 300;                  // s without a new contact in the ring (once tight) -> next focus
-CQ_magCoastGap = 1500;                   // keep this far from the EAST coast (the carrier group)
-CQ_magArea = [14500, 9000, 28500, 24500]; // area she sweeps: east Altis [xmin, ymin, xmax, ymax]
+CQ_magCoastGap = 1500;                   // keep this far from the coast facing the carrier group
+CQ_magArea = [1500, 1500, 29500, 29500]; // area she sweeps: all of Altis [xmin, ymin, xmax, ymax]
+// Dormant Darters (CQ_fnc_magDormant): MAGPIE has Darters grounded all over the island, every
+// CQ_magDormantGap m on land (coordinates only, no objects). A ground enemy passing within
+// CQ_magDormantWake m of one wakes it: a Darter takes off right there, first gets away from the
+// enemy to more than 80 % of its sensor range, then joins the fleet. Each point wakes once.
+// A woken Darter destroyed is replaced from the nearest point left, after CQ_magDormantReplace s.
+// Woken Darters also relay MAGPIE's data link (CQ_netCoverRelay around them).
+CQ_magDormant = true;
+CQ_magDormantGap = 500;                  // m between two points (grid)
+CQ_magDormantWake = 500;                 // m: a ground enemy this close wakes the point
+CQ_magDormantBase = 2500;                // m: no point this close to the player base
+CQ_magDormantMax = 6;                    // woken Darters alive at once, at most
+CQ_magDormantAlt = 250;                  // m flight altitude (sensor ~600 m)
+CQ_magDormantFlee = 0.9;                 // flee until this fraction of the sensor range from the enemy (> 80 %)
+CQ_magDormantReplace = 60;               // s before a destroyed woken Darter is replaced
+CQ_magDormantRelay = true;               // woken Darters extend the data link like a relay
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
 CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2, max 2400 m (Darter ~600, Sentinel_Argos ~1380, Sentinel_Hermes ~2100)

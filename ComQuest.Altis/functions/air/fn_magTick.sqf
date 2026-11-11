@@ -42,10 +42,21 @@ private _cat = {
 // start point); the next one spawns once it is airborne (> 30 m). A lost drone comes back after
 // CQ_magRespawn s.
 CQ_magRunway params ["_rp", "_hdg"];
-private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault ["pad", -1]) > -1 }) };
+private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault ["pad", -1]) > -1 || { (_this getOrDefault ["role", ""]) == "dormant" } }) };
 {
     private _m = _x;
     private _v = _m get "veh";
+    if (!isNull _v && { !alive _v } && { !(_m get "lost") } && { (_m getOrDefault ["role", ""]) == "dormant" }) then {
+        // a woken dormant Darter: no respawn on the field, the nearest point left replaces it (CQ_fnc_magDormant)
+        _m set ["lost", true];
+        _m set ["phase", "none"];
+        _m set ["due", 1e12];
+        CQ_magDormantDead pushBack [getPosATL _v, time];
+        CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
+        publicVariable "CQ_magVehs";
+        ["MAGPIE: %1 lost at %2, a dormant point nearby replaces it in %3 s", [_m get "name", mapGridPosition _v, CQ_magDormantReplace]] call CQ_fnc_log;
+    };
+    if ((_m getOrDefault ["role", ""]) == "dormant") then { if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 }; continue };
     if (!isNull _v && { !alive _v } && { !(_m get "lost") }) then {
         _m set ["lost", true];
         _m set ["phase", "none"];
@@ -151,10 +162,13 @@ private _flying = CQ_mag select { alive (_x get "veh") && { (_x getOrDefault ["p
 // are the live enemy positions every player sees on the map (CQ_magVisible).
 // nGD: MAGPIE only identifies what lies inside her coverage: CQ_netCoverBase around the base and
 // CQ_netCoverRelay around every relay we hold (CQ_fnc_relayDeploy). Drones still fly anywhere.
+// woken dormant Darters in the air relay the data link too
+private _dRelays = ((CQ_mag select { (_x getOrDefault ["role", ""]) == "dormant" && { alive (_x get "veh") } && { ((getPosATL (_x get "veh")) select 2) > 40 } }) apply { getPosATL (_x get "veh") });
 private _covered = {
     params ["_p"];
     (_p distance2D CQ_basePos) < CQ_netCoverBase
     || { ((missionNamespace getVariable ["CQ_relays", []]) findIf { alive (_x select 1) && { _p distance2D (_x select 2) < CQ_netCoverRelay } }) > -1 }
+    || { CQ_magDormantRelay && { (_dRelays findIf { _p distance2D _x < CQ_netCoverRelay }) > -1 } }
 };
 if (time >= CQ_magDetectT) then {
     CQ_magDetectT = time + CQ_magDetectEvery;
@@ -303,7 +317,7 @@ private _focusOn = _focus isNotEqualTo [];
 if (_focusOn) then {
     _focus = [_focus select 0, _focus select 1, 0];
     CQ_magRingR = (CQ_magRingStart - CQ_magRingShrink * (time - CQ_magFocusT) / 60) max CQ_magRingMin;
-    private _ring = [_flying, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;
+    private _ring = [_flying select { !(_x getOrDefault ["flee", false]) }, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;   // a woken Darter getting away joins once clear
     private _n = count _ring;
     private _step = 360 / (_n max 1);
     private _rot = (time - CQ_magFocusT) * CQ_magRingTurn;
@@ -420,7 +434,7 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
 {
     private _m = _x;
     private _v = _m get "veh";
-    if (_focusOn || { (_m getOrDefault ["role", ""]) == "chain" }) then { continue };
+    if (_focusOn || { (_m getOrDefault ["role", ""]) == "chain" } || { _m getOrDefault ["flee", false] }) then { continue };
     if (((getPosATL _v) select 2) < 40 && { time - (_m get "planT") < 300 }) then { continue };
     private _tgt = _m get "target";
     private _arrived = (_m get "explore") && { _tgt isNotEqualTo [] } && { _v distance2D _tgt < 500 };

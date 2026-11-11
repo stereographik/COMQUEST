@@ -19,7 +19,7 @@ if (CQ_startAtDawn) then {
 enableDynamicSimulationSystem true;   // AI far from players stops simulating (used from milestone 2)
 
 call CQ_fnc_baseSetup;
-call CQ_fnc_carrierSetup;           // CSAT carrier off the east coast: every insertion starts there
+call CQ_fnc_carrierSetup;           // CSAT carrier at one of the sites around Altis: every insertion starts there
 
 // Vehicle depots: no vehicle at start, players request them (CQ_fnc_depotSpawn)
 CQ_depotVehs = [];
@@ -102,6 +102,7 @@ addMissionEventHandler ["EntityKilled", {
     call CQ_fnc_statsInit;
     call CQ_fnc_magInit;
     ["magpie", CQ_fnc_magTick] call CQ_fnc_directorAddTask;
+    ["magDormant", CQ_fnc_magDormant] call CQ_fnc_directorAddTask;
     ["tigris", CQ_fnc_tigrisTick] call CQ_fnc_directorAddTask;
     ["heatmap", CQ_fnc_heatTick] call CQ_fnc_directorAddTask;
     CQ_act = 1;

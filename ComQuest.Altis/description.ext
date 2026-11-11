@@ -199,6 +199,7 @@ class CfgFunctions
             file = "functions\air";
             class magInit {};
             class magTick {};
+            class magDormant {};
             class magPhoto {};
             class magMarks {};
             class magMapClient {};
