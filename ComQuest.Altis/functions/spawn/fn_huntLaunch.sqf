@@ -78,7 +78,7 @@ while { surfaceIsWater _lz && { _t < 20 } } do { _lz = (getPosATL leader _tg) ge
         ["spectre", _who] call CQ_fnc_opEvent;
         if (!isNull _who && { isPlayer _who }) then {
             private _pg = group _who;
-            if !(_pg getVariable ["CQ_solo", true]) then { _pg setVariable ["CQ_sqPts", (_pg getVariable ["CQ_sqPts", 0]) + CQ_huntBounty, true]; _pg setVariable ["CQ_sqScore", (_pg getVariable ["CQ_sqScore", 0]) + CQ_huntBounty, true] };
+            if !(_pg getVariable ["CQ_solo", true]) then { _pg setVariable ["CQ_sqPts", (_pg getVariable ["CQ_sqPts", 0]) + CQ_huntBounty, true] };
             [_who, CQ_huntBounty, "special forces team"] call CQ_fnc_scoreAdd;
         };
     }];
