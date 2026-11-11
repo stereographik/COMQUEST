@@ -25,7 +25,7 @@ CQ_mag = CQ_mag select { !((_x getOrDefault ["role", ""]) == "dormant" && { _x g
 // known anti-air (a Tigris MAGPIE identified recently, the corridor outpost once spotted): a point
 // within CQ_magAaAvoid of it stays asleep, it would only wake to be shot down
 private _aaKnown = ((values CQ_magSeen) select { alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } && { (typeOf (_x select 0)) in CQ_magAaClasses } }) apply { _x select 3 };
-if (!isNil "CQ_op" && { CQ_op get "spotted" } && { !(CQ_op get "fallen") }) then { _aaKnown pushBack (missionNamespace getVariable ["CQ_opMarkPos", CQ_op get "pos"]) };
+if (!isNil "CQ_outpostState" && { CQ_outpostState get "spotted" } && { !(CQ_outpostState get "fallen") }) then { _aaKnown pushBack (missionNamespace getVariable ["CQ_opMarkPos", CQ_outpostState get "pos"]) };
 private _aaSafe = { params ["_p"]; (_aaKnown findIf { _x distance2D _p < CQ_magAaAvoid }) == -1 };
 
 private _awake = { count (CQ_mag select { (_x getOrDefault ["role", ""]) == "dormant" && { alive (_x get "veh") } }) };

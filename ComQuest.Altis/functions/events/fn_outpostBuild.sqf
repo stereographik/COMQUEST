@@ -5,11 +5,11 @@
     HQ, the highest open spot that best sees the flight corridor from the carrier (or an Altis
     military post found there): watchtower + watcher, CQ_opAA, CQ_opHMG, a mortar, a jammer and a
     barricaded squad (scaled with CQ_scale); CQ_opBoats gunboats patrol the coast. Every man is
-    marked CQ_outpost (out of the AI caps, never reinforced). State: CQ_op (CQ_fnc_outpostTick).
+    marked CQ_outpost (out of the AI caps, never reinforced). State: CQ_outpostState (CQ_fnc_outpostTick).
 */
 params ["_hqSite"];
 if (!isServer || { !CQ_outpost }) exitWith {};
-if (!isNil "CQ_op") exitWith { ["Outpost: already built"] call CQ_fnc_log };
+if (!isNil "CQ_outpostState") exitWith { ["Outpost: already built"] call CQ_fnc_log };
 private _a = [CQ_coastPoint select 0, CQ_coastPoint select 1, 0];
 private _b = [_hqSite select 0, _hqSite select 1, 0];
 private _len = _a distance2D _b;
@@ -158,7 +158,7 @@ if (count _pts >= 2) then {
 { _x setVariable ["CQ_outpost", true, true] } forEach _men;
 
 private _off = (CQ_opFuzz select 0) + random ((CQ_opFuzz select 1) - (CQ_opFuzz select 0));
-CQ_op = createHashMapFromArray [
+CQ_outpostState = createHashMapFromArray [
     ["pos", _center], ["fuzzPos", _center getPos [_off, random 360]], ["objs", _objs], ["men", _men],
     ["tower", _tower], ["watcher", _watcher], ["jammer", _jammer], ["aa", _aa], ["mortar", _mortar], ["boats", _boats],
     ["hqSite", _b], ["hqId", -1], ["spotted", false], ["fallen", false], ["mark", ""], ["jam", true],

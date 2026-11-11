@@ -3,22 +3,22 @@
     The corridor outpost (CQ_fnc_outpostBuild), while it stands:
       jammer   on while the jammer stands, CQ_counterJam is off (crash crate) and the outpost holds:
                CQ_opJam / CQ_opJamPos for MAGPIE (CQ_fnc_magTick) and the signal panel
-      marker   once MAGPIE has spotted it (CQ_op "spotted", set by CQ_fnc_magTick): a black hatched
+      marker   once MAGPIE has spotted it (CQ_outpostState "spotted", set by CQ_fnc_magTick): a black hatched
                circle around a point CQ_opFuzz m off while jammed, the exact spot otherwise
       mortar   fires on players its tower watcher sees within CQ_opMortarRange, after a delay
       fall     no outpost man left in the post: flights to its HQ come the long way round and its
                resupply is CQ_opSupplyDelay s later (CQ_corridorLost = that HQ's id)
 */
-if (isNil "CQ_op") exitWith {};
+if (isNil "CQ_outpostState") exitWith {};
 if (time < (missionNamespace getVariable ["CQ_opNext", 0])) exitWith {};
 CQ_opNext = time + 5;
-private _op = CQ_op;
+private _op = CQ_outpostState;
 private _pos = _op get "pos";
 
 // the HQ it serves: the active HQ nearest its HQ site
 if ((_op get "hqId") < 0) then {
     private _hs = (values CQ_hqs) select { (_x get "pos") distance2D (_op get "hqSite") < 1500 };
-    if (_hs isNotEqualTo []) then { _op set ["hqId", (([_hs, [], { (_x get "pos") distance2D (CQ_op get "hqSite") }] call BIS_fnc_sortBy) select 0) get "id"] };
+    if (_hs isNotEqualTo []) then { _op set ["hqId", (([_hs, [], { (_x get "pos") distance2D (CQ_outpostState get "hqSite") }] call BIS_fnc_sortBy) select 0) get "id"] };
 };
 
 // ---- fall: nobody left in the post itself (gunboats apart)

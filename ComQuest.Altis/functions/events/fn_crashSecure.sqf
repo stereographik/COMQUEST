@@ -26,5 +26,5 @@ if (!isNull _p) then { [_p, 100, "crash crate"] call CQ_fnc_scoreAdd };
 // reverse engineering (permanent): the corridor outpost's jammer no longer hides it
 if !(missionNamespace getVariable ["CQ_counterJam", false]) then {
     CQ_counterJam = true; publicVariable "CQ_counterJam";
-    if (!isNil "CQ_op" && { !(CQ_op get "fallen") } && { alive (CQ_op get "jammer") }) then { ["counterJam", []] call CQ_fnc_say };
+    if (!isNil "CQ_outpostState" && { !(CQ_outpostState get "fallen") } && { alive (CQ_outpostState get "jammer") }) then { ["counterJam", []] call CQ_fnc_say };
 };

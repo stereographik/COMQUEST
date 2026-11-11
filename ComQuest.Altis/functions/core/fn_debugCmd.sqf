@@ -143,7 +143,7 @@ if (_needHq && { count _hq == 0 }) then {
             };
         };
         case "opBuild": {
-            if (!isNil "CQ_op") then { _msg = "the outpost already exists" } else {
+            if (!isNil "CQ_outpostState") then { _msg = "the outpost already exists" } else {
                 private _hs = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
                 private _site = if (_hs isEqualTo []) then { CQ_coastPoint getPos [1500, CQ_coastPoint getDir CQ_basePos] } else { (([_hs, [], { _x get "id" }] call BIS_fnc_sortBy) select 0) get "pos" };
                 [_site] spawn CQ_fnc_outpostBuild;
@@ -151,18 +151,18 @@ if (_needHq && { count _hq == 0 }) then {
             };
         };
         case "opKill": {
-            if (isNil "CQ_op") then { _msg = "no outpost" } else {
-                { if (alive _x && { _x distance2D (CQ_op get "pos") < 300 }) then { _x setDamage 1 } } forEach (CQ_op get "men");
+            if (isNil "CQ_outpostState") then { _msg = "no outpost" } else {
+                { if (alive _x && { _x distance2D (CQ_outpostState get "pos") < 300 }) then { _x setDamage 1 } } forEach (CQ_outpostState get "men");
                 _msg = "outpost garrison killed (gunboats spared)";
             };
         };
         case "opJam": {
-            if (isNil "CQ_op") then { _msg = "no outpost" } else { (CQ_op get "jammer") setDamage 1; _msg = "outpost jammer destroyed" };
+            if (isNil "CQ_outpostState") then { _msg = "no outpost" } else { (CQ_outpostState get "jammer") setDamage 1; _msg = "outpost jammer destroyed" };
         };
         case "tpOp": {
-            if (isNil "CQ_op") then { _msg = "no outpost" } else {
+            if (isNil "CQ_outpostState") then { _msg = "no outpost" } else {
                 if (!isNull _p) then {
-                    private _q = (CQ_op get "pos") getPos [600, (CQ_op get "pos") getDir CQ_basePos];
+                    private _q = (CQ_outpostState get "pos") getPos [600, (CQ_outpostState get "pos") getDir CQ_basePos];
                     [_p] remoteExec ["moveOut", _p];
                     [_p, _q] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
                     _msg = "teleported 600 m from the outpost (base side)";
