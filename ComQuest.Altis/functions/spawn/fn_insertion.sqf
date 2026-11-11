@@ -131,6 +131,12 @@ private _troops = [];
     _x params ["_lat", "_lzDist", "_lzAng", "_nSquads", "_withCmd"];
     private _p = [_lat, 120] call _slot;
     ([ CQ_troopHeliClass, _p, _heading, true, CQ_heightTroops] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
+    _heli addEventHandler ["Killed", {
+        params ["_h", "_k", "_i"];
+        private _w = [_i, _k] select (isNull _i);
+        ["Insertion: troop heli destroyed at %1 by %2", [mapGridPosition _h,
+            if (isNull _w || { _w == _h }) then { "a crash (no shooter)" } else { format ["%1 / %2 (%3)", typeOf _w, typeOf vehicle _w, side group _w] }]] call CQ_fnc_log;
+    }];
     private _seats = _heli emptyPositions "cargo";
     private _lost = 0;
 
@@ -192,6 +198,13 @@ private _handoff = {
         _hq set ["state", "Failed"];
         { deleteMarker _x } forEach (_hq get "markers");
         ["Enemy insertion failed", format ["HQ #%1: no troops made it to the ground", _id]] call CQ_fnc_announce;
+        // the carrier tries again at the same spot: this landing does not count and its supplies come back
+        CQ_rootsLaunched = (CQ_rootsLaunched - 1) max 0;
+        CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", 0]) + 1;
+        call CQ_fnc_carrierMarker;
+        CQ_rootRetrySite = _site;
+        CQ_nextRootTime = serverTime + CQ_rootRetryDelay;
+        ["Root insertion failed: the carrier retries at %1 in %2 s", [mapGridPosition _site, CQ_rootRetryDelay]] call CQ_fnc_log;
     };
     _hq set ["infantry", _infantry];
     _hq set ["cmdGroup", _cmdGroup];

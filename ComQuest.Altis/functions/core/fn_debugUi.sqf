@@ -17,10 +17,11 @@ private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
 uiNamespace setVariable ["CQ_dbgDisplay", _d];
 _d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];   // U closes it
 
-private _W = safeZoneW * 0.86;
-private _H = safeZoneH * 0.86;
-private _X = safeZoneX + (safeZoneW - _W) / 2;
-private _Y = safeZoneY + (safeZoneH - _H) / 2;
+// docked on the right, full height, a fifth of the screen wide
+private _W = safeZoneW / 5;
+private _H = safeZoneH;
+private _X = safeZoneX + safeZoneW - _W;
+private _Y = safeZoneY;
 private _L = 0.036;                                     // line height
 private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
@@ -39,12 +40,12 @@ _title ctrlSetTextColor (CQ_ui get "accent");
 private _close = ["RscButton", -1, [_X + _W - 0.05, _Y + 0.004, 0.04, _L], "X"] call _mk;
 _close ctrlAddEventHandler ["ButtonClick", { (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) closeDisplay 1 }];
 
-// ---- left: status + HQ list
-private _lw = _W * 0.38;
+// ---- top: status + HQ list
+private _lw = _W - 0.027;
 private _status = ["RscStructuredText", 9001, [_X + 0.015, _Y + _L * 1.3, _lw, _L * 5.2]] call _mk;
 _status ctrlSetBackgroundColor (CQ_ui get "inset");
-(["RscText", -1, [_X + 0.015, _Y + _L * 6.7, _lw, _L * 0.8], "ENEMY HQs  (select one for the HQ buttons)"] call _mk) ctrlSetTextColor (CQ_ui get "muted");
-private _list = ["RscListBox", 9000, [_X + 0.015, _Y + _L * 7.6, _lw, _H - _L * 8.2]] call _mk;
+(["RscText", -1, [_X + 0.015, _Y + _L * 6.6, _lw, _L * 0.8], "ENEMY HQs  (select one for the HQ buttons)"] call _mk) ctrlSetTextColor (CQ_ui get "muted");
+private _list = ["RscListBox", 9000, [_X + 0.015, _Y + _L * 7.4, _lw, _L * 6.5]] call _mk;
 
 uiNamespace setVariable ["CQ_dbgSel", {
     private _lb = (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) displayCtrl 9000;
@@ -85,31 +86,43 @@ private _cats = [
         ["Logs, view", [["All enemy logs", "!logEnemy"], ["All friendly logs", "!logFriend"], ["FINAL PLAYER VIEW", "!playerView"]]]
     ]]
 ];
-private _rx = _X + 0.03 + _lw;
-private _rw = _W - (_rx - _X) - 0.015;
-private _sw = _rw * 0.15;                              // subcategory label column
-private _cols = 4;
-private _bx = _rx + _sw;
-private _bw = (_rw - _sw - (_cols - 1) * 0.006) / _cols;
-private _y = _Y + _L * 1.3;
+// ---- below: the buttons, in a scrolling group (2 columns, subcategory label above its buttons)
+private _gy = _Y + _L * 14.2;
+private _grp = _d ctrlCreate ["RscControlsGroup", -1];
+_grp ctrlSetPosition [_X + 0.012, _gy, _W - 0.016, _H - (_gy - _Y) - 0.008];
+_grp ctrlCommit 0;
+private _mkG = {
+    params ["_cls", "_pos", ["_txt", ""]];
+    private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), -1, _grp];
+    [_c, _cls] call CQ_fnc_uiStyle;
+    _c ctrlSetPosition _pos;
+    if (_txt != "") then { _c ctrlSetText _txt };
+    _c ctrlCommit 0;
+    _c
+};
+private _rw = _W - 0.016 - 0.03;                       // room for the scrollbar
+private _cols = 2;
+private _bw = (_rw - (_cols - 1) * 0.006) / _cols;
+private _y = 0;
 private _toggles = [];
 {
     _x params ["_cat", "_subs"];
-    private _h = ["RscText", -1, [_rx, _y, _rw, _L * 0.8], _cat] call _mk;
+    private _h = ["RscText", [0, _y, _rw, _L * 0.8], _cat] call _mkG;
     _h ctrlSetFont "PuristaMedium";
     _h ctrlSetTextColor (CQ_ui get "accent");
-    (["RscText", -1, [_rx, _y + _L * 0.8, _rw, 0.002]] call _mk) ctrlSetBackgroundColor (CQ_ui get "accent");
+    (["RscText", [0, _y + _L * 0.8, _rw, 0.002]] call _mkG) ctrlSetBackgroundColor (CQ_ui get "accent");
     _y = _y + _L * 0.9;
     {
         _x params ["_sub", "_btns"];
-        private _sl = ["RscText", -1, [_rx, _y, _sw, _L * 0.95], _sub] call _mk;
+        private _sl = ["RscText", [0, _y, _rw, _L * 0.7], _sub] call _mkG;
         _sl ctrlSetTextColor (CQ_ui get "muted");
-        _sl ctrlSetFontHeight (_L * 0.7);
+        _sl ctrlSetFontHeight (_L * 0.62);
+        _y = _y + _L * 0.7;
         {
             _x params ["_label", "_cmd"];
             private _c = _forEachIndex mod _cols;
             if (_c == 0 && { _forEachIndex > 0 }) then { _y = _y + _L * 1.02 };
-            private _b = ["RscButton", -1, [_bx + _c * (_bw + 0.006), _y, _bw, _L * 0.95], _label] call _mk;
+            private _b = ["RscButton", [_c * (_bw + 0.006), _y, _bw, _L * 0.95], _label] call _mkG;
             _b setVariable ["CQ_cmd", _cmd];
             _b setVariable ["CQ_label", _label];
             if ((_cmd select [0, 1]) == "!" && { _cmd != "!arsenal" }) then { _toggles pushBack _b };
@@ -146,7 +159,7 @@ private _toggles = [];
                 call (uiNamespace getVariable ["CQ_dbgToggleLabels", {}]);
             }];
         } forEach _btns;
-        _y = _y + _L * 1.1;
+        _y = _y + _L * 1.15;
     } forEach _subs;
     _y = _y + _L * 0.3;
 } forEach _cats;

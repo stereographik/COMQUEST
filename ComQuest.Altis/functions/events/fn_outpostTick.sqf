@@ -17,7 +17,7 @@ private _pos = _op get "pos";
 
 // the HQ it serves: the active HQ nearest its HQ site
 if ((_op get "hqId") < 0) then {
-    private _hs = (values CQ_hqs) select { (_x get "pos") distance2D (_op get "hqSite") < 1500 };
+    private _hs = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { (_x get "pos") distance2D (_op get "hqSite") < 1500 } };
     if (_hs isNotEqualTo []) then { _op set ["hqId", (([_hs, [], { (_x get "pos") distance2D (CQ_outpostState get "hqSite") }] call BIS_fnc_sortBy) select 0) get "id"] };
 };
 
