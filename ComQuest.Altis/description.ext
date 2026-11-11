@@ -255,6 +255,7 @@ class CfgFunctions
             class shopBuy {};
             class shopUi {};
             class scoreAdd {};
+            class rankBoard {};
             class statsAdd {};
             class statsTick {};
             class statsInit {};

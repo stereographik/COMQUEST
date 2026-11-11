@@ -371,6 +371,9 @@ CQ_classSidearm = ["hgun_P07_F", "16Rnd_9x21_Mag", 3];
 CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
 CQ_classChangeRange = 2;                 // classes are changed inside the HQ compound walls (+ this margin, m)
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads
+CQ_rankRange = 60;                       // m: the squad ranking under the base billboard shows this close
+CQ_rankHeight = [2.3, 0.5];              // m above the ground: top line (title) and step down per line
+CQ_rankColors = [[0.85, 0.68, 0.21, 1], [0.75, 0.75, 0.75, 1], [0.70, 0.45, 0.25, 1]];   // gold, silver, bronze rifles
 // Contact / heavy support
 CQ_helpRadius = 700;                     // patrolling squads this close to a contact join in
 CQ_flareWindow = 120;                    // the spotting squad wiped (to CQ_flareLossShare) within this -> red flare

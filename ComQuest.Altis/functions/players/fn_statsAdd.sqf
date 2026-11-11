@@ -27,5 +27,9 @@ if !(_g getVariable ["CQ_solo", true]) then {
         private _w = CQ_squadPointWeights findIf { (_x select 0) == _k };
         if (_w > -1 && { _k != "longest" }) then { _sp = _sp + _v * ((CQ_squadPointWeights select _w) select 1) };
     } forEach _pairs;
-    if (_sp != 0) then { _g setVariable ["CQ_sqPts", ((_g getVariable ["CQ_sqPts", 0]) + _sp) max 0, true] };
+    if (_sp != 0) then {
+        _g setVariable ["CQ_sqPts", ((_g getVariable ["CQ_sqPts", 0]) + _sp) max 0, true];
+        // ranking score (base billboard, CQ_fnc_rankBoard): everything earned, never spent
+        _g setVariable ["CQ_sqScore", ((_g getVariable ["CQ_sqScore", 0]) + _sp) max 0, true];
+    };
 };

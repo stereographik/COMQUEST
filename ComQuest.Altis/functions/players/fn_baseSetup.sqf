@@ -428,6 +428,8 @@ if (_bbC != "") then {
     _bb setPosATL _bbP;
     _bb allowDamage false;
     _bb setObjectTextureGlobal [0, "media\billboard.jpg"];
+    CQ_billboard = _bb;
+    publicVariable "CQ_billboard";      // the squad ranking is drawn under its banner (CQ_fnc_rankBoard)
     ["Billboard (%1) at %2", [_bbC, mapGridPosition _bb]] call CQ_fnc_log;
 };
 
