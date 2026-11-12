@@ -254,6 +254,10 @@ CQ_btReplaceDelay = 300;                 // s before the carrier paradrops a rep
 CQ_btMaxDrops = 16;                      // build trucks the carrier can paradrop in the whole game (replacements + new trucks for founding HQs)
 CQ_btEscortClass = "O_MRAP_02_hmg_F";    // escort of a replacement truck (Ifrit HMG, CSAT's Hunter)
 CQ_btEscortMax = 3;                      // one escort more per truck the HQ lost, up to this
+CQ_btKajClass = "O_Heli_Attack_02_dynamicLoadout_F";   // Kajman teaming with the build truck while an HQ is built
+CQ_btKajRange = [100, 500];              // m around the truck: its scouting points
+CQ_btKajEvery = [30, 40];                // s between two scouting points
+CQ_btKajDelay = 300;                     // s before another Kajman joins after one is lost
 CQ_hqMarkerRadius = 400;                 // approximate circle shown to players
 CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted", "SatchelCharge_Remote_Ammo", "SatchelCharge_Remote_Ammo_Scripted"];
 

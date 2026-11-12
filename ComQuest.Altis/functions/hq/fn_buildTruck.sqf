@@ -13,6 +13,7 @@
                                         CQ_btReplaceDelay s, with one escort more per truck this HQ
                                         lost (CQ_btEscortMax at most); CQ_btMaxDrops for the whole game
       "board"   [_hq]                   the squad gets back in (waits up to CQ_btBoardTime s)
+      "kajman"  [_hq]                   (spawned) a Kajman scouts around the truck while the HQ is built
 
     HQ keys: "buildTruck" (object), "btSquad" (group), "btKills" (trucks lost), "btPending".
     The truck is never in the HQ's "vehicles": nothing else (roaming, convoys, colonists) takes it.
@@ -55,6 +56,7 @@ switch (_mode) do {
                 ["request", [_h]] spawn CQ_fnc_buildTruck;
             }];
         };
+        if (!(_hq getOrDefault ["buildDone", false]) && { !(_hq getOrDefault ["kajLoop", false]) }) then { ["kajman", [_hq]] spawn CQ_fnc_buildTruck };
         ["HQ #%1: build truck %2 assigned (squad %3, %4 escorts)", [_hq get "id", typeOf _tr,
             [groupId _sg, "none"] select (isNull _sg), (count units group driver _tr) - 1]] call CQ_fnc_log;
     };
@@ -122,6 +124,79 @@ switch (_mode) do {
         _t = time;
         waitUntil { sleep 5; alive (_hq getOrDefault ["buildTruck", objNull]) || { time - _t > 420 } };
         _hq set ["btPending", false];
+    };
+
+    case "kajman": {
+        // A Kajman teams with the truck while the HQ is being built: the nearest free one of the
+        // fleet (CQ_air, state "btEscort" keeps it out of patrols, QRFs and re-basing), else the
+        // carrier flies one in. It scouts CQ_btKajRange m around the truck, a new point every
+        // CQ_btKajEvery s. Lost: another after CQ_btKajDelay s. HQ built: back to the fleet.
+        _args params ["_hq"];
+        private _id = _hq get "id";
+        _hq set ["kajLoop", true];
+        private _e = createHashMap;
+        private _nextT = time + 90;  // when a (new) Kajman may be fetched (90 s: the landing's own Kajman joins the fleet first)
+        private _ptT = 0;
+        private _release = {
+            if (count _e > 0 && { alive (_e get "veh") }) then {
+                _e set ["state", "toPark"]; _e set ["nearT", -1];
+                (_e get "veh") flyInHeight 110;
+                (_e get "veh") doMove (getPosATL (_e get "pad"));
+                ["HQ #%1: build truck Kajman back to the fleet", [_id]] call CQ_fnc_log;
+            };
+            _e = createHashMap;
+        };
+        while { (_hq get "state") in CQ_activeStates && { !(_hq getOrDefault ["buildDone", false]) } } do {
+            sleep 5;
+            private _tr = _hq getOrDefault ["buildTruck", objNull];
+            private _ctr = if (alive _tr) then { getPosATL _tr } else { _hq get "pos" };
+            // lost (dead, or taken off the job): wait, then get another
+            if (count _e > 0 && { !alive (_e get "veh") || { (_e get "state") != "btEscort" } }) then {
+                if ((_e get "state") == "btEscort") then { ["HQ #%1: build truck Kajman lost, another in %2 s", [_id, CQ_btKajDelay]] call CQ_fnc_log };
+                _e = createHashMap; _nextT = time + CQ_btKajDelay;
+            };
+            // dry or thirsty: back to the fleet (it rearms there), another one comes at once
+            if (count _e > 0 && { alive (_e get "veh") } && { ([_e get "veh"] call CQ_fnc_vehAmmoLevel) < CQ_airLowAmmo || { fuel (_e get "veh") < CQ_airLowFuel } }) then {
+                ["HQ #%1: build truck Kajman low on ammo or fuel, swapped", [_id]] call CQ_fnc_log;
+                call _release; _nextT = time;
+            };
+            if (count _e == 0 && { time >= _nextT }) then {
+                private _free = CQ_air select {
+                    alive (_x get "veh") && { (typeOf (_x get "veh")) find "O_Heli_Attack_02" == 0 } && { (_x get "state") in ["parked", "toPark", "patrolling"] }
+                };
+                if (_free isNotEqualTo []) then {
+                    _free = [_free, [], { (_x get "veh") distance2D _ctr }, "ASCEND"] call BIS_fnc_sortBy;
+                    _e = _free select 0;
+                    ["HQ #%1: fleet Kajman %2 teams with the build truck (%3 m away)", [_id, groupId (_e get "grp"), round ((_e get "veh") distance2D _ctr)]] call CQ_fnc_log;
+                } else {
+                    private _from = if (!isNil "CQ_carrierPos") then { CQ_carrierPos getPos [300, CQ_carrierPos getDir _ctr] } else { _ctr getPos [5000, random 360] };
+                    ([CQ_btKajClass, [_from select 0, _from select 1, 0], _from getDir _ctr, false, CQ_heightEscort] call CQ_fnc_spawnHeli) params ["_h", "_hg"];
+                    [_h] call CQ_fnc_airLoadout;
+                    [_h, 1] call CQ_fnc_vehAmmoInit;
+                    [_h, _hg, "armed", _id, objNull, [], true] call CQ_fnc_airRegister;   // always accepted (parked flag), even with a full fleet
+                    _e = CQ_air select (CQ_air findIf { (_x get "veh") == _h });
+                    _h engineOn true;
+                    ["HQ #%1: no free Kajman, the carrier sends one for the build truck", [_id]] call CQ_fnc_log;
+                };
+                _e set ["state", "btEscort"];
+                private _g = _e get "grp";
+                [_g] call CQ_fnc_clearWaypoints;
+                _g setBehaviour "AWARE"; _g setCombatMode "RED";
+                _ptT = 0;
+            };
+            // scouting: a new point CQ_btKajRange around the truck every CQ_btKajEvery s
+            if (count _e > 0 && { time >= _ptT }) then {
+                private _v = _e get "veh";
+                CQ_btKajRange params ["_r0", "_r1"];
+                _v flyInHeight (60 + random 60);
+                _v doMove (_ctr getPos [_r0 + random (_r1 - _r0), random 360]);
+                _ptT = time + (CQ_btKajEvery select 0) + random ((CQ_btKajEvery select 1) - (CQ_btKajEvery select 0));
+            };
+            // the truck moved on to another HQ (split): this loop belongs to the old one
+            if (alive _tr && { (_tr getVariable ["CQ_btHq", -1]) != _id }) exitWith {};
+        };
+        call _release;
+        _hq set ["kajLoop", false];
     };
 
     case "board": {
