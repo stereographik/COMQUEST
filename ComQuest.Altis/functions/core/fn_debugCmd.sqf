@@ -123,6 +123,13 @@ if (_needHq && { count _hq == 0 }) then {
             private _r = _hq getOrDefault ["depot", objNull];
             if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: depot destroyed", _id] } else { _msg = format ["HQ #%1 has no depot", _id] };
         };
+        case "logPos": {
+            if (!isNull _p) then {
+                private _q = getPosATL _p;
+                ["DEBUG position of %1: [%2, %3, 0] facing %4", [name _p, round (_q select 0), round (_q select 1), round getDir _p]] call CQ_fnc_log;
+                _msg = format ["Position logged: [%1, %2, 0] facing %3", round (_q select 0), round (_q select 1), round getDir _p];
+            };
+        };
         case "tpRelayVeh": {
             private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
             if (!alive _rv) then { _msg = "No relay vehicle out yet" } else {
