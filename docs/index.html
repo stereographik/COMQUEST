@@ -157,18 +157,18 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     </div>
     <h1>ComQuest</h1>
     <div class="plate">
-      <canvas id="plate" aria-label="Animated map: the CSAT carrier plants HQs inland, each one built in four stages and founding the next"></canvas>
+      <canvas id="plate" aria-label="Animated map: the CSAT carrier plants HQs inland, each one built in six stages and founding the next"></canvas>
       <span class="tag" style="left:12px;top:12px">Enemy network · live</span>
       <span class="tag" style="right:12px;top:12px">6 HQs per carrier</span>
-      <span class="tag" style="left:12px;bottom:12px">4 build stages each</span>
+      <span class="tag" style="left:12px;bottom:12px">6 build stages each</span>
       <span class="tag" style="right:12px;bottom:12px">No markers on your map</span>
     </div>
     <div class="hero-foot">
-      <p class="lead">A CSAT carrier parks off Altis and starts planting headquarters inland. Each one grows, splits and feeds the next, while a friendly drone operator hunts them from the sky. Find the network and cut it apart before the carrier empties onto the island.</p>
+      <p class="lead">A CSAT carrier parks at one of sixteen positions off Altis and starts planting headquarters inland. Each one grows, splits and feeds the next, while a friendly drone operator hunts them from the sky. Find the network and cut it apart before the carrier empties onto the island.</p>
       <div class="stats">
         <div><b>6</b><span>HQs per carrier</span></div>
-        <div><b>4</b><span>build stages</span></div>
-        <div><b>12</b><span>MAGPIE drones</span></div>
+        <div><b>6</b><span>build stages</span></div>
+        <div><b>16</b><span>carrier positions</span></div>
         <div><b>11</b><span>player classes</span></div>
         <div><b>160</b><span>enemy infantry cap</span></div>
       </div>
@@ -190,14 +190,14 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
     <p class="lead">Nothing is placed by hand. A server-side director runs the enemy as a living system: it inserts, builds, resupplies, redeploys and calls for help every few seconds, whether you are watching or not. The carrier holds enough for six HQs, and its marker shows what is left.</p></div>
   </div>
   <div class="grid g4">
-    <div class="cell x"><span class="mono">Step 1</span><h3>Insertion</h3><p>Taru and Mohawk transports leave the carrier. The first HQ is a beachhead within 2 km of the shore.</p></div>
+    <div class="cell x"><span class="mono">Step 1</span><h3>Insertion</h3><p>Transport helicopters leave the carrier, wherever it parked this time: sixteen positions, never the same twice in a row. The first HQ goes inland of it, and a failed landing is simply retried a few minutes later.</p></div>
     <div class="cell x"><span class="mono">Step 2</span><h3>Paradrop</h3><p>A Zamak and an Ifrit come down under their own chutes, plus a long-range Tigris anti-air vehicle with every insertion.</p></div>
     <div class="cell x"><span class="mono">Step 3</span><h3>Secure</h3><p>Squads post out to a 1 km perimeter before anyone lays a sandbag.</p></div>
     <div class="cell x"><span class="mono">Then</span><h3>Split</h3><p>A strong HQ sends colonists by truck and helicopter to found the next one, until the carrier is empty.</p></div>
-    <div class="cell"><span class="mono">Stage 1/4</span><h3>Command post</h3><p>The HQ commander moves in. Kill or capture him: he matters.</p></div>
-    <div class="cell"><span class="mono">Stage 2/4</span><h3>Perimeter</h3><p>Sandbags around the site.</p></div>
-    <div class="cell"><span class="mono">Stage 3/4</span><h3>Depot and radio</h3><p>Ammo depot, fuel tanker, supply truck and a radio tower.</p></div>
-    <div class="cell"><span class="mono">Stage 4/4</span><h3>Operational</h3><p>Helipad with a QRF helicopter, three AA pits, an HMG tower, and two squads of armed locals.</p></div>
+    <div class="cell"><span class="mono">Stages 1–2</span><h3>Defences first</h3><p>Three AA pits, then a cargo tower with a heavy machine gun on top.</p></div>
+    <div class="cell"><span class="mono">Stage 3</span><h3>Radio tower</h3><p>The HQ's voice, with a guard squad of its own. It can't be blown up: an Engineer hacks it from the terminal at its foot.</p></div>
+    <div class="cell"><span class="mono">Stages 4–5</span><h3>Depot and fuel</h3><p>A supply depot with a field supply truck, then a fuel tanker. The depot only goes down to satchels or demolition charges.</p></div>
+    <div class="cell"><span class="mono">Stage 6/6</span><h3>Operational</h3><p>Helipad with a QRF helicopter, a command building and a sandbag ring. The commander moves in: kill or capture him.</p></div>
   </div>
   <div class="grid g3" style="margin-top:24px">
     <div class="cell"><h3>Logistics</h3><p>The main HQ is resupplied by air and HEMTT convoys carry ammunition on to the others. A dead convoy is felt across the island.</p></div>
@@ -222,19 +222,35 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
   </div>
 </section>
 
-<section id="magpie">
+<section id="events">
   <div class="head">
     <div class="num">03</div>
+    <div><span class="mono">Events</span><h2>The island doesn't wait for you</h2>
+    <p class="lead">Two things happen outside the HQ cycle. One guards the enemy's back from the start; the other falls out of the sky when nobody expects it and pulls both sides to the same spot.</p></div>
+  </div>
+  <div class="grid g3">
+    <div class="cell hot x"><span class="mono">From the start</span><h3>Corridor outpost</h3><p>On the highest ground between the carrier and the first HQ, guarding its flight path: a watchtower whose spotter calls in a mortar, two Titan AA, two HMG towers, a dug-in squad and two gunboats patrolling the coast. Its men share everything they see by radio.</p></div>
+    <div class="cell x"><span class="mono">Jammer</span><h3>A rough idea, at best</h3><p>A jamming mast blinds MAGPIE within 600 m and keeps the outpost off your map: you only get a hatched black circle about a kilometre wide. Destroy the mast, or crack a crash crate, and the marker becomes exact.</p></div>
+    <div class="cell x"><span class="mono">Reward</span><h3>Cut the corridor</h3><p>Take the outpost and the first HQ's resupply flights come late and the long way round, over 4 km off their line. The outpost doesn't count toward the enemy caps.</p></div>
+    <div class="cell hot x"><span class="mono">Random</span><h3>Transport crash</h3><p>An enemy transport goes down between your base and their network, carrying a communications crate. Its survivors dig in around it. 10% chance in the first 15 minutes, then whenever the front stalls, at most once every 40 minutes.</p></div>
+    <div class="cell x"><span class="mono">Clock</span><h3>Hidden ten minutes</h3><p>Once the survivors make contact, a clock you can't see starts. Run out of time and a CH-49 paradrops a Nyx, Kamysh, Marid or Gorgon full of soldiers that roam the site. The signal finder warns: ENEMY SECURING DEVICE.</p></div>
+    <div class="cell cool x"><span class="mono">Payoff</span><h3>Decrypt</h3><p>Reach the crate and hold the action: twelve minutes of decryption at base, and the network's secrets go on your map, the outpost's exact position included. The enemy can never take the crate back.</p></div>
+  </div>
+</section>
+
+<section id="magpie">
+  <div class="head">
+    <div class="num">04</div>
     <div><span class="mono">Air intelligence</span><h2>MAGPIE hunts from the sky</h2>
-    <p class="lead">MAGPIE is the friendly drone operator, a bot. She launches as soon as the carrier shows up, flies twelve drones at once, and only speaks when she has tracked something.</p></div>
+    <p class="lead">MAGPIE is the friendly drone operator, a bot. She launches as soon as the carrier shows up, keeps two large Sentinels in the air, and has small Darters sleeping across the island. She only speaks when she has tracked something.</p></div>
   </div>
   <div class="split">
     <div class="grid g2">
-      <div class="cell cool x"><span class="mono">3 hunters</span><h3>Darter, Greyhawk, Reaper</h3><p>Flying at 250, 900 and 1,500 m. The higher the drone, the wider its sensor, up to 2.4 km. Fixed wings take off one at a time from the runway.</p></div>
-      <div class="cell cool x"><span class="mono">9 Darters</span><h3>Scan chain</h3><p>A north–south line of small drones sweeps east across the island, following the coast and never searching the sea.</p></div>
+      <div class="cell cool x"><span class="mono">2 Sentinels</span><h3>Argos and Hermes</h3><p>Unarmed Greyhawk airframes at 900 and 1,500 m. The higher the drone, the wider its sensor. They take off one at a time from the runway.</p></div>
+      <div class="cell cool x"><span class="mono">Sleeping Darters</span><h3>Wake on contact</h3><p>A grid of points every 500 m across Altis. A ground enemy within 500 m wakes a Darter there; it looks, then backs off to the edge of its sensor. Lost ones are replaced from the nearest point a minute later.</p></div>
       <div class="cell cool"><span class="mono">First contact</span><h3>Encirclement</h3><p>The first enemy spotted becomes the centre of every flight path. The drones spread around it and tighten the ring, taking risks to see more.</p></div>
       <div class="cell cool"><span class="mono">Identification</span><h3>Not every pass counts</h3><p>Each pass has a chance to identify: 60% for infantry up to 90% for aircraft. Hidden units stay hidden.</p></div>
-      <div class="cell hot"><span class="mono">Threat</span><h3>Tigris</h3><p>Every insertion drops a Tigris. Its radar only wakes once it notices a drone, missiles reach 3.5 km, and half of them are guided home. A lost drone is replaced after 8 minutes.</p></div>
+      <div class="cell hot"><span class="mono">Threat</span><h3>Tigris</h3><p>Every insertion drops a Tigris, and the corridor outpost has Titans. The radar only wakes once it notices a drone, and missiles reach 3.5 km. A lost Sentinel is replaced after 8 minutes; MAGPIE learns to fly around known AA.</p></div>
       <div class="cell hot"><span class="mono">Map</span><h3>Live and heat</h3><p>While a drone sees an enemy, everyone sees it live on the map. A heatmap marks scanned ground in teal and contacts in rose, fading within a minute. <span class="pill t">heatmap in test</span></p></div>
     </div>
     <div class="stack">
@@ -244,18 +260,18 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
         <div class="msg u"><span class="mono">MAGPIE</span><p>Contact. All birds converging, I want a ring around it.</p></div>
         <div class="msg e"><span class="mono">MAGPIE</span><p>Tracked anti-air east of the ridge. Keeping my distance. Mostly.</p></div>
       </div>
-      <p class="mono" style="text-transform:none;letter-spacing:.02em">Reports every 2 minutes, only when something new was identified, as a compact list per area of operation.</p>
+      <p class="mono" style="text-transform:none;letter-spacing:.02em">Reports every 2 minutes, only when something new was identified, as a compact list per area of operation. Each card stays on screen for 6 seconds.</p>
     </div>
   </div>
 </section>
 
 <section id="win">
   <div class="head">
-    <div class="num">04</div>
+    <div class="num">05</div>
     <div><span class="mono">Win and lose</span><h2>Victory is total, defeat is one man</h2></div>
   </div>
   <div class="grid g4">
-    <div class="cell"><span class="mono">An HQ falls</span><p>Only when its commander is dead or captured <b>and</b> every installation is destroyed: depot, fuel, radio tower, helipad and AA.</p></div>
+    <div class="cell"><span class="mono">An HQ falls</span><p>When its commander is dead or captured <b>and</b> its radio tower is hacked or gone. A hacked tower turns into your relay on the spot.</p></div>
     <div class="cell"><span class="mono">Capture</span><p>Hold the action on the commander. He talks, and every HQ in his network goes on your map.</p></div>
     <div class="cell cool"><span class="mono">Victory</span><p>The carrier is empty and every enemy HQ on Altis is destroyed.</p></div>
     <div class="cell hot"><span class="mono">Defeat</span><p>Colonel Harlan, your commander in the HQ offices, is killed. The operation is over.</p></div>
@@ -264,14 +280,14 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
 
 <section id="base">
   <div class="head">
-    <div class="num">05</div>
+    <div class="num">06</div>
     <div><span class="mono">Your base</span><h2>An airfield compound and its motor pool</h2>
     <p class="lead">Built by script at the AAC airfield from zones drawn on the map: a walled HQ, four vehicle rows, crate dispensers, repair depots facing the runway, a vehicle shop and a field of drone pads.</p></div>
   </div>
   <div class="split">
     <div class="plate"><canvas id="base" width="600" height="420" aria-label="Base layout: runway, HQ compound, four vehicle rows, repair depots, shop and UAV field"></canvas></div>
     <div class="stack">
-      <div><h3>HQ compound</h3><p>H-barrier walls, a gate between two towers, guard towers on the corners. Inside: offices, warehouse, radar, medical post, and one arsenal box per squad. Classes can only be changed inside these walls.</p></div>
+      <div><h3>HQ compound</h3><p>H-barrier walls, a gate between two towers, guard towers on the corners. Inside: offices, warehouse, radar, medical post, and one arsenal box per squad. Classes can only be changed inside these walls. A respawn vehicle can carry the spawn point to the front; while it does, it is locked and never despawns.</p></div>
       <div><h3>Vehicle rows</h3><p>Four parallel rows, smallest vehicle first, spaced by each model's width plus 5 m, ending at a repair depot. Every row gets a similar mix.</p></div>
       <div><h3>Crates and loadout</h3><p>Dispensers hold ready-filled supply crates; one action fills a vehicle with resupply for a whole squad.</p></div>
       <div><h3>Runway and defence</h3><p>The runway is kept clear for MAGPIE. AA and HMG positions around the perimeter are rebuilt 10 minutes after they fall.</p></div>
@@ -294,7 +310,7 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
 
 <section id="players">
   <div class="head">
-    <div class="num">06</div>
+    <div class="num">07</div>
     <div><span class="mono">Players</span><h2>26 slots, everything on U</h2>
     <p class="lead">The lobby has 26 identical Rifleman slots. You land in the compound unassigned and press U: one small menu leads to everything.</p></div>
   </div>
@@ -321,23 +337,24 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
           <tr><td>Light Anti-Tank</td><td class="n">4</td><td></td></tr>
           <tr><td>Heavy Anti-Tank</td><td class="n">2</td><td></td></tr>
           <tr><td>Anti-Air</td><td class="n">2</td><td></td></tr>
-          <tr><td>Engineer</td><td class="n">4</td><td>Repairs, explosives</td></tr>
-          <tr><td>Marksman</td><td class="n">2</td><td></td></tr>
-          <tr><td>Pilot</td><td class="n">4</td><td></td></tr>
+          <tr><td>Engineer</td><td class="n">4</td><td>Repairs, explosives, hacks towers</td></tr>
+          <tr><td>Sniper</td><td class="n">2</td><td>GM6 Lynx, ghillie</td></tr>
+          <tr><td>Pilot</td><td class="n">4</td><td>Flight gear</td></tr>
         </tbody>
       </table>
     </div>
   </div>
   <div class="grid g3" style="margin-top:24px">
     <div class="cell"><h3>Squads</h3><p>Create, join, leave or disband. A leader invites an unassigned player, who answers in an accept or decline window.</p></div>
-    <div class="cell"><h3>Classes</h3><p>Shown as used / limit. You keep your class loadout and skills through respawns, and the arsenal customises the rest.</p></div>
+    <div class="cell"><h3>Classes</h3><p>Shown as used / limit. Each class starts with the best vanilla kit for its role and a suppressor, kept through respawns. The arsenal is role-aware: only medics take medikits, only launcher classes take launchers, but anyone can carry magazines and rockets for the squad. No personal drones.</p></div>
+    <div class="cell"><h3>Earplugs</h3><p>On the scroll menu and the End key. One press brings the noise of battle down to a whisper; press again to take them out.</p></div>
     <div class="cell"><h3>Stats</h3><p>Every player's combat is tracked for the session: filter by class, sort by any column, open a player's details.</p></div>
   </div>
 </section>
 
 <section id="intel">
   <div class="head">
-    <div class="num">07</div>
+    <div class="num">08</div>
     <div><span class="mono">Radio and story</span><h2>Three voices, no coordinates</h2>
     <p class="lead">Messages never give a location. The story follows the carrier: four acts as it empties, a SITREP every 20 minutes, and a speech budget so the net never floods. Serious milsim, with the dry humour of an old staff officer.</p></div>
   </div>
@@ -351,7 +368,7 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
     <div class="stack">
       <div><h3>CROSSROAD</h3><p>Your HQ. Acts, SITREPs, losses and the occasional dry remark.</p></div>
       <div><h3>MAGPIE</h3><p>The drone operator. She reports enemy tracking only, never her own drones.</p></div>
-      <div><h3>COMHAT</h3><p>Translated enemy radio, heard only through a standing tower. Drop the tower and the voice cuts mid-sentence.</p></div>
+      <div><h3>COMHAT</h3><p>Translated enemy radio, heard only through a standing tower. Hack the tower and the voice cuts mid-sentence. Its cards carry a thick red border.</p></div>
       <div><h3>Direction finder</h3><p>Carry a radio and the panel at the top of the screen picks up the closest fully built HQ. Sweep your view to find the bearing, walk in to raise the level.</p>
         <div class="signal"><span class="mono">Signal</span><b>65%</b><div class="meter"><i></i></div></div></div>
     </div>
@@ -360,7 +377,7 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
 
 <section id="shop">
   <div class="head">
-    <div class="num">08</div>
+    <div class="num">09</div>
     <div><span class="mono">Score and shop</span><h2>Fight as a squad, buy as a squad</h2>
     <p class="lead">Kills, vehicles and objectives earn points for your squad. The squad leader spends them at the shop terminal west of the HQ.</p></div>
   </div>
@@ -394,13 +411,13 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
 
 <section id="hood">
   <div class="head">
-    <div class="num">09</div>
+    <div class="num">10</div>
     <div><span class="mono">Under the hood</span><h2>One director, two files</h2></div>
   </div>
   <div class="grid g4">
     <div class="cell x"><h3>Vanilla + CBA</h3><p>Base-game assets only. Every class is checked for DLC at runtime, with a base-game fallback.</p></div>
     <div class="cell x"><h3>One director</h3><p>A single server loop with self-timed tasks: HQs, logistics, air, MAGPIE, balancing, crates, repair, stats.</p></div>
-    <div class="cell x"><h3>Debug panel</h3><p>F3 or the U menu, for the host and admins: seven categories of test commands, map overlays and a final player view.</p></div>
+    <div class="cell x"><h3>Debug panel</h3><p>F3 or the U menu, for the host and admins. Docked on the right: teleporters first, then map visibility, HQs, forces, events, friendly, story and logs.</p></div>
     <div class="cell x"><h3>Tunable</h3><p>Timings, limits, prices, layout and the whole radio script live in <code>cfg/settings.sqf</code> and <code>cfg/story.sqf</code>.</p></div>
   </div>
 </section>
@@ -463,10 +480,10 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Vanil
         ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(from.x+(to.x-from.x)*f,from.y+(to.y-from.y)*f); ctx.stroke(); ctx.setLineDash([]);
         if(f<1) return;
         planted++;
-        const built=Math.min(4,Math.floor((age-1.2)/0.35)), s=7;
+        const built=Math.min(6,Math.floor((age-1.2)/0.25)), s=7;
         ctx.strokeStyle='#BA392C'; ctx.lineWidth=2; ctx.strokeRect(to.x-s,to.y-s,s*2,s*2);
-        ctx.fillStyle='#BA392C'; for(let k=0;k<built;k++) ctx.fillRect(to.x-s+2+k*3,to.y-s+2,2,s*2-4);
-        if(built>=4 && !reduce){ const pulse=(tt*0.6+i*0.3)%1; ctx.strokeStyle=`rgba(186,57,44,${0.4*(1-pulse)})`; ctx.beginPath(); ctx.arc(to.x,to.y,10+pulse*26,0,Math.PI*2); ctx.stroke() }
+        ctx.fillStyle='#BA392C'; for(let k=0;k<built;k++) ctx.fillRect(to.x-s+2+k*1.8,to.y-s+2,1.2,s*2-4);
+        if(built>=6 && !reduce){ const pulse=(tt*0.6+i*0.3)%1; ctx.strokeStyle=`rgba(186,57,44,${0.4*(1-pulse)})`; ctx.beginPath(); ctx.arc(to.x,to.y,10+pulse*26,0,Math.PI*2); ctx.stroke() }
         ctx.lineWidth=1;
         ctx.strokeStyle='rgba(242,241,223,.5)'; ctx.beginPath(); ctx.moveTo(to.x+12,to.y-14); ctx.lineTo(to.x+20,to.y-14); ctx.moveTo(to.x+16,to.y-18); ctx.lineTo(to.x+16,to.y-10); ctx.stroke();
         ctx.fillStyle='rgba(242,241,223,.85)'; ctx.fillText(names[i]+'  '+built+'/4',to.x+12,to.y+4);
