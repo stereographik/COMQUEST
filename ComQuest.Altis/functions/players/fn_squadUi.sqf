@@ -24,11 +24,19 @@ uiNamespace setVariable ["CQ_sqDisplay", _d];
 uiNamespace setVariable ["CQ_sqView", _view];
 _d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];
 
-private _W = safeZoneW * 0.56;
-private _H = safeZoneH * 0.66;
-private _X = safeZoneX + (safeZoneW - _W) / 2;
-private _Y = safeZoneY + (safeZoneH - _H) / 2;
-private _L = 0.042;
+// the field tablet picture (media\comtablet_ca.paa, 1024 x 1024, background cut out), docked on the
+// right and overlapping the screen edge like the U menu; the window fills its green screen
+// (CQ_sqScreen = [x0, y0, x1, y1] as fractions of the picture)
+private _npx = (safeZoneH * CQ_sqSize) / pixelH;
+private _pw = _npx * pixelW; private _ph = _npx * pixelH;
+private _picX = safeZoneX + safeZoneW - _pw * (1 - CQ_sqOverhang);
+private _picY = safeZoneY + (safeZoneH - _ph) / 2;
+CQ_sqScreen params ["_fx0", "_fy0", "_fx1", "_fy1"];
+private _X = _picX + _pw * _fx0 + 0.004;
+private _Y = _picY + _ph * _fy0 + 0.004;
+private _W = _pw * (_fx1 - _fx0) - 0.008;
+private _H = _ph * (_fy1 - _fy0) - 0.008;
+private _L = (0.042 * _H / (safeZoneH * 0.66)) max 0.03;   // row height, scaled to the screen
 private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
     private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), _idc];
@@ -38,9 +46,10 @@ private _mk = {
     _c ctrlCommit 0;
     _c
 };
-// dark backdrop behind the whole window (readability over the game view)
-(["RscText", -1, [_X - 0.01, _Y - 0.01, _W + 0.02, _H + 0.02]] call _mk) ctrlSetBackgroundColor [0, 0, 0, 0.8];
-(["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor (CQ_ui get "panel");
+private _pic = ["RscPicture", -1, [_picX, _picY, _pw, _ph]] call _mk;
+_pic ctrlSetText (getMissionPath "media\comtablet_ca.paa");
+// dark tint over the green screen: the screen glow shows through, text stays readable
+(["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0, 0.04, 0, CQ_sqTint];
 (["RscText", -1, [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
 private _tabS = ["RscButton", 7090, [_X + 0.01, _Y + 0.004, _W * 0.18, _L], "SQUADS"] call _mk;
 private _tabC = ["RscButton", 7093, [_X + 0.02 + _W * 0.18, _Y + 0.004, _W * 0.16, _L], "CLASS"] call _mk;
