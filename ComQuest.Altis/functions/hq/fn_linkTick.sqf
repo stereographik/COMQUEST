@@ -6,7 +6,7 @@
       base                    CQ_netCoverBase       always linked
       relay vehicle           CQ_linkRelayVehR      sent by the base 1/3 of the way to the first HQ
       relays we hold          CQ_netCoverRelay      hacked towers, engineer relays
-      crewed friendly vehicle CQ_linkVehR           anything of ours with someone inside
+      friendly vehicle        CQ_linkVehR           any of ours, crewed or empty, until it despawns or blows up
       MAGPIE drone in the air CQ_linkDroneR         Sentinels and woken Darters
     A drone that is not linked flies on but reports nothing (CQ_fnc_magTick: "CQ_linked").
     Published for the map (CQ_fnc_magMapClient): CQ_linkPub = [[[pos, range, linked], ...], [[posA, posB], ...]]
@@ -67,7 +67,10 @@ private _drones = [];
     if (alive _v && { (_x getOrDefault ["phase", ""]) == "air" }) then { _drones pushBack _v; _nodes pushBack [getPosATL _v, CQ_linkDroneR, _v] };
 } forEach (missionNamespace getVariable ["CQ_mag", []]);
 {
-    if (alive _x && { _x != _rv } && { !(_x in _drones) } && { (crew _x) isNotEqualTo [] } && { side group effectiveCommander _x == west } && { !(_x isKindOf "StaticWeapon") }) then {
+    // ours, crewed or not (a parked empty vehicle relays until it despawns or blows up): a BLUFOR
+    // model, or anything with our people inside
+    if (alive _x && { _x != _rv } && { !(_x in _drones) } && { !(_x isKindOf "StaticWeapon") } && { !(_x isKindOf "ParachuteBase") }
+        && { getNumber (configOf _x >> "side") == 1 || { (crew _x) isNotEqualTo [] && { side group effectiveCommander _x == west } } }) then {
         _nodes pushBack [getPosATL _x, CQ_linkVehR, _x];
     };
 } forEach vehicles;
