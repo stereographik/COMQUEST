@@ -74,7 +74,7 @@ player addAction ["<t color='#918C3B'>Return vehicle to the depot</t>",
 private _rspTgt = "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); !isNull _v && { alive _v } && { _v isKindOf 'LandVehicle' || { _v isKindOf 'Air' } } && { _this distance _v < 10 } && { leader group _this == _this } && { !(group _this getVariable ['CQ_solo', false]) }";
 player addAction ["<t color='#918C3B'>Lock as squad respawn vehicle</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["lock", player, _v] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 1, false, true, "",
-    _rspTgt + " && { (group _this getVariable ['CQ_rspVeh', objNull]) != _v } && { (_v getVariable ['CQ_rspLeft', CQ_rspCredits]) > 0 }"];
+    _rspTgt + " && { getNumber (configOf _v >> 'side') != 0 } && { (group _this getVariable ['CQ_rspVeh', objNull]) != _v } && { (_v getVariable ['CQ_rspLeft', CQ_rspCredits]) > 0 }"];
 player addAction ["<t color='#BA392C'>Unlock squad respawn vehicle</t>",
     { ["unlock", player] remoteExec ["CQ_fnc_rspVeh", 2] }, nil, 0.9, false, true, "",
     _rspTgt + " && { (group _this getVariable ['CQ_rspVeh', objNull]) == _v }"];
