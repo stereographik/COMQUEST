@@ -157,10 +157,10 @@ if (isNil "CQ_arsenalReady") then {
     }] call BIS_fnc_addScriptedEventHandler;
 
     [] spawn {
-        waitUntil { sleep 0.5; !isNil "CQ_arsenalBoxes" };
+        waitUntil { sleep 0.5; !isNil "CQ_arsenalBoxes" && { !isNil "CQ_vehBoxesDone" } };   // squad boxes + vehicle boxes
         {
             _x addAction [
-                format ["<t color='#918C3B'>Arsenal (%1 equipment)</t>", _x getVariable ["CQ_squadBox", ""]],
+                format ["<t color='#918C3B'>Arsenal (%1 equipment)</t>", _x getVariable ["CQ_squadBox", ""]],   // squad and vehicle boxes
                 { [] spawn CQ_fnc_arsenalOpen },
                 nil, 6, true, true, "", "true", 6
             ];

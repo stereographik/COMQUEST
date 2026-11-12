@@ -347,6 +347,39 @@ CQ_depots = [];
     _rm setMarkerColor "ColorWEST";
     _rm setMarkerText "Repair & vehicle depot";
 } forEach CQ_repairSpots;
+
+// Vehicle arsenal boxes: next to every vehicle depot pad and every loading zone, so a vehicle
+// just taken can be kitted on the spot (arsenal for the player, a full stock to load into the
+// vehicle). Restocked every CQ_vehBoxRefill s.
+CQ_vehBoxes = [];
+{
+    _x params ["_s", "_pad", "_face"];
+    private _bp = _pad getPos [9, _face + 90];
+    private _cp = [[_bp select 0, _bp select 1, 0], 2, 15, []] call CQ_fnc_clearPos;
+    if (_cp isNotEqualTo []) then { _bp = _cp };
+    CQ_vehBoxes pushBack [[_bp select 0, _bp select 1, 0], _face];
+} forEach CQ_depots;
+{ CQ_vehBoxes pushBack [_x getPos [CQ_loadZoneRadius + 3, _ang + 180], _ang] } forEach CQ_loadZones;
+CQ_vehBoxes = CQ_vehBoxes apply {
+    _x params ["_bp", "_bd"];
+    private _b = createVehicle [_boxCls, [0, 0, 0], [], 0, "CAN_COLLIDE"];
+    _b setDir _bd;
+    _b setPosATL [_bp select 0, _bp select 1, 0];
+    _b allowDamage false;
+    [_b, 2, false] call CQ_fnc_crateFill;
+    _b setVariable ["CQ_squadBox", "vehicle", true];
+    CQ_arsenalBoxes pushBack _b;            // same arsenal action as the squad boxes (CQ_fnc_playerSetup)
+    _b
+};
+publicVariable "CQ_arsenalBoxes";
+CQ_vehBoxesDone = true; publicVariable "CQ_vehBoxesDone";
+["Base: %1 vehicle arsenal boxes (depots and loading zones)", [count CQ_vehBoxes]] call CQ_fnc_log;
+[] spawn {
+    while { true } do {
+        sleep CQ_vehBoxRefill;
+        { if (!isNull _x) then { clearWeaponCargoGlobal _x; clearMagazineCargoGlobal _x; clearItemCargoGlobal _x; clearBackpackCargoGlobal _x; [_x, 2, false] call CQ_fnc_crateFill } } forEach CQ_vehBoxes;
+    };
+};
 publicVariable "CQ_repairPoints";
 publicVariable "CQ_depots";
 
