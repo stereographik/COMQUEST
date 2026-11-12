@@ -92,11 +92,19 @@ while { _grow } do {
         };
     };
 };
-{ private _v = _x; _v setVariable ["CQ_linked", _ok select (_nodes findIf { (_x select 2) == _v })] } forEach _drones;
+{
+    private _v = _x;
+    private _l = _ok select (_nodes findIf { (_x select 2) == _v });
+    if ((_v getVariable ["CQ_linked", -1]) isNotEqualTo _l) then { _v setVariable ["CQ_linked", _l, true] };   // public: the map shows a Darter only while linked
+} forEach _drones;
 if (alive _rv) then { _rv setVariable ["CQ_linked", true] };
 
 private _pub = [_nodes apply { [_x select 0, _x select 1, false] }, _edges];
 { ((_pub select 0) select _forEachIndex) set [2, _x] } forEach _ok;
+// a drone out of the network is not on our map at all (its range circle would give it away)
+private _shown = [];
+{ if ((_x select 2) || { !(((_nodes select _forEachIndex) select 2) in _drones) }) then { _shown pushBack _x } } forEach (_pub select 0);
+_pub set [0, _shown];
 CQ_linkPub = _pub;
 publicVariable "CQ_linkPub";
 if (CQ_debug || { time - (missionNamespace getVariable ["CQ_linkLogT", -1e6]) > 60 }) then {
