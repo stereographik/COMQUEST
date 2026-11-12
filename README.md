@@ -1,4 +1,4 @@
-# ComQuest
+# ComQuest par stereographik
 
 ### [▶ View the mission showcase](https://stereographik.github.io/COMQUEST/)
 
@@ -50,3 +50,5 @@ ComQuest.Altis/
   functions/players/       base, vehicles, crates, squads, classes, stats, shop
 docs/index.html            showcase page (GitHub Pages)
 ```
+
+ComQuest par stereographik
