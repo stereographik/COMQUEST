@@ -29,7 +29,7 @@ switch (_mode) do {
         if (!alive _tr) exitWith {};
         _hq set ["buildTruck", _tr];
         _hq set ["btSquad", _sg];
-        _tr setVariable ["CQ_btHq", _hq get "id"];
+        _tr setVariable ["CQ_btHq", _hq get "id", true];   // public: the debug map draws it in black
         _tr setVariable ["CQ_busy", true];
         _tr enableDynamicSimulation false;
         private _dg = group driver _tr;

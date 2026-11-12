@@ -40,8 +40,9 @@ CQ_dbgMapHooked = true;
                 if (alive _x && { (crew _x) isNotEqualTo [] }) then {
                     private _g = group effectiveCommander _x;
                     if ((side _g) call _want) then {
-                        _map drawIcon [_x call _icon, (side _g) call _col, getPosASLVisual _x, 24, 24, getDirVisual _x,
-                            format ["%1 %2", groupId _g, _x getVariable ["CQ_dbg", ""]], 1, 0.035, "PuristaMedium", "right"];
+                        private _bt = _x getVariable ["CQ_btHq", -1];     // the HQ build truck: black
+                        _map drawIcon [_x call _icon, [(side _g) call _col, [0, 0, 0, 1]] select (_bt > -1), getPosASLVisual _x, [24, 30] select (_bt > -1), [24, 30] select (_bt > -1), getDirVisual _x,
+                            [format ["%1 %2", groupId _g, _x getVariable ["CQ_dbg", ""]], format ["BUILD TRUCK HQ #%1", _bt]] select (_bt > -1), 1, 0.035, "PuristaMedium", "right"];
                     };
                 };
             } forEach vehicles;
