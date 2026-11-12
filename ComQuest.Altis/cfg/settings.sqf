@@ -49,7 +49,6 @@ CQ_dispenserCrates = 2;                  // ready-filled crates per dispenser
 CQ_raySpacing = 5;                       // safety gap between two vehicles (on top of their own size)
 CQ_repairDepotRot = 0;                   // turn the repair depot model if its open side is not toward the runway (e.g. 180)
 CQ_repairRadius = 12;                    // repair station service radius (repair, refuel, rearm)
-CQ_vehBoxRefill = 120;                   // s between two restocks of the vehicle arsenal boxes (depots, loading zones)
 // Squad autofill of a vehicle (CQ_fnc_vehAutoFill), per member:
 //   [rifle mags, MG belts, sniper mags, 40 mm, launcher rounds (in use), other launcher round, pistol mags, grenades, smokes, first aid kits]
 CQ_fillShare = [6, 3, 4, 6, 2, 1, 2, 2, 2, 2];
