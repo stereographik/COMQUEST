@@ -422,6 +422,7 @@ CQ_startAfterIntro = 5;                  // s after the FIRST player's intro: th
 CQ_introPlace = "ALTIS  ·  AEGEAN SEA  ·  AAC AIRFIELD";   // typed on black before the shots, under the time and date
 CQ_introTypeDelay = 0.06;               // s per typed letter
 CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
+CQ_menuOverhang = 0.18;                  // share of the picture pushed past the right screen edge (the side connectors go off screen)
 CQ_menuScreen = [0.4102, 0.4062, 0.7070, 0.5410];   // its green screen zone in the picture (fractions), under the status bar, right of the icon column
 CQ_bleedOut = 300;                       // s a downed player waits for a medic (ReviveBleedOutDelay in description.ext)
 CQ_surgeChance = 0.10;                   // adrenalineSurge: chance for a downed medic to get up on his own over the whole wait
