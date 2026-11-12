@@ -139,6 +139,7 @@ switch (_mode) do {
         private _ptT = 0;
         private _release = {
             if (count _e > 0 && { alive (_e get "veh") }) then {
+                (_e get "veh") setVariable ["CQ_btKaj", nil, true];
                 _e set ["state", "toPark"]; _e set ["nearT", -1];
                 (_e get "veh") flyInHeight 110;
                 (_e get "veh") doMove (getPosATL (_e get "pad"));
@@ -179,6 +180,7 @@ switch (_mode) do {
                     ["HQ #%1: no free Kajman, the carrier sends one for the build truck", [_id]] call CQ_fnc_log;
                 };
                 _e set ["state", "btEscort"];
+                (_e get "veh") setVariable ["CQ_btKaj", _id, true];   // the debug map draws it in black
                 private _g = _e get "grp";
                 [_g] call CQ_fnc_clearWaypoints;
                 _g setBehaviour "AWARE"; _g setCombatMode "RED";

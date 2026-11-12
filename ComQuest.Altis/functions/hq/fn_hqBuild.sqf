@@ -201,12 +201,15 @@ private _truckWait = {
 // HQ (perimeter or patrol, never its leader, the squad keeps 2+ men) and guards it right away;
 // CQ_fnc_hqGarrison skips the sites guarded this way
 private _guardNow = {
-    params ["_obj"];
+    params ["_obj", ["_truckSquad", false]];
     if (isNull _obj) exitWith {};
     private _site = getPosATL _obj;
     private _donors = ((_hq get "infantry") select {
         (_x getVariable ["CQ_role", ""]) in ["patrol", "secure"] && { ({ alive _x } count units _x) >= CQ_objGuardSize + 2 }
     });
+    // depot and tanker: no squad to spare -> the build truck's squad leaves a team behind
+    private _sg = _hq getOrDefault ["btSquad", grpNull];
+    if (_donors isEqualTo [] && { _truckSquad } && { !isNull _sg } && { ({ alive _x } count units _sg) >= CQ_objGuardSize + 2 }) then { _donors = [_sg] };
     if (_donors isEqualTo []) exitWith { ["HQ #%1: no squad free to guard the new %2", [_id, typeOf _obj]] call CQ_fnc_log };
     private _donor = ([_donors, [], { (leader _x) distance2D _site }, "ASCEND"] call BIS_fnc_sortBy) select 0;
     private _men = ((units _donor) select { alive _x && { _x != leader _donor } && { vehicle _x == _x } }) select [0, CQ_objGuardSize];
@@ -396,7 +399,7 @@ if (!isNull _ftruck) then {
 };
 _hq set ["fieldTruck", _ftruck];
 if (!isNull _depot) then { (_hq get "installations") pushBack _depot };
-[_depot] call _guardNow;
+[_depot, true] call _guardNow;
 _hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
 [4, format ["supply depot (%1 ammo), field supply truck", round (_hq get "stock")]] call _stage;
 
@@ -419,7 +422,7 @@ _hq set ["tanker", _tanker];
 if (!isNull _tanker) then { _tanker setVariable ["CQ_objType", "Fuel tanker"] };
 
 if (!isNull _tanker) then { (_hq get "installations") pushBack _tanker };
-[_tanker] call _guardNow;
+[_tanker, true] call _guardNow;
 _hq set ["fuel", [(_hq get "fuelInit") min (_hq get "cap"), 0] select (isNull _tanker)];
 [5, format ["fuel tanker (%1 fuel)", round (_hq get "fuel")]] call _stage;
 

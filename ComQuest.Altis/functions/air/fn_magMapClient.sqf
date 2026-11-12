@@ -73,7 +73,8 @@ CQ_echoes = [];
         } forEach (missionNamespace getVariable ["CQ_magVisible", []]);
         {
             if (alive _x) then {
-                _map drawIcon [_x call _icon, [0.25, 0.55, 1, 1], getPosASLVisual _x, 26, 26, getDirVisual _x,
+                private _sz = [26, 13] select (_x isKindOf "UAV_01_base_F");   // Darters: half size
+                _map drawIcon [_x call _icon, [0.25, 0.55, 1, 1], getPosASLVisual _x, _sz, _sz, getDirVisual _x,
                     format ["MAGPIE %1", _x getVariable ["CQ_magName", ""]], 1, 0.035, "PuristaMedium", "right"];
             };
         } forEach (missionNamespace getVariable ["CQ_magVehs", []]);
