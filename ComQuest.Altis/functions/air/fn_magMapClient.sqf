@@ -50,12 +50,21 @@ CQ_echoes = [];
         };
         // nGD: the enemy radio network (CQ_fnc_netTick) and our MAGPIE coverage
         (missionNamespace getVariable ["CQ_netPub", []]) params [["_nNodes", []], ["_nLinks", []], ["_nTrunk", []], ["_nRelays", []], ["_nBase", 0]];
-        if (_nBase > 0) then { _map drawEllipse [CQ_basePos, _nBase, _nBase, 0, [0.25, 0.55, 1, 0.35], ""] };
+        // our data link (CQ_fnc_linkTick): every node's range (blue linked, grey cut off) and the links
+        (missionNamespace getVariable ["CQ_linkPub", []]) params [["_lNodes", []], ["_lEdges", []]];
+        {
+            _x params ["_lp", "_lr", "_lok"];
+            _map drawEllipse [_lp, _lr, _lr, 0, [[0.5, 0.5, 0.5, 0.25], [0.25, 0.55, 1, 0.35]] select _lok, ""];
+        } forEach _lNodes;
+        { _map drawLine [_x select 0, _x select 1, [0.25, 0.55, 1, 0.6]] } forEach _lEdges;
         {
             _x params ["_rp", "_rr"];
-            _map drawEllipse [_rp, _rr, _rr, 0, [0.25, 0.55, 1, 0.35], ""];
             _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], _rp, 22, 22, 0, "RELAY", 1, 0.035, "PuristaMedium", "right"];
         } forEach _nRelays;
+        private _rvh = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
+        if (alive _rvh) then {
+            _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], getPosASLVisual _rvh, 22, 22, 0, "RELAY VEHICLE", 1, 0.035, "PuristaMedium", "right"];
+        };
         {
             _x params ["_a", "_b", "_ok"];
             _map drawLine [_a, _b, [[0.45, 0.45, 0.42, 0.8], CQ_echoColor + [0.9]] select _ok];

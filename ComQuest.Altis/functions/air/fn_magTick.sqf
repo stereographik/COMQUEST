@@ -160,17 +160,10 @@ private _flying = CQ_mag select { alive (_x get "veh") && { (_x getOrDefault ["p
 // identified with a chance per pass (CQ_magSpotChance by kind): it takes several passes to see
 // everything. A contact already identified is tracked while it stays in line of sight: those
 // are the live enemy positions every player sees on the map (CQ_magVisible).
-// nGD: MAGPIE only identifies what lies inside her coverage: CQ_netCoverBase around the base and
-// CQ_netCoverRelay around every relay we hold (CQ_fnc_relayDeploy). Drones still fly anywhere.
-// woken dormant Darters in the air relay the data link too
-private _dRelays = ((CQ_mag select { (_x getOrDefault ["role", ""]) == "dormant" && { alive (_x get "veh") } && { ((getPosATL (_x get "veh")) select 2) > 40 } }) apply { getPosATL (_x get "veh") });
-private _covered = {
-    params ["_p"];
-    (_p distance2D CQ_basePos) < CQ_netCoverBase
-    || { time < (missionNamespace getVariable ["CQ_decryptUntil", -1]) }       // crash event: decryption
-    || { ((missionNamespace getVariable ["CQ_relays", []]) findIf { alive (_x select 1) && { _p distance2D (_x select 2) < CQ_netCoverRelay } }) > -1 }
-    || { CQ_magDormantRelay && { (_dRelays findIf { _p distance2D _x < CQ_netCoverRelay }) > -1 } }
-};
+// Data link (CQ_fnc_linkTick): a drone only reports while it is linked to the base through a chain
+// of friendly nodes (overlapping ranges). Unlinked, it flies on and nothing it sees reaches us.
+// During a crash-crate decryption everything gets through.
+private _covered = { true };
 // corridor outpost (CQ_fnc_outpostTick): its jammer hides everything around it; a drone within
 // sensor range of it only learns that something is there (CQ_outpostState "spotted": the rough area)
 private _opJam = missionNamespace getVariable ["CQ_opJam", false];
@@ -181,6 +174,7 @@ if (time >= CQ_magDetectT) then {
         private _v = _x get "veh";
         private _alt = (getPosATL _v) select 2;
         if (_alt < 40) then { continue };                 // still taking off
+        if (!(_v getVariable ["CQ_linked", false]) && { time >= (missionNamespace getVariable ["CQ_decryptUntil", -1]) }) then { continue };   // no data link
         CQ_magSensor params ["_r0", "_rk", "_rmax"];
         private _r = (_r0 + _alt * _rk) min _rmax;
         private _eye = getPosASL _v vectorAdd [0, 0, -1.5];

@@ -160,6 +160,7 @@ class CfgFunctions
             class relayDeploy {};
             class towerHack {};
             class buildTruck {};
+            class linkTick {};
             class hqTick {};
             class hqStatusMarker {};
             class hqNerves {};

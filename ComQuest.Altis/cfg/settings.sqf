@@ -188,8 +188,15 @@ CQ_opDetour = 4000;                      // m: flights to that HQ start this far
 
 // --- nGD: the enemy radio network ("break the net, take the net") -------------
 CQ_netEvery = 10;                        // s between two network updates (links, isolation, map)
-CQ_netCoverBase = 7000;                  // m: MAGPIE identifies enemies this close to the base...
-CQ_netCoverRelay = 4000;                 // ...or this close to a relay we hold (nothing beyond: no data link)
+CQ_netCoverBase = 5000;                  // m: the base's data-link range (CQ_fnc_linkTick: nodes link when their ranges overlap)
+CQ_netCoverRelay = 4000;                 // m: range of a relay we hold (hacked tower, engineer relay)
+CQ_linkEvery = 3;                        // s between two data-link updates
+CQ_linkRelayVehR = 2500;                 // m: range of the base's relay vehicle
+CQ_linkVehR = 1000;                      // m: range of any crewed friendly vehicle
+CQ_linkDroneR = 1000;                    // m: range of a MAGPIE drone in the air (it reports only while linked)
+CQ_linkRelayClass = "B_MRAP_01_F";       // the relay vehicle (unarmed Hunter, AI driver, locked)
+CQ_linkRelayFrac = 1 / 3;                // it parks this share of the way from the base to the first enemy HQ
+CQ_linkRelayRespawn = 300;               // s before another one leaves after it is lost
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
 CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up
 CQ_hackTime = 20;                        // s an engineer holds "Hack radio tower" at its foot: the tower becomes our relay (no demolition)
