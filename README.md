@@ -25,6 +25,8 @@ Copy `ComQuest.Altis` into `Documents\Arma 3 - Other Profiles\<profile>\mpmissio
 
 ## Configure
 
+**[Server admin settings guide](https://claude.ai/artifact/VLWo2kk6tQpMBEzHs8UiCm)**: what every setting does, the debug panel, and a checklist before a real game.
+
 - `ComQuest.Altis/cfg/settings.sqf`: every tunable number (timings, limits, classes, base layout, shop prices).
 - `ComQuest.Altis/cfg/story.sqf`: all radio lines.
 
