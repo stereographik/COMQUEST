@@ -66,12 +66,7 @@ CQ_baseLayoutObjs = [
     ["B_GMG_01_high_F",             [14575, 16218], 90]
 ];
 // ...and Hesco lines: [class, piece length (m), [corner, corner, ...]]
-CQ_baseLayoutHesco = [
-    ["Land_HBarrier_Big_F", 8.5, [[14379, 16056], [14423, 16017], [14547, 16145], [14501, 16184]]],
-    ["Land_HBarrier_Big_F", 8.5, [[14359, 16077], [14338, 16099], [14364, 16122]]],
-    ["Land_HBarrier_Big_F", 8.5, [[14483, 16202], [14468, 16214], [14447, 16189]]],
-    ["Land_HBarrier_5_F",   5.7, [[14498, 16290], [14527, 16268]]]
-];
+CQ_baseLayoutHesco = [];   // none for now (the last drawn layout was taken out)
 // Base parking area: the zone marked on the map (SW end of the runway, next to the camp).
 // An area marker named cq_park_area placed in Eden overrides it.
 CQ_parkArea = [[14193, 16226, 0], [14480, 16194, 0], [14158, 15889, 0]];   // [x, y, 0]: inPolygon needs 3 numbers per point
@@ -226,6 +221,9 @@ CQ_linkRelayClass = "B_MRAP_01_F";       // the relay vehicle (unarmed Hunter, A
 CQ_linkRelayFrac = 1 / 3;                // it parks this share of the way from the base to the first enemy HQ
 CQ_linkRelaySpawn = [14444, 16163, 0];   // where the base's relay vehicle is created
 CQ_linkRelayRespawn = 300;               // s before another one leaves after it is lost
+CQ_linkCampNet = "CamoNet_BLUFOR_big_F";   // relay mode: camo net over the parked relay vehicle...
+CQ_linkCampTent = "Land_TentDome_F";       // ...a tent...
+CQ_linkCampFire = "Campfire_burning_F";    // ...and a campfire; all gone once it moves off
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
 CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up
 CQ_hackTime = 20;                        // s an engineer holds "Hack radio tower" at its foot: the tower becomes our relay (no demolition)
