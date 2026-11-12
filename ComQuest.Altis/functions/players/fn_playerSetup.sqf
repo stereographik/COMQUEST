@@ -51,6 +51,12 @@ player addAction ["<t color='#918C3B'>Unload supply crate</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); [ "unload", _v, player ] remoteExec ["CQ_fnc_crateCargo", 2] }, nil, 5, true, true, "",
     "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); count (_v getVariable ['CQ_crates', []]) > 0 && { _this distance _v < 8 }"];
 
+// Engineers: short sandbag walls in the field (CQ_fnc_sandbag), recalled from the base
+player addAction ["<t color='#918C3B'>Build a sandbag wall</t>", { ["place"] spawn CQ_fnc_sandbag }, nil, 1.2, false, true, "",
+    "_this getUnitTrait 'engineer' && { vehicle _this == _this } && { isNil 'CQ_sbGhost' } && { _this distance2D CQ_basePos > CQ_baseRadius } && { (missionNamespace getVariable ['CQ_sb_' + getPlayerUID _this, 0]) < CQ_sbMax }"];
+player addAction ["<t color='#918C3B'>Recall my sandbag walls</t>", { ["recall", [player]] remoteExec ["CQ_fnc_sandbag", 2] }, nil, 1.1, false, true, "",
+    "_this distance2D CQ_basePos < CQ_baseRadius && { (missionNamespace getVariable ['CQ_sb_' + getPlayerUID _this, 0]) > 0 }"];
+
 // Loadout zones: auto-fill / empty the inventory of the vehicle you sit in or look at
 private _zoneVeh = "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); !isNull _v && { _v isKindOf 'AllVehicles' } && { !(_v isKindOf 'CAManBase') } && { _this distance _v < 10 } && { speed _v < 3 } && { (missionNamespace getVariable ['CQ_loadZones', []]) findIf { _v distance2D _x < CQ_loadZoneRadius } > -1 }";
 player addAction ["<t color='#918C3B'>Auto-fill vehicle (squad resupply)</t>",
