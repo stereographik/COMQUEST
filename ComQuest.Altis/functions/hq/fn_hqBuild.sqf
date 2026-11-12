@@ -1,7 +1,8 @@
 /*
     CQ_fnc_hqBuild  (server, spawned by CQ_fnc_hqTick when the perimeter is secured)
     [_hq] spawn CQ_fnc_hqBuild;
-    Builds the HQ composition in 6 stages, CQ_hqBuildStageTime seconds apart, announcing each.
+    Builds the HQ composition in 6 stages, announcing each. Each stage goes up when the build truck
+    (CQ_fnc_buildTruck) has driven to its site (see _truckWait).
     Offsets are [right, forward] metres in the HQ's own frame (rotated by its "dir").
       1 3 AA pits   2 HMG watchtower   3 radio tower (they can communicate)
       4 supply depot + field supply truck   5 fuel tanker
@@ -120,28 +121,80 @@ private _engineerOnly = {
         if (_ammo in CQ_engineerCharges && { _eng }) then { _dmg } else { damage _o };
     }];
 };
-// Stage wait: CQ_hqBuildStageTime of calm, or until the debug panel skips it. The clock stops
-// during a battle (no construction under fire): contact reported by the HQ less than
-// CQ_buildPauseAfterContact s ago, or BLUFOR within CQ_buildPauseRange of the site.
-private _wait = {
-    private _left = CQ_hqBuildStageTime;
-    private _paused = false;
+// Stage wait: the build truck (CQ_fnc_buildTruck) drives to the stage's site; the stage goes up
+// once it stopped within CQ_btStopDist, its squad got out and CQ_btSpawnDelay s passed. No truck
+// (destroyed, not landed yet): the build is frozen until the carrier's replacement arrives.
+// Safety: no progress for CQ_btStuck s -> new route, then a short hop onto free ground; a leg
+// longer than CQ_btLegMax s -> the truck is put at the stop. The debug panel skips the drive.
+private _truckWait = {
+    params ["_dest"];
+    private _legT = -1; private _lastP = [0, 0, 0]; private _moveT = time; private _stuckN = 0;
+    private _tr = objNull; private _frozen = false; private _frozenT = time;
+    private _stop = {
+        params ["_tr"];
+        private _p = (_dest getPos [CQ_btStopDist - 4, _dest getDir _tr]) findEmptyPosition [0, 40, typeOf _tr];
+        if (_p isEqualTo []) then { _p = _dest getPos [CQ_btStopDist - 4, _dest getDir _tr] };
+        _tr setVelocity [0, 0, 0];
+        _tr setPosATL [_p select 0, _p select 1, 0.3];
+    };
     waitUntil {
         sleep 1;
-        private _fight = (time - (_hq get "lastContactT") < CQ_buildPauseAfterContact)
-            || { ((_c nearEntities [["CAManBase", "LandVehicle", "Air"], CQ_buildPauseRange]) findIf { alive _x && { side group _x == west } }) > -1 };
-        // nGD: players near or a recent contact slow the work down (CQ_buildSlowNear) instead of
-        // stopping it: hanging around a site is no longer a pause button, the build is a race
-        if (_fight) then {
-            if (!_paused) then { _paused = true; ["HQ #%1: construction slowed down, battle at the site", [_id]] call CQ_fnc_log };
-            _left = _left - CQ_buildSlowNear;
-        } else {
-            if (_paused) then { _paused = false; ["HQ #%1: construction back to full speed", [_id]] call CQ_fnc_log };
-            _left = _left - 1;
+        _tr = _hq getOrDefault ["buildTruck", objNull];
+        if (_hq get "skipStage") exitWith { if (alive _tr) then { [_tr] call _stop }; true };
+        if (!alive _tr || { !canMove _tr } || { !alive driver _tr }) exitWith {
+            if (!_frozen) then { _frozen = true; _frozenT = time; ["HQ #%1: construction frozen, no build truck", [_id]] call CQ_fnc_log };
+            // 60 s grace: the root's Zamak may still be under its parachute
+            if (!alive _tr && { time - _frozenT > 60 } && { !(_hq getOrDefault ["btPending", false]) } && { !(_hq getOrDefault ["btNone", false]) }) then {
+                ["request", [_hq]] spawn CQ_fnc_buildTruck;
+            };
+            if (alive _tr && { !alive driver _tr || { !canMove _tr } }) then { _tr setDamage 1 };   // crippled: counts as lost
+            _legT = -1;
+            false
         };
-        _left <= 0 || { _hq get "skipStage" }
+        _frozen = false;
+        if (_legT < 0) then {
+            ["board", [_hq]] call CQ_fnc_buildTruck;
+            private _dg = group driver _tr;
+            [_dg] call CQ_fnc_clearWaypoints;
+            _dg setBehaviour "SAFE"; _dg setSpeedMode "NORMAL"; _dg setFormation "COLUMN";
+            _dg move _dest;
+            _legT = time; _moveT = time; _lastP = getPosATL _tr; _stuckN = 0;
+        };
+        if (_tr distance2D _dest <= CQ_btStopDist) exitWith { true };
+        if (_tr distance2D _lastP > 5) then { _lastP = getPosATL _tr; _moveT = time };
+        if (time - _moveT > CQ_btStuck) then {
+            if (_stuckN == 0) then {
+                ["HQ #%1: build truck stuck at grid %2, new route", [_id, mapGridPosition _tr]] call CQ_fnc_log;
+                (group driver _tr) move _dest;
+            } else {
+                private _p = ((_tr getPos [25, _tr getDir _dest]) findEmptyPosition [0, 40, typeOf _tr]);
+                if (_p isNotEqualTo []) then { _tr setVelocity [0, 0, 0]; _tr setPosATL [_p select 0, _p select 1, 0.3] };
+                (group driver _tr) move _dest;
+                ["HQ #%1: build truck still stuck, moved onto free ground at grid %2", [_id, mapGridPosition _tr]] call CQ_fnc_log;
+            };
+            _stuckN = _stuckN + 1; _moveT = time; _lastP = getPosATL _tr;
+        };
+        if (time - _legT > CQ_btLegMax) exitWith {
+            ["HQ #%1: build truck leg over %2 s, put at its stop", [_id, CQ_btLegMax]] call CQ_fnc_log;
+            [_tr] call _stop;
+            true
+        };
+        false
     };
+    private _skip = _hq get "skipStage";
     _hq set ["skipStage", false];
+    if (alive _tr) then {
+        private _dg = group driver _tr;
+        [_dg] call CQ_fnc_clearWaypoints;
+        _dg move (getPosATL _tr);                        // stop here (a later move order still works)
+        private _sg = _hq getOrDefault ["btSquad", grpNull];
+        if (!isNull _sg) then {
+            _sg leaveVehicle _tr;                         // they climb out and stand guard
+            _sg setBehaviour "AWARE";
+        };
+        ["HQ #%1: build truck at its stop (%2 m from the site)", [_id, round (_tr distance2D _dest)]] call CQ_fnc_log;
+    };
+    if (!_skip) then { sleep CQ_btSpawnDelay };
 };
 
 // Relaxed site (tolerance 3+): the troops clear trees and bushes from the footprint first
@@ -164,7 +217,7 @@ private _sites = call _sitesFor;
 _hq set ["objSites", _sites];
 
 // Stage 1 - 3 AA pits (air cover before anything else)
-call _wait;
+[_sites select 3] call _truckWait;
 private _aaGroup = createGroup [east, true];
 {
     private _sp = _x;
@@ -185,7 +238,7 @@ _aaGroup setCombatMode "RED";
 [1, "3 AA pits"] call _stage;
 
 // Stage 2 - HMG watchtower on the west side (facing the player's side of the island)
-call _wait;
+[_sites select 6] call _truckWait;
 private _ta = CQ_hmgTowerDir - _d;
 private _tower = ["Land_Cargo_Patrol_V1_F", _sites select 6, _ta, true] call _placeAt;
 if (!isNull _tower) then {
@@ -211,7 +264,7 @@ if (!isNull _tower) then {
 [2, "HMG watchtower"] call _stage;
 
 // Stage 3 - radio tower, so the HQ can talk to the network
-call _wait;
+[_sites select 1] call _truckWait;
 private _radio = ["Land_TTowerBig_2_F", _sites select 1, 0, true] call _placeAt;
 // the tower is never blown up: it is hacked by an engineer (CQ_fnc_towerHack) and becomes our relay
 _radio addEventHandler ["HandleDamage", {
@@ -284,7 +337,7 @@ _radio addEventHandler ["Killed", {
 [3, "radio tower"] call _stage;
 
 // Stage 4 - supply depot + ammo boxes, field resupply truck
-call _wait;
+[_sites select 0] call _truckWait;
 private _depot = ["Land_Cargo_House_V1_F", _sites select 0, 90, true] call _placeAt;
 if (!isNull _depot) then { { ["Box_East_Ammo_F", (getPosATL _depot) getPos [7, _d + 180 + _x]] call _placeAt } forEach [-25, 0, 25] };
 [_depot] call _engineerOnly;
@@ -320,7 +373,7 @@ _hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
 [4, format ["supply depot (%1 ammo), field supply truck", round (_hq get "stock")]] call _stage;
 
 // Stage 5 - fuel tanker
-call _wait;
+[_sites select 2] call _truckWait;
 // Fuel tanker: holds the HQ's fuel. Any weapon can destroy it.
 private _tanker = [CQ_tankerClass, _sites select 2, 90] call _placeAt;
 if (!isNull _tanker) then {
@@ -342,7 +395,7 @@ _hq set ["fuel", [(_hq get "fuelInit") min (_hq get "cap"), 0] select (isNull _t
 [5, format ["fuel tanker (%1 fuel)", round (_hq get "fuel")]] call _stage;
 
 // Stage 6 - helipad with the QRF helicopter, command building, sandbag ring
-call _wait;
+[[-32, -32] call _at] call _truckWait;     // off the command post footprint (ring 13 m, helipad on the right)
 private _pad = ["Land_HelipadSquare_F", 26, 0, 0, true] call _place;
 _hq set ["pad", _pad];
 if (!isNull _pad) then {
@@ -372,6 +425,7 @@ for "_a" from 15 to 345 step 15 do {
 // Recall the perimeter squads and set the garrison
 [_hq] call CQ_fnc_hqGarrison;
 _hq set ["buildDone", true];
+["board", [_hq]] spawn CQ_fnc_buildTruck;   // the squad gets back in: the truck waits there to found the next HQ
 _hq set ["builtT", time];
 [_hq] call CQ_fnc_hqStatusMarker;
 [_hq] call CQ_fnc_hqGuerilla;

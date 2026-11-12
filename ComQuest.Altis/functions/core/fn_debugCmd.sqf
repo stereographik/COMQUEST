@@ -20,7 +20,7 @@ if !(_caller == 2 || { (admin _caller) == 2 }) exitWith {};     // host or logge
 private _p = (allPlayers select { owner _x == _caller }) param [0, objNull];
 private _hq = CQ_hqs getOrDefault [_id, createHashMap];
 private _msg = "";
-private _needHq = _cmd in ["hack", "tpTower", "next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq"];
+private _needHq = _cmd in ["btKill", "btNow", "tpBt", "hack", "tpTower", "next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq"];
 
 if (_needHq && { count _hq == 0 }) then {
     _msg = "Select an HQ in the list first";
@@ -122,6 +122,26 @@ if (_needHq && { count _hq == 0 }) then {
         case "depot": {
             private _r = _hq getOrDefault ["depot", objNull];
             if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: depot destroyed", _id] } else { _msg = format ["HQ #%1 has no depot", _id] };
+        };
+        case "btKill": {
+            private _tr = _hq getOrDefault ["buildTruck", objNull];
+            if (alive _tr) then { _tr setDamage 1; _msg = format ["HQ #%1: build truck destroyed (%2 lost, carrier drops %3/%4)", _id, _hq getOrDefault ["btKills", 0], missionNamespace getVariable ["CQ_btDrops", 0], CQ_btMaxDrops] }
+            else { _msg = format ["HQ #%1 has no build truck (replacement %2)", _id, ["not asked", "on its way"] select (_hq getOrDefault ["btPending", false])] };
+        };
+        case "btNow": {
+            if (_hq getOrDefault ["btPending", false]) then { _hq set ["btNow", true]; _msg = format ["HQ #%1: replacement truck takes off now", _id] }
+            else { _msg = format ["HQ #%1: no replacement truck waiting", _id] };
+        };
+        case "tpBt": {
+            private _tr = _hq getOrDefault ["buildTruck", objNull];
+            if (!alive _tr) then { _msg = format ["HQ #%1 has no build truck", _id] } else {
+                if (!isNull _p) then {
+                    private _t = _tr getPos [12, getDir _tr + 150];
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, _t] spawn { params ["_p", "_t"]; sleep 0.5; _p setPosATL [_t select 0, _t select 1, 0] };
+                };
+                _msg = format ["HQ #%1: next to its build truck (grid %2)", _id, mapGridPosition _tr];
+            };
         };
         case "hack": {
             private _r = _hq getOrDefault ["radio", objNull];

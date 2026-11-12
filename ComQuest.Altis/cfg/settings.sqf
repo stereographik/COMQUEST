@@ -199,7 +199,6 @@ CQ_towerGuardSkill = 0.65;
 CQ_relayRange = 30;                      // m from a fallen tower site to deploy a relay
 CQ_relayRetakeRange = 4000;              // the nearest enemy HQ this close sends a squad to destroy a new relay
 CQ_lowStockShare = 0.2;                  // HQ marker shows [low ammo] under this share of its depot cap
-CQ_buildSlowNear = 0.5;                  // construction speed while players are near / just after contact (was a full stop)
 // player scaling (CQ_fnc_netScale): full power = 4 full squads
 CQ_fullPowerPlayers = 24;
 CQ_scaleMin = 0.35;                      // fewest players: 35 % of the infantry cap, waves up to twice as slow
@@ -243,9 +242,18 @@ CQ_objRadius = createHashMapFromArray [
 CQ_siteMaxGradient = 0.15;
 CQ_siteNoPlayerRadius = 800;
 CQ_siteMinHqSpacing = 1500;
-CQ_hqBuildStageTime = 120;               // seconds per construction stage (6 stages, 12 min)
-CQ_buildPauseRange = 400;                // m: BLUFOR this close to a site under construction stops the work
-CQ_buildPauseAfterContact = 120;         // s: and for this long after the HQ reports contact
+// Build truck (CQ_fnc_buildTruck): no build timer any more, each stage goes up when the truck got there
+CQ_btTruckClass = "O_Truck_02_transport_F";   // Zamak: the first one comes with the root insertion's paradrop
+CQ_btSquad = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_engineer_F", "O_engineer_F", "O_Soldier_GL_F", "O_Soldier_F", "O_Soldier_F"];   // rides in the back
+CQ_btStopDist = 20;                      // m from the stage's site: the truck stops, the squad gets out
+CQ_btSpawnDelay = 3;                     // s after the stop before the stage appears
+CQ_btBoardTime = 25;                     // s the squad gets to board before the truck leaves (near ones are put in)
+CQ_btStuck = 45;                         // s without moving 5 m: new route, then a short hop onto free ground
+CQ_btLegMax = 240;                       // s per leg at most: the truck is put at its stop (safety)
+CQ_btReplaceDelay = 300;                 // s before the carrier paradrops a replacement truck
+CQ_btMaxDrops = 16;                      // build trucks the carrier can paradrop in the whole game (replacements + new trucks for founding HQs)
+CQ_btEscortClass = "O_MRAP_02_hmg_F";    // escort of a replacement truck (Ifrit HMG, CSAT's Hunter)
+CQ_btEscortMax = 3;                      // one escort more per truck the HQ lost, up to this
 CQ_hqMarkerRadius = 400;                 // approximate circle shown to players
 CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted", "SatchelCharge_Remote_Ammo", "SatchelCharge_Remote_Ammo_Scripted"];
 
@@ -606,7 +614,6 @@ if (CQ_debug) then {
     CQ_debugFirstAtRunway = false;       // true: 1st root lands at the runway end (marker "cq_debug_site" overrides)
     CQ_firstRootDelay = 30;
     CQ_insertionSpawnDistance = 3500;
-    CQ_hqBuildStageTime = 45;
     CQ_secureTimeout = 90;
     CQ_baseNoSpawnRadius = 1200;         // the runway HQ is only ~900 m from the base
     CQ_waveInterval = 300;

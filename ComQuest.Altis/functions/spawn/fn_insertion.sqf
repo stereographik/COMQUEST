@@ -264,6 +264,11 @@ while { true } do {
                         params ["_c", "_hq", "_id", "_label"];
                         private _t = time;
                         waitUntil { sleep 1; !alive _c || { isTouchingGround _c && { speed _c < 3 } } || { time - _t > 120 } };
+                        if (alive _c && { _label == "Zamak truck" }) exitWith {
+                            // the Zamak is the HQ's build truck: crew, a squad in the back (CQ_fnc_buildTruck)
+                            _c allowDamage true;
+                            ["landed", [_c, _id]] call CQ_fnc_buildTruck;
+                        };
                         if (alive _c) then {
                             _c allowDamage true;
                             [_c] call CQ_fnc_crewVehicle;

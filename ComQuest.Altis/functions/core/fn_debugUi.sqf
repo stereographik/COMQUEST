@@ -61,7 +61,7 @@ uiNamespace setVariable ["CQ_dbgSel", {
 // [category, [[subcategory, [[label, command], ...]], ...]]; command "!x" = local action, else sent to the server
 private _cats = [
     ["TELEPORTERS", [
-        ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Crash site", "tpCrash"], ["Outpost", "tpOp"], ["Base", "tpBase"]]]
+        ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Crash site", "tpCrash"], ["Outpost", "tpOp"], ["Base", "tpBase"]]]
     ]],
     ["MAP VISIBILITY", [
         ["Show", [["Enemies", "!mapEnemy"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"]]]
@@ -69,7 +69,8 @@ private _cats = [
     ["ENEMY HQ  (selected in the list)", [
         ["Phase", [["FULL HQ NOW", "fullHq"], ["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"], ["Reinf. wave", "wave"]]],
         ["Objectives", [["Kill cmdr", "killCmd"], ["Capture cmdr", "capture"], ["Hack tower", "hack"], ["Destroy tower", "tower"],
-                        ["Destroy depot", "depot"], ["Destroy tanker", "tanker"], ["Destroy HQ", "destroy"]]]
+                        ["Destroy depot", "depot"], ["Destroy tanker", "tanker"], ["Destroy HQ", "destroy"]]],
+        ["Build truck", [["Kill truck", "btKill"], ["Replacement now", "btNow"]]]
     ]],
     ["ENEMY FORCES", [
         ["Carrier", [["Landing now", "root"], ["Supply flight", "flight"], ["Carrier -1 HQ", "carrierMinus"], ["Carrier full", "carrierFull"]]],

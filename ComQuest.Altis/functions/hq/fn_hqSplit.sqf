@@ -143,3 +143,25 @@ _child set ["fuelInit", _carryFuel];
     _id, _n, _child get "id", mapGridPosition _site, round (_site distance2D _c), _total - _n, _carry]] call CQ_fnc_announce;
 
 [_child, _col, _colVehs, _cmdG] spawn CQ_fnc_colonise;
+
+// The parent's build truck (and its squad) leaves to build the child; the carrier sends the
+// parent a new one for its own next split (CQ_fnc_buildTruck, counts in CQ_btMaxDrops)
+private _bt = _hq getOrDefault ["buildTruck", objNull];
+if (alive _bt && { canMove _bt } && { alive driver _bt }) then {
+    private _sg = _hq getOrDefault ["btSquad", grpNull];
+    _hq set ["buildTruck", objNull];
+    _hq set ["btSquad", grpNull];
+    ["assign", [_child, _bt, _sg]] call CQ_fnc_buildTruck;
+    [_child, _site] spawn {
+        params ["_child", "_site"];
+        ["board", [_child]] call CQ_fnc_buildTruck;
+        private _tr = _child getOrDefault ["buildTruck", objNull];
+        if (!alive _tr) exitWith {};
+        private _dg = group driver _tr;
+        [_dg] call CQ_fnc_clearWaypoints;
+        _dg setBehaviour "SAFE";
+        _dg move (_site getPos [40, random 360]);
+    };
+    ["HQ #%1: build truck leaves for HQ #%2", [_id, _child get "id"]] call CQ_fnc_log;
+};
+["request", [_hq]] spawn CQ_fnc_buildTruck;
