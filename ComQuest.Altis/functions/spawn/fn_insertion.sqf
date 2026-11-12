@@ -131,6 +131,12 @@ private _troops = [];
     _x params ["_lat", "_lzDist", "_lzAng", "_nSquads", "_withCmd"];
     private _p = [_lat, 120] call _slot;
     ([ CQ_troopHeliClass, _p, _heading, true, CQ_heightTroops] call CQ_fnc_spawnHeli) params ["_heli", "_hg"];
+    _heli addEventHandler ["Killed", {
+        params ["_h", "_k", "_i"];
+        private _w = [_i, _k] select (isNull _i);
+        ["Insertion: troop heli destroyed at %1 by %2", [mapGridPosition _h,
+            if (isNull _w || { _w == _h }) then { "a crash (no shooter)" } else { format ["%1 / %2 (%3)", typeOf _w, typeOf vehicle _w, side group _w] }]] call CQ_fnc_log;
+    }];
     private _seats = _heli emptyPositions "cargo";
     private _lost = 0;
 
@@ -192,6 +198,13 @@ private _handoff = {
         _hq set ["state", "Failed"];
         { deleteMarker _x } forEach (_hq get "markers");
         ["Enemy insertion failed", format ["HQ #%1: no troops made it to the ground", _id]] call CQ_fnc_announce;
+        // the carrier tries again at the same spot: this landing does not count and its supplies come back
+        CQ_rootsLaunched = (CQ_rootsLaunched - 1) max 0;
+        CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", 0]) + 1;
+        call CQ_fnc_carrierMarker;
+        CQ_rootRetrySite = _site;
+        CQ_nextRootTime = serverTime + CQ_rootRetryDelay;
+        ["Root insertion failed: the carrier retries at %1 in %2 s", [mapGridPosition _site, CQ_rootRetryDelay]] call CQ_fnc_log;
     };
     _hq set ["infantry", _infantry];
     _hq set ["cmdGroup", _cmdGroup];
@@ -296,6 +309,27 @@ while { true } do {
             continue;
         };
 
+        // debug FULL HQ NOW: the troops are put on the ground at once, the helis stay in the sky
+        if (_state in ["fly", "landing"] && { _hq getOrDefault ["dbgDrop", false] }) then {
+            {
+                // out of the heli (still high in the sky), then set down once really out: protected meanwhile
+                _x allowDamage false;
+                unassignVehicle _x;
+                moveOut _x;
+                [_x, (_e get "lz") getPos [3 + random 12, random 360]] spawn {
+                    params ["_u", "_p"];
+                    waitUntil { sleep 0.1; vehicle _u == _u };
+                    _u setVelocity [0, 0, 0];
+                    _u setPosATL [_p select 0, _p select 1, 0];
+                    sleep 3;
+                    _u allowDamage true;
+                };
+            } forEach _pass;
+            ["Enemy troops landed", format ["HQ #%1: %2 soldiers put on the ground (debug)", _id, count _pass]] call CQ_fnc_announce;
+            _e set ["state", "unloaded"];
+            _e set ["t", time];
+            continue;
+        };
         switch (_state) do {
             case "fly": {
                 if (_heli distance2D (_e get "lz") < 500) then {

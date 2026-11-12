@@ -11,6 +11,9 @@ if (!isServer || { isNull _t } || { !alive _t } || { _t getVariable ["CQ_hacked"
 private _id = _t getVariable ["CQ_hqId", -1];
 private _hq = CQ_hqs getOrDefault [_id, createHashMap];
 _t setVariable ["CQ_hacked", true, true];
+_t setVariable ["CQ_hackable", false, true];
+private _term = _t getVariable ["CQ_terminal", objNull];
+if (!isNull _term) then { [_term, 3] call BIS_fnc_dataTerminalAnimate };   // stays open: hacked
 _t removeAllEventHandlers "HandleDamage";          // destructible from now on (it is our relay)
 if (count _hq > 0) then { _hq set ["radio", objNull]; _hq set ["radioHacked", _t] };
 // OPERATION briefing: this objective is done, by the hacker's squad

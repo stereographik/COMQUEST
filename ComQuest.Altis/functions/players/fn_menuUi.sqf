@@ -32,7 +32,7 @@ if (_admin) then { _items pushBack ["DEBUG PANEL", "Test commands (F3)", { [] sp
 // of the picture)
 private _npx = (safeZoneH * CQ_menuSize) / pixelH;              // picture size in screen pixels
 private _pw = _npx * pixelW; private _ph = _npx * pixelH;
-private _picX = safeZoneX + (safeZoneW - _pw) / 2;
+private _picX = safeZoneX + safeZoneW - _pw;                   // docked on the right
 private _picY = safeZoneY + (safeZoneH - _ph) / 2;
 private _mk = {
     params ["_cls", "_pos", ["_txt", ""]];

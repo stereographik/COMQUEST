@@ -44,6 +44,10 @@ private _site = if (CQ_rootsLaunched == 0 && CQ_debugFirstAtRunway) then {
     }
 } };
 
+if (!isNil "CQ_rootRetrySite") then {
+    _site = CQ_rootRetrySite; CQ_rootRetrySite = nil;
+    ["Root insertion: second attempt at the failed landing site %1", [mapGridPosition _site]] call CQ_fnc_log;
+};
 if (_site isEqualTo []) exitWith {
     ["Root insertion: no land found this tick, retrying"] call CQ_fnc_log;
 };
