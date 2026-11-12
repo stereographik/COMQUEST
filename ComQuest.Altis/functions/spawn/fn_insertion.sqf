@@ -114,6 +114,7 @@ private _lifts = [];
     };
     _heli doMove _lz;
 
+    if (_label == "Zamak truck") then { _hq set ["btIncoming", true] };   // the build truck is on its way: no replacement asked meanwhile
     _lifts pushBack createHashMapFromArray [
         ["heli", _heli], ["grp", _hg], ["cargo", _cargo], ["mass", getMass _cargo], ["slung", _viv],
         ["lz", _lz], ["label", _label], ["state", "fly"], ["t", time]
@@ -224,6 +225,7 @@ while { true } do {
 
         if (_state in ["fly", "near"] && { !alive _heli }) then {
             _e set ["state", "dead"];
+            if ((_e get "label") == "Zamak truck") then { _hq set ["btIncoming", false] };   // the build truck is lost: the carrier will send one
             ["CSAT transport shot down", format ["HQ #%1: the Mohawk carrying the %2 is down", _id, _e get "label"]] call CQ_fnc_announce;
             private _c = _e get "cargo";
             if (!(_e get "slung")) then { deleteVehicle _c };
@@ -240,7 +242,9 @@ while { true } do {
                 private _minD = _e getOrDefault ["minD", 1e9];
                 if (_d < _minD) then { _e set ["minD", _d]; _minD = _d };
                 private _passed = _minD < CQ_dropLead && { _d > _minD + 40 };   // overflew the LZ between two checks
-                if ((_d < CQ_dropLead && _safe) || { _d < 80 } || { _passed && _safe } || { time - (_e get "t") > 400 && _safe }) then {
+                if ((_d < CQ_dropLead && _safe) || { _d < 80 } || { _passed && _safe } || { time - (_e get "t") > 400 && _safe }
+                    || { time - (_e get "t") > 200 && { !surfaceIsWater getPosATL _heli } && { _d < 1500 } }) then {   // never kept circling: any land near the LZ will do
+                    if (time - (_e get "t") > 200) then { ["HQ #%1: Mohawk with %2 forced to drop after %3 s (%4 m from its LZ)", [_id, _e get "label", round (time - (_e get "t")), round _d]] call CQ_fnc_log };
                     private _cargo = _e get "cargo";
                     if (_e get "slung") then {
                         _heli setVehicleCargo objNull;          // Vehicle-in-Vehicle unload in flight: own parachute
@@ -264,6 +268,7 @@ while { true } do {
                         params ["_c", "_hq", "_id", "_label"];
                         private _t = time;
                         waitUntil { sleep 1; !alive _c || { isTouchingGround _c && { speed _c < 3 } } || { time - _t > 120 } };
+                        if (_label == "Zamak truck") then { _hq set ["btIncoming", false] };
                         if (alive _c && { _label == "Zamak truck" }) exitWith {
                             // the Zamak is the HQ's build truck: crew, a squad in the back (CQ_fnc_buildTruck)
                             _c allowDamage true;

@@ -144,7 +144,7 @@ private _truckWait = {
         if (!alive _tr || { !canMove _tr } || { !alive driver _tr }) exitWith {
             if (!_frozen) then { _frozen = true; _frozenT = time; ["HQ #%1: construction frozen, no build truck", [_id]] call CQ_fnc_log };
             // 60 s grace: the root's Zamak may still be under its parachute
-            if (!alive _tr && { time - _frozenT > 60 } && { !(_hq getOrDefault ["btPending", false]) } && { !(_hq getOrDefault ["btNone", false]) }) then {
+            if (!alive _tr && { time - _frozenT > 60 } && { !(_hq getOrDefault ["btIncoming", false]) } && { !(_hq getOrDefault ["btPending", false]) } && { !(_hq getOrDefault ["btNone", false]) }) then {
                 ["request", [_hq]] spawn CQ_fnc_buildTruck;
             };
             if (alive _tr && { !alive driver _tr || { !canMove _tr } }) then { _tr setDamage 1 };   // crippled: counts as lost
