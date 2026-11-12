@@ -373,6 +373,44 @@ CQ_vehBoxes = CQ_vehBoxes apply {
 };
 publicVariable "CQ_arsenalBoxes";
 CQ_vehBoxesDone = true; publicVariable "CQ_vehBoxesDone";
+
+// Base defences from the layout drawn on the map picker (CQ_baseLayoutObjs, CQ_baseLayoutHesco)
+private _nH = 0;
+{
+    _x params ["_hc", "_hl", "_pts"];
+    for "_i" from 1 to (count _pts) - 1 do {
+        private _a = (_pts select (_i - 1)) + [0]; private _b = (_pts select _i) + [0];
+        private _len = _a distance2D _b;
+        private _sd = _a getDir _b;
+        private _n = ceil (_len / _hl);
+        for "_k" from 0 to _n - 1 do {
+            private _f = (_k + 0.5) / _n;
+            private _p = [(_a select 0) + ((_b select 0) - (_a select 0)) * _f, (_a select 1) + ((_b select 1) - (_a select 1)) * _f, 0];
+            [_p, 4] call _clearSoft;
+            private _o = createVehicle [_hc, [0, 0, 0], [], 0, "CAN_COLLIDE"];
+            _o setDir (_sd + 90);
+            _o setPosATL _p;
+            _o setVectorUp surfaceNormal _p;
+            _o allowDamage false;
+            _nH = _nH + 1;
+        };
+    };
+} forEach CQ_baseLayoutHesco;
+{
+    _x params ["_oc", "_op", "_od"];
+    private _p = [_op select 0, _op select 1, 0];
+    [_p, 3] call _clearSoft;
+    private _o = createVehicle [_oc, [0, 0, 0], [], 0, "CAN_COLLIDE"];
+    _o setDir _od;
+    _o setPosATL _p;
+    if (_o isKindOf "StaticWeapon") then {
+        createVehicleCrew _o;
+        (group gunner _o) enableDynamicSimulation false;
+        (group gunner _o) setBehaviour "AWARE";
+        (group gunner _o) setCombatMode "RED";
+    } else { _o allowDamage false };
+} forEach CQ_baseLayoutObjs;
+["Base layout: %1 Hesco pieces, %2 objects", [_nH, count CQ_baseLayoutObjs]] call CQ_fnc_log;
 ["Base: %1 vehicle arsenal boxes (depots and loading zones)", [count CQ_vehBoxes]] call CQ_fnc_log;
 [] spawn {
     while { true } do {

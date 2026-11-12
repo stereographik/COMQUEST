@@ -50,6 +50,21 @@ CQ_raySpacing = 5;                       // safety gap between two vehicles (on 
 CQ_repairDepotRot = 0;                   // turn the repair depot model if its open side is not toward the runway (e.g. 180)
 CQ_repairRadius = 12;                    // repair station service radius (repair, refuel, rearm)
 CQ_vehBoxRefill = 120;                   // s between two restocks of the vehicle arsenal boxes (depots, loading zones)
+// Base defences drawn on the Altis location picker: [class, [x, y], facing]; statics get an AI crew
+CQ_baseLayoutObjs = [
+    ["Land_PortableLight_double_F", [14399, 16117], 125],
+    ["Land_PortableLight_double_F", [14434, 16150], 135],
+    ["Land_PortableLight_double_F", [14418, 16098], 310],
+    ["Land_HBarrierTower_F",        [14332, 16130], 225],
+    ["B_GMG_01_high_F",             [14575, 16218], 90]
+];
+// ...and Hesco lines: [class, piece length (m), [corner, corner, ...]]
+CQ_baseLayoutHesco = [
+    ["Land_HBarrier_Big_F", 8.5, [[14379, 16056], [14423, 16017], [14547, 16145], [14501, 16184]]],
+    ["Land_HBarrier_Big_F", 8.5, [[14359, 16077], [14338, 16099], [14364, 16122]]],
+    ["Land_HBarrier_Big_F", 8.5, [[14483, 16202], [14468, 16214], [14447, 16189]]],
+    ["Land_HBarrier_5_F",   5.7, [[14498, 16290], [14527, 16268]]]
+];
 // Base parking area: the zone marked on the map (SW end of the runway, next to the camp).
 // An area marker named cq_park_area placed in Eden overrides it.
 CQ_parkArea = [[14193, 16226, 0], [14480, 16194, 0], [14158, 15889, 0]];   // [x, y, 0]: inPolygon needs 3 numbers per point
