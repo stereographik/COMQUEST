@@ -52,7 +52,7 @@ def dxt5(img):
     return bytes(out)
 def tagg(name, data): return b'GGAT' + name + struct.pack('<I', len(data)) + data
 levels = []; cur = im
-while cur.size[0] >= 4: levels.append(cur); cur = cur.resize((cur.size[0]//2, cur.size[1]//2), Image.LANCZOS)
+while min(cur.size) >= 4: levels.append(cur); cur = cur.resize((cur.size[0]//2, cur.size[1]//2), Image.LANCZOS)
 avg = np.array(levels[-1]).reshape(-1,4).mean(0).astype(int)
 head = struct.pack('<H', 0xFF05)
 t = tagg(b'CGVA', bytes([avg[2], avg[1], avg[0], avg[3]])) + tagg(b'CXAM', bytes([255,255,255,255])) + tagg(b'GALF', struct.pack('<I', 1))

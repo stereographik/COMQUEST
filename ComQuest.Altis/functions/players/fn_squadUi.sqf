@@ -24,12 +24,13 @@ uiNamespace setVariable ["CQ_sqDisplay", _d];
 uiNamespace setVariable ["CQ_sqView", _view];
 _d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];
 
-// the field tablet picture (media\comtablet_ca.paa, 1024 x 1024, background cut out), docked on the
-// right and overlapping the screen edge like the U menu; the window fills its green screen
+// the field tablet picture (media\comtablet_ca.paa, 1024 x 512 texture of a 1024 x 640 crop, background
+// cut out), centred on screen and kept fully inside it; the window fills its green screen
 // (CQ_sqScreen = [x0, y0, x1, y1] as fractions of the picture)
-private _npx = (safeZoneH * CQ_sqSize) / pixelH;
-private _pw = _npx * pixelW; private _ph = _npx * pixelH;
-private _picX = safeZoneX + safeZoneW - _pw * (1 - CQ_sqOverhang);
+private _ph = safeZoneH * CQ_sqSize;
+private _pw = (_ph / pixelH) * 1.6 * pixelW;                    // 1024 x 640 picture ratio, square pixels
+if (_pw > safeZoneW) then { _ph = _ph * safeZoneW / _pw; _pw = safeZoneW };
+private _picX = safeZoneX + (safeZoneW - _pw) / 2;
 private _picY = safeZoneY + (safeZoneH - _ph) / 2;
 CQ_sqScreen params ["_fx0", "_fy0", "_fx1", "_fy1"];
 private _X = _picX + _pw * _fx0 + 0.004;
@@ -48,6 +49,7 @@ private _mk = {
 };
 private _pic = ["RscPicture", -1, [_picX, _picY, _pw, _ph]] call _mk;
 _pic ctrlSetText (getMissionPath "media\comtablet_ca.paa");
+["Squad window: tablet picture %1 (file found: %2), pos %3", [ctrlText _pic, fileExists (getMissionPath "media\comtablet_ca.paa"), ctrlPosition _pic]] call CQ_fnc_log;
 // dark tint over the green screen: the screen glow shows through, text stays readable
 (["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0, 0.04, 0, CQ_sqTint];
 (["RscText", -1, [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
