@@ -47,9 +47,16 @@ private _mk = {
     _c ctrlCommit 0;
     _c
 };
-private _pic = ["RscPicture", -1, [_picX, _picY, _pw, _ph]] call _mk;
+// the tablet goes on its own title layer, under this window (drawn on the window's own display it
+// did not show), removed when the window closes
+"CQ_sqBg" cutRsc ["RscTitleDisplayEmpty", "PLAIN", 0, false];
+private _bg = uiNamespace getVariable ["RscTitleDisplayEmpty", displayNull];
+private _pic = _bg ctrlCreate ["RscPicture", -1];
+_pic ctrlSetPosition [_picX, _picY, _pw, _ph];
+_pic ctrlCommit 0;
 _pic ctrlSetText (getMissionPath "media\comtablet_ca.paa");
-["Squad window: tablet picture %1 (file found: %2), pos %3", [ctrlText _pic, fileExists (getMissionPath "media\comtablet_ca.paa"), ctrlPosition _pic]] call CQ_fnc_log;
+_d displayAddEventHandler ["Unload", { "CQ_sqBg" cutText ["", "PLAIN"] }];
+["Squad window: tablet layer %1, picture %2, pos %3", [!isNull _bg, !isNull _pic, ctrlPosition _pic]] call CQ_fnc_log;
 // dark tint over the green screen: the screen glow shows through, text stays readable
 (["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0, 0.04, 0, CQ_sqTint];
 (["RscText", -1, [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
