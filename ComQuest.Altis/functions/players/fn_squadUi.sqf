@@ -24,7 +24,7 @@ uiNamespace setVariable ["CQ_sqDisplay", _d];
 uiNamespace setVariable ["CQ_sqView", _view];
 _d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];
 
-// the field tablet picture (media\comtablet_ca.paa, 1024 x 512 texture of a 1024 x 640 crop, background
+// the field tablet picture (media\comtablet_ca.paa, 2048 x 1024 texture of a 2048 x 1280 crop, background
 // cut out), centred on screen and kept fully inside it; the window fills its green screen
 // (CQ_sqScreen = [x0, y0, x1, y1] as fractions of the picture)
 private _ph = safeZoneH * CQ_sqSize;
