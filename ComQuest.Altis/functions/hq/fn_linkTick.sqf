@@ -26,8 +26,8 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
     private _dest = CQ_basePos vectorAdd ((_hp vectorDiff CQ_basePos) vectorMultiply CQ_linkRelayFrac);
     private _road = [_dest, 300] call BIS_fnc_nearestRoad;
     if (!isNull _road) then { _dest = getPosATL _road };
-    private _sp = (CQ_basePos getPos [60, CQ_basePos getDir _hp]) findEmptyPosition [0, 80, CQ_linkRelayClass];
-    if (_sp isEqualTo []) then { _sp = CQ_basePos getPos [60, CQ_basePos getDir _hp] };
+    private _sp = CQ_linkRelaySpawn findEmptyPosition [0, 40, CQ_linkRelayClass];
+    if (_sp isEqualTo []) then { _sp = CQ_linkRelaySpawn };
     _rv = createVehicle [CQ_linkRelayClass, _sp, [], 0, "NONE"];
     _rv setDir (CQ_basePos getDir _hp);
     _rv setVariable ["CQ_linkRelay", true, true];
