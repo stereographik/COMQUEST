@@ -36,20 +36,38 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
     _rv lock 2;                                   // the base's relay: not a ride
     _rv enableDynamicSimulation false;
     _g enableDynamicSimulation false;
-    _g setBehaviour "CARELESS"; _g setCombatMode "BLUE"; _g setSpeedMode "FULL";
-    { _x disableAI "AUTOCOMBAT"; _x disableAI "TARGET" } forEach units _g;
+    // armed: the gunner fires at will on the way; the driver never stops to fight
+    _g setBehaviour "AWARE"; _g setCombatMode "YELLOW"; _g setSpeedMode "FULL";
+    (driver _rv) disableAI "AUTOCOMBAT"; (driver _rv) disableAI "TARGET"; (driver _rv) disableAI "AUTOTARGET";
     _rv engineOn true;
     _g move _dest;
     (driver _rv) doMove _dest;
     _rv setVariable ["CQ_linkMoveT", time];
     _rv setVariable ["CQ_linkLastP", getPosATL _rv];
     _rv setVariable ["CQ_linkDest", _dest];
+    // under fire: everyone is told (once a minute at most)
+    _rv addEventHandler ["Hit", {
+        params ["_v"];
+        if (time - (_v getVariable ["CQ_linkHitT", -1e6]) < CQ_linkAlertEvery) exitWith {};
+        _v setVariable ["CQ_linkHitT", time];
+        ["Relay vehicle under fire", format ["The base's relay vehicle is under fire at grid %1 (%2%% damage)", mapGridPosition _v, round (damage _v * 100)]] call CQ_fnc_announce;
+    }];
     _rv addEventHandler ["Killed", {
+        if ((_this select 0) != (missionNamespace getVariable ["CQ_linkRelayVeh", objNull])) exitWith {};   // already written off
         CQ_linkRelayT = time + CQ_linkRelayRespawn;
         ["Relay vehicle lost", format ["The base's relay vehicle is destroyed at grid %1: another one leaves in %2 min", mapGridPosition (_this select 0), round (CQ_linkRelayRespawn / 60)]] call CQ_fnc_announce;
     }];
     CQ_linkRelayVeh = _rv;
     ["Relay vehicle", format ["The base sends a relay vehicle toward grid %1 (%2 m out), to stretch MAGPIE's data link", mapGridPosition _dest, round (_dest distance2D CQ_basePos)]] call CQ_fnc_announce;
+};
+// crew dead or the vehicle crippled: written off, another one leaves (this one, if it still
+// stands, relays on like any empty vehicle of ours)
+if (alive _rv && { !alive driver _rv || { !canMove _rv } }) then {
+    CQ_linkRelayVeh = objNull;
+    CQ_linkRelayT = time + CQ_linkRelayRespawn;
+    ["Relay vehicle lost", format ["The base's relay vehicle is out of action at grid %1 (%2): another one leaves in %3 min",
+        mapGridPosition _rv, ["crew down", "immobilised"] select (alive driver _rv), round (CQ_linkRelayRespawn / 60)]] call CQ_fnc_announce;
+    _rv = objNull;
 };
 if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
     private _dest = _rv getVariable ["CQ_linkDest", getPosATL _rv];
@@ -74,6 +92,7 @@ if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
         _rv setVariable ["CQ_linkParked", true];
         doStop (driver _rv);
         _rv engineOn false;
+        (group driver _rv) setCombatMode "RED";      // parked: engages anything that comes
         ["Relay vehicle parked at grid %1 (%2 m from the base)", [mapGridPosition _rv, round (_rv distance2D CQ_basePos)]] call CQ_fnc_log;
     };
 };
