@@ -74,41 +74,8 @@ if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
         _rv setVariable ["CQ_linkParked", true];
         doStop (driver _rv);
         _rv engineOn false;
-        // relay mode: a camo net over it, a tent and a campfire beside it
-        private _d = getDir _rv;
-        private _camp = [];
-        private _net = createVehicle [CQ_linkCampNet, [0, 0, 0], [], 0, "CAN_COLLIDE"];
-        _net setDir _d; _net setPosATL [(getPosATL _rv) select 0, (getPosATL _rv) select 1, 0];
-        _camp pushBack _net;
-        private _tp = _rv getPos [9, _d + 90];
-        private _tent = createVehicle [CQ_linkCampTent, [0, 0, 0], [], 0, "CAN_COLLIDE"];
-        _tent setDir (_d + 180); _tent setPosATL [_tp select 0, _tp select 1, 0]; _tent setVectorUp surfaceNormal _tp;
-        _camp pushBack _tent;
-        private _fp = _rv getPos [8, _d + 135];
-        private _fire = createVehicle [CQ_linkCampFire, [0, 0, 0], [], 0, "CAN_COLLIDE"];
-        _fire setPosATL [_fp select 0, _fp select 1, 0];
-        _camp pushBack _fire;
-        { _x allowDamage false } forEach _camp;
-        _rv setVariable ["CQ_linkCamp", _camp];
-        _rv setVariable ["CQ_linkParkPos", getPosATL _rv];
-        ["Relay vehicle: camp pitched (net %1, tent %2, fire %3)", [!isNull _net, !isNull _tent, !isNull _fire]] call CQ_fnc_log;
         ["Relay vehicle parked at grid %1 (%2 m from the base)", [mapGridPosition _rv, round (_rv distance2D CQ_basePos)]] call CQ_fnc_log;
     };
-};
-
-// back to vehicle mode (it moves off, or is lost): the camp goes
-{
-    private _camp = _x getVariable ["CQ_linkCamp", []];
-    if (_camp isNotEqualTo [] && { !alive _x || { _x distance2D (_x getVariable ["CQ_linkParkPos", getPosATL _x]) > 15 } }) then {
-        { deleteVehicle _x } forEach _camp;
-        _x setVariable ["CQ_linkCamp", []];
-        if (alive _x) then { _x setVariable ["CQ_linkParked", false] };
-        ["Relay vehicle: camp struck (%1)", [["lost", "on the move"] select (alive _x)]] call CQ_fnc_log;
-    };
-} forEach ((missionNamespace getVariable ["CQ_linkCampVehs", []]) select { !isNull _x });
-if (alive _rv && { (_rv getVariable ["CQ_linkCamp", []]) isNotEqualTo [] }) then {
-    if (isNil "CQ_linkCampVehs") then { CQ_linkCampVehs = [] };
-    CQ_linkCampVehs pushBackUnique _rv;
 };
 
 // ---- nodes

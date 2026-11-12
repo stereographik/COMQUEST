@@ -9,10 +9,40 @@
       ["lock",   _player, _vehicle] call CQ_fnc_rspVeh;
       ["unlock", _player] call CQ_fnc_rspVeh;
       ["use",    _player] call CQ_fnc_rspVeh;
+      ["camp", _vehicle, true / false]          camp up / struck (below)
+    While a vehicle is a squad respawn point it is a camp: a camo net over it, a tent and a
+    campfire beside it (CQ_rspCamp*). Unlocked, out of credits or destroyed: the camp goes.
     State: group variable CQ_rspVeh (public), vehicle variable CQ_rspLeft (public).
 */
 params ["_mode", "_p", ["_v", objNull]];
-if (!isServer || { isNull _p }) exitWith {};
+if (!isServer) exitWith {};
+if (_mode == "camp") exitWith {
+    // here _p is the vehicle, _v true (pitch) / false (strike)
+    private _veh = _p;
+    { deleteVehicle _x } forEach (_veh getVariable ["CQ_rspCampObjs", []]);
+    _veh setVariable ["CQ_rspCampObjs", []];
+    if (_v isEqualTo true && { alive _veh }) then {
+        private _d = getDir _veh;
+        private _vp = getPosATL _veh;
+        private _net = createVehicle [CQ_rspCampNet, [0, 0, 0], [], 0, "CAN_COLLIDE"];
+        _net setDir _d; _net setPosATL [_vp select 0, _vp select 1, 0];
+        private _tp = _veh getPos [9, _d + 90];
+        private _tent = createVehicle [CQ_rspCampTent, [0, 0, 0], [], 0, "CAN_COLLIDE"];
+        _tent setDir (_d + 180); _tent setPosATL [_tp select 0, _tp select 1, 0]; _tent setVectorUp surfaceNormal _tp;
+        private _fp = _veh getPos [8, _d + 135];
+        private _fire = createVehicle [CQ_rspCampFire, [0, 0, 0], [], 0, "CAN_COLLIDE"];
+        _fire setPosATL [_fp select 0, _fp select 1, 0];
+        private _objs = [_net, _tent, _fire];
+        { _x allowDamage false } forEach _objs;
+        _veh setVariable ["CQ_rspCampObjs", _objs];
+        if !(_veh getVariable ["CQ_rspCampEh", false]) then {
+            _veh setVariable ["CQ_rspCampEh", true];
+            _veh addEventHandler ["Killed", { ["camp", _this select 0, false] call CQ_fnc_rspVeh }];
+        };
+        ["Respawn vehicle camp pitched at grid %1 (%2)", [mapGridPosition _veh, typeOf _veh]] call CQ_fnc_log;
+    };
+};
+if (isNull _p) exitWith {};
 private _say = { params ["_t"]; [_t] remoteExec ["hint", _p] };
 private _g = group _p;
 private _toSquad = { params ["_t"]; [_t] remoteExec ["systemChat", units _g select { isPlayer _x }] };
@@ -27,9 +57,10 @@ switch (_mode) do {
         private _owner = (allGroups select { (_x getVariable ["CQ_rspVeh", objNull]) == _v && { _x != _g } }) param [0, grpNull];
         if (!isNull _owner) exitWith { [format ["This vehicle is already the respawn point of %1", groupId _owner]] call _say };
         if (isNil { _v getVariable "CQ_rspLeft" }) then { _v setVariable ["CQ_rspLeft", CQ_rspCredits, true] };
-        if (!isNull _old && { _old != _v }) then { [_old, 0] remoteExec ["lock", _old] };
+        if (!isNull _old && { _old != _v }) then { [_old, 0] remoteExec ["lock", _old]; ["camp", _old, false] call CQ_fnc_rspVeh };
         _g setVariable ["CQ_rspVeh", _v, true];
         [_v, 2] remoteExec ["lock", _v];                 // nobody gets in while it is a respawn point
+        ["camp", _v, true] call CQ_fnc_rspVeh;
         [format ["%1: squad respawn vehicle set to a %2 at %3 (%4 credits)%5", groupId _g, [_v] call _vName, mapGridPosition _v, _v getVariable "CQ_rspLeft",
             ["", " - the previous one is unlocked"] select (!isNull _old && { _old != _v })]] call _toSquad;
         ["Respawn vehicle: %1 locked a %2 (%3 credits)", [groupId _g, typeOf _v, _v getVariable "CQ_rspLeft"]] call CQ_fnc_log;
@@ -39,6 +70,7 @@ switch (_mode) do {
         private _rv = _g getVariable ["CQ_rspVeh", objNull];
         if (isNull _rv) exitWith {};
         [_rv, 0] remoteExec ["lock", _rv];
+        ["camp", _rv, false] call CQ_fnc_rspVeh;
         _g setVariable ["CQ_rspVeh", objNull, true];
         [format ["%1: squad respawn vehicle unlocked", groupId _g]] call _toSquad;
     };
@@ -59,6 +91,7 @@ switch (_mode) do {
         if (_left <= 0) then {
             _g setVariable ["CQ_rspVeh", objNull, true];
             [_rv, 0] remoteExec ["lock", _rv];
+            ["camp", _rv, false] call CQ_fnc_rspVeh;
             [format ["%1: the squad respawn vehicle has used all its credits", groupId _g]] call _toSquad;
         };
     };
