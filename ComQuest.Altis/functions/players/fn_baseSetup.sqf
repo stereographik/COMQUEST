@@ -278,26 +278,11 @@ private _vd = _ang + 90;                         // vehicles parked perpendicula
         CQ_baseSpots set [_role, (CQ_baseSpots getOrDefault [_role, []]) + [[_p, _vd]]];
         _r = _r + 2 * _half + CQ_raySpacing;
     } forEach _ray;
-    // crate dispenser + loadout zone at the end of the row (drawn spot, or further if the
-    // row is longer)
-    private _dp = CQ_dispensers param [_ri, []];
-    private _dDist = if (_dp isEqualTo []) then { 0 } else { (_s0 distance2D _dp) };
-    _dDist = _dDist max (_r + CQ_loadZoneRadius);
-    private _lz = [_dDist] call _at2;
-    [_lz, CQ_loadZoneRadius + 5] call _clearSoft;
-    CQ_loadZones pushBack _lz;
-    { (createVehicle ["RoadCone_L_F", _lz getPos [CQ_loadZoneRadius - 1, _ang + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
-    for "_k" from 0 to CQ_dispenserCrates - 1 do {
-        private _cp = (_lz getPos [CQ_loadZoneRadius + 2.5, _ang]) getPos [(_k - (CQ_dispenserCrates - 1) / 2) * 3, _vd];
-        CQ_crateSpots pushBack [_cp select 0, _cp select 1, 0];
-    };
-    ["Base row %1: %2 m, %3, dispenser at %4 m", [_ri + 1, round _r, (_ray apply { _x select 0 }) joinString " < ", round _dDist]] call CQ_fnc_log;
+    // no loading zone or crate dispenser any more: vehicles are kitted on the depot helipads
+    // next to the repair depots (squad autofill, vehicle arsenal box)
+    ["Base row %1: %2 m, %3", [_ri + 1, round _r, (_ray apply { _x select 0 }) joinString " < "]] call CQ_fnc_log;
 } forEach _rays;
-private _dm = createMarker ["cq_crates", (CQ_loadZones select 0)];
-_dm setMarkerType "loc_rearm";
-_dm setMarkerColor "ColorWEST";
-_dm setMarkerText "Crates & loadout";
-publicVariable "CQ_loadZones";
+publicVariable "CQ_loadZones";   // empty: no loading zones
 
 // repair stations
 CQ_repairPoints = [];
@@ -359,7 +344,6 @@ CQ_vehBoxes = [];
     if (_cp isNotEqualTo []) then { _bp = _cp };
     CQ_vehBoxes pushBack [[_bp select 0, _bp select 1, 0], _face];
 } forEach CQ_depots;
-{ CQ_vehBoxes pushBack [_x getPos [CQ_loadZoneRadius + 3, _ang + 180], _ang] } forEach CQ_loadZones;
 CQ_vehBoxes = CQ_vehBoxes apply {
     _x params ["_bp", "_bd"];
     private _b = createVehicle [_boxCls, [0, 0, 0], [], 0, "CAN_COLLIDE"];

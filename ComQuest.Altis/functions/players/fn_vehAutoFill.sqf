@@ -1,7 +1,7 @@
 /*
     CQ_fnc_vehAutoFill  (server, from a player action through remoteExec)
     ["fill", _vehicle, _player] / ["clear", _vehicle, _player]
-    Near a vehicle arsenal box or in a loading zone (CQ_fnc_vehFillSpot):
+    On a depot helipad or at its repair depot (CQ_fnc_vehFillSpot):
       fill   replaces the vehicle's cargo with what THIS squad shoots: every member (wherever
              he is) is read - rifle, underbarrel launcher, launcher, pistol, the magazines in
              use - and gets a balanced share (CQ_fillShare), plus a few essentials each and a
@@ -14,7 +14,7 @@
 params ["_mode", "_v", "_who"];
 if (!isServer || { !alive _v }) exitWith {};
 private _say = { params ["_t"]; [_t] remoteExec ["hint", owner _who] };
-if !([_v] call CQ_fnc_vehFillSpot) exitWith { ["Bring the vehicle next to a vehicle arsenal box or into a loading zone first"] call _say };
+if !([_v] call CQ_fnc_vehFillSpot) exitWith { ["Bring the vehicle onto a depot helipad, next to a repair depot, first"] call _say };
 // fill: CQ_fillCooldown s between two autofills by the same player
 if (_mode == "fill") then {
     if (isNil "CQ_fillLast") then { CQ_fillLast = createHashMap };

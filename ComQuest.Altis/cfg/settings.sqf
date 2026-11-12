@@ -55,7 +55,7 @@ CQ_vehBoxRefill = 120;                   // s between two restocks of the vehicl
 CQ_fillShare = [6, 3, 4, 6, 2, 1, 2, 2, 2, 2];
 CQ_fillMaxScale = 1.5;                   // a big vehicle grows the shares up to this
 CQ_fillSoloScale = 5;                    // a player alone: up to this (fills the vehicle)
-CQ_fillBoxRange = 20;                    // m from a vehicle arsenal box to autofill there
+CQ_fillPadRange = 15;                    // m from a depot helipad (or its repair depot) to autofill there
 CQ_fillCooldown = 40;                    // s between two autofills by the same player
 // Base defences drawn on the Altis location picker: [class, [x, y], facing]; statics get an AI crew
 CQ_baseLayoutObjs = [
