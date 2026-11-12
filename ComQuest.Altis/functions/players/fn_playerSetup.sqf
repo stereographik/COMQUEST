@@ -93,8 +93,8 @@ if (isNil "CQ_hackHintLoop") then {
             private _t = (nearestObjects [player, ["Land_TTowerBig_2_F"], 30]) select { _x getVariable ["CQ_hackable", false] };
             if (_t isEqualTo [] || { (_t select 0) == _last }) then { continue };
             _last = _t select 0;
-            hint (["Enemy radio tower: an ENGINEER can hack it on the field terminal at its foot (hold 20 s).",
-                   "Enemy radio tower: go to the field terminal at its foot and hold 'Hack radio tower' (20 s)."] select ((player getVariable ["CQ_class", ""]) == "Engineer"));
+            hint ([format ["Enemy radio tower: hack it on the field terminal at its foot (hold %1 s, an engineer does it in %2 s).", round (CQ_hackTime * CQ_hackSlowFactor), CQ_hackTime],
+                   format ["Enemy radio tower: go to the field terminal at its foot and hold 'Hack radio tower' (%1 s).", CQ_hackTime]] select ((player getVariable ["CQ_class", ""]) == "Engineer"));
         };
     };
 };

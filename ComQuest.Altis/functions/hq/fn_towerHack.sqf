@@ -27,8 +27,8 @@ CQ_relays pushBack [_id, _t, _pos];
 call CQ_fnc_relaySites;
 CQ_netNext = 0;
 private _name = if (count _hq > 0) then { [_id] call CQ_fnc_objName } else { "an enemy HQ" };
-["Radio tower hacked", format ["%1 hacked the radio tower of %2 (grid %3): it is our relay now, MAGPIE covers %4 m around it",
-    [name _u, "Command"] select (isNull _u), _name, mapGridPosition _pos, CQ_netCoverRelay]] call CQ_fnc_announce;
+["Radio tower hacked", format ["%1 hacked the radio tower of %2 (grid %3): it is our relay now, linking our network within %4 m and to the base or other relays within %5 km",
+    [name _u, "Command"] select (isNull _u), _name, mapGridPosition _pos, CQ_netCoverRelay, round (CQ_linkBackbone / 1000)]] call CQ_fnc_announce;
 ["towerHacked", [_name]] call CQ_fnc_say;
 if (!isNull _u) then { [_u, 75, "radio tower hacked"] call CQ_fnc_scoreAdd };
 

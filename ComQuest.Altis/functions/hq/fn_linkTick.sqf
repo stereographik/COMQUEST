@@ -5,7 +5,8 @@
     every path counts, the network is whatever is connected to the base.
       base                    CQ_netCoverBase       always linked
       relay vehicle           CQ_linkRelayVehR      sent by the base 1/3 of the way to the first HQ
-      relays we hold          CQ_netCoverRelay      hacked towers, engineer relays
+      relays we hold          CQ_netCoverRelay      hacked towers, engineer relays; the base and the
+                                                    relays also link to each other within CQ_linkBackbone
       friendly vehicle        CQ_linkVehR           any of ours, crewed or empty, until it despawns or blows up
       MAGPIE drone in the air CQ_linkDroneR         Sentinels and woken Darters
     A drone that is not linked flies on but reports nothing (CQ_fnc_magTick: "CQ_linked").
@@ -98,20 +99,20 @@ if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
 };
 
 // ---- nodes
-private _nodes = [[CQ_basePos, CQ_netCoverBase, objNull]];
-{ if (alive (_x select 1)) then { _nodes pushBack [_x select 2, CQ_netCoverRelay, _x select 1] } } forEach (missionNamespace getVariable ["CQ_relays", []]);
-if (alive _rv) then { _nodes pushBack [getPosATL _rv, CQ_linkRelayVehR, _rv] };
+private _nodes = [[CQ_basePos, CQ_netCoverBase, objNull, "b"]];
+{ if (alive (_x select 1)) then { _nodes pushBack [_x select 2, CQ_netCoverRelay, _x select 1, "r"] } } forEach (missionNamespace getVariable ["CQ_relays", []]);
+if (alive _rv) then { _nodes pushBack [getPosATL _rv, CQ_linkRelayVehR, _rv, "v"] };
 private _drones = [];
 {
     private _v = _x get "veh";
-    if (alive _v && { (_x getOrDefault ["phase", ""]) == "air" }) then { _drones pushBack _v; _nodes pushBack [getPosATL _v, CQ_linkDroneR, _v] };
+    if (alive _v && { (_x getOrDefault ["phase", ""]) == "air" }) then { _drones pushBack _v; _nodes pushBack [getPosATL _v, CQ_linkDroneR, _v, "d"] };
 } forEach (missionNamespace getVariable ["CQ_mag", []]);
 {
     // ours, crewed or not (a parked empty vehicle relays until it despawns or blows up): a BLUFOR
     // model, or anything with our people inside
     if (alive _x && { _x != _rv } && { !(_x in _drones) } && { !(_x isKindOf "StaticWeapon") } && { !(_x isKindOf "ParachuteBase") }
         && { getNumber (configOf _x >> "side") == 1 || { (crew _x) isNotEqualTo [] && { side group effectiveCommander _x == west } } }) then {
-        _nodes pushBack [getPosATL _x, CQ_linkVehR, _x];
+        _nodes pushBack [getPosATL _x, CQ_linkVehR, _x, "v"];
     };
 } forEach vehicles;
 
@@ -124,11 +125,13 @@ while { _grow } do {
     _grow = false;
     for "_a" from 0 to _n - 1 do {
         if !(_ok select _a) then { continue };
-        (_nodes select _a) params ["_pa", "_ra"];
+        (_nodes select _a) params ["_pa", "_ra", "", "_ka"];
         for "_b" from 0 to _n - 1 do {
             if (_ok select _b) then { continue };
-            (_nodes select _b) params ["_pb", "_rb"];
-            if (_pa distance2D _pb <= _ra + _rb) then { _ok set [_b, true]; _edges pushBack [_pa, _pb]; _grow = true };
+            (_nodes select _b) params ["_pb", "_rb", "", "_kb"];
+            // overlapping ranges; the base and the relays we hold also talk to each other over
+            // CQ_linkBackbone m (radio backbone)
+            if (_pa distance2D _pb <= _ra + _rb || { _ka in ["b", "r"] && { _kb in ["b", "r"] } && { _pa distance2D _pb <= CQ_linkBackbone } }) then { _ok set [_b, true]; _edges pushBack [_pa, _pb]; _grow = true };
         };
     };
 };

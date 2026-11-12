@@ -149,6 +149,13 @@ private _truckWait = {
             };
             if (alive _tr && { !alive driver _tr || { !canMove _tr } }) then { _tr setDamage 1 };   // crippled: counts as lost
             _legT = -1;
+            // the carrier has no build truck left: the build goes on the old way, one stage
+            // every CQ_btFallbackTime s (the men carry it in)
+            if (_hq getOrDefault ["btNone", false] && { time - _frozenT > CQ_btFallbackTime }) exitWith {
+                ["HQ #%1: no build truck left, stage built without one", [_id]] call CQ_fnc_log;
+                _frozenT = time;
+                true
+            };
             false
         };
         _frozen = false;
@@ -308,7 +315,7 @@ _radio addEventHandler ["HandleDamage", {
 }];
 _radio setVariable ["CQ_hackable", true, true];
 // the hack is done like defusing a bomb: on a field terminal at the tower's foot, it opens while
-// an Engineer works on it (CQ_hackTime s, interrupted if he moves away or is hit)
+// anyone works on it (an Engineer CQ_hackTime s, others CQ_hackSlowFactor times longer; interrupted if he moves away or is hit)
 if (!isNull _radio) then {
     private _tp = (getPosATL _radio) getPos [6, (getPosATL _radio) getDir _c];
     _tp = [_tp select 0, _tp select 1, 0];
@@ -319,18 +326,25 @@ if (!isNull _radio) then {
     _term setVariable ["CQ_tower", _radio, true];
     _radio setVariable ["CQ_terminal", _term, true];
     (_hq get "objects") pushBack _term;
-    [_term,
-        "<t color='#BA392C'>Hack radio tower</t>",
-        "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
-        "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
-        "(_this getVariable ['CQ_class', '']) == 'Engineer' && { _this distance _target < 3 } && { (_target getVariable ['CQ_tower', objNull]) getVariable ['CQ_hackable', false] }",
-        "_caller distance _target < 3 && { alive _caller } && { lifeState _caller != 'INCAPACITATED' }",
-        { params ["_target"]; [_target, 3] call BIS_fnc_dataTerminalAnimate },
-        {},
-        { params ["_target", "_caller"]; [_target getVariable ["CQ_tower", objNull], _caller] remoteExec ["CQ_fnc_towerHack", 2] },
-        { params ["_target"]; [_target, 0] call BIS_fnc_dataTerminalAnimate },
-        [], CQ_hackTime, 1000, false, false
-    ] remoteExec ["BIS_fnc_holdActionAdd", 0, _term];
+    // anyone can hack; an Engineer twice as fast (two actions, one shows per player)
+    {
+        _x params ["_cond", "_time", "_label"];
+        [_term,
+            format ["<t color='#BA392C'>Hack radio tower%1</t>", _label],
+            "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
+            "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
+            _cond + " && { _this distance _target < 3 } && { (_target getVariable ['CQ_tower', objNull]) getVariable ['CQ_hackable', false] }",
+            "_caller distance _target < 3 && { alive _caller } && { lifeState _caller != 'INCAPACITATED' }",
+            { params ["_target"]; [_target, 3] call BIS_fnc_dataTerminalAnimate },
+            {},
+            { params ["_target", "_caller"]; [_target getVariable ["CQ_tower", objNull], _caller] remoteExec ["CQ_fnc_towerHack", 2] },
+            { params ["_target"]; [_target, 0] call BIS_fnc_dataTerminalAnimate },
+            [], _time, 1000, false, false
+        ] remoteExec ["BIS_fnc_holdActionAdd", 0, _term];
+    } forEach [
+        ["(_this getVariable ['CQ_class', '']) == 'Engineer'", CQ_hackTime, ""],
+        ["(_this getVariable ['CQ_class', '']) != 'Engineer'", CQ_hackTime * CQ_hackSlowFactor, " (slow: not an engineer)"]
+    ];
 };
 // heavily guarded: a squad of its own around the tower (scaled, out of the AI caps)
 if (!isNull _radio) then {
