@@ -123,6 +123,17 @@ if (_needHq && { count _hq == 0 }) then {
             private _r = _hq getOrDefault ["depot", objNull];
             if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: depot destroyed", _id] } else { _msg = format ["HQ #%1 has no depot", _id] };
         };
+        case "tpRelayVeh": {
+            private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
+            if (!alive _rv) then { _msg = "No relay vehicle out yet" } else {
+                if (!isNull _p) then {
+                    private _t = _rv getPos [10, getDir _rv + 150];
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, _t] spawn { params ["_p", "_t"]; sleep 0.5; _p setPosATL [_t select 0, _t select 1, 0] };
+                };
+                _msg = format ["Next to the relay vehicle (grid %1, %2 m from its spot)", mapGridPosition _rv, round (_rv distance2D (_rv getVariable ["CQ_linkDest", getPosATL _rv]))];
+            };
+        };
         case "btKill": {
             private _tr = _hq getOrDefault ["buildTruck", objNull];
             if (alive _tr) then { _tr setDamage 1; _msg = format ["HQ #%1: build truck destroyed (%2 lost, carrier drops %3/%4)", _id, _hq getOrDefault ["btKills", 0], missionNamespace getVariable ["CQ_btDrops", 0], CQ_btMaxDrops] }

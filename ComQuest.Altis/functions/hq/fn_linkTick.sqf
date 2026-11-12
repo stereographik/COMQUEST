@@ -30,15 +30,19 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
     if (_sp isEqualTo []) then { _sp = CQ_basePos getPos [60, CQ_basePos getDir _hp] };
     _rv = createVehicle [CQ_linkRelayClass, _sp, [], 0, "NONE"];
     _rv setDir (CQ_basePos getDir _hp);
-    _rv lock 2;                                   // the base's relay: not a ride
     _rv setVariable ["CQ_linkRelay", true, true];
-    private _g = createGroup [west, true];
-    private _u = _g createUnit ["B_Soldier_F", _sp, [], 5, "NONE"];
-    _u moveInDriver _rv;
-    _g addVehicle _rv;
-    _g setBehaviour "SAFE"; _g setCombatMode "GREEN";
+    createVehicleCrew _rv;                        // a proper crew (driver + commander), then locked
+    private _g = group driver _rv;
+    _rv lock 2;                                   // the base's relay: not a ride
+    _rv enableDynamicSimulation false;
     _g enableDynamicSimulation false;
+    _g setBehaviour "CARELESS"; _g setCombatMode "BLUE"; _g setSpeedMode "FULL";
+    { _x disableAI "AUTOCOMBAT"; _x disableAI "TARGET" } forEach units _g;
+    _rv engineOn true;
     _g move _dest;
+    (driver _rv) doMove _dest;
+    _rv setVariable ["CQ_linkMoveT", time];
+    _rv setVariable ["CQ_linkLastP", getPosATL _rv];
     _rv setVariable ["CQ_linkDest", _dest];
     _rv addEventHandler ["Killed", {
         CQ_linkRelayT = time + CQ_linkRelayRespawn;
@@ -49,6 +53,23 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
 };
 if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
     private _dest = _rv getVariable ["CQ_linkDest", getPosATL _rv];
+    // on the road: progress check every 30 s, a stuck drive gets a new order then a short hop
+    if (time - (_rv getVariable ["CQ_linkMoveT", time]) > 30) then {
+        private _moved = _rv distance2D (_rv getVariable ["CQ_linkLastP", getPosATL _rv]);
+        ["Relay vehicle: %1 m from its spot (moved %2 m in 30 s)", [round (_rv distance2D _dest), round _moved]] call CQ_fnc_log;
+        if (_moved < 10) then {
+            if (_moved < 2 && { (_rv getVariable ["CQ_linkStuck", 0]) >= 1 }) then {
+                private _p = (_rv getPos [25, _rv getDir _dest]) findEmptyPosition [0, 40, typeOf _rv];
+                if (_p isNotEqualTo []) then { _rv setVelocity [0, 0, 0]; _rv setPosATL [_p select 0, _p select 1, 0.3] };
+            };
+            _rv setVariable ["CQ_linkStuck", (_rv getVariable ["CQ_linkStuck", 0]) + 1];
+            _rv engineOn true;
+            (group driver _rv) move _dest;
+            (driver _rv) doMove _dest;
+        } else { _rv setVariable ["CQ_linkStuck", 0] };
+        _rv setVariable ["CQ_linkMoveT", time];
+        _rv setVariable ["CQ_linkLastP", getPosATL _rv];
+    };
     if (_rv distance2D _dest < 40 || { speed _rv < 1 && { _rv distance2D _dest < 200 } }) then {
         _rv setVariable ["CQ_linkParked", true];
         doStop (driver _rv);
