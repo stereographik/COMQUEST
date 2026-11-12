@@ -8,12 +8,21 @@
              medikit / toolkit if the squad has a medic / an engineer. The whole load is scaled
              to the vehicle's cargo space: smaller vehicle, every share shrinks alike; bigger
              one, shares grow up to CQ_fillMaxScale (a player alone: up to CQ_fillSoloScale).
+             CQ_fillCooldown s between two fills by the same player.
       clear  empties the vehicle's cargo
 */
 params ["_mode", "_v", "_who"];
 if (!isServer || { !alive _v }) exitWith {};
 private _say = { params ["_t"]; [_t] remoteExec ["hint", owner _who] };
 if !([_v] call CQ_fnc_vehFillSpot) exitWith { ["Bring the vehicle next to a vehicle arsenal box or into a loading zone first"] call _say };
+// fill: CQ_fillCooldown s between two autofills by the same player
+if (_mode == "fill") then {
+    if (isNil "CQ_fillLast") then { CQ_fillLast = createHashMap };
+    private _left = ceil (CQ_fillCooldown - (time - (CQ_fillLast getOrDefault [getPlayerUID _who, -1e6])));
+    if (_left > 0) exitWith { _mode = "wait"; [format ["Autofill ready again in %1 s", _left]] call _say };
+    CQ_fillLast set [getPlayerUID _who, time];
+};
+if (_mode == "wait") exitWith {};
 private _name = getText (configOf _v >> "displayName");
 clearWeaponCargoGlobal _v; clearMagazineCargoGlobal _v; clearItemCargoGlobal _v; clearBackpackCargoGlobal _v;
 if (_mode == "clear") exitWith { [format ["%1: cargo emptied", _name]] call _say };
