@@ -197,6 +197,32 @@ private _truckWait = {
     if (!_skip) then { sleep CQ_btSpawnDelay };
 };
 
+// As soon as an objective stands, a team (CQ_objGuardSize) splits off the nearest squad of the
+// HQ (perimeter or patrol, never its leader, the squad keeps 2+ men) and guards it right away;
+// CQ_fnc_hqGarrison skips the sites guarded this way
+private _guardNow = {
+    params ["_obj"];
+    if (isNull _obj) exitWith {};
+    private _site = getPosATL _obj;
+    private _donors = ((_hq get "infantry") select {
+        (_x getVariable ["CQ_role", ""]) in ["patrol", "secure"] && { ({ alive _x } count units _x) >= CQ_objGuardSize + 2 }
+    });
+    if (_donors isEqualTo []) exitWith { ["HQ #%1: no squad free to guard the new %2", [_id, typeOf _obj]] call CQ_fnc_log };
+    private _donor = ([_donors, [], { (leader _x) distance2D _site }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+    private _men = ((units _donor) select { alive _x && { _x != leader _donor } && { vehicle _x == _x } }) select [0, CQ_objGuardSize];
+    if (_men isEqualTo []) exitWith {};
+    private _g = createGroup [east, true];
+    _men joinSilent _g;
+    _g setVariable ["CQ_role", "guard"];
+    _g setBehaviour "AWARE";
+    _g setSpeedMode "FULL";
+    _g enableDynamicSimulation false;
+    [_g, _site, 35] call CQ_fnc_infPatrol;
+    (_hq get "infantry") pushBack _g;
+    _obj setVariable ["CQ_guarded", true];
+    ["HQ #%1: %2 men of %3 run to guard the new %4 (%5 m)", [_id, count _men, groupId _donor, typeOf _obj, round ((leader _g) distance2D _site)]] call CQ_fnc_log;
+};
+
 // Relaxed site (tolerance 3+): the troops clear trees and bushes from the footprint first
 if ((_hq get "siteLevel") >= 3) then {
     private _veg = nearestTerrainObjects [_c, ["TREE", "SMALL TREE", "BUSH"], CQ_siteRadius, false, true];
@@ -228,6 +254,7 @@ private _aaGroup = createGroup [east, true];
         createVehicleCrew _aa;
         _aa setVariable ["CQ_objType", "AA"];
         (_hq get "installations") pushBack _aa;
+        [_aa] call _guardNow;
         (crew _aa) joinSilent _aaGroup;
         [_aa, 1] call CQ_fnc_vehAmmoInit;
     };
@@ -369,6 +396,7 @@ if (!isNull _ftruck) then {
 };
 _hq set ["fieldTruck", _ftruck];
 if (!isNull _depot) then { (_hq get "installations") pushBack _depot };
+[_depot] call _guardNow;
 _hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
 [4, format ["supply depot (%1 ammo), field supply truck", round (_hq get "stock")]] call _stage;
 
@@ -391,6 +419,7 @@ _hq set ["tanker", _tanker];
 if (!isNull _tanker) then { _tanker setVariable ["CQ_objType", "Fuel tanker"] };
 
 if (!isNull _tanker) then { (_hq get "installations") pushBack _tanker };
+[_tanker] call _guardNow;
 _hq set ["fuel", [(_hq get "fuelInit") min (_hq get "cap"), 0] select (isNull _tanker)];
 [5, format ["fuel tanker (%1 fuel)", round (_hq get "fuel")]] call _stage;
 

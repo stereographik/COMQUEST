@@ -122,7 +122,7 @@ if (isNull (_hq getOrDefault ["escort", grpNull]) && { alive (_hq get "commander
     [_g, _site, 35] call CQ_fnc_infPatrol;
     _g enableDynamicSimulation CQ_dynSimGarrison;
     (_hq get "infantry") pushBack _g;
-} forEach ((_hq get "installations") select { alive _x && { (_x distance2D _c) > 80 } });
+} forEach ((_hq get "installations") select { alive _x && { (_x distance2D _c) > 80 } && { !(_x getVariable ["CQ_guarded", false]) } });   // sites guarded during the build keep their team
 
 // Vehicles: armed ones patrol 400 m, the truck parks by the depot
 {
