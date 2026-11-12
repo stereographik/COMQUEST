@@ -282,6 +282,7 @@ class CfgFunctions
             class classKit {};
             class arsenalOpen {};
             class sandbag {};
+            class vehFillSpot {};
             class adrenalineSurge {};
             class intro {};
             class applyTraits {};

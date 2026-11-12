@@ -50,6 +50,12 @@ CQ_raySpacing = 5;                       // safety gap between two vehicles (on 
 CQ_repairDepotRot = 0;                   // turn the repair depot model if its open side is not toward the runway (e.g. 180)
 CQ_repairRadius = 12;                    // repair station service radius (repair, refuel, rearm)
 CQ_vehBoxRefill = 120;                   // s between two restocks of the vehicle arsenal boxes (depots, loading zones)
+// Squad autofill of a vehicle (CQ_fnc_vehAutoFill), per member:
+//   [rifle mags, MG belts, sniper mags, 40 mm, launcher rounds (in use), other launcher round, pistol mags, grenades, smokes, first aid kits]
+CQ_fillShare = [6, 3, 4, 6, 2, 1, 2, 2, 2, 2];
+CQ_fillMaxScale = 1.5;                   // a big vehicle grows the shares up to this
+CQ_fillSoloScale = 5;                    // a player alone: up to this (fills the vehicle)
+CQ_fillBoxRange = 20;                    // m from a vehicle arsenal box to autofill there
 // Base defences drawn on the Altis location picker: [class, [x, y], facing]; statics get an AI crew
 CQ_baseLayoutObjs = [
     ["Land_PortableLight_double_F", [14399, 16117], 125],

@@ -372,6 +372,7 @@ CQ_vehBoxes = CQ_vehBoxes apply {
     _b
 };
 publicVariable "CQ_arsenalBoxes";
+publicVariable "CQ_vehBoxes";
 CQ_vehBoxesDone = true; publicVariable "CQ_vehBoxesDone";
 
 // Base defences from the layout drawn on the map picker (CQ_baseLayoutObjs, CQ_baseLayoutHesco)

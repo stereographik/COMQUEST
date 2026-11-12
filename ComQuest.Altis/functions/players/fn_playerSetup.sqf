@@ -58,10 +58,10 @@ player addAction ["<t color='#918C3B'>Recall my sandbag walls</t>", { ["recall",
     "_this distance2D CQ_basePos < CQ_baseRadius && { (missionNamespace getVariable ['CQ_sb_' + getPlayerUID _this, 0]) > 0 }"];
 
 // Loadout zones: auto-fill / empty the inventory of the vehicle you sit in or look at
-private _zoneVeh = "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); !isNull _v && { _v isKindOf 'AllVehicles' } && { !(_v isKindOf 'CAManBase') } && { _this distance _v < 10 } && { speed _v < 3 } && { (missionNamespace getVariable ['CQ_loadZones', []]) findIf { _v distance2D _x < CQ_loadZoneRadius } > -1 }";
-player addAction ["<t color='#918C3B'>Auto-fill vehicle (squad resupply)</t>",
+private _zoneVeh = "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); !isNull _v && { _v isKindOf 'AllVehicles' } && { !(_v isKindOf 'CAManBase') } && { _this distance _v < 10 } && { speed _v < 3 } && { [_v] call CQ_fnc_vehFillSpot }";
+player addAction ["<t color='#918C3B'>Autofill for my squad</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["fill", _v, player] remoteExec ["CQ_fnc_vehAutoFill", 2] }, nil, 4.9, true, true, "", _zoneVeh];
-player addAction ["<t color='#918C3B'>Empty vehicle inventory</t>",
+player addAction ["<t color='#918C3B'>Empty vehicle cargo</t>",
     { private _v = [cursorObject, vehicle player] select (vehicle player != player); ["clear", _v, player] remoteExec ["CQ_fnc_vehAutoFill", 2] }, nil, 0.5, false, true, "", _zoneVeh];
 
 // Vehicle depot: give back the depot vehicle you sit in or look at, next to a depot
