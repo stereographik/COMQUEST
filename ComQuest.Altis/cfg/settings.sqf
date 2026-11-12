@@ -208,7 +208,7 @@ CQ_testMagDirect = false;                // TEST ONLY, set false before merging 
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 6;                         // root insertions in a campaign (victory after the last one)
 CQ_rootInterval = 3600;                  // seconds between root insertions
-CQ_firstRootDelay = 120;                 // seconds after mission start
+CQ_firstRootDelay = 10;                  // seconds after mission start
 CQ_insertionSpawnDistance = 8000;        // helis appear this far from the site
 CQ_insertionFlyHeight = 80;              // default; each role has its own band below
 // Altitude bands keep formations from colliding (careless transports never dodge)
@@ -266,7 +266,7 @@ CQ_maxInfantry = 160;                    // enemy foot soldiers alive at once (v
 CQ_carrierHqs = 6;                       // the carrier has supplies for this many new HQs (insertions + splits), then it is empty
 CQ_secureRadius = 1000;                  // squads post out to this perimeter before building
 CQ_secureShare = 0.5;                    // perimeter counts as secured once every squad is this far out
-CQ_secureTimeout = 180;                  // build starts anyway after 3 min (squads keep walking to their posts)
+CQ_secureTimeout = 60;                   // build starts anyway after 1 min (squads keep walking to their posts)
 CQ_holdTime = 60;                        // hold after installation, before calling reinforcements
 CQ_waveInterval = 600;                   // a new reinforcement wave every 10 min per HQ
 CQ_waveSpawnDist = [1000, 1500];         // convoy spawns on a road this far from the HQ
