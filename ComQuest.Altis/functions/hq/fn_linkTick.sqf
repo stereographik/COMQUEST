@@ -91,6 +91,7 @@ if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
         { _x allowDamage false } forEach _camp;
         _rv setVariable ["CQ_linkCamp", _camp];
         _rv setVariable ["CQ_linkParkPos", getPosATL _rv];
+        ["Relay vehicle: camp pitched (net %1, tent %2, fire %3)", [!isNull _net, !isNull _tent, !isNull _fire]] call CQ_fnc_log;
         ["Relay vehicle parked at grid %1 (%2 m from the base)", [mapGridPosition _rv, round (_rv distance2D CQ_basePos)]] call CQ_fnc_log;
     };
 };
