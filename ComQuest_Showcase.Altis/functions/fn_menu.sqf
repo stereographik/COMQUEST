@@ -3,20 +3,21 @@
     Teleport to its plot | Place in front of me | Remove placed near me | Export layout | Close.
 */
 disableSerialization;
+// (SQF names are case-insensitive: _X would be the loop's _x, hence _mX0 / _mY0 ...)
 if (!isNull (uiNamespace getVariable ["SC_menu", displayNull])) exitWith {};
 private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
 uiNamespace setVariable ["SC_menu", _d];
-private _W = safeZoneW * 0.42; private _H = safeZoneH * 0.6;
-private _X = safeZoneX + (safeZoneW - _W) / 2; private _Y = safeZoneY + (safeZoneH - _H) / 2;
+private _mW0 = safeZoneW * 0.42; private _mH0 = safeZoneH * 0.6;
+private _mX0 = safeZoneX + (safeZoneW - _mW0) / 2; private _mY0 = safeZoneY + (safeZoneH - _mH0) / 2;
 private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
     private _c = _d ctrlCreate [_cls, _idc];
     _c ctrlSetPosition _pos; if (_txt != "") then { _c ctrlSetText _txt }; _c ctrlCommit 0; _c
 };
-(["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0.1, 0.11, 0.09, 0.94];
-private _t = ["RscText", -1, [_X + 0.01, _Y + 0.005, _W - 0.02, 0.045], "COMPOSITION SHOWCASE  -  CntoDev compositions, CC-BY-SA-4.0"] call _mk;
+(["RscText", -1, [_mX0, _mY0, _mW0, _mH0]] call _mk) ctrlSetBackgroundColor [0.1, 0.11, 0.09, 0.94];
+private _t = ["RscText", -1, [_mX0 + 0.01, _mY0 + 0.005, _mW0 - 0.02, 0.045], "COMPOSITION SHOWCASE  -  CntoDev compositions, CC-BY-SA-4.0"] call _mk;
 _t ctrlSetTextColor [0.57, 0.55, 0.23, 1];
-private _lb = ["RscListBox", 7100, [_X + 0.01, _Y + 0.055, _W - 0.02, _H - 0.18]] call _mk;
+private _lb = ["RscListBox", 7100, [_mX0 + 0.01, _mY0 + 0.055, _mW0 - 0.02, _mH0 - 0.18]] call _mk;
 {
     _x params ["_name", "_author"];
     (SC_report select _forEachIndex) params ["_ok", "_all", "_miss", "_dlc"];
@@ -27,10 +28,10 @@ private _lb = ["RscListBox", 7100, [_X + 0.01, _Y + 0.055, _W - 0.02, _H - 0.18]
     if (_ok < _all) then { _lb lbSetColor [_i, [0.9, 0.75, 0.4, 1]] };
 } forEach SC_comps;
 _lb lbSetCurSel 0;
-private _bw = (_W - 0.06) / 5; private _by = _Y + _H - 0.11;
+private _bw = (_mW0 - 0.06) / 5; private _by = _mY0 + _mH0 - 0.11;
 {
     _x params ["_label", "_code", "_k"];
-    private _b = ["RscButton", -1, [_X + 0.01 + _k * (_bw + 0.01), _by, _bw, 0.05], _label] call _mk;
+    private _b = ["RscButton", -1, [_mX0 + 0.01 + _k * (_bw + 0.01), _by, _bw, 0.05], _label] call _mk;
     _b setVariable ["code", _code];
     _b ctrlAddEventHandler ["ButtonClick", {
         params ["_b"];
@@ -48,6 +49,6 @@ private _bw = (_W - 0.06) / 5; private _by = _Y + _H - 0.11;
     ["Export", { ["export"] call SC_fnc_place }, 3],
     ["Close", { params ["", "_d"]; _d closeDisplay 1 }, 4]
 ];
-private _info = ["RscText", -1, [_X + 0.01, _Y + _H - 0.055, _W - 0.02, 0.045],
+private _info = ["RscText", -1, [_mX0 + 0.01, _mY0 + _mH0 - 0.055, _mW0 - 0.02, 0.045],
     format ["%1 placed by you  |  Q / E turn while placing  |  map: blue flags = plots", count (missionNamespace getVariable ["SC_placed", []])]] call _mk;
 _info ctrlSetTextColor [0.65, 0.64, 0.5, 1];
