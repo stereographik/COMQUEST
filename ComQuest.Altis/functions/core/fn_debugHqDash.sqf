@@ -96,4 +96,19 @@ if !(_hq get "buildDone") then {
     _t = _t + (["Squad", format ["%1 men", [[_hq getOrDefault ["btSquad", grpNull]]] call _men]] call _row);
     _t = _t + (["Trucks lost / drops used", format ["%1 / %2 of %3", _hq getOrDefault ["btKills", 0], missionNamespace getVariable ["CQ_btDrops", 0], CQ_btMaxDrops]] call _row);
 };
+// ---- medic and engineer teams (they serve the whole network)
+_t = _t + ("SUPPORT TEAMS" call _head);
+{
+    _x params ["_kind", "_label"];
+    private _v = missionNamespace getVariable [format ["CQ_team_%1", _kind], objNull];
+    private _left = (missionNamespace getVariable ["CQ_specialLeft", createHashMap]) getOrDefault [_kind, CQ_specialRespawns];
+    private _txt = if (alive _v) then {
+        format ["%1 men, %2 m away (grid %3)", { alive _x } count units (group driver _v), round (_v distance2D (_hq get "pos")), mapGridPosition _v]
+    } else {
+        if (isNil "CQ_firstDropT") then { "not dropped yet" } else { "in flight or lost" }
+    };
+    _t = _t + ([_label, _txt, [_bad, _ok] select (alive _v)] call _row);
+    _t = _t + (["   replacements left", str _left] call _row);
+} forEach [["medic", "Medic team"], ["engineer", "Engineer team"]];
+
 format ["<t size='0.62'>%1</t>", _t]
