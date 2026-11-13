@@ -264,6 +264,8 @@ CQ_linkLegLen = 400;                     // m: the relay vehicle drives in legs 
 // allows (anchored on the relay vehicle while it is alive, else on the base), CQ_waspMargin m
 // inside the edge of their overlapping ranges
 CQ_wasp = true;
+CQ_objLookTime = 60;                     // s a Watcher Darter looks around a newly spotted objective (plus its flight there)
+CQ_objLookAaR = 1200;                    // m it keeps from a spotted AA pit while looking
 CQ_waspMargin = 150;                     // m inside the link edge
 CQ_linkAlertEvery = 60;                  // s between two "relay vehicle under fire" alerts
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
