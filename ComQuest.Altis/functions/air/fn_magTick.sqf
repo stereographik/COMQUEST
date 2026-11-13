@@ -177,6 +177,7 @@ if (time >= CQ_magDetectT) then {
         if (!(_v getVariable ["CQ_linked", false]) && { time >= (missionNamespace getVariable ["CQ_decryptUntil", -1]) }) then { continue };   // no data link
         CQ_magSensor params ["_r0", "_rk", "_rmax"];
         private _r = (_r0 + _alt * _rk) min _rmax;
+        if (_v isKindOf "UAV_01_base_F" && { time < (missionNamespace getVariable ["CQ_hstBoostUntil", -1]) }) then { _r = _r * CQ_hstBoost };   // rescued technician's firmware
         private _eye = getPosASL _v vectorAdd [0, 0, -1.5];
         // search cells seen
         { if (!(_x select 1) && { (_x select 0) distance2D _v < _r * 0.8 }) then { _x set [1, true] } } forEach CQ_magCells;

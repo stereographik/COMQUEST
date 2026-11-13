@@ -27,7 +27,8 @@ if (_sig != CQ_crashFrontSig) then { CQ_crashFrontSig = _sig; CQ_crashFrontT = t
 
 // ---- trigger
 private _busy = !isNil "CQ_crashState" && { !(CQ_crashState get "secured") } && { time - (CQ_crashState get "t0") < CQ_crashCooldown };
-if (!_busy && { missionNamespace getVariable ["CQ_missionStarted", false] } && { time - CQ_crashLastT > CQ_crashCooldown }) then {
+private _hstOn = !isNil "CQ_hstState" && { (CQ_hstState get "phase") != "done" };   // never with a hostage event, CQ_hstGap s apart
+if (!_busy && { !_hstOn } && { time - (missionNamespace getVariable ["CQ_hstLastT", -1e6]) > CQ_hstGap } && { missionNamespace getVariable ["CQ_missionStarted", false] } && { time - CQ_crashLastT > CQ_crashCooldown }) then {
     private _early = CQ_crashEarlyT > 0 && { time >= CQ_crashEarlyT };
     private _stale = time - CQ_crashFrontT > CQ_crashStagnant;
     if (_early || _stale) then {

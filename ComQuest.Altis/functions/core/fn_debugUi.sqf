@@ -61,7 +61,7 @@ uiNamespace setVariable ["CQ_dbgSel", {
 // [category, [[subcategory, [[label, command], ...]], ...]]; command "!x" = local action, else sent to the server
 private _cats = [
     ["TELEPORTERS", [
-        ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Relay vehicle", "tpRelayVeh"], ["Log my position", "logPos"], ["Crash site", "tpCrash"], ["Outpost", "tpOp"], ["Base", "tpBase"]]]
+        ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Relay vehicle", "tpRelayVeh"], ["Log my position", "logPos"], ["Crash site", "tpCrash"], ["Hostage", "tpHst"], ["Outpost", "tpOp"], ["Base", "tpBase"]]]
     ]],
     ["MAP VISIBILITY", [
         ["Show", [["Enemies", "!mapEnemy"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"]]]
@@ -78,7 +78,9 @@ private _cats = [
     ]],
     ["EVENTS", [
         ["Crash", [["Trigger crash", "crash"], ["Timer out", "crashOut"], ["Decrypt now", "decrypt"]]],
-        ["Outpost", [["Build", "opBuild"], ["Jammer off", "opJam"], ["Destroy", "opKill"]]]
+        ["Outpost", [["Build", "opBuild"], ["Jammer off", "opJam"], ["Destroy", "opKill"]]],
+        ["Hostage", [["Start hostage", "hst"], ["Clear house", "hstClear"], ["Firmware now", "hstFw"],
+                     ["Into the heli", "hstBoard"], ["Home now", "hstHome"], ["End event", "hstEnd"]]]
     ]],
     ["FRIENDLY", [
         ["MAGPIE", [["Report now", "magReport"], ["Launch missing", "magLaunch"], ["Shoot down", "magKill"]]],

@@ -152,6 +152,42 @@ CQ_assaultBreach = 70;                   // ...and this close, the infantry stor
 // is not secured by then, the carrier paradrops one of CQ_crashDropClasses with a squad, which
 // roams around the site for CQ_crashRoam s, then joins the nearest enemy HQ. A player reaching
 // the crate secures it (no condition): CQ_crashDecrypt s of decryption = MAGPIE sees everywhere
+
+// Hostage event (CQ_fnc_hostageTick): a civilian radio technician held by CSAT in a village house
+// between the base and an enemy HQ, marked exactly. Same trigger as the crash (front still for
+// CQ_crashStagnant s, at most every CQ_crashCooldown s), never while a crash runs, CQ_hstGap s
+// apart from it. House clear (no guard within CQ_hstClearR m) -> anyone holds "Download
+// firmware" on him -> a friendly helicopter waits on the ground CQ_hstLzR m away; he is too hurt
+// to walk: players carry him to it (or load him into any vehicle) while CQ_hstGuer guerillas
+// chase him -> it flies him to the base. Over the base perimeter:
+// Darter detection range x CQ_hstBoost for CQ_hstBoostTime s (stacks time), CQ_hstPoints to the
+// player who downloaded the firmware. He dies: CROSSROAD reports it, no penalty.
+// Debug panel: EVENTS > Hostage, TELEPORTERS > Hostage.
+CQ_hst = true;
+CQ_hstGap = 1200;                        // s between a crash and a hostage event (either order)
+CQ_hstSiteFrac = [0.35, 0.65];           // search point between the base (0) and an enemy HQ (1)
+CQ_hstSearchR = 1500;                    // m: villages around the search point
+CQ_hstSearchStep = 1500;                 // m added each time nothing fits (limits relax from the 3rd round)
+CQ_hstPlayerGap = 800;                   // m: no player this close to the village (halved when relaxed)
+CQ_hstBaseGap = 1000;                    // m from the base
+CQ_hstHqGap = 600;                       // m from an enemy HQ
+CQ_hstMinBp = 4;                         // building positions the house needs (2 when relaxed)
+CQ_hstCivClass = "C_man_polo_1_F";
+CQ_hstSitAnim = "Acts_AidlPsitMstpSsurWnonDnon_loop";   // sitting, hands tied
+CQ_hstDamageMul = 0.5;                   // damage the hostage takes (x)
+CQ_hstGuards = ["O_Soldier_TL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_F", "O_Soldier_LAT_F"];
+CQ_hstGuardsIn = 3;                      // of them at the house's windows, the rest covering the approaches
+CQ_hstSkill = 0.65;
+CQ_hstClearR = 150;                      // m: the house is clear once no guard is alive this close
+CQ_hstFwTime = 10;                       // s: "Download firmware" hold
+CQ_hstHeliClass = "B_Heli_Transport_01_F";   // Ghost Hawk, AI crew
+CQ_hstLzR = [80, 500];                   // m from the hostage: the helicopter's clear spot
+CQ_hstFlyHeight = 70;                    // m
+CQ_hstGuer = [3, 4];                     // guerillas sent after him
+CQ_hstGuerDist = [300, 500];             // m from him where they appear
+CQ_hstBoost = 1.5;                       // Darter detection range x
+CQ_hstBoostTime = 1200;                  // s (20 min), added on each rescue
+CQ_hstPoints = 100;                      // score to the player who downloaded the firmware
 // and every enemy HQ and radio tower is shown on the map.
 // When: the front has not moved (no HQ built, fallen or launched, no relay) for CQ_crashStagnant
 // s; at most every CQ_crashCooldown s; plus a CQ_crashEarlyChance chance of one in the first

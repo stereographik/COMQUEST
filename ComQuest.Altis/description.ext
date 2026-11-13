@@ -206,6 +206,12 @@ class CfgFunctions
             class crashSecure {};
             class crashRoam {};
             class crashDrop {};
+            class hostageStart {};
+            class hostageTick {};
+            class hostageFirmware {};
+            class hostageHeli {};
+            class hostageEnd {};
+            class hostageCarry {};
             class outpostBuild {};
             class outpostTick {};
         };

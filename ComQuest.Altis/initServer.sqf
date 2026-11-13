@@ -101,6 +101,7 @@ addMissionEventHandler ["EntityKilled", {
     ["net", CQ_fnc_netTick] call CQ_fnc_directorAddTask;
     ["link", CQ_fnc_linkTick] call CQ_fnc_directorAddTask;
     ["crash", CQ_fnc_crashTick] call CQ_fnc_directorAddTask;
+    ["hostage", CQ_fnc_hostageTick] call CQ_fnc_directorAddTask;
     ["outpost", CQ_fnc_outpostTick] call CQ_fnc_directorAddTask;
     call CQ_fnc_statsInit;
     call CQ_fnc_magInit;

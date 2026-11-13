@@ -7,7 +7,7 @@
     Carrier and forces:   root, flight, carrierMinus, carrierFull, killAll
     Story:                actNext, sitrep, storyReset
     MAGPIE:               magReport, magLaunch, magKill
-    Events:               crash, tpCrash, decrypt, crashOut, opBuild, opKill, opJam, tpOp
+    Events:               crash, tpCrash, decrypt, crashOut, hst, tpHst, hstClear, hstFw, hstBoard, hstHome, hstEnd, opBuild, opKill, opJam, tpOp
     Player (the caller):  heal, tpBase, tpHq, points, vehFix
     Base and world:       vehReset, defRebuild, time1, noon, night, clearWx
     View:                 playerView (the game as a final player sees it: no debug output)
@@ -201,6 +201,52 @@ if (_needHq && { count _hq == 0 }) then {
                     [_p, CQ_crashPos getPos [400, CQ_crashPos getDir CQ_basePos]] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
                     _msg = "teleported 400 m from the crash site";
                 };
+            };
+        };
+        case "hst": {
+            CQ_hstLastT = time;
+            _msg = if (call CQ_fnc_hostageStart) then { format ["hostage held at %1", mapGridPosition CQ_hstPos] } else { "no house found (!)" };
+        };
+        case "tpHst": {
+            if (isNil "CQ_hstState" || { (CQ_hstState get "phase") == "done" }) then { _msg = "no hostage event running" } else {
+                if (!isNull _p) then {
+                    private _h = CQ_hstState get "hostage";
+                    private _c = if (alive _h) then { getPosATL _h } else { CQ_hstState get "pos" };
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, _c getPos [300, _c getDir CQ_basePos]] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
+                    _msg = format ["teleported 300 m from the hostage (phase %1)", CQ_hstState get "phase"];
+                };
+            };
+        };
+        case "hstClear": {
+            if (isNil "CQ_hstState" || { (CQ_hstState get "phase") != "held" }) then { _msg = "no hostage held" } else {
+                private _n = 0;
+                { if (alive _x) then { _x setDamage 1; _n = _n + 1 } } forEach (CQ_hstState get "guards");
+                _msg = format ["%1 guards killed, the house clears on the next tick", _n];
+            };
+        };
+        case "hstFw": {
+            if (isNil "CQ_hstState" || { !((CQ_hstState get "phase") in ["held", "clear"]) }) then { _msg = "no hostage waiting for the firmware" } else {
+                (CQ_hstState get "hostage") setVariable ["CQ_hstClear", true, true];
+                [_p] call CQ_fnc_hostageFirmware;
+                _msg = format ["firmware downloaded, extraction at %1", mapGridPosition (CQ_hstState get "lz")];
+            };
+        };
+        case "hstBoard": {
+            if (isNil "CQ_hstState" || { (CQ_hstState get "phase") != "extract" }) then { _msg = "no extraction running" } else {
+                private _h = CQ_hstState get "hostage"; private _v = CQ_hstState get "heli";
+                if (alive _h && { alive _v }) then { _h assignAsCargo _v; _h moveInCargo _v; _msg = "technician put in the helicopter" } else { _msg = "hostage or helicopter dead" };
+            };
+        };
+        case "hstHome": {
+            if (isNil "CQ_hstState" || { (CQ_hstState get "phase") == "done" }) then { _msg = "no hostage event running" } else {
+                ["home"] call CQ_fnc_hostageEnd;
+                _msg = format ["rescue done: Darter range x%1 for %2 s", CQ_hstBoost, CQ_hstBoostTime];
+            };
+        };
+        case "hstEnd": {
+            if (isNil "CQ_hstState" || { (CQ_hstState get "phase") == "done" }) then { _msg = "no hostage event running" } else {
+                [] call CQ_fnc_hostageEnd; _msg = "hostage event ended (no result)";
             };
         };
         case "crashOut": {
