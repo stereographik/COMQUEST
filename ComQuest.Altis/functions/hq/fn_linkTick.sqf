@@ -18,6 +18,20 @@ if (time < (missionNamespace getVariable ["CQ_linkNext", 0])) exitWith {};
 CQ_linkNext = time + CQ_linkEvery;
 
 // ---- relay vehicle
+// relay vehicle: drives in legs of CQ_linkLegLen m, each ending on a road (one far order made the
+// AI plan, roll 10 m, stop the engine and plan again)
+private _leg = {
+    params ["_rv", "_dest"];
+    private _d = _rv distance2D _dest;
+    private _p = if (_d <= CQ_linkLegLen * 1.3) then { _dest } else {
+        private _q = _rv getPos [CQ_linkLegLen, _rv getDir _dest];
+        private _rd = (_q nearRoads 150) select { (getPosATL _x) distance2D _dest < _d };
+        if (_rd isEqualTo []) then { _q } else { getPosATL (([_rd, [], { _x distance2D _q }, "ASCEND"] call BIS_fnc_sortBy) select 0) }
+    };
+    _rv setVariable ["CQ_linkLeg", _p];
+    _rv engineOn true;
+    (driver _rv) doMove _p;
+};
 private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
 if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) }) then {
     private _roots = ((values CQ_hqs) select { (_x getOrDefault ["parent", -1]) == -1 && { (_x get "state") in CQ_activeStates } });
@@ -42,10 +56,8 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
     _g selectLeader (driver _rv);
     _g setBehaviourStrong "CARELESS"; _g setCombatMode "BLUE"; _g setSpeedMode "FULL";
     { _x disableAI "AUTOCOMBAT" } forEach units _g;
-    _rv engineOn true;
-    _g move _dest;
-    (driver _rv) doMove _dest;
     _rv setVariable ["CQ_linkMoveT", time];
+    [_rv, _dest] call _leg;
     _rv setVariable ["CQ_linkLastP", getPosATL _rv];
     _rv setVariable ["CQ_linkDest", _dest];
     // under fire: everyone is told (once a minute at most)
@@ -87,14 +99,14 @@ if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
                 if (_p isNotEqualTo []) then { _rv setVelocity [0, 0, 0]; _rv setPosATL [_p select 0, _p select 1, 0.3] };
             };
             _rv setVariable ["CQ_linkStuck", (_rv getVariable ["CQ_linkStuck", 0]) + 1];
-            _rv engineOn true;
-            (group driver _rv) move _dest;
-            (driver _rv) doMove _dest;
+            [_rv, _dest] call _leg;
         } else { _rv setVariable ["CQ_linkStuck", 0] };
         _rv setVariable ["CQ_linkMoveT", time];
         _rv setVariable ["CQ_linkLastP", getPosATL _rv];
     };
-    if (_rv distance2D _dest < 40 || { speed _rv < 1 && { _rv distance2D _dest < 200 } }) then {
+    // leg reached: the next one
+    if (_rv distance2D (_rv getVariable ["CQ_linkLeg", _dest]) < 40 && { _rv distance2D _dest >= 40 }) then { [_rv, _dest] call _leg };
+    if (_rv distance2D _dest < 40 || { speed _rv < 1 && { _rv distance2D _dest < 200 } && { time - (_rv getVariable ["CQ_linkMoveT", 0]) > 20 } }) then {
         _rv setVariable ["CQ_linkParked", true];
         doStop (driver _rv);
         _rv engineOn false;

@@ -42,6 +42,7 @@ private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
     private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), _idc];
     [_c, _cls] call CQ_fnc_uiStyle;
+    if !(_cls in ["RscPicture"]) then { _c ctrlSetFontHeight (_L * CQ_sqFont) };   // smaller text than the Arma default
     _c ctrlSetPosition _pos;
     if (_txt != "") then { _c ctrlSetText _txt };
     _c ctrlCommit 0;
