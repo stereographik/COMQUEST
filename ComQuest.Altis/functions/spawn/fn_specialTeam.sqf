@@ -62,6 +62,7 @@ while { true } do {
         _g enableDynamicSimulation false;
         _v setFuelConsumptionCoef CQ_fuelConsumption;
         _v setVariable ['CQ_team', '%2', true];
+        _g setVariable ['CQ_team', '%2', true];
         missionNamespace setVariable ['CQ_team_%2', _v];
     ", _medic, _kind], _tag] spawn CQ_fnc_paraDropVehicle;
 
