@@ -326,7 +326,7 @@ private _focusOn = _focus isNotEqualTo [];
 if (_focusOn) then {
     _focus = [_focus select 0, _focus select 1, 0];
     CQ_magRingR = (CQ_magRingStart - CQ_magRingShrink * (time - CQ_magFocusT) / 60) max CQ_magRingMin;
-    private _ring = [_flying select { !(_x getOrDefault ["flee", false]) }, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;   // a woken Darter getting away joins once clear
+    private _ring = [_flying select { !(_x getOrDefault ["flee", false]) && { (_x getOrDefault ["role", ""]) != "wasp" } }, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;   // a woken Darter getting away joins once clear; WASP keeps to the link edge
     private _n = count _ring;
     private _step = 360 / (_n max 1);
     private _rot = (time - CQ_magFocusT) * CQ_magRingTurn;
