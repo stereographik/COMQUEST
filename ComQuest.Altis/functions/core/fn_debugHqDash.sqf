@@ -15,7 +15,7 @@ private _yn = { params ["_alive", ["_yes", "up"], ["_no", "down"]]; [[_no, _bad]
 private _ago = { private _s = round (time - _this); if (_s > 1e5) exitWith { "never" }; if (_s < 120) then { format ["%1 s", _s] } else { format ["%1 min", round (_s / 60)] } };
 private _men = { params ["_gs"]; { alive _x } count (flatten (_gs apply { if (isNull _x) then { [] } else { units _x } })) };
 
-private _t = format ["<t size='1.15' font='PuristaMedium' color='%1'>HQ #%2  %3</t><br/>", _acc, _id, _hq getOrDefault ["name", ""]];
+private _t = format ["<t size='1.05' font='PuristaMedium' color='%1'>HQ #%2  %3</t><br/>", _acc, _id, _hq getOrDefault ["name", ""]];
 
 // ---- phase
 private _st = _hq get "state";
@@ -96,4 +96,4 @@ if !(_hq get "buildDone") then {
     _t = _t + (["Squad", format ["%1 men", [[_hq getOrDefault ["btSquad", grpNull]]] call _men]] call _row);
     _t = _t + (["Trucks lost / drops used", format ["%1 / %2 of %3", _hq getOrDefault ["btKills", 0], missionNamespace getVariable ["CQ_btDrops", 0], CQ_btMaxDrops]] call _row);
 };
-format ["<t size='0.82'>%1</t>", _t]
+format ["<t size='0.62'>%1</t>", _t]

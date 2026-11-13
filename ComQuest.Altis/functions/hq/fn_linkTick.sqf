@@ -37,9 +37,11 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
     _rv lock 2;                                   // the base's relay: not a ride
     _rv enableDynamicSimulation false;
     _g enableDynamicSimulation false;
-    // armed: the gunner fires at will on the way; the driver never stops to fight
-    _g setBehaviour "AWARE"; _g setCombatMode "YELLOW"; _g setSpeedMode "FULL";
-    (driver _rv) disableAI "AUTOCOMBAT"; (driver _rv) disableAI "TARGET"; (driver _rv) disableAI "AUTOTARGET";
+    // on the road: careless, the driver leads and never stops to fight (an alert crew would not
+    // drive at all); parked: the gunner engages anything that comes
+    _g selectLeader (driver _rv);
+    _g setBehaviourStrong "CARELESS"; _g setCombatMode "BLUE"; _g setSpeedMode "FULL";
+    { _x disableAI "AUTOCOMBAT" } forEach units _g;
     _rv engineOn true;
     _g move _dest;
     (driver _rv) doMove _dest;
@@ -77,6 +79,9 @@ if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
         private _moved = _rv distance2D (_rv getVariable ["CQ_linkLastP", getPosATL _rv]);
         ["Relay vehicle: %1 m from its spot (moved %2 m in 30 s)", [round (_rv distance2D _dest), round _moved]] call CQ_fnc_log;
         if (_moved < 10) then {
+            private _dr = driver _rv;
+            ["Relay vehicle stuck: driver %1 (leader %2), command %3, ready %4, behaviour %5, fuel %6, canMove %7",
+                [alive _dr, _dr == leader group _dr, currentCommand _dr, unitReady _dr, behaviour _dr, round (fuel _rv * 100), canMove _rv]] call CQ_fnc_log;
             if (_moved < 2 && { (_rv getVariable ["CQ_linkStuck", 0]) >= 1 }) then {
                 private _p = (_rv getPos [25, _rv getDir _dest]) findEmptyPosition [0, 40, typeOf _rv];
                 if (_p isNotEqualTo []) then { _rv setVelocity [0, 0, 0]; _rv setPosATL [_p select 0, _p select 1, 0.3] };
@@ -93,6 +98,7 @@ if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
         _rv setVariable ["CQ_linkParked", true];
         doStop (driver _rv);
         _rv engineOn false;
+        (group driver _rv) setBehaviour "AWARE";
         (group driver _rv) setCombatMode "RED";      // parked: engages anything that comes
         ["Relay vehicle parked at grid %1 (%2 m from the base)", [mapGridPosition _rv, round (_rv distance2D CQ_basePos)]] call CQ_fnc_log;
     };
