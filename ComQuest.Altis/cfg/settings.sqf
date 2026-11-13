@@ -41,7 +41,9 @@ CQ_baseVehPadding = 25;                  // metres between base vehicles (fallba
 //   (start point next to the HQ, running along CQ_baseDir); a crate dispenser + loadout zone
 //   at the far end of each row; 2 repair stations east of the vehicle zone
 CQ_billboardFlip = false;                // true if the base billboard (front wall, right of the gate) shows its back to the courtyard
-CQ_compoundSize = [80, 60];              // inner compound width x depth (m)
+CQ_compoundSize = [100, 76];             // inner compound width x depth (m): 4 squad bays, plaza, boulevard, back row
+CQ_baseLevel = true;                     // level the compound's ground before building (setTerrainHeight)
+CQ_baseLevelBlend = 25;                  // m outside the walls over which the levelled ground blends back into the terrain
 CQ_grassCut = true;                      // false: no grass cutting at all (test switch)
 CQ_grassCutRadius = 100;                 // no grass this far around the base centre (m)...
 CQ_grassCutSpacing = 10;                 // ...normal-size clutter cutters this far apart (lower it if grass shows between them)

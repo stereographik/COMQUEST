@@ -1,11 +1,14 @@
 /*
     CQ_fnc_baseSetup  (server)
     Builds the player base from the zones drawn on the map (cfg/settings.sqf):
-    1. HQ compound at CQ_basePos, front toward CQ_baseDir (CQ_compoundSize), H-barrier walls,
-       vehicle gate flanked by two H-barrier towers, guard towers in the corners:
-         back row     cargo HQ (friendly commander inside) | HQ offices | cargo HQ
-         courtyard    radar + watchtower, flag, medical post, 4 squad equipment boxes aligned
-                      in the centre (arsenal + squad resupply)
+    1. HQ compound at CQ_basePos, front toward CQ_baseDir (CQ_compoundSize), on ground levelled
+       first (CQ_baseLevel), H-barrier walls, vehicle gate flanked by two H-barrier towers, a
+       pedestrian door on the left (toward the shop), guard towers in the corners:
+         back row     ops offices | cargo HQ (friendly commander inside, centred) | medical post
+         centre       plaza with the flag and lamps, a clear boulevard to the gate (muster point)
+         sides        4 squad bays (Alpha, Bravo left; Charlie, Delta right): camo net over the
+                      squad equipment box (arsenal + squad resupply), table, chairs, light
+         front        radar (left), supply stack (right), billboard right of the gate
        Terrain objects inside the compound are hidden.
     2. Vehicle zone: 4 parallel rows starting at CQ_rayStarts and running along CQ_baseDir,
        laid out as if the quota vehicles (CQ_baseVehicles) were parked there (no vehicle is
@@ -87,7 +90,19 @@ private _wall = {
     };
 };
 
-// ---------------------------------------------------------------- 1. compound
+// ---------------------------------------------------------------- 1. compound (v2, "Camp Harlan")
+// Layout in compound coordinates (x right, y toward the gate / CQ_baseDir), CQ_compoundSize:
+//
+//      tower ---- H-barrier ---- [gate tower] GATE [gate tower] ---- billboard - supply - tower
+//        radar                         boulevard (lamps)
+//   [ALPHA bay]                     muster / respawn                         [CHARLIE bay]
+//  side door  ->                    plaza + flag (lamps)
+//   [BRAVO bay]                                                              [DELTA bay]
+//        MilOffices (ops)        Cargo HQ (commander)        Medical post
+//      tower ------------------------- H-barrier ------------------------------- tower
+//
+// The ground of the compound is levelled first (setTerrainHeight, blended over CQ_baseLevelBlend
+// m) so every building sits flush on a flat floor and the walls run straight.
 CQ_compoundSize params ["_W", "_D"];
 private _hw = _W / 2;
 private _hd = _D / 2;
@@ -102,45 +117,84 @@ private _hidden = 0;
     if (abs _lx < _hw + 6 && { abs _ly < _hd + 6 }) then { hideObjectGlobal _x; _hidden = _hidden + 1 };
 } forEach (nearestTerrainObjects [_o, [], sqrt ((_hw + 6) ^ 2 + (_hd + 6) ^ 2), false, true]);
 
+// level the ground: every terrain grid point of the compound (+ the blend band) moved toward the
+// compound's mean height, fully inside, fading out across CQ_baseLevelBlend m outside
+if (CQ_baseLevel) then {
+    private _g = (getTerrainInfo select 3) max 1;
+    private _blend = CQ_baseLevelBlend;
+    private _reach = sqrt ((_hw + _blend) ^ 2 + (_hd + _blend) ^ 2);
+    private _pts = [];
+    private _sum = 0; private _n = 0;
+    for "_gx" from (floor (((_o select 0) - _reach) / _g)) to (ceil (((_o select 0) + _reach) / _g)) do {
+        for "_gy" from (floor (((_o select 1) - _reach) / _g)) to (ceil (((_o select 1) + _reach) / _g)) do {
+            private _px = _gx * _g; private _py = _gy * _g;
+            private _dx = _px - (_o select 0); private _dy = _py - (_o select 1);
+            private _lx = abs (_dx * cos _d - _dy * sin _d);
+            private _ly = abs (_dx * sin _d + _dy * cos _d);
+            private _out = ((_lx - _hw - 4) max 0) max ((_ly - _hd - 4) max 0);   // metres outside the walls (+4)
+            if (_out < _blend) then {
+                private _z = getTerrainHeight [_px, _py];
+                _pts pushBack [_px, _py, _z, _out];
+                if (_out == 0) then { _sum = _sum + _z; _n = _n + 1 };
+            };
+        };
+    };
+    if (_n > 0) then {
+        private _flat = _sum / _n;
+        private _new = _pts apply {
+            _x params ["_px", "_py", "_z", "_out"];
+            private _w = 1 - (_out / _blend);
+            _w = _w * _w * (3 - 2 * _w);                  // smoothstep: no step at the edge of the band
+            [_px, _py, _z + (_flat - _z) * _w]
+        };
+        setTerrainHeight [_new, true];
+        ["Base: ground levelled at %1 m (%2 grid points, grid %3 m)", [_flat toFixed 1, count _new, _g]] call CQ_fnc_log;
+    };
+};
+
 private _hb = ["Land_HBarrier_Big_F", "Land_HBarrier_5_F", "Land_HBarrier_3_F"];
-private _gate = 9;                                  // half width of the vehicle gate
+private _gate = 10;                                 // half width of the vehicle gate
+private _door = [4, 10];                            // pedestrian door in the left wall (y from / to), toward the shop
 [_hb, [-_hw, -_hd], [_hw, -_hd]] call _wall;        // back
-[_hb, [-_hw, -_hd], [-_hw, _hd]] call _wall;        // left
+[_hb, [-_hw, -_hd], [-_hw, _door select 0]] call _wall;    // left, behind the door
+[_hb, [-_hw, _door select 1], [-_hw, _hd]] call _wall;     // left, in front of the door
 [_hb, [_hw, -_hd], [_hw, _hd]] call _wall;          // right
 [_hb, [-_hw, _hd], [-_gate, _hd]] call _wall;       // front, left of the gate
 [_hb, [_gate, _hd], [_hw, _hd]] call _wall;         // front, right of the gate
-// gate towers (H-barrier bunkers) and short chicane walls outside the gate
-[["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"], -_gate - 4, _hd + 1, 0] call _put;
-[["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"], _gate + 4, _hd + 1, 0] call _put;
-[["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], -_gate - 10, _hd + 9, 15] call _put;
-[["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], _gate + 10, _hd + 9, -15] call _put;
+// gate: two H-barrier towers, a chicane of concrete blocks outside, bar gate lights
+[["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"], -_gate - 4, _hd + 1, 0, true] call _put;
+[["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"], _gate + 4, _hd + 1, 0, true] call _put;
+[["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], -_gate - 10, _hd + 10, 15] call _put;
+[["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], _gate + 10, _hd + 10, -15] call _put;
+// side door: bag fence screen outside it
+[["Land_BagFence_Long_F"], -_hw - 3, ((_door select 0) + (_door select 1)) / 2, 90] call _put;
+[["Land_BagFence_Round_F"], -_hw - 2.2, (_door select 1) + 1.2, 135] call _put;
+[["Land_BagFence_Round_F"], -_hw - 2.2, (_door select 0) - 1.2, 45] call _put;
 // guard towers in the corners
 { [["Land_Cargo_Patrol_V1_F", "Land_BagBunker_Tower_F"], (_x select 0) * (_hw - 5), (_x select 1) * (_hd - 5), [180, 0] select ((_x select 1) > 0), true] call _put } forEach [[-1, -1], [1, -1], [-1, 1], [1, 1]];
 
-// back row of buildings, packed from the left, their back 4 m from the back wall
-private _row = [
-    ["Land_Cargo_HQ_V1_F", "Land_MilOffices_V1_F"],    // command post: the friendly commander's building
-    ["Land_MilOffices_V1_F", "Land_Cargo_HQ_V1_F"],
-    ["Land_Cargo_HQ_V1_F", "Land_Cargo_House_V1_F"]
-];
-private _rowCls = (_row apply { [_x] call _pick }) select { _x != "" };
-private _rowW = 0;
-{ _rowW = _rowW + (([_x] call _dims) select 0) + 5 } forEach _rowCls;
-while { _rowW - 5 > _W - 8 && { count _rowCls > 1 } } do {
-    private _drop = _rowCls deleteAt (count _rowCls - 1);
-    _rowW = _rowW - (([_drop] call _dims) select 0) - 5;
-};
-private _cx = -(_rowW - 5) / 2;
+// back row: ops offices | command post (the friendly commander's building, centred) | medical
+private _cmdCls = [["Land_Cargo_HQ_V1_F", "Land_MilOffices_V1_F"]] call _pick;
+private _opsCls = [["Land_MilOffices_V1_F", "Land_Cargo_House_V1_F"]] call _pick;
+private _medCls = [["Land_Medevac_house_V1_F", "Land_Cargo_House_V1_F"]] call _pick;
 private _ops = objNull;
-{
-    ([_x] call _dims) params ["_bw", "_bl"];
-    private _b = [[_x], _cx + _bw / 2, -_hd + 4 + _bl / 2, 0, true] call _put;
-    if (_forEachIndex == 0) then { _ops = _b };
-    _cx = _cx + _bw + 5;
-} forEach _rowCls;
+if (_cmdCls != "") then {
+    ([_cmdCls] call _dims) params ["_cw", "_cl"];
+    _ops = [[_cmdCls], 0, -_hd + 5 + _cl / 2, 0, true] call _put;
+    if (_opsCls != "") then {
+        ([_opsCls] call _dims) params ["_ow", "_ol"];
+        private _ox = -(_cw / 2) - 7 - (_ow / 2);
+        if (_ox - _ow / 2 > -_hw + 4) then { [[_opsCls], _ox, -_hd + 5 + _ol / 2, 0, true] call _put };
+    };
+    if (_medCls != "") then {
+        ([_medCls] call _dims) params ["_mw", "_ml"];
+        private _mx = (_cw / 2) + 9 + (_mw / 2);
+        if (_mx + _mw / 2 < _hw - 4) then { [[_medCls], _mx, -_hd + 5 + _ml / 2, 0, true] call _put };
+    };
+};
 
-// friendly commander in the command post (first building of the row), standing in the middle
-// of its floor: if he dies, the mission is lost. Only enemy fire can hurt him.
+// friendly commander in the command post, standing in the middle of its floor: if he dies,
+// the mission is lost. Only enemy fire can hurt him.
 private _fg = createGroup [west, true];
 private _fp = [0, -_hd + 10] call _at;
 CQ_friendlyCmd = _fg createUnit ["B_officer_F", _fp, [], 0, "CAN_COLLIDE"];
@@ -153,8 +207,7 @@ _fg setGroupIdGlobal ["CROSSROAD Actual"];
 publicVariable "CQ_friendlyCmd";
 CQ_cmdPost = _ops;      // the enemy assault breaches this building (CQ_fnc_assaultTick)
 // floor height = lowest building position (the roof ones are higher), then snapped onto the
-// floor surface right under the building's centre. Done a moment later, once the building's
-// geometry is ready.
+// floor surface right under the building's centre, once the building's geometry is ready
 if (!isNull _ops) then {
     [_ops, _d] spawn {
         params ["_b", "_d"];
@@ -169,7 +222,6 @@ if (!isNull _ops) then {
         ["Friendly commander in %1 at %2 (floor %3 m above ground)", [typeOf _b, mapGridPosition _b, ((ASLToATL [_c select 0, _c select 1, _z]) select 2) toFixed 2]] call CQ_fnc_log;
     };
 };
-// friendly fire, crashes, falls, collapsing walls: no damage. Only an enemy can kill him.
 CQ_friendlyCmd addEventHandler ["HandleDamage", {
     params ["_u", "_sel", "_dmg", "_src", "", "_idx", "_inst"];
     private _who = [_inst, _src] select (isNull _inst);
@@ -186,38 +238,55 @@ CQ_friendlyCmd addEventHandler ["Killed", {
     [] spawn { sleep 12; "EveryoneLost" call BIS_fnc_endMissionServer };
 }];
 
-// courtyard: radar + watchtower (front left), flag, medical post (left), 4 squad boxes
-[["Land_Radar_Small_F", "Land_TTowerSmall_2_F"], -22, _hd - 14, 0, true] call _put;
-[["Land_Cargo_Patrol_V1_F"], -10, _hd - 10, 0, true] call _put;
-[["Flag_NATO_F"], 0, 9, 0] call _put;
-[["Land_Medevac_house_V1_F", "Land_Cargo_House_V1_F"], -_hw + 9, 2, 90, true] call _put;
+// plaza in front of the command post: flag, four lamps; the boulevard to the gate is kept clear
+[["Flag_NATO_F"], 0, 2, 0, true] call _put;
+{ [["Land_LampHalogen_F", "Land_LampShabby_F"], _x select 0, _x select 1, _x select 2, true] call _put } forEach [[-10, -6, 45], [10, -6, -45], [-10, 12, 135], [10, 12, -135]];
+{ [["Land_LampShabby_F", "Land_LampHalogen_F"], _x select 0, _x select 1, _x select 2, true] call _put } forEach [[-_gate + 1, _hd - 10, 90], [_gate - 1, _hd - 10, -90]];
+
+// squad bays: Alpha / Bravo along the left wall, Charlie / Delta along the right one, each a
+// camo net over its equipment box (arsenal + squad resupply), a briefing table, chairs, a light
+// and a bag fence at its back; open toward the plaza
 CQ_arsenalBoxes = [];
 private _boxCls = [["B_CargoNet_01_ammo_F", "B_supplyCrate_F"]] call _pick;
+private _bayX = _hw - 13;
 {
-    private _p = [-10.5 + 7 * _forEachIndex, 0] call _at;
+    _x params ["_sq", "_side", "_by"];
+    private _bx = _side * _bayX;
+    private _in = -_side;                               // toward the plaza (x direction)
+    private _face = [270, 90] select (_in > 0);         // facing the plaza
+    [["CamoNet_BLUFOR_open_F", "CamoNet_BLUFOR_F"], _bx, _by, 90, true] call _put;
+    private _p = [_bx + _in * 1.5, _by] call _at;
     private _b = createVehicle [_boxCls, _p, [], 0, "CAN_COLLIDE"];
-    _b setDir _d;
+    _b setDir (_d + _face);
     _b setPosATL _p;
+    _b setVectorUp [0, 0, 1];
     _b allowDamage false;
     [_b, 2, false] call CQ_fnc_crateFill;     // big squad box: not loadable
-    _b setVariable ["CQ_squadBox", _x, true];
+    _b setVariable ["CQ_squadBox", _sq, true];
     CQ_arsenalBoxes pushBack _b;
-} forEach ["Alpha", "Bravo", "Charlie", "Delta"];
+    [["Land_CampingTable_F"], _bx - _in * 3, _by + 3.5, _face, true] call _put;
+    { [["Land_CampingChair_V2_F", "Land_CampingChair_V1_F"], _bx - _in * (3 + (_x select 0)), _by + 3.5 + (_x select 1), _face + (_x select 2), true] call _put } forEach [[1.2, 0.6, 180], [1.2, -0.6, 180], [-1.2, 0, 0]];
+    [["Land_PortableLight_single_F", "Land_PortableLight_double_F"], _bx - _in * 5.5, _by - 5, _face + 20, true] call _put;
+    [["Land_BagFence_Long_F"], _bx - _in * 7.5, _by - 3, 90, true] call _put;
+    [["Land_BagFence_Long_F"], _bx - _in * 7.5, _by + 3, 90, true] call _put;
+    [["Land_Pallets_stack_F", "Land_Pallet_F"], _bx - _in * 5, _by + 6.5, 0, true] call _put;
+    private _bm = createMarker [format ["cq_bay_%1", _sq], [_bx, _by] call _at];
+    _bm setMarkerType "mil_box";
+    _bm setMarkerColor "ColorWEST";
+    _bm setMarkerSize [0.5, 0.5];
+    _bm setMarkerText _sq;
+} forEach [["Alpha", -1, 20], ["Bravo", -1, -7], ["Charlie", 1, 20], ["Delta", 1, -7]];
 publicVariable "CQ_arsenalBoxes";
-private _sm = createMarker ["cq_sqboxes", [0, 0] call _at];
-_sm setMarkerType "mil_box";
-_sm setMarkerColor "ColorWEST";
-_sm setMarkerSize [0.5, 0.5];
-_sm setMarkerText "Equipment";
 CQ_arsenalBox = CQ_arsenalBoxes select 0;
 publicVariable "CQ_arsenalBox";
 
-// supply corner (right side of the courtyard)
-[["Land_Pallets_stack_F"], _hw - 7, -6, 0] call _put;
-[["Land_CratesWooden_F"], _hw - 7, 2, 90] call _put;
-[["Land_PaperBox_closed_F"], _hw - 10, 6, 15] call _put;
-// lights
-{ [["Land_PortableLight_double_F"], _x select 0, _x select 1, _x select 2] call _put } forEach [[-_hw + 3, _hd - 3, 225], [_hw - 3, _hd - 3, 135], [-_hw + 3, -_hd + 3, 315], [_hw - 3, -_hd + 3, 45]];
+// front corners: radar (left), supply stack (right), between the bays and the front towers
+[["Land_Radar_Small_F", "Land_TTowerSmall_2_F"], -_hw + 18, _hd - 8, 0, true] call _put;
+[["Land_Pallets_stack_F"], _hw - 10, _hd - 7, 0, true] call _put;
+[["Land_CratesWooden_F"], _hw - 16, _hd - 6, 90, true] call _put;
+[["Land_PaperBox_closed_F"], _hw - 13, _hd - 10, 15, true] call _put;
+// lights in the corners
+{ [["Land_PortableLight_double_F"], _x select 0, _x select 1, _x select 2, true] call _put } forEach [[-_hw + 3, -_hd + 3, 315], [_hw - 3, -_hd + 3, 45]];
 
 // ---------------------------------------------------------------- 2. vehicle rays
 private _blockTypes = ["BUILDING", "HOUSE", "CHURCH", "CHAPEL", "FUELSTATION", "HOSPITAL", "LIGHTHOUSE", "POWER LINES", "TRANSMITTER", "WATERTOWER", "BUNKER", "FORTRESS", "VIEW-TOWER", "RUIN"];
@@ -463,7 +532,7 @@ if (_bbC != "") then {
 
 // muster point (start + respawn): open ground in the front half of the courtyard, right of the
 // flag, never inside or against a building (nearest clear spot if something stands there)
-private _mw = [8, 16] call _at;
+private _mw = [0, 18] call _at;          // on the boulevard, between the plaza and the gate
 CQ_musterPos = [_mw, 4, 24] call CQ_fnc_clearPos;
 if (CQ_musterPos isEqualTo []) then { CQ_musterPos = _mw };
 CQ_musterPos = [CQ_musterPos select 0, CQ_musterPos select 1, 0];
