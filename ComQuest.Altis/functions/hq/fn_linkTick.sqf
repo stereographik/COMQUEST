@@ -43,6 +43,12 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
     // that stays within reach
     private _dir = CQ_basePos getDir (missionNamespace getVariable ["CQ_carrierPos", _hp]);
     private _reach = CQ_netCoverBase * CQ_linkReach;
+    // a spot where a relay vehicle was lost on that line: park CQ_linkDeathBack m short of it
+    {
+        private _along = (_x distance2D CQ_basePos) * cos ((CQ_basePos getDir _x) - _dir);
+        private _side = abs ((_x distance2D CQ_basePos) * sin ((CQ_basePos getDir _x) - _dir));
+        if (_along > 0 && { _side < CQ_linkDeathLane } && { _along - CQ_linkDeathBack < _reach }) then { _reach = (_along - CQ_linkDeathBack) max 800 };
+    } forEach (missionNamespace getVariable ["CQ_linkDeathPts", []]);
     private _dest = CQ_basePos getPos [_reach, _dir];
     private _k = 0;
     while { surfaceIsWater _dest && { _k < 45 } } do { _dest = _dest getPos [-100, _dir]; _k = _k + 1 };
@@ -77,6 +83,8 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
     _rv addEventHandler ["Killed", {
         if ((_this select 0) != (missionNamespace getVariable ["CQ_linkRelayVeh", objNull])) exitWith {};   // already written off
         CQ_linkRelayT = time + CQ_linkRelayRespawn;
+        if (isNil "CQ_linkDeathPts") then { CQ_linkDeathPts = [] };
+        CQ_linkDeathPts pushBack getPosATL (_this select 0);
         ["Relay vehicle lost", format ["The base's relay vehicle is destroyed at grid %1: another one leaves in %2 min", mapGridPosition (_this select 0), round (CQ_linkRelayRespawn / 60)]] call CQ_fnc_announce;
     }];
     CQ_linkRelayVeh = _rv;
@@ -87,6 +95,8 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
 if (alive _rv && { !alive driver _rv || { !canMove _rv } }) then {
     CQ_linkRelayVeh = objNull;
     CQ_linkRelayT = time + CQ_linkRelayRespawn;
+    if (isNil "CQ_linkDeathPts") then { CQ_linkDeathPts = [] };
+    CQ_linkDeathPts pushBack getPosATL _rv;
     ["Relay vehicle lost", format ["The base's relay vehicle is out of action at grid %1 (%2): another one leaves in %3 min",
         mapGridPosition _rv, ["crew down", "immobilised"] select (alive driver _rv), round (CQ_linkRelayRespawn / 60)]] call CQ_fnc_announce;
     _rv = objNull;

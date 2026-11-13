@@ -141,7 +141,7 @@ CQ_rootInland = [1500, 4000];            // root insertions land this far inland
 CQ_firstRootInland = [0, 400];           // the very first one: within 400 m of the site's paired first HQ position
 CQ_rootRetryDelay = 180;                 // s: a root insertion that put nobody on the ground is flown again at the same site
 CQ_rootCoastSpread = 4000;               // later ones: a coast point up to this far either side of the carrier's line to the island
-CQ_childSpread = 70;                     // child HQs head toward the player base, +/- this many degrees
+CQ_childSpread = 40;                     // child HQs head toward the player base, +/- this many degrees
 CQ_waveSpread = 60;                      // waves arrive from the carrier side of the HQ, +/- degrees
 CQ_assaultRange = 3500;                  // an HQ this close to the player base assaults it instead of colonising
 CQ_assaultSweep = 300;                   // assault groups this close to the command post sweep the base (COMBAT, SAD)
@@ -269,6 +269,8 @@ CQ_wasp = true;
 CQ_objLookTime = 60;                     // s a Watcher Darter looks around a newly spotted objective (plus its flight there)
 CQ_objLookAaR = 1200;                    // m it keeps from a spotted AA pit while looking
 
+CQ_linkDeathBack = 500;                  // m: the next relay vehicle parks this far short of where one was lost (toward the base)
+CQ_linkDeathLane = 600;                  // m: a loss this close to the base -> spot line counts
 CQ_linkAlertEvery = 60;                  // s between two "relay vehicle under fire" alerts
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
 CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up
@@ -664,7 +666,7 @@ CQ_colonistShare = 0.7;                  // share of infantry leaving to found a
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_minInfantryToExpand = 16;
 CQ_minDefenders = 8;                     // never send away the last 8 infantry of an HQ
-CQ_childDistance = [1600, 2400];         // child HQ ~2 km from its parent
+CQ_childDistance = [3000, 4000];         // child HQ 3-4 km from its parent (the front reaches the base in fewer generations)
 
 // --- Contact, comms and QRF ---------------------------------------------------
 CQ_contactRadius = 1500;                 // a group must spot players within this of its HQ
