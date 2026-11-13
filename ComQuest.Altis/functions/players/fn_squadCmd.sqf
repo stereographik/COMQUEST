@@ -1,6 +1,7 @@
 /*
     CQ_fnc_squadCmd  (server, from the squad manager through remoteExec)
     ["join", _player, _group] / ["ungroup", _player] / ["disband", _player]
+    / ["falcon", _player] / ["unfalcon", _player]   (pilot class taken / dropped: CQ_fnc_setClass)
     / ["unassign", _player] / ["create", _player]
       join      the player joins that (friendly) squad
       ungroup   the player leaves his squad and becomes unassigned
@@ -14,6 +15,13 @@
 */
 params ["_cmd", "_p", ["_g", grpNull], ["_extra", false]];
 if (!isServer || { isNull _p }) exitWith {};
+// FALCON: pilots live in the one squad "Falcon"; nobody else joins it, they don't leave it
+private _isPilot = (_p getVariable ["CQ_class", ""]) == CQ_falconClass;
+private _inFalcon = (group _p) getVariable ["CQ_falcon", false];
+if (_cmd in ["join", "ungroup", "create", "disband", "invite", "inviteReply"] && { _inFalcon || { _isPilot } }) exitWith {
+    ["Pilots fly for every squad from Falcon: change class to leave it"] remoteExec ["hint", _p];
+};
+if (_cmd == "join" && { _g getVariable ["CQ_falcon", false] }) exitWith { ["Falcon is for pilots only"] remoteExec ["hint", _p] };
 private _solo = {
     params ["_u"];
     private _ng = createGroup [west, true];
@@ -29,6 +37,32 @@ private _toSolo = {
     _grp setVariable ["CQ_sqPts", 0, true];          // squad points are lost when the squad ends
 };
 switch (_cmd) do {
+    // the player became a pilot: into Falcon (created when needed)
+    case "falcon": {
+        if (_inFalcon) exitWith {};
+        private _fg = (allGroups select { side _x == west && { _x getVariable ["CQ_falcon", false] } && { units _x isNotEqualTo [] } }) param [0, grpNull];
+        private _old = group _p;
+        if (isNull _fg) then {
+            _fg = createGroup [west, true];
+            _fg setGroupIdGlobal [CQ_falconName];
+            _fg setVariable ["CQ_falcon", true, true];
+            _fg setVariable ["CQ_solo", false, true];
+            _fg setVariable ["CQ_sqPts", 0, true];
+            _fg setVariable ["CQ_sqBought", [], true];
+        };
+        [_p] joinSilent _fg;
+        if (count units _old == 0) then { deleteGroup _old } else {
+            if (leader _old == _p) then { _old selectLeader ((units _old) select 0) };
+        };
+        [format ["You fly for every squad now: you are in %1", CQ_falconName]] remoteExec ["hint", _p];
+        ["Squads: %1 is a pilot, joined %2", [name _p, CQ_falconName]] call CQ_fnc_log;
+    };
+    // the player is no pilot any more: out of Falcon, unassigned
+    case "unfalcon": {
+        if (!_inFalcon) exitWith {};
+        [_p] call _solo;
+        ["Squads: %1 left %2 (no longer a pilot)", [name _p, CQ_falconName]] call CQ_fnc_log;
+    };
     case "join": {
         if (isNull _g || { side _g != west } || { group _p isEqualTo _g }) exitWith {};
         private _old = group _p;

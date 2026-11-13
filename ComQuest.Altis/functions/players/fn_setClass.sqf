@@ -22,5 +22,10 @@ private _lo = getUnitLoadout player;
 CQ_savedLoadout = _lo;
 CQ_myClass = _label;
 [_traits] call CQ_fnc_applyTraits;
+private _was = player getVariable ["CQ_class", "Rifleman"];
 player setVariable ["CQ_class", _label, true];
+// FALCON: pilots go into the one transport squad, and leave it (unassigned) when they change
+if (_label == CQ_falconClass) then { ["falcon", player] remoteExec ["CQ_fnc_squadCmd", 2] } else {
+    if (_was == CQ_falconClass) then { ["unfalcon", player] remoteExec ["CQ_fnc_squadCmd", 2] };
+};
 hint format ["You are now: %1", _label];

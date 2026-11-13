@@ -15,6 +15,8 @@ private _items = CQ_baseVehicles select {
     private _c = configFile >> "CfgVehicles" >> (_x select 0);
     isClass _c && { getText (_c >> "DLC") == "" }
 };
+// Falcon pilots: aircraft only (CQ_fnc_depotSpawn checks it again)
+if ((player getVariable ["CQ_class", ""]) == CQ_falconClass) then { _items = _items select { (_x select 0) isKindOf "Air" } };
 private _cat = { params ["_c"]; [["light", "truck"] select (_c isKindOf "Truck_F"), "air"] select (_c isKindOf "Air") };
 private _cdOf = { params ["_c"]; private _k = [_c] call _cat; (CQ_depotCooldown select (CQ_depotCooldown findIf { (_x select 0) == _k })) select 1 };
 

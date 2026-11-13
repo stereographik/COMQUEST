@@ -33,7 +33,7 @@ CQ_baseVehicles = [
     ["B_Truck_01_transport_F",    "hemtt",      2],   // HEMTT troop transport
     ["B_Heli_Light_01_F",         "littlebird", 6],   // MH-6 Little Bird
     ["B_Heli_Transport_01_F",     "ghosthawk",  4],   // UH-80 Ghost Hawk
-    ["I_Heli_Transport_02_F",     "mohawk",     1]    // CH-49 Mohawk: heavy lift, any vehicle up to CQ_hlMax (CQ_fnc_heavyLift) (one line per class: the quota is read from the first match)
+    ["I_Heli_Transport_02_F",     "mohawk",     4]    // CH-49 Mohawk: heavy lift, any vehicle up to CQ_hlMax (CQ_fnc_heavyLift) (one line per class: the quota is read from the first match)
 ];
 CQ_baseVehPadding = 25;                  // metres between base vehicles (fallback search)
 // Base layout (CQ_fnc_baseSetup), from the zones drawn on the map:
@@ -76,7 +76,7 @@ CQ_parkGrid = 25;                        // base parking grid: one vehicle per c
 CQ_parkClear = 10;                       // a cell needs no object / rock / building / tree within this
 CQ_parkMaxGradient = 0.1;                // ...and flat ground
 CQ_parkSearch = 450;                     // grid searched this far around the park point behind the camp
-CQ_vehAbandonDelay = 900;                // depot vehicle empty and still this long, no player within 200 m: back in stock (15 min)
+CQ_vehAbandonDelay = 600;                // depot vehicle empty and still this long, no player within 200 m: back in stock (10 min)
 CQ_opNotifyGap = 20;                     // "Objectives updated, check map": at most one notification every 20 s
 CQ_rspCredits = 10;                      // squad respawn vehicle: teleports a vehicle gives before it stops being a respawn point
 CQ_rspCampNet = "CamoNet_BLUFOR_big_F";    // a squad respawn vehicle becomes a camp: camo net over it...
@@ -96,6 +96,11 @@ CQ_hlAlt = 25;                           // m: the helicopter must hover this lo
 CQ_hlRadius = 20;                        // m: ...this close to the vehicle for it to be made liftable                  // s: hold to dismantle one of your walls in the field
 CQ_sbMaxSlope = 0.85;                    // ground flatter than this (surface normal z) only
 CQ_depotMaxPerSquad = 2;                 // depot vehicles out at the same time per squad
+CQ_depotBurst = 2;                       // a squad leader takes this many in a row, then the cooldown starts
+// FALCON: every Pilot is put in the one squad "Falcon", the transport service of all squads
+CQ_falconClass = "Pilot";                // CQ_classes label
+CQ_falconName = "Falcon";
+CQ_falconPerPilot = 1;                   // depot aircraft out per pilot (no cooldown, aircraft only)
 CQ_depotCooldown = [["light", 120], ["truck", 180], ["air", 300]];   // s before the same player can request again, by type taken
 CQ_depotRange = 10;                      // metres from the depot furniture to use it
 CQ_depotReturnRange = 30;                // a vehicle this close to a depot (or its pad) can be returned

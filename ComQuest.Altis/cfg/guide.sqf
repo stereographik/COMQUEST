@@ -14,7 +14,7 @@ CQ_guide = [
     ]],
     ["2. Squads and classes", [
         "Squads: up to 26 players, any number of squads. The squad leader invites players, spends the squad's combat points in the vehicle shop, and can lock a vehicle as the squad's respawn point.",
-        "Classes: Rifleman, Squad Leader, Medic, Grenadier, Autorifleman, Light Anti-Tank, Heavy Anti-Tank, Anti-Air, Engineer, Sniper, Pilot. You change class only inside the HQ compound.",
+        "Classes: Rifleman, Squad Leader, Medic, Grenadier, Autorifleman, Light Anti-Tank, Heavy Anti-Tank, Anti-Air, Engineer, Sniper, Pilot. You change class only inside the HQ compound. Pilots join FALCON, the transport squad of every squad: they take aircraft from the free depot (no cooldown) and fly the others. Only squad leaders and pilots take depot vehicles.",
         "Medics heal fully. Engineers repair, defuse, hack radio towers twice as fast and carry two sandbag walls. Only pilots fly.",
         "Stats: the STATS tab ranks every player by score, kills, vehicles, objectives, heals and more, filtered by class."
     ]],
