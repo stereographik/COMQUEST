@@ -42,7 +42,9 @@ private _mk = {
     params ["_cls", "_idc", "_pos", ["_txt", ""]];
     private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), _idc];
     [_c, _cls] call CQ_fnc_uiStyle;
-    if !(_cls in ["RscPicture"]) then { _c ctrlSetFontHeight (_L * CQ_sqFont) };   // smaller text than the Arma default
+    // labels, buttons and lists a bit smaller than the Arma default; the descriptions (structured
+    // text) keep their own sizes
+    if !(_cls in ["RscPicture", "RscStructuredText"]) then { _c ctrlSetFontHeight ((ctrlFontHeight _c) * CQ_sqFont) };
     _c ctrlSetPosition _pos;
     if (_txt != "") then { _c ctrlSetText _txt };
     _c ctrlCommit 0;
