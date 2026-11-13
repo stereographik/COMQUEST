@@ -12,7 +12,7 @@
     A drone that is not linked flies on but reports nothing (CQ_fnc_magTick: "CQ_linked").
     Published for the map (CQ_fnc_magMapClient): CQ_linkPub = [[[pos, range, linked], ...], [[posA, posB], ...]]
     Also runs the relay vehicle: sent once the first enemy HQ is known, parked at
-    CQ_linkRelayFrac of the way from the base to it, replaced CQ_linkRelayRespawn s after a loss.
+    CQ_linkReach of the base's range out toward the carrier, replaced CQ_linkRelayRespawn s after a loss.
 */
 if (time < (missionNamespace getVariable ["CQ_linkNext", 0])) exitWith {};
 CQ_linkNext = time + CQ_linkEvery;
@@ -38,13 +38,20 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
     if (_roots isEqualTo []) exitWith {};
     private _root = ([_roots, [], { _x get "id" }] call BIS_fnc_sortBy) select 0;
     private _hp = _root get "pos";
-    private _dest = CQ_basePos vectorAdd ((_hp vectorDiff CQ_basePos) vectorMultiply CQ_linkRelayFrac);
-    private _road = [_dest, 300] call BIS_fnc_nearestRoad;
-    if (!isNull _road) then { _dest = getPosATL _road };
+    // as far as the base's range allows (CQ_linkReach of it, so the ranges overlap well), toward
+    // the carrier (WASP holds the same line beyond it); pulled back to land, then onto a road
+    // that stays within reach
+    private _dir = CQ_basePos getDir (missionNamespace getVariable ["CQ_carrierPos", _hp]);
+    private _reach = CQ_netCoverBase * CQ_linkReach;
+    private _dest = CQ_basePos getPos [_reach, _dir];
+    private _k = 0;
+    while { surfaceIsWater _dest && { _k < 45 } } do { _dest = _dest getPos [-100, _dir]; _k = _k + 1 };
+    private _rd = (_dest nearRoads 400) select { (getPosATL _x) distance2D CQ_basePos <= _reach && { !surfaceIsWater getPosATL _x } };
+    if (_rd isNotEqualTo []) then { _dest = getPosATL (([_rd, [], { _x distance2D _dest }, "ASCEND"] call BIS_fnc_sortBy) select 0) };
     private _sp = CQ_linkRelaySpawn findEmptyPosition [0, 40, CQ_linkRelayClass];
     if (_sp isEqualTo []) then { _sp = CQ_linkRelaySpawn };
     _rv = createVehicle [CQ_linkRelayClass, _sp, [], 0, "NONE"];
-    _rv setDir (CQ_basePos getDir _hp);
+    _rv setDir _dir;
     _rv setVariable ["CQ_linkRelay", true, true];
     createVehicleCrew _rv;                        // a proper crew (driver + commander), then locked
     private _g = group driver _rv;

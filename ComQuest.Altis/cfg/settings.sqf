@@ -258,17 +258,17 @@ CQ_linkRelayVehR = 2500;                 // m: range of the base's relay vehicle
 CQ_linkVehR = 1000;                      // m: range of any friendly vehicle, crewed or empty
 CQ_linkDroneR = 1000;                    // m: range of a MAGPIE drone in the air (it reports only while linked)
 CQ_linkRelayClass = "B_MRAP_01_hmg_F";   // the relay vehicle (Hunter HMG, AI crew that fires back, locked)
-CQ_linkRelayFrac = 1 / 3;                // it parks this share of the way from the base to the first enemy HQ
+CQ_linkReach = 0.9;                      // every chain link stretched to this share of the bigger range (10 % kept for a sure overlap): the relay vehicle parks at 90 % of the base's range toward the carrier, WASP at 90 % of its anchor's range beyond
 CQ_linkRelaySpawn = [14444, 16163, 0];   // where the base's relay vehicle is created
 CQ_linkRelayRespawn = 300;               // s before another one leaves after it is lost
 CQ_linkLegLen = 400;                     // m: the relay vehicle drives in legs this long, each ending on a road
 // WASP: MAGPIE's autonomous Darter (CQ_magDrones) flies as far toward the carrier as the data link
-// allows (anchored on the relay vehicle while it is alive, else on the base), CQ_waspMargin m
-// inside the edge of their overlapping ranges
+// allows (anchored on the relay vehicle while it is alive, else on the base), at CQ_linkReach of
+// the anchor's range
 CQ_wasp = true;
 CQ_objLookTime = 60;                     // s a Watcher Darter looks around a newly spotted objective (plus its flight there)
 CQ_objLookAaR = 1200;                    // m it keeps from a spotted AA pit while looking
-CQ_waspMargin = 150;                     // m inside the link edge
+
 CQ_linkAlertEvery = 60;                  // s between two "relay vehicle under fire" alerts
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
 CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up
