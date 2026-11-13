@@ -5,9 +5,9 @@
     first Mohawk drop of the game, next to that first HQ, and dropped again
     CQ_specialRespawn s (15 min) after it is wiped out (vehicle destroyed or crew dead), at most
     CQ_specialRespawns times (shown on the carrier marker):
-      medic     white Marid APC, white-clad medics: drives to wounded CSAT soldiers
+      medic     sand hex Marid APC, medics in sand hex: drives to wounded CSAT soldiers
                 (damage > CQ_medicHealAbove) and treats everyone within 40 m back to health
-      engineer  Marid APC, engineers in urban camo: drives to damaged CSAT vehicles and
+      engineer  green hex Marid APC, engineers in urban camo: drives to damaged CSAT vehicles and
                 statics (damage or broken wheels/tracks) and repairs them on the spot
     Between jobs the team waits near the main HQ. Runs for the whole mission.
     Each team keeps CQ_sniperSeats seats free: with every insertion it drives snipers out to
@@ -38,15 +38,17 @@ while { true } do {
         private _g = createGroup [east, true];
         private _cls = ['O_engineer_F', 'O_medic_F'] select _medic;
         private _mk = { private _u = _g createUnit [_cls, getPosATL _v, [], 5, 'NONE']; [[_u]] call CQ_fnc_unitPrep; _u };
-        if (_medic) then {
-            { _v setObjectTextureGlobal [_forEachIndex, '#(rgb,8,8,3)color(0.93,0.93,0.9,1)'] } forEach getArray (configOf _v >> 'hiddenSelections');
+        // medics: the Marid's own sand hex camo; engineers: green hex (its texture source if the
+        // game has it, else a plain olive paint)
+        if (!_medic) then {
+            if (isClass (configOf _v >> 'TextureSources' >> 'GreenHex')) then { [_v, ['GreenHex', 1]] call BIS_fnc_initVehicle }
+            else { { _v setObjectTextureGlobal [_forEachIndex, '#(rgb,8,8,3)color(0.30,0.33,0.22,1)'] } forEach getArray (configOf _v >> 'hiddenSelections') };
         };
         (call _mk) moveInDriver _v;
         { (call _mk) moveInTurret [_v, _x] } forEach (allTurrets [_v, false]);
         for '_i' from 1 to ((_v emptyPositions 'cargo') - CQ_sniperSeats) do { (call _mk) moveInCargo _v };
         {
             if (_medic) then {
-                _x setObjectTextureGlobal [0, '#(rgb,8,8,3)color(0.95,0.95,0.93,1)'];
                 _x addItemToBackpack 'Medikit';
             } else {
                 _x forceAddUniform 'U_O_CombatUniform_oucamo';
