@@ -30,7 +30,9 @@ while { true } do {
     private _lz = (_home get "pos") getPos [150 + random 100, random 360];
     ["%1: paradrop near HQ #%2 (grid %3)", [_tag, _home get "id", mapGridPosition _lz]] call CQ_fnc_log;
 
-    // --- paradrop the Marid, then crew it with the team
+    // --- paradrop the Marid, then crew it with the team (medics: the Marid's own sand hex camo;
+    // engineers: green hex, its texture source if the game has it, else a plain olive paint).
+    // No comments inside the compiled string below: compile does not strip them.
     missionNamespace setVariable [format ["CQ_team_%1", _kind], objNull];
     [CQ_specialVehicle, _lz, compile format ["
         params ['_v'];
@@ -38,8 +40,6 @@ while { true } do {
         private _g = createGroup [east, true];
         private _cls = ['O_engineer_F', 'O_medic_F'] select _medic;
         private _mk = { private _u = _g createUnit [_cls, getPosATL _v, [], 5, 'NONE']; [[_u]] call CQ_fnc_unitPrep; _u };
-        // medics: the Marid's own sand hex camo; engineers: green hex (its texture source if the
-        // game has it, else a plain olive paint)
         if (!_medic) then {
             if (isClass (configOf _v >> 'TextureSources' >> 'GreenHex')) then { [_v, ['GreenHex', 1]] call BIS_fnc_initVehicle }
             else { { _v setObjectTextureGlobal [_forEachIndex, '#(rgb,8,8,3)color(0.30,0.33,0.22,1)'] } forEach getArray (configOf _v >> 'hiddenSelections') };
