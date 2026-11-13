@@ -76,12 +76,17 @@ switch (_mode) do {
         if (!hasInterface) exitWith {};
         CQ_hlCand = objNull;
         private _downT = -1;
+        private _carried = objNull;
+        private _lifted = false;
         while { true } do {
             sleep 0.5;
             private _h = vehicle player;
             // auto release: the cargo set down on the ground, helicopter nearly still, CQ_hlAutoRelease s
             private _sl = if (_h != player && { driver _h == player }) then { getSlingLoad _h } else { objNull };
-            if (CQ_hlAutoRelease > 0 && { !isNull _sl } && { isTouchingGround _sl || { ((getPosATL _sl) select 2) < 0.5 } } && { speed _h < 8 }) then {
+            // only a load that has been carried (off the ground since it was hooked)
+            if (_sl != _carried) then { _carried = _sl; _lifted = false };
+            if (!isNull _sl && { ((getPosATL _sl) select 2) > 3 }) then { _lifted = true };
+            if (CQ_hlAutoRelease > 0 && { _lifted } && { !isNull _sl } && { isTouchingGround _sl || { ((getPosATL _sl) select 2) < 0.5 } } && { speed _h < 8 }) then {
                 if (_downT < 0) then { _downT = time };
                 if (time - _downT >= CQ_hlAutoRelease) then {
                     _downT = -1;
