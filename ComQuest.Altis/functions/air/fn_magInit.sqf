@@ -92,14 +92,8 @@ for "_j" from 0 to CQ_magChainCount - 1 do {
         ["planT", 0], ["explore", false], ["target", []], ["lost", false], ["role", "chain"], ["slot", _j]
     ];
 };
-// WASP: the one autonomous Darter that pushes out toward the carrier as far as the data link holds
-if (CQ_wasp) then {
-    CQ_mag pushBack createHashMapFromArray [
-        ["i", count CQ_mag], ["name", "WASP"], ["cls", "B_UAV_01_F"], ["alt", CQ_waspAlt], ["scale", 1],
-        ["veh", objNull], ["due", time + CQ_magFirstDelay], ["phase", "none"], ["tries", 0], ["rollT", 0],
-        ["planT", 0], ["explore", false], ["target", []], ["lost", false], ["role", "wasp"]
-    ];
-};
+// WASP: MAGPIE's own autonomous Darter pushes out toward the carrier as far as the data link holds
+if (CQ_wasp) then { { if ((_x get "name") == "WASP") then { _x set ["role", "wasp"] } } forEach CQ_mag };
 // each Darter gets its own pad
 private _pi = 0;
 { if ((_x get "cls") == "B_UAV_01_F") then { _x set ["pad", _pi]; _pi = _pi + 1 } } forEach CQ_mag;

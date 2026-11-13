@@ -260,11 +260,10 @@ CQ_linkRelayFrac = 1 / 3;                // it parks this share of the way from 
 CQ_linkRelaySpawn = [14444, 16163, 0];   // where the base's relay vehicle is created
 CQ_linkRelayRespawn = 300;               // s before another one leaves after it is lost
 CQ_linkLegLen = 400;                     // m: the relay vehicle drives in legs this long, each ending on a road
-// WASP: one unique autonomous Darter that flies as far toward the carrier as the data link allows
-// (anchored on the relay vehicle while it is alive, else on the base), CQ_waspMargin m inside the
-// edge of their overlapping ranges
+// WASP: MAGPIE's autonomous Darter (CQ_magDrones) flies as far toward the carrier as the data link
+// allows (anchored on the relay vehicle while it is alive, else on the base), CQ_waspMargin m
+// inside the edge of their overlapping ranges
 CQ_wasp = true;
-CQ_waspAlt = 250;                        // m
 CQ_waspMargin = 150;                     // m inside the link edge
 CQ_linkAlertEvery = 60;                  // s between two "relay vehicle under fire" alerts
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
@@ -766,7 +765,7 @@ CQ_shopRange = 6;                        // metres from the shop terminal to use
 // The two large drones are Greyhawk airframes named Sentinel_Argos (low) and Sentinel_Hermes
 // (high, wider sensor); the Sentinel UCAV itself needs the Jets DLC. Weapons are removed: MAGPIE only looks.
 CQ_magDrones = [
-    ["Darter",   ["B_UAV_01_F"],                                  250, 0.8],
+    ["WASP",     ["B_UAV_01_F"],                                  250, 0.8],   // the autonomous Darter (CQ_wasp)
     ["Sentinel_Argos",  ["B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"],     900, 1.2],
     ["Sentinel_Hermes", ["B_UAV_05_F", "B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"], 1500, 1.6]
 ];
