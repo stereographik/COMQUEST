@@ -178,7 +178,11 @@ switch (_mode) do {
             };
             case "drive": {
                 private _t = _s get "target";
-                if (!alive _t) exitWith { _s set ["phase", "back"]; _s set ["t0", 0] };
+                // target lost before they got there (not their doing): home, and the cooldown is refunded
+                if (!alive _t) exitWith {
+                    _s set ["phase", "back"]; _s set ["t0", 0]; _s set ["huntT", -1e6];
+                    ["SABOTAGE: target lost before contact, back home, cooldown refunded"] call CQ_fnc_log;
+                };
                 if (!alive _v || { !canMove _v }) exitWith { _s set ["phase", "foot"]; { unassignVehicle _x; moveOut _x } forEach units _g; _s set ["t0", 0] };
                 if (time - (_s get "t0") > 20) then {
                     _s set ["t0", time];
