@@ -166,6 +166,7 @@ switch (_mode) do {
             if (count _e == 0 && { time >= _nextT }) then {
                 _free = CQ_air select {
                     alive (_x get "veh") && { (typeOf (_x get "veh")) find "O_Heli_Attack_02" == 0 } && { (_x get "state") in ["parked", "toPark", "patrolling"] }
+                    && { ([_x get "veh"] call CQ_fnc_vehAmmoLevel) >= CQ_airLowAmmo } && { fuel (_x get "veh") >= CQ_airLowFuel }   // not the one just sent to rearm
                 };
             };
             // no free one yet and the landing's escorts may still be on their way to the fleet: wait

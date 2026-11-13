@@ -80,14 +80,20 @@ private _lifts = [];
 {
     _x params ["_cargoClass", "_lat", "_lzDist", "_lzAng", "_label"];
     private _p = [_lat, 0] call _slot;
-    private _heli = createVehicle [CQ_dropPlaneClass, [_p select 0, _p select 1, CQ_heightDrop], [], 0, "FLY"];
-    _heli setPosASL [_p select 0, _p select 1, (getTerrainHeightASL _p max 0) + CQ_heightDrop];
-    _heli setDir _heading;
-    _heli setVelocityModelSpace [0, 60, 0];
-    private _hg = [_heli] call CQ_fnc_crewVehicle;     // CSAT crew in the Mohawk
-    _hg setBehaviourStrong "CARELESS";
-    _hg setCombatMode "BLUE";
-    _heli flyInHeight CQ_heightDrop;
+    // plane and crew in one frame (unscheduled): a busy scheduler must not leave it empty in the air
+    private _heli = objNull;
+    private _hg = grpNull;
+    isNil {
+        _heli = createVehicle [CQ_dropPlaneClass, [_p select 0, _p select 1, CQ_heightDrop], [], 0, "FLY"];
+        _heli setPosASL [_p select 0, _p select 1, (getTerrainHeightASL _p max 0) + CQ_heightDrop];
+        _heli setDir _heading;
+        _heli setVelocityModelSpace [0, 60, 0];
+        _hg = [_heli] call CQ_fnc_crewVehicle;     // CSAT crew in the Mohawk
+        _hg setBehaviourStrong "CARELESS";
+        _hg setCombatMode "BLUE";
+        _heli engineOn true;
+        _heli flyInHeight CQ_heightDrop;
+    };
     _heli setFuelConsumptionCoef CQ_fuelConsumption;
 
     private _cargo = objNull;

@@ -27,15 +27,22 @@ private _hiASL = 0;
 private _len = _start distance2D _lz;
 for "_s" from 0 to _len step 100 do { _hiASL = _hiASL max (getTerrainHeightASL (_start getPos [_s, _away])) };
 _alt = _alt max (_hiASL + 120 - ((getTerrainHeightASL _start) max 0));
-private _pl = createVehicle [CQ_dropPlaneClass, [_start select 0, _start select 1, 1500 + 50 * CQ_dropSlot], [], 0, "FLY"];
-_pl setPosASL [_start select 0, _start select 1, (getTerrainHeightASL _start max 0) + _alt];
-_pl setDir _away;
-_pl setVelocityModelSpace [0, 60, 0];
-private _pg = [_pl] call CQ_fnc_crewVehicle;
-_pg setBehaviourStrong "CARELESS";
-_pg setCombatMode "BLUE";
-_pl flyInHeight _alt;
-_pl flyInHeightASL [_hiASL + 100, _hiASL + 100, _hiASL + 100];
+// plane, crew and speed in one frame (unscheduled): with a busy scheduler an empty plane created
+// in the air fell for seconds before its crew existed and crashed
+private _pl = objNull;
+private _pg = grpNull;
+isNil {
+    _pl = createVehicle [CQ_dropPlaneClass, [_start select 0, _start select 1, 1500 + 50 * CQ_dropSlot], [], 0, "FLY"];
+    _pl setPosASL [_start select 0, _start select 1, (getTerrainHeightASL _start max 0) + _alt];
+    _pl setDir _away;
+    _pl setVelocityModelSpace [0, 60, 0];
+    _pg = [_pl] call CQ_fnc_crewVehicle;
+    _pg setBehaviourStrong "CARELESS";
+    _pg setCombatMode "BLUE";
+    _pl engineOn true;
+    _pl flyInHeight _alt;
+    _pl flyInHeightASL [_hiASL + 100, _hiASL + 100, _hiASL + 100];
+};
 
 private _cargo = objNull;
 private _viv = false;
