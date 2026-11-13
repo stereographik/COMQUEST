@@ -432,6 +432,7 @@ CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is f
 CQ_hmgTowerDist = 45;                    // ...and distance
 // Enemy support teams: one medic team, one engineer team, dropped again after destruction
 CQ_specialVehicle = "O_APC_Wheeled_02_rcws_v2_F";   // MSE-3 Marid (8 cargo seats: the team + the snipers)
+CQ_specialLzR = [100, 1000];             // m from the HQ: where each team is paradropped (random)
 CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Mohawk vehicle paradrop of the game (engineers 20 s later)
 CQ_specialRespawn = 900;                 // a wiped-out team is dropped again 15 min later
 CQ_specialRespawns = 3;                  // ...at most this many times per team (first drop not counted)

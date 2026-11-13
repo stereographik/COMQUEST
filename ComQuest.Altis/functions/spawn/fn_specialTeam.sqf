@@ -27,7 +27,7 @@ while { true } do {
         private _act = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
         _home = ([_act, [], { _x get "born" }, "ASCEND"] call BIS_fnc_sortBy) select 0;
     };
-    private _lz = (_home get "pos") getPos [150 + random 100, random 360];
+    private _lz = (_home get "pos") getPos [(CQ_specialLzR select 0) + random ((CQ_specialLzR select 1) - (CQ_specialLzR select 0)), random 360];
     ["%1: paradrop near HQ #%2 (grid %3)", [_tag, _home get "id", mapGridPosition _lz]] call CQ_fnc_log;
 
     // --- paradrop the Marid, then crew it with the team (medics: the Marid's own sand hex camo;
