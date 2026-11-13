@@ -41,6 +41,7 @@ private _now = time;
             ["fallen", [[_id] call CQ_fnc_objName, { (_x get "state") in CQ_activeStates } count (values CQ_hqs)]] call CQ_fnc_say;
             if (isNil "CQ_relays") then { CQ_relays = [] };
             call CQ_fnc_relaySites;          // an engineer can now put a relay on its tower site
+            [_hq] spawn CQ_fnc_hqFallen;     // its depot, tanker, aircraft and troops stop serving it
         };
     };
     _state = _hq get "state";

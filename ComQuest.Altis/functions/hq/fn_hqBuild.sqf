@@ -214,9 +214,9 @@ private _guardNow = {
     private _donors = ((_hq get "infantry") select {
         (_x getVariable ["CQ_role", ""]) in ["patrol", "secure"] && { ({ alive _x } count units _x) >= CQ_objGuardSize + 2 }
     });
-    // depot and tanker: no squad to spare -> the build truck's squad leaves a team behind
+    // depot and tanker: the build truck's squad leaves a team behind first, else the nearest squad
     private _sg = _hq getOrDefault ["btSquad", grpNull];
-    if (_donors isEqualTo [] && { _truckSquad } && { !isNull _sg } && { ({ alive _x } count units _sg) >= CQ_objGuardSize + 2 }) then { _donors = [_sg] };
+    if (_truckSquad && { !isNull _sg } && { ({ alive _x } count units _sg) >= CQ_objGuardSize + 2 }) then { _donors = [_sg] };
     if (_donors isEqualTo []) exitWith { ["HQ #%1: no squad free to guard the new %2", [_id, typeOf _obj]] call CQ_fnc_log };
     private _donor = ([_donors, [], { (leader _x) distance2D _site }, "ASCEND"] call BIS_fnc_sortBy) select 0;
     private _men = ((units _donor) select { alive _x && { _x != leader _donor } && { vehicle _x == _x } }) select [0, CQ_objGuardSize];
@@ -264,7 +264,6 @@ private _aaGroup = createGroup [east, true];
         createVehicleCrew _aa;
         _aa setVariable ["CQ_objType", "AA"];
         (_hq get "installations") pushBack _aa;
-        [_aa] call _guardNow;
         (crew _aa) joinSilent _aaGroup;
         [_aa, 1] call CQ_fnc_vehAmmoInit;
     };
@@ -390,7 +389,7 @@ _depot setVariable ["CQ_hqId", _id];
 _hq set ["depot", _depot];
 _depot addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
-    if (isNil "_hq") exitWith {};
+    if (isNil "_hq" || { !((_hq get "state") in CQ_activeStates) }) exitWith {};   // fallen HQ: no score, no announce
     ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
     ["killDepot", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
     params ["", "_k", "_i"];
@@ -427,7 +426,7 @@ if (!isNull _tanker) then {
     _tanker setVariable ["CQ_hqId", _id];
     _tanker addEventHandler ["Killed", {
         private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
-        if (isNil "_hq") exitWith {};
+        if (isNil "_hq" || { !((_hq get "state") in CQ_activeStates) }) exitWith {};   // fallen HQ: nothing to announce
         ["Fuel tanker destroyed", format ["HQ #%1 lost its %2 fuel: no more refuelling there", _hq get "id", round (_hq get "fuel")]] call CQ_fnc_announce;
         _hq set ["fuel", 0];
     }];

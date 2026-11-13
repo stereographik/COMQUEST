@@ -308,6 +308,7 @@ CQ_carrierHqs = 6;                       // the carrier has supplies for this ma
 CQ_secureRadius = 1000;                  // squads post out to this perimeter before building
 CQ_secureShare = 0.5;                    // perimeter counts as secured once every squad is this far out
 CQ_secureTimeout = 60;                   // build starts anyway after 1 min (squads keep walking to their posts)
+CQ_hqFallenBlow = 60;           // s after an HQ falls: its depot and tanker are blown up by the leaving troops
 CQ_holdTime = 60;                        // hold after installation, before calling reinforcements
 CQ_waveInterval = 600;                   // a new reinforcement wave every 10 min per HQ
 CQ_waveSpawnDist = [1000, 1500];         // convoy spawns on a road this far from the HQ

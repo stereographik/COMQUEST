@@ -101,6 +101,11 @@ while { true } do {
             } else {
                 // idle: wait near the main HQ
                 private _h = CQ_hqs getOrDefault [CQ_hubId, createHashMap];
+                if (count _h > 0 && { !((_h get "state") in CQ_activeStates) }) then {
+                    // the main HQ fell: the nearest standing one
+                    private _act = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
+                    _h = if (_act isEqualTo []) then { createHashMap } else { ([_act, [], { (_x get "pos") distance2D _p }, "ASCEND"] call BIS_fnc_sortBy) select 0 };
+                };
                 if (count _h > 0 && { _v distance2D (_h get "pos") > 250 } && { currentWaypoint _g >= count waypoints _g }) then {
                     _g move ((_h get "pos") getPos [80 + random 60, random 360]);
                 };
