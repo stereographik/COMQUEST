@@ -1,4 +1,4 @@
 // Build stamp, shown in the map's Credits section and tiny at the bottom of the screen (updated with every deploy)
 CQ_version = "0.13.0";
 CQ_branch = "showcase";
-CQ_build = "2026-11-14 00:26";
+CQ_build = "2026-11-14 00:48";

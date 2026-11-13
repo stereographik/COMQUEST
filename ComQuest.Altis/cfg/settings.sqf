@@ -41,11 +41,13 @@ CQ_baseVehPadding = 25;                  // metres between base vehicles (fallba
 //   (start point next to the HQ, running along CQ_baseDir); a crate dispenser + loadout zone
 //   at the far end of each row; 2 repair stations east of the vehicle zone
 CQ_billboardFlip = false;                // true if the base billboard (front wall, right of the gate) shows its back to the courtyard
-CQ_compoundSize = [100, 76];             // inner compound width x depth (m): 4 squad bays, plaza, boulevard, back row
+CQ_baseOuter = [260, 190];               // Camp Harlan outer wall width x depth (m): motor pool | keep | aviation apron
+CQ_baseRunwayGap = 110;                  // m: no outer wall corner closer than this to the runway centre line (the site moves inland)
+CQ_compoundSize = [100, 90];             // the keep (inner wall): command post, plaza, 4 squad bays; class change / arsenal zone
 CQ_baseLevel = true;                     // level the compound's ground before building (setTerrainHeight)
 CQ_baseLevelBlend = 25;                  // m outside the walls over which the levelled ground blends back into the terrain
 CQ_grassCut = true;                      // false: no grass cutting at all (test switch)
-CQ_grassCutRadius = 100;                 // no grass this far around the base centre (m)...
+CQ_grassCutRadius = 170;                 // no grass this far around the base centre (m)...
 CQ_grassCutSpacing = 10;                 // ...normal-size clutter cutters this far apart (lower it if grass shows between them)
 CQ_rayStarts = [[14255, 16151, 0], [14282, 16143, 0], [14304, 16130, 0], [14330, 16116, 0]];
 CQ_dispensers = [[14293, 16200, 0], [14310, 16189, 0], [14339, 16175, 0], [14364, 16166, 0]];   // pushed further out if a row is longer
@@ -62,13 +64,7 @@ CQ_fillSoloScale = 5;                    // a player alone: up to this (fills th
 CQ_fillPadRange = 15;                    // m from a depot helipad (or its repair depot) to autofill there
 CQ_fillCooldown = 40;                    // s between two autofills by the same player
 // Base defences drawn on the Altis location picker: [class, [x, y], facing]; statics get an AI crew
-CQ_baseLayoutObjs = [
-    ["Land_PortableLight_double_F", [14399, 16117], 125],
-    ["Land_PortableLight_double_F", [14434, 16150], 135],
-    ["Land_PortableLight_double_F", [14418, 16098], 310],
-    ["Land_HBarrierTower_F",        [14332, 16130], 225],
-    ["B_GMG_01_high_F",             [14575, 16218], 90]
-];
+CQ_baseLayoutObjs = [];                  // Camp Harlan v3: every defence is built with the walls (corner spots)
 // ...and Hesco lines: [class, piece length (m), [corner, corner, ...]]
 CQ_baseLayoutHesco = [];   // none for now (the last drawn layout was taken out)
 // Base parking area: the zone marked on the map (SW end of the runway, next to the camp).

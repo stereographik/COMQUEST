@@ -44,7 +44,10 @@ if (_pilot) then {
     if (_left > 0) exitWith { [format ["Next vehicle request in %1", [_left, "MM:SS"] call BIS_fnc_secondsToString]] call _say; _cls = "" };
 };
 if (_cls == "") exitWith {};
-(CQ_depots select _di) params ["", "_pad", "_padDir"];
+(CQ_depots select _di) params ["", "_pad", "_padDir", ["_kind", ""]];
+// motor pool pads take ground vehicles, apron pads aircraft
+if (_kind == "air" && { !(_cls isKindOf "Air") }) exitWith { ["Ground vehicles come from the motor pool"] call _say };
+if (_kind == "ground" && { _cls isKindOf "Air" }) exitWith { ["Aircraft come from the aviation apron"] call _say };
 if (((nearestObjects [_pad, ["LandVehicle", "Air"], 9]) select { alive _x }) isNotEqualTo []) exitWith { ["The depot pad is blocked: move the vehicle off the pad"] call _say };
 
 private _v = createVehicle [_cls, _pad, [], 0, "NONE"];
