@@ -432,7 +432,7 @@ CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is f
 CQ_hmgTowerDist = 45;                    // ...and distance
 // Enemy support teams: one medic team, one engineer team, dropped again after destruction
 CQ_specialVehicle = "I_MRAP_03_hmg_F";   // Strider HMG
-CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Blackfish drop of the game
+CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Mohawk vehicle paradrop of the game (engineers 20 s later)
 CQ_specialRespawn = 900;                 // a wiped-out team is dropped again 15 min later
 CQ_specialRespawns = 3;                  // ...at most this many times per team (first drop not counted)
 CQ_specialRange = 6000;

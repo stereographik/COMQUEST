@@ -55,7 +55,9 @@ waitUntil {
     if (_d < 900) then { _pl limitSpeed 220 };
     if (_d < _minD) then { _minD = _d };
     private _safe = [getPosATL _pl, CQ_dropCoastGap] call CQ_fnc_coastSafe;
-    if ((_d < CQ_dropLead && _safe) || { _d < 80 } || { _minD < CQ_dropLead && { _d > _minD + 40 } && _safe } || { time - _t0 > 500 && _safe }) then {
+    if ((_d < CQ_dropLead && _safe) || { _d < 80 } || { _minD < CQ_dropLead && { _d > _minD + 40 } && _safe } || { time - _t0 > 500 && _safe }
+        || { time - _t0 > 200 && { !surfaceIsWater getPosATL _pl } && { _d < 1500 } }) then {   // never kept circling: any land near the LZ will do
+        if (time - _t0 > 200) then { ["%1: Mohawk forced to drop after %2 s (%3 m from its LZ)", [_tag, round (time - _t0), round _d]] call CQ_fnc_log };
         if (_viv) then { _pl setVehicleCargo objNull } else {
             detach _cargo;
             _cargo hideObjectGlobal false;
