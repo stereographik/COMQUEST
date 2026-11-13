@@ -92,8 +92,8 @@ CQ_sbDismantleTime = 2;
 // Heavy lift (CQ_fnc_heavyLift): these helicopters sling load any vehicle up to CQ_hlMax kg (vanilla Mohawk: 5 t)
 CQ_hlClasses = ["I_Heli_Transport_02_F"];
 CQ_hlMax = 12000;                        // kg: Strider 9.7 t, HEMTT family ~10.8-11 t
-CQ_hlAlt = 25;                           // m: the helicopter must hover this low...
-CQ_hlRadius = 20;                        // m: ...this close to the vehicle for it to be made liftable                  // s: hold to dismantle one of your walls in the field
+CQ_hlRadius = 30;                        // m: the pilot's "Hook" action reaches vehicles this close (any height)
+CQ_hlGrace = 20;                         // s: a lightened vehicle keeps its light mass at least this long                  // s: hold to dismantle one of your walls in the field
 CQ_sbMaxSlope = 0.85;                    // ground flatter than this (surface normal z) only
 CQ_depotMaxPerSquad = 2;                 // depot vehicles out at the same time per squad
 CQ_depotBurst = 2;                       // a squad leader takes this many in a row, then the cooldown starts

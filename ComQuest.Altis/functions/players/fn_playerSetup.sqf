@@ -70,6 +70,14 @@ player addAction ["<t color='#918C3B'>Recall my sandbag walls</t>", { ["recall",
     { ["remove", [player, CQ_sbTarget]] remoteExec ["CQ_fnc_sandbag", 2] }, {},
     [], CQ_sbDismantleTime, 1.15, false, false] call BIS_fnc_holdActionAdd;
 
+// Heavy lift (CQ_fnc_heavyLift): the Mohawk pilot hooks / releases any vehicle up to CQ_hlMax
+player addAction ["<t color='#918C3B'>Hook vehicle</t>", {
+    ["hook", [vehicle player, CQ_hlCand, player]] remoteExec ["CQ_fnc_heavyLift", 2];
+}, nil, 6, true, true, "", "!isNull (missionNamespace getVariable ['CQ_hlCand', objNull]) && { driver vehicle _this == _this }"];
+player addAction ["<t color='#BA392C'>Release cargo</t>", {
+    ["release", [vehicle player, player]] remoteExec ["CQ_fnc_heavyLift", 2];
+}, nil, 5.9, false, true, "", "vehicle _this != _this && { driver vehicle _this == _this } && { (typeOf vehicle _this) in CQ_hlClasses } && { !isNull getSlingLoad vehicle _this }"];
+
 // Loadout zones: auto-fill / empty the inventory of the vehicle you sit in or look at
 private _zoneVeh = "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); !isNull _v && { _v isKindOf 'AllVehicles' } && { !(_v isKindOf 'CAManBase') } && { _this distance _v < 10 } && { speed _v < 3 } && { [_v] call CQ_fnc_vehFillSpot }";
 player addAction ["<t color='#918C3B'>Autofill for my squad</t>",
