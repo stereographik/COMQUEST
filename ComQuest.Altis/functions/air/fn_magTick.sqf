@@ -171,6 +171,7 @@ private _opPos = missionNamespace getVariable ["CQ_opJamPos", []];
 if (time >= CQ_magDetectT) then {
     CQ_magDetectT = time + CQ_magDetectEvery;
     {
+        private _md = _x;                                   // this drone's entry (seenT: last enemy in its sight)
         private _v = _x get "veh";
         private _alt = (getPosATL _v) select 2;
         if (_alt < 40) then { continue };                 // still taking off
@@ -197,6 +198,7 @@ if (time >= CQ_magDetectT) then {
             if (_checks >= CQ_magChecksPerPass) then { break };
             _checks = _checks + 1;
             if (([_v, "VIEW", _o] checkVisibility [_eye, aimPos _o]) < 0.2) then { continue };
+            _md set ["seenT", time];
             if (_rec isEqualTo []) then {
                 private _c = [_o] call _cat;
                 if (random 1 > ([CQ_magSpotChance getOrDefault [_c, 0.3], CQ_huntSpotChance] select (_o getVariable ["CQ_hunter", false]))) then { continue };   // not identified this pass
@@ -326,7 +328,7 @@ private _focusOn = _focus isNotEqualTo [];
 if (_focusOn) then {
     _focus = [_focus select 0, _focus select 1, 0];
     CQ_magRingR = (CQ_magRingStart - CQ_magRingShrink * (time - CQ_magFocusT) / 60) max CQ_magRingMin;
-    private _ring = [_flying select { !(_x getOrDefault ["flee", false]) && { (_x getOrDefault ["role", ""]) != "wasp" } && { time >= (_x getOrDefault ["lookUntil", 0]) } }, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;   // a woken Darter getting away joins once clear; WASP keeps to the link edge
+    private _ring = [_flying select { !(_x getOrDefault ["flee", false]) && { (_x getOrDefault ["role", ""]) != "wasp" } && { time >= (_x getOrDefault ["lookUntil", 0]) } && { !(_x getOrDefault ["sneak", false]) } }, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;   // a woken Darter getting away joins once clear; WASP keeps to the link edge
     private _n = count _ring;
     private _step = 360 / (_n max 1);
     private _rot = (time - CQ_magFocusT) * CQ_magRingTurn;
@@ -473,7 +475,7 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
 {
     private _m = _x;
     private _v = _m get "veh";
-    if (_focusOn || { (_m getOrDefault ["role", ""]) in ["chain", "wasp"] } || { _m getOrDefault ["flee", false] } || { time < (_m getOrDefault ["lookUntil", 0]) }) then { continue };
+    if (_focusOn || { (_m getOrDefault ["role", ""]) in ["chain", "wasp"] } || { _m getOrDefault ["flee", false] } || { time < (_m getOrDefault ["lookUntil", 0]) } || { _m getOrDefault ["sneak", false] }) then { continue };
     if (((getPosATL _v) select 2) < 40 && { time - (_m get "planT") < 300 }) then { continue };
     private _tgt = _m get "target";
     private _arrived = (_m get "explore") && { _tgt isNotEqualTo [] } && { _v distance2D _tgt < 500 };

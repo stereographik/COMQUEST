@@ -59,7 +59,8 @@ private _wake = {
         ["i", 100 + CQ_magDormantN], ["name", _name], ["cls", "B_UAV_01_F"], ["alt", CQ_magDormantAlt], ["scale", 0.8],
         ["veh", _nv], ["due", 1e12], ["phase", "air"], ["tries", 0], ["rollT", time],
         ["planT", time], ["explore", false], ["target", []], ["lost", false],
-        ["role", "dormant"], ["flee", true], ["fleeFrom", _from], ["fleePos", _fromPos], ["fleeT", time], ["wpT", -1e6]
+        ["role", "dormant"], ["flee", true], ["fleeFrom", _from], ["fleePos", _fromPos], ["fleeT", time], ["wpT", -1e6],
+        ["wakePos", _p], ["seenT", time], ["sneak", false]
     ];
     CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
     publicVariable "CQ_magVehs";
@@ -93,6 +94,38 @@ private _wake = {
     _wp setWaypointCompletionRadius 50;
     _g setCurrentWaypoint _wp;
     _m set ["target", []];
+} forEach CQ_mag;
+
+// ---- sneak back: a woken Darter that has seen nothing for CQ_magSneakIdle s (after getting away)
+// slips back, low, to the spot where it woke and circles it quietly; anything in its sight again
+// and it rejoins the fleet's flight plans
+{
+    private _m = _x;
+    if ((_m getOrDefault ["role", ""]) != "dormant" || { _m getOrDefault ["flee", false] } || { time < (_m getOrDefault ["lookUntil", 0]) }) then { continue };
+    private _v = _m get "veh";
+    if (!alive _v) then { continue };
+    private _idle = time - (_m getOrDefault ["seenT", time]);
+    if (_m getOrDefault ["sneak", false]) then {
+        if (_idle < CQ_magDetectEvery * 2) then {
+            _m set ["sneak", false]; _m set ["planT", -1e6];
+            ["MAGPIE: %1 has company again near its wake point, back to the fleet", [_m get "name"]] call CQ_fnc_log;
+        };
+        continue;
+    };
+    if (_idle < CQ_magSneakIdle) then { continue };
+    private _p = _m getOrDefault ["wakePos", getPosATL _v];
+    if !([_p] call _aaSafe) then { continue };                   // known anti-air there now: stays with the fleet
+    _m set ["sneak", true];
+    private _g = group effectiveCommander _v;
+    [_g] call CQ_fnc_clearWaypoints;
+    _v flyInHeight CQ_magSneakAlt;
+    private _wp = _g addWaypoint [[_p select 0, _p select 1, 0], 0];
+    _wp setWaypointType "LOITER";
+    _wp setWaypointLoiterRadius CQ_magSneakR;
+    _wp setWaypointSpeed "LIMITED";
+    _g setCurrentWaypoint _wp;
+    _m set ["target", []];
+    ["MAGPIE: %1 saw nothing for %2 min, sneaks back to its wake point at %3", [_m get "name", round (_idle / 60), mapGridPosition _p]] call CQ_fnc_log;
 } forEach CQ_mag;
 
 // ---- replacements: the nearest point left to where a woken Darter went down

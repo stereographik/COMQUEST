@@ -843,6 +843,9 @@ CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2
 CQ_magSpotChance = createHashMapFromArray [["inf", 0.6], ["static", 0.7], ["light", 0.8], ["armour", 0.85], ["air", 0.9]];   // chance per pass to identify a new contact in sight
 CQ_magAaClasses = ["O_APC_Tracked_02_AA_F"];   // anti-air MAGPIE keeps away from once identified (HQ AA guns are a plain risk)
 CQ_magAaAvoid = 2500;                    // m kept from the last known position of a Tigris (its missiles reach ~4 km: a moved Tigris is deadly)
+CQ_magSneakIdle = 180;                   // s a woken Darter sees nothing before it sneaks back to where it woke
+CQ_magSneakAlt = 150;                    // m, lower than usual on the way back and over its wake point
+CQ_magSneakR = 200;                      // m: the circle it keeps over its wake point
 CQ_magAoRange = 2500;                    // a contact belongs to the nearest known AO within this range
 // Tigris: one long-range anti-air vehicle paradropped with each carrier insertion; it roams the HQ network
 CQ_tigrisClass = "O_APC_Tracked_02_AA_F";
