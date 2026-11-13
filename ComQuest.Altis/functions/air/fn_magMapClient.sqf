@@ -59,11 +59,11 @@ CQ_echoes = [];
         { _map drawLine [_x select 0, _x select 1, [0.25, 0.55, 1, 0.6]] } forEach _lEdges;
         {
             _x params ["_rp", "_rr"];
-            _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], _rp, 22, 22, 0, "RELAY", 1, 0.035, "PuristaMedium", "right"];
+            _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], _rp, 22 * CQ_mapIconScale, 22 * CQ_mapIconScale, 0, "RELAY", 1, 0.035, "PuristaMedium", "right"];
         } forEach _nRelays;
         private _rvh = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
         if (alive _rvh) then {
-            _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], getPosASLVisual _rvh, 22, 22, 0, "RELAY VEHICLE", 1, 0.035, "PuristaMedium", "right"];
+            _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], getPosASLVisual _rvh, 22 * CQ_mapIconScale, 22 * CQ_mapIconScale, 0, "RELAY VEHICLE", 1, 0.035, "PuristaMedium", "right"];
         };
         {
             _x params ["_a", "_b", "_ok"];
@@ -82,7 +82,7 @@ CQ_echoes = [];
         } forEach (missionNamespace getVariable ["CQ_magVisible", []]);
         {
             if (alive _x && { !(_x isKindOf "UAV_01_base_F") || { _x getVariable ["CQ_linked", false] } }) then {   // a Darter shows only while linked to the base
-                private _sz = [26, 13] select (_x isKindOf "UAV_01_base_F");   // Darters: half size
+                private _sz = ([26, 13] select (_x isKindOf "UAV_01_base_F")) * CQ_mapIconScale;   // Darters: half the others
                 _map drawIcon [_x call _icon, [0.25, 0.55, 1, 1], getPosASLVisual _x, _sz, _sz, getDirVisual _x,
                     format ["MAGPIE %1", _x getVariable ["CQ_magName", ""]], 1, 0.035, "PuristaMedium", "right"];
             };

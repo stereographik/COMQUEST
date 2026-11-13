@@ -33,6 +33,7 @@ player createDiarySubject ["CQ_credits", "Credits"];
 player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [
     "<font face='PuristaSemibold' size='18' color='#F2F1DF'>COMQUEST</font><br/><font color='#A6A381'>Arma 3 multiplayer co-op on Altis</font><br/><br/>Mission by <font color='#F2F1DF'>Django aka stereographik</font><br/>Version <font color='#F2F1DF'>%1</font>, built %2<br/><br/><font color='#A6A381'>github.com/stereographik/COMQUEST</font>",
     CQ_version, CQ_build]]];
+[] spawn CQ_fnc_mapIconScale;   // every mission icon marker at CQ_mapIconScale
 [] spawn CQ_fnc_rdfClient;   // radio direction finder panel
 [] spawn CQ_fnc_statsClient; // shots, heals, distances, time played
 call CQ_fnc_heatMapClient;   // MAGPIE heatmap under everything else

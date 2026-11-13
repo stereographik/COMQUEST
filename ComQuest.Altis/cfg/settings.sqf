@@ -463,6 +463,7 @@ CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get tre
 // Radio direction finder (players with a radio): signal from enemy HQ radios
 CQ_rdfRange = 6000;                      // no signal beyond this
 CQ_rdfTop = 40;                          // signal panel: px from the top of the screen (centred)
+CQ_mapIconScale = 0.5;                   // every map icon (mission markers, drones, relays, debug) at this x its default size
 CQ_threatRange = 1500;                   // threat compass: closest danger the network knows within this (m)
 CQ_threatMemory = 60;                    // s a drone contact stays on the compass at its last seen spot
 CQ_playerMapMarkers = false;             // true = enemy HQ areas and the carrier shown on the players' map

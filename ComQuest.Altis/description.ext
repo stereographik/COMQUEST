@@ -269,6 +269,7 @@ class CfgFunctions
         class players
         {
             file = "functions\players";
+            class mapIconScale {};
             class baseSetup {};
             class rdfTick {};
             class rdfClient {};
