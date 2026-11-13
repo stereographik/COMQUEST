@@ -9,13 +9,13 @@
     appear only when the HQ is fully built (last objective ready); a fallen HQ loses its circle
     and keeps a black [NAME (rank)][destroyed] dot.
     Every objective gets its own marker once a UAV has seen it and the intel reached the base over
-    the data link (CQ_spotted, CQ_fnc_objSpot), orange [Depot][active], removed as soon as the
+    the data link (CQ_spotted, CQ_fnc_objSpot), orange [Depot], removed as soon as the
     objective is destroyed.
 */
 params ["_hq"];
 private _id = _hq get "id";
 
-// one marker per objective, orange "[type][active]", from the moment it is set up until it is
+// one marker per objective, orange "[type]", from the moment it is set up until it is
 // destroyed (then removed; CQ_objMarkDone keeps a destroyed one from coming back)
 if (isNil "CQ_objMarkDone") then { CQ_objMarkDone = [] };
 {
@@ -34,7 +34,7 @@ if (isNil "CQ_objMarkDone") then { CQ_objMarkDone = [] };
         _om setMarkerSize [0.7, 0.7];
         _om setMarkerColor "ColorOrange";
     };
-    private _ot = format ["[%1][active]", _o getVariable ["CQ_objType", "Objective"]];
+    private _ot = format ["[%1]", _o getVariable ["CQ_objType", "Objective"]];
     if (markerText _om != _ot) then { _om setMarkerText _ot };
 } forEach (_hq get "installations");
 
