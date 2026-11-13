@@ -272,6 +272,7 @@ class CfgFunctions
             file = "functions\players";
             class mapIconScale {};
             class conduct {};
+            class nameCheck {};
             class guideDiary {};
             class baseSetup {};
             class rdfTick {};
@@ -320,6 +321,12 @@ class CfgFunctions
 
 class CfgDebriefing
 {
+    class CQ_badName
+    {
+        title = "Name not allowed";
+        subtitle = "ComQuest";
+        description = "Your player name breaks the server rules. Change it in Arma's main menu (Configure, Profile, Edit) and rejoin.";
+    };
     class CQ_kicked
     {
         title = "Removed by an admin";

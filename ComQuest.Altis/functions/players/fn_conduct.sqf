@@ -41,6 +41,17 @@ switch (_mode) do {
     // ---------------------------------------------------------------- rules gate
     case "check": {
         _a params ["_p"];
+        // player name first (CQ_fnc_nameCheck; very strict): the host only gets a warning
+        if (CQ_nameCheck) then {
+            private _why = [name _p] call CQ_fnc_nameCheck;
+            if (_why == "" && { (allPlayers findIf { _x != _p && { toLower (name _x) == toLower (name _p) } }) > -1 }) then {
+                _why = "Another player is already using that name.";
+            };
+            if (_why != "") then {
+                [format ["Name refused: ""%1"" (%2)%3", name _p, _why, ["", " - host, warning only"] select (owner _p == 2)]] call _alert;
+                ["badName", [_why, owner _p == 2]] remoteExec ["CQ_fnc_conduct", _p];
+            };
+        };
         if (!CQ_rulesGate || { (getPlayerUID _p) in CQ_rulesUids }) exitWith { _p setVariable ["CQ_rulesOk", true, true] };
         ["openRules", []] remoteExec ["CQ_fnc_conduct", _p];
     };
@@ -182,6 +193,20 @@ switch (_mode) do {
         _a params [["_secs", 600]];
         { _x enableChannel [false, false] } forEach [0, 1, 2];
         [_secs] spawn { params ["_s"]; sleep _s; { _x enableChannel [true, true] } forEach [0, 1, 2]; systemChat "[MUTED] Your channels are open again." };
+    };
+    case "badName": {
+        if (!hasInterface) exitWith {};
+        _a params ["_why", ["_host", false]];
+        [_why, _host] spawn {
+            params ["_why", "_host"];
+            waitUntil { sleep 0.5; !isNull findDisplay 46 };
+            sleep 3;
+            private _t = format ["<t size='1.3' font='PuristaSemibold' color='#BA392C'>NAME NOT ALLOWED</t><br/><br/><t color='#F2F1DF'>%1</t><br/><br/><t color='#A6A381' size='0.9'>Names: %2-%3 characters, letters A-Z, digits, spaces, - _ or . only; no insults, slurs or reserved words.<br/>Change it in Arma's main menu: Configure, Profile, Edit, then rejoin.</t>", _why, CQ_nameMin, CQ_nameMax];
+            if (_host) exitWith { hint parseText (_t + "<br/><br/><t color='#918C3B'>You are the host: warning only.</t>") };
+            titleText [_t, "PLAIN", 0.5, true, true];
+            sleep 15;
+            ["CQ_badName", false] call BIS_fnc_endMission;
+        };
     };
     case "kicked": {
         if (!hasInterface) exitWith {};
