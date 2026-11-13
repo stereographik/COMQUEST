@@ -196,16 +196,16 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
     <div class="cell x"><span class="mono">Then</span><h3>Split</h3><p>A strong HQ sends its build truck and colonists to found the next one and gets a new truck from the carrier, until the carrier is empty.</p></div>
     <div class="cell"><span class="mono">Stages 1–2</span><h3>Defences first</h3><p>Three AA pits, then a cargo tower with a heavy machine gun on top.</p></div>
     <div class="cell"><span class="mono">Stage 3</span><h3>Radio tower</h3><p>The HQ's voice, with a guard squad of its own. It can't be blown up: anyone hacks it from the terminal at its foot, an Engineer twice as fast.</p></div>
-    <div class="cell"><span class="mono">Stages 4–5</span><h3>Depot and fuel</h3><p>A supply depot with a field supply truck, then a fuel tanker, each guarded by a team left behind by the truck squad. The depot only goes down to satchels or demolition charges.</p></div>
+    <div class="cell"><span class="mono">Stages 4–5</span><h3>Depot and fuel</h3><p>A supply depot with a field supply truck, then a fuel tanker, each guarded by a team left behind by the truck squad. The HQ also arms the nearest village: locals in civilian clothes with bandoliers and Katibas. The depot only goes down to satchels or demolition charges.</p></div>
     <div class="cell"><span class="mono">Stage 6/6</span><h3>Operational</h3><p>Helipad with a QRF helicopter, a command building and a sandbag ring. The commander moves in: kill or capture him.</p></div>
   </div>
   <div class="grid g3" style="margin-top:24px">
     <div class="cell"><h3>Logistics</h3><p>The main HQ is resupplied by air and HEMTT convoys carry ammunition on to the others. A dead convoy is felt across the island.</p></div>
     <div class="cell"><h3>Redeployment</h3><p>Every minute the director evens out infantry across built HQs, by truck or helicopter. At most 160 enemy soldiers are on the ground at once.</p></div>
     <div class="cell"><h3>Movement</h3><p>Ifrits, Hunters and armour roam between HQs and avoid hilltops. Orca and Kajman helicopters fly irregular patrols.</p></div>
-    <div class="cell"><h3>Support teams</h3><p>A medic team and an engineer team keep the network running. Each comes back three times, then it is gone for good.</p></div>
+    <div class="cell"><h3>Support teams</h3><p>A medic team in a sand Marid and an engineer team in a green Marid, paradropped 100–1000 m from the main HQ, heal and repair across the network and drive the snipers to their hilltops. Each comes back three times, then it is gone for good.</p></div>
     <div class="cell"><h3>Reinforcements</h3><p>Weakened HQs call fresh sections from the carrier, while it still has men to send.</p></div>
-    <div class="cell hot"><span class="mono">Rule</span><h3>No markers</h3><p>Enemy positions never appear on your map by themselves. Drones, the direction finder or a talkative commander put them there.</p></div>
+    <div class="cell hot"><span class="mono">Rule</span><h3>No markers</h3><p>Enemy positions never appear on your map by themselves. Even an HQ's objectives stay hidden until a drone has seen them and the intel has reached the base over the data link. Drones or a talkative commander put them there.</p></div>
   </div>
 </section>
 
@@ -233,8 +233,9 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
     <div class="cell x"><span class="mono">Jammer</span><h3>A rough idea, at best</h3><p>A jamming mast blinds MAGPIE within 600 m and keeps the outpost off your map: you only get a hatched black circle about a kilometre wide. Destroy the mast, or crack a crash crate, and the marker becomes exact.</p></div>
     <div class="cell x"><span class="mono">Reward</span><h3>Cut the corridor</h3><p>Take the outpost and the first HQ's resupply flights come late and the long way round, over 4 km off their line. The outpost doesn't count toward the enemy caps.</p></div>
     <div class="cell hot x"><span class="mono">Random</span><h3>Transport crash</h3><p>An enemy transport goes down between your base and their network, carrying a communications crate. Its survivors dig in around it. 10% chance in the first 15 minutes, then whenever the front stalls, at most once every 40 minutes.</p></div>
-    <div class="cell x"><span class="mono">Clock</span><h3>Hidden ten minutes</h3><p>Once the survivors make contact, a clock you can't see starts. Run out of time and a CH-49 paradrops a Nyx, Kamysh, Marid or Gorgon full of soldiers that roam the site. The signal finder warns: ENEMY SECURING DEVICE.</p></div>
+    <div class="cell x"><span class="mono">Clock</span><h3>Hidden ten minutes</h3><p>Once the survivors make contact, a clock you can't see starts. Run out of time and a CH-49 paradrops a Nyx, Kamysh, Marid or Gorgon full of soldiers that roam the site. The radio panel warns: ENEMY SECURING DEVICE.</p></div>
     <div class="cell cool x"><span class="mono">Payoff</span><h3>Decrypt</h3><p>Reach the crate and hold the action: twelve minutes of decryption at base, and the network's secrets go on your map, the outpost's exact position included. The enemy can never take the crate back.</p></div>
+    <div class="cell hot x"><span class="mono">Random</span><h3>Hostage rescue</h3><p>CSAT holds one of our radio technicians in a marked village house, five soldiers guarding it. Plug in and download his firmware, then carry him, too hurt to walk, to a Ghost Hawk waiting on the ground nearby while armed locals close in. Fly him home and the Darters see half as far again for twenty minutes.</p></div>
   </div>
 </section>
 
@@ -242,7 +243,7 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
   <div class="head">
     <div class="num">04</div>
     <div><span class="mono">Air intelligence</span><h2>MAGPIE hunts from the sky</h2>
-    <p class="lead">MAGPIE is the friendly drone operator, a bot. She launches as soon as the carrier shows up, keeps two large Sentinels in the air, and has small Darters sleeping across the island. Her drones only report while a data link chains them back to the base. She only speaks when she has tracked something.</p></div>
+    <p class="lead">MAGPIE is the friendly drone operator, a bot. She launches as soon as the carrier shows up, keeps two large Sentinels in the air, sends WASP to the edge of the data link, and has small Darters sleeping across the island. Her drones only report while a data link chains them back to the base. She only speaks when she has tracked something.</p></div>
   </div>
   <div class="split">
     <div class="grid g2">
@@ -252,7 +253,9 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
       <div class="cell cool"><span class="mono">Identification</span><h3>Not every pass counts</h3><p>Each pass has a chance to identify: 60% for infantry up to 90% for aircraft. Hidden units stay hidden.</p></div>
       <div class="cell hot"><span class="mono">Threat</span><h3>Tigris</h3><p>Every insertion drops a Tigris, and the corridor outpost has Titans. The radar only wakes once it notices a drone, and missiles reach 3.5 km. A lost Sentinel is replaced after 8 minutes; MAGPIE learns to fly around known AA.</p></div>
       <div class="cell cool"><span class="mono">Network</span><h3>Data link</h3><p>A drone reports only while it is chained to the base through overlapping ranges: base 5 km, hacked-tower relays 4 km, the relay vehicle 2.5 km, any friendly vehicle (even empty) 1 km, drones 1 km. Base and relays also link directly up to 10 km. Links are drawn on the map, and a Darter shows only while linked.</p></div>
-      <div class="cell"><span class="mono">Relay vehicle</span><h3>Hunter on the road</h3><p>As soon as the first HQ exists, a crewed Hunter HMG drives a third of the way towards it and parks as a relay. It fires back, radios when it comes under fire, and is replaced 5 minutes after it is lost.</p></div>
+      <div class="cell"><span class="mono">Relay vehicle</span><h3>Hunter on the road</h3><p>As soon as the first HQ exists, a crewed Hunter HMG drives a third of the way towards it and parks as a relay. It drives careless, radios when it comes under fire, opens fire once parked, and is replaced 5 minutes after it is lost.</p></div>
+      <div class="cell cool"><span class="mono">Edge of the link</span><h3>WASP</h3><p>MAGPIE's own Darter pushes toward the carrier as far as the data link holds: about 3.3 km past the relay vehicle, or almost 6 km past the base when there is none. It stays out of the encirclement and follows its anchor out.</p></div>
+      <div class="cell"><span class="mono">Intel</span><h3>Objectives spotted</h3><p>An HQ's AA pits, tower, depot or tanker only go on the map once a drone has seen them and the intel reached the base. A new one sends the nearest Watcher Darter to circle it for a minute, clear of known anti-air.</p></div>
       <div class="cell hot"><span class="mono">Map</span><h3>Live and heat</h3><p>While a drone sees an enemy, everyone sees it live on the map. A heatmap marks scanned ground in teal and contacts in rose, fading within a minute. <span class="pill t">heatmap in test</span></p></div>
     </div>
     <div class="stack">
@@ -373,8 +376,8 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
       <div><h3>CROSSROAD</h3><p>Your HQ. Acts, SITREPs, losses and the occasional dry remark.</p></div>
       <div><h3>MAGPIE</h3><p>The drone operator. She reports enemy tracking only, never her own drones.</p></div>
       <div><h3>COMHAT</h3><p>Translated enemy radio, heard only through a standing tower. Hack the tower and the voice cuts mid-sentence. Its cards carry a thick red border.</p></div>
-      <div><h3>Direction finder</h3><p>Carry a radio and the panel at the top of the screen picks up the closest fully built HQ. Sweep your view to find the bearing, walk in to raise the level.</p>
-        <div class="signal"><span class="mono">Signal</span><b>65%</b><div class="meter"><i></i></div></div></div>
+      <div><h3>Threat compass</h3><p>Carry a radio inside the data link's coverage and the panel at the top of the screen points to the closest enemy a linked drone sees: its type, an arrow relative to your view, its distance, and how long ago it was seen. Step out of coverage and the panel goes dark.</p>
+        <div class="signal"><span class="mono">INF x4</span><b>420 m</b><div class="meter"><i></i></div></div></div>
     </div>
   </div>
 </section>
