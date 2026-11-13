@@ -61,7 +61,7 @@ _dt ctrlSetFont "PuristaMedium";
 _dt ctrlSetTextColor (CQ_ui get "accent");
 private _dash = ["RscStructuredText", 9002, [_DX + 0.015, _Y + _L * 1.3, _DW - 0.03, _H - _L * 1.5]] call _mk;
 _dash ctrlSetStructuredText parseText "<t size='0.85' color='#A6A381'>Select an HQ in the list to see its dashboard.</t>";
-_list ctrlAddEventHandler ["LBSelChanged", { ["list", call (uiNamespace getVariable "CQ_dbgSel")] remoteExec ["CQ_fnc_debugCmd", 2] }];
+_list ctrlAddEventHandler ["LBSelChanged", { ["list", call (uiNamespace getVariable "CQ_dbgSel")] remoteExecCall ["CQ_fnc_debugCmd", 2] }];
 
 uiNamespace setVariable ["CQ_dbgSel", {
     private _lb = (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) displayCtrl 9000;
@@ -226,7 +226,7 @@ uiNamespace setVariable ["CQ_dbgToggleLabels", {
 }];
 call (uiNamespace getVariable "CQ_dbgToggleLabels");
 
-["list", -1] remoteExec ["CQ_fnc_debugCmd", 2];
+["list", -1] remoteExecCall ["CQ_fnc_debugCmd", 2];
 [] spawn {
     disableSerialization;
     private _pSig = "";
@@ -246,6 +246,11 @@ call (uiNamespace getVariable "CQ_dbgToggleLabels");
             { private _k = _pc lbAdd (_x select 0); _pc lbSetData [_k, _x select 1]; if ((_x select 1) == _keep) then { _pc lbSetCurSel _k } } forEach _rows;
         };
         sleep 3;
-        ["list", call (uiNamespace getVariable ["CQ_dbgSel", { -1 }])] remoteExec ["CQ_fnc_debugCmd", 2];
+        // one refresh in flight at a time (the server's answer clears CQ_dbgPending): a busy server
+        // used to pile up dozens of unanswered dashboard requests
+        if (time - (missionNamespace getVariable ["CQ_dbgPending", -1e6]) > 15) then {
+            CQ_dbgPending = time;
+            ["list", call (uiNamespace getVariable ["CQ_dbgSel", { -1 }])] remoteExecCall ["CQ_fnc_debugCmd", 2];
+        };
     };
 };

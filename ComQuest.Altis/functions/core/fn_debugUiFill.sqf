@@ -5,6 +5,7 @@
 */
 params [["_rows", []], ["_msg", ""], ["_status", ""], ["_dash", ""]];
 disableSerialization;
+CQ_dbgPending = -1e6;      // answer in: the panel may ask again
 
 if (_msg != "") then { systemChat format ["[CQ debug] %1", _msg] };
 

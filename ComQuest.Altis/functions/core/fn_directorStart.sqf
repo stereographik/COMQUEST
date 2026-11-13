@@ -16,18 +16,25 @@ CQ_directorHandle = [] spawn {
         private _times = [];
         {
             _x params ["_name", "_code"];
-            private _t1 = diag_tickTime;
             // heavy tasks run in one go (unscheduled): no time-slicing against every other script,
-            // so they finish in the frame they start and their time is their real cost
-            if (_name in CQ_directorAtomic) then { isNil _code } else { [] call _code };
-            _times pushBack [diag_tickTime - _t1, _name];
+            // so they finish in the frame they start and their time is their real cost (timed
+            // inside the same unscheduled block, "*" in the log)
+            if (_name in CQ_directorAtomic) then {
+                private _dt1 = 0;
+                isNil { private _t1 = diag_tickTime; [] call _code; _dt1 = diag_tickTime - _t1 };
+                _times pushBack [_dt1, _name + "*"];
+            } else {
+                private _t1 = diag_tickTime;
+                [] call _code;
+                _times pushBack [diag_tickTime - _t1, _name];
+            };
         } forEach CQ_directorTasks;
 
         private _dt = diag_tickTime - _t0;
         if (_dt > 0.5) then {
             // which tasks took the time, and how busy the scheduler is (all scripts share it)
             _times sort false;
-            private _top = (_times select [0, 3]) apply { format ["%1 %2s", _x select 1, (_x select 0) toFixed 1] };
+            private _top = (_times select [0, 3]) apply { format ["%1 %2s", _x select 1, (_x select 0) toFixed 2] };
             diag_activeScripts params [["_sp", 0], ["_ex", 0], ["_sq", 0], ["_fsm", 0]];
             ["Slow tick: %1 s (slowest: %2) | scripts spawn %3 execVM %4 fsm %5 | fps %6 | units %7, groups %8",
                 [_dt toFixed 2, _top joinString ", ", _sp, _ex, _fsm, round diag_fps, count allUnits, count allGroups]] call CQ_fnc_log;
