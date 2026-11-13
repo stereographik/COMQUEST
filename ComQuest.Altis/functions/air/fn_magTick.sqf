@@ -444,7 +444,7 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
 
 // ---- WASP: as far toward the carrier as the data link holds. Its anchor is the relay vehicle
 // while that one is alive, else the base; it sits CQ_waspMargin m inside the edge of their
-// overlapping ranges, on the line anchor -> carrier
+// range, on the line anchor -> carrier
 {
     private _m = _x;
     if (time - (_m get "planT") < 20) then { continue };
@@ -453,7 +453,7 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
     (if (alive _rv) then { [getPosATL _rv, CQ_linkRelayVehR] } else { [CQ_basePos, CQ_netCoverBase] }) params ["_a", "_ar"];
     private _cp = missionNamespace getVariable ["CQ_carrierPos", _a];
-    private _s = _a getPos [_ar + CQ_linkDroneR - CQ_waspMargin, _a getDir _cp];
+    private _s = _a getPos [_ar - CQ_waspMargin, _a getDir _cp];   // inside the anchor's range: a link needs the drone within the bigger circle
     if (surfaceIsWater _s) then {
         // over the sea it can still relay: keep it, but never past the coast by more than 1 km
         private _k = 0;

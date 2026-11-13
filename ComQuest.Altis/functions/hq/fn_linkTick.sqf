@@ -1,7 +1,7 @@
 /*
     CQ_fnc_linkTick  (server, director task, every CQ_linkEvery s)
     Our data link: what MAGPIE sees only reaches the map through a chain of friendly nodes back to
-    the base. Two nodes are linked when their range circles overlap (distance <= range A + range B);
+    the base. Two nodes are linked when the weaker one is inside the stronger one's range (distance <= max range);
     every path counts, the network is whatever is connected to the base.
       base                    CQ_netCoverBase       always linked
       relay vehicle           CQ_linkRelayVehR      sent by the base 1/3 of the way to the first HQ
@@ -148,9 +148,10 @@ private _canLink = {
     params ["_a", "_b"];
     (_nodes select _a) params ["_pa", "_ra", "", "_ka"];
     (_nodes select _b) params ["_pb", "_rb", "", "_kb"];
-    // overlapping ranges; the base and the relays we hold also talk to each other over
-    // CQ_linkBackbone m (radio backbone)
-    _pa distance2D _pb <= _ra + _rb || { _ka in ["b", "r"] && { _kb in ["b", "r"] } && { _pa distance2D _pb <= CQ_linkBackbone } }
+    // the weaker node must be inside the stronger one's range (the line never leaves a drawn
+    // circle); the base and the relays we hold also talk to each other over CQ_linkBackbone m
+    // (radio backbone)
+    _pa distance2D _pb <= (_ra max _rb) || { _ka in ["b", "r"] && { _kb in ["b", "r"] } && { _pa distance2D _pb <= CQ_linkBackbone } }
 };
 while { true } do {
     private _bestD = 1e9; private _bA = -1; private _bB = -1;
