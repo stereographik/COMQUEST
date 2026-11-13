@@ -222,12 +222,11 @@ if (_needHq && { count _hq == 0 }) then {
             if (isNil "CQ_hstState" || { (CQ_hstState get "phase") != "held" }) then { _msg = "no hostage held" } else {
                 private _n = 0;
                 { if (alive _x) then { _x setDamage 1; _n = _n + 1 } } forEach (CQ_hstState get "guards");
-                _msg = format ["%1 guards killed, the house clears on the next tick", _n];
+                _msg = format ["%1 guards killed", _n];
             };
         };
         case "hstFw": {
             if (isNil "CQ_hstState" || { !((CQ_hstState get "phase") in ["held", "clear"]) }) then { _msg = "no hostage waiting for the firmware" } else {
-                (CQ_hstState get "hostage") setVariable ["CQ_hstClear", true, true];
                 [_p] call CQ_fnc_hostageFirmware;
                 _msg = format ["firmware downloaded, extraction at %1", mapGridPosition (CQ_hstState get "lz")];
             };

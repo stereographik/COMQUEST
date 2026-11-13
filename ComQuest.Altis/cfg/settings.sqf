@@ -156,8 +156,8 @@ CQ_assaultBreach = 70;                   // ...and this close, the infantry stor
 // Hostage event (CQ_fnc_hostageTick): a civilian radio technician held by CSAT in a village house
 // between the base and an enemy HQ, marked exactly. Same trigger as the crash (front still for
 // CQ_crashStagnant s, at most every CQ_crashCooldown s), never while a crash runs, CQ_hstGap s
-// apart from it. House clear (no guard within CQ_hstClearR m) -> anyone holds "Download
-// firmware" on him -> a friendly helicopter waits on the ground CQ_hstLzR m away; he is too hurt
+// apart from it. Anyone reaching him holds "Download firmware" on him (the guards need not be
+// dead) -> a friendly helicopter waits on the ground CQ_hstLzR m away; he is too hurt
 // to walk: players carry him to it (or load him into any vehicle) while CQ_hstGuer guerillas
 // chase him -> it flies him to the base. Over the base perimeter:
 // Darter detection range x CQ_hstBoost for CQ_hstBoostTime s (stacks time), CQ_hstPoints to the
@@ -178,7 +178,6 @@ CQ_hstDamageMul = 0.5;                   // damage the hostage takes (x)
 CQ_hstGuards = ["O_Soldier_TL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_F", "O_Soldier_LAT_F"];
 CQ_hstGuardsIn = 3;                      // of them at the house's windows, the rest covering the approaches
 CQ_hstSkill = 0.65;
-CQ_hstClearR = 150;                      // m: the house is clear once no guard is alive this close
 CQ_hstFwTime = 10;                       // s: "Download firmware" hold
 CQ_hstHeliClass = "B_Heli_Transport_01_F";   // Ghost Hawk, AI crew
 CQ_hstLzR = [80, 500];                   // m from the hostage: the helicopter's clear spot

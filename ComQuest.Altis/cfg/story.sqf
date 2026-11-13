@@ -313,10 +313,6 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "All stations: CSAT is holding one of our radio technicians in a house at grid %1. Five guards. He has our firmware in his head. Bring him home."]],
         [["COMHAT", "...the civilian technician is secured in the house, awaiting transport..."], ["CROSSROAD", "That's our radio tech they're talking about. Grid %1, marked on your maps. Get him out."]]
     ]],
-    ["hstClear", [
-        [["CROSSROAD", "House is clear. Get to the technician and pull that firmware before anything else."]],
-        [["CROSSROAD", "Guards down. Plug into the tech and download the firmware, then we fly him out."]]
-    ]],
     // [name, lz grid]
     ["hstFirmware", [
         [["CROSSROAD", "%1 has the firmware. A bird is on the ground at grid %2, green smoke. Get him aboard, locals are already moving on him."]],
@@ -477,7 +473,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "hstStart", "hstClear", "hstFirmware", "hstHeliLost", "hstAboard", "hstHome", "hstDead", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen", "towerHacked"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "hstStart", "hstFirmware", "hstHeliLost", "hstAboard", "hstHome", "hstDead", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen", "towerHacked"];
 
 CQ_uiCardX = 19;                          // px from the screen's left edge to the card (its border then lines up with the vehicle panel, ~16 px)
 CQ_uiCardY = 300;                         // px from the top: first card (below the map screen's menu)

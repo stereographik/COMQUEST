@@ -3,8 +3,7 @@
     The hostage event (see CQ_fnc_hostageStart):
       when      like the crash: the front has not moved for CQ_crashStagnant s, at most every
                 CQ_crashCooldown s, never while a crash is running and CQ_hstGap s apart from it
-      held      the house is clear once no guard is alive within CQ_hstClearR m of it (killed or
-                gone): anyone can then hold "Download firmware" on the hostage
+      held      anyone reaching the hostage holds "Download firmware" on him (guards or not)
       extract   (CQ_fnc_hostageFirmware) players carry him to the helicopter (or any vehicle),
                 guerillas chase him
       flight    aboard: the helicopter flies to the base; over the base perimeter = home
@@ -61,15 +60,6 @@ if (_ph in ["extract", "flight"] && { _h distance2D CQ_basePos < CQ_baseRadius }
 };
 
 switch (_ph) do {
-    case "held": {
-        private _g = (_s get "guards") select { alive _x && { _x distance2D _site < CQ_hstClearR } };
-        if (_g isEqualTo []) then {
-            _s set ["phase", "clear"];
-            _h setVariable ["CQ_hstClear", true, true];
-            ["Hostage event: house clear, the firmware can be downloaded"] call CQ_fnc_log;
-            ["hstClear", []] call CQ_fnc_say;
-        };
-    };
     case "extract": {
         private _v = _s get "heli";
         if (!alive _v || { !canMove _v }) exitWith {

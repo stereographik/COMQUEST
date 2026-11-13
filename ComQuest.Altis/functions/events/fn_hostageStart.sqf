@@ -88,7 +88,7 @@ _h addEventHandler ["HandleDamage", { params ["_u", "_sel", "_dmg", "", "", "_id
     "<t color='#918C3B'>Download firmware</t>",
     "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_connect_ca.paa",
     "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_connect_ca.paa",
-    "_this distance _target < 3 && { alive _this } && { alive _target } && { _target getVariable ['CQ_hstClear', false] } && { !(_target getVariable ['CQ_hstFw', false]) }",
+    "_this distance _target < 3 && { alive _this } && { alive _target } && { !(_target getVariable ['CQ_hstFw', false]) }",
     "_caller distance _target < 3 && { alive _target }",
     {}, {},
     { params ["_target", "_caller"]; [_caller] remoteExec ["CQ_fnc_hostageFirmware", 2] },
