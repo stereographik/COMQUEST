@@ -1,6 +1,6 @@
 /*
     CQ_fnc_squadUi  (client)   U key, or the scroll menu
-    [_view] spawn CQ_fnc_squadUi;      _view: "squads" (default) or "board"
+    [_view] spawn CQ_fnc_squadUi;      _view: "squads" (default), "board", "class", "guide" or "rules"
     One window, two views (tabs at the top):
       SQUADS       three columns: friendly squads | members of the selected squad | unassigned
                    players (always shown). Join / Create / Leave / Disband / Invite (the
@@ -70,6 +70,10 @@ _tabC ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView"
 private _close = ["RscButton", 7092, [_X + _W - 0.05, _Y + 0.004, 0.04, _L], "X"] call _mk;
 _tabS ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "squads"] }];
 _tabB ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "board"] }];
+private _tabG = ["RscButton", 7094, [_X + 0.04 + _W * 0.56, _Y + 0.004, _W * 0.14, _L], "GUIDE"] call _mk;
+private _tabR = ["RscButton", 7095, [_X + 0.05 + _W * 0.70, _Y + 0.004, _W * 0.14, _L], "RULES"] call _mk;
+_tabG ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "guide"] }];
+_tabR ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "rules"] }];
 _close ctrlAddEventHandler ["ButtonClick", { (uiNamespace getVariable ["CQ_sqDisplay", displayNull]) closeDisplay 1 }];
 
 // --- squads view: three columns  SQUADS | MEMBERS | UNASSIGNED PLAYERS (always visible)
@@ -195,6 +199,56 @@ _bTake ctrlAddEventHandler ["ButtonClick", {
 }];
 private _clCtrls = [_classList, _classInfo, _bTake];
 
+// --- guide view: chapters | text (CQ_guide, cfg\guide.sqf)
+private _gList = ["RscListBox", 7301, [_X + 0.01, _top, _W * 0.28, _H - _L * 2.2]] call _mk;
+private _gText = ["RscStructuredText", 7302, [_X + 0.02 + _W * 0.28, _top, _W * 0.72 - 0.03, _H - _L * 2.2]] call _mk;
+_gText ctrlSetBackgroundColor (CQ_ui get "inset");
+{ _gList lbAdd (_x select 0) } forEach CQ_guide;
+_gList ctrlAddEventHandler ["LBSelChanged", {
+    params ["_c", "_i"];
+    private _ch = CQ_guide param [_i, ["", []]];
+    private _t = format ["<t size='1.05' font='PuristaSemibold' color='#F2F1DF'>%1</t><br/><br/>", _ch select 0];
+    { _t = _t + format ["<t size='0.85' color='#CFCDB3'>%1</t><br/><br/>", _x] } forEach (_ch select 1);
+    ((uiNamespace getVariable ["CQ_sqDisplay", displayNull]) displayCtrl 7302) ctrlSetStructuredText parseText _t;
+}];
+_gList lbSetCurSel 0;
+private _gCtrls = [_gList, _gText];
+
+// --- rules view: the rules, I AGREE (first join), report a player (CQ_fnc_conduct)
+private _rText = ["RscStructuredText", 7401, [_X + 0.01, _top, _W * 0.62, _H - _L * 2.2]] call _mk;
+_rText ctrlSetBackgroundColor (CQ_ui get "inset");
+private _rT = format ["<t size='0.95' font='PuristaSemibold' color='#918C3B'>SERVER RULES</t><br/><t size='0.8' color='#A6A381'>%1</t><br/><br/>", CQ_rulesIntro];
+{ _rT = _rT + format ["<t size='0.85' color='#918C3B'>%1.  </t><t size='0.85' color='#F2F1DF'>%2</t><br/><br/>", _forEachIndex + 1, _x] } forEach CQ_rules;
+_rText ctrlSetStructuredText parseText _rT;
+private _rx = _X + 0.02 + _W * 0.62;
+private _rw = _W * 0.38 - 0.03;
+private _bAgree = ["RscButton", 7402, [_rx, _top, _rw, _L * 1.4], "I AGREE"] call _mk;
+_bAgree ctrlAddEventHandler ["ButtonClick", {
+    CQ_rulesOkLocal = true;
+    player setVariable ["CQ_rulesOk", true, true];
+    ["agree", [player]] remoteExec ["CQ_fnc_conduct", 2];
+    hint "Thank you. Good hunting.";
+}];
+private _rInfo = ["RscStructuredText", 7403, [_rx, _top + _L * 1.6, _rw, _L * 1.4]] call _mk;
+private _rHdr = ["RscText", -1, [_rx, _top + _L * 3.4, _rw, _L * 0.8], "REPORT A PLAYER"] call _mk;
+_rHdr ctrlSetFont "PuristaMedium";
+_rHdr ctrlSetTextColor (CQ_ui get "muted");
+private _rWho = ["RscCombo", 7404, [_rx, _top + _L * 4.3, _rw, _L * 0.85]] call _mk;
+private _rWhy = ["RscCombo", 7405, [_rx, _top + _L * 5.3, _rw, _L * 0.85]] call _mk;
+{ _rWhy lbAdd _x } forEach CQ_reportReasons;
+_rWhy lbSetCurSel 0;
+private _bRep = ["RscButton", 7406, [_rx, _top + _L * 6.4, _rw, _L * 1.1], "SEND TO ADMINS"] call _mk;
+_bRep ctrlAddEventHandler ["ButtonClick", {
+    private _d = uiNamespace getVariable ["CQ_sqDisplay", displayNull];
+    private _w = _d displayCtrl 7404; private _r = _d displayCtrl 7405;
+    if (lbCurSel _w < 0) exitWith { hint "Pick a player first" };
+    ["report", [player, _w lbData (lbCurSel _w), _r lbText (lbCurSel _r)]] remoteExec ["CQ_fnc_conduct", 2];
+}];
+private _rNote = ["RscStructuredText", -1, [_rx, _top + _L * 7.7, _rw, _L * 2]] call _mk;
+_rNote ctrlSetStructuredText parseText "<t size='0.75' color='#A6A381'>Reports go to the admins only; the player is not told. Use it for what an admin may not have seen.</t>";
+private _rCtrls = [_rText, _bAgree, _rInfo, _rHdr, _rWho, _rWhy, _bRep, _rNote];
+private _rWhoN = -1;
+
 private _role = {
     params ["_u"];
     private _r = roleDescription _u;
@@ -214,6 +268,10 @@ while { !isNull _d } do {
         { _x ctrlShow (_view == "squads") } forEach _sqCtrls;
         { _x ctrlShow (_view == "board") } forEach _bdCtrls;
         { _x ctrlShow (_view == "class") } forEach _clCtrls;
+        { _x ctrlShow (_view == "guide") } forEach _gCtrls;
+        { _x ctrlShow (_view == "rules") } forEach _rCtrls;
+        [_tabG, _view == "guide"] call CQ_fnc_uiSel;
+        [_tabR, _view == "rules"] call CQ_fnc_uiSel;
         [_tabC, _view == "class"] call CQ_fnc_uiSel;
         [_tabS, _view == "squads"] call CQ_fnc_uiSel;
         [_tabB, _view == "board"] call CQ_fnc_uiSel;
@@ -221,6 +279,19 @@ while { !isNull _d } do {
     };
     private _players = allPlayers select { side group _x == west };
 
+    if (_view == "rules") then {
+        private _ok = player getVariable ["CQ_rulesOk", false];
+        _bAgree ctrlShow !_ok;
+        _rInfo ctrlSetStructuredText parseText (if (_ok) then { "<t size='0.8' color='#8FD16A'>You accepted the rules. Thank you.</t>" }
+            else { "<t size='0.8' color='#BA392C'>Accept the rules to use vehicles, the arsenal and classes.</t>" });
+        private _others = (allPlayers select { _x != player }) apply { [name _x, getPlayerUID _x] };
+        if (count _others != _rWhoN) then {
+            _rWhoN = count _others;
+            lbClear _rWho;
+            { private _k = _rWho lbAdd (_x select 0); _rWho lbSetData [_k, _x select 1] } forEach _others;
+            if (_others isNotEqualTo []) then { _rWho lbSetCurSel 0 };
+        };
+    };
     if (_view == "class") then {
         private _i = lbCurSel _classList;
         private _mine = player getVariable ["CQ_class", "Rifleman"];

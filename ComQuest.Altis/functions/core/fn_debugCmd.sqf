@@ -9,6 +9,7 @@
     MAGPIE:               magReport, magLaunch, magKill
     Events:               crash, tpCrash, decrypt, crashOut, hst, tpHst, hstClear, hstFw, hstBoard, hstHome, hstEnd, opBuild, opKill, opJam, tpOp
     Player (the caller):  heal, tpBase, tpHq, points, vehFix
+    Players (admin tools, _id = [uid, text]): pWarn, pMute, pBase, pKick (CQ_fnc_conduct)
     Base and world:       vehReset, defRebuild, time1, noon, night, clearWx
     View:                 playerView (the game as a final player sees it: no debug output)
     list                  just refresh
@@ -296,6 +297,15 @@ if (_needHq && { count _hq == 0 }) then {
             _msg = format ["%1 drone(s) shot down", _n];
         };
         case "heal": { if (!isNull _p) then { _p setDamage 0; _msg = "healed" } };
+        // admin tools on a player (CQ_fnc_conduct): _id = [uid, text]
+        case "pWarn";
+        case "pMute";
+        case "pBase";
+        case "pKick": {
+            if !(_id isEqualType []) exitWith { _msg = "pick a player first" };
+            ["admin", [_cmd, _id param [0, ""], _id param [1, ""], _p]] call CQ_fnc_conduct;
+            _msg = format ["%1 sent", _cmd select [1]];
+        };
         case "tpBase": {
             if (!isNull _p) then {
                 [_p] remoteExec ["moveOut", _p];

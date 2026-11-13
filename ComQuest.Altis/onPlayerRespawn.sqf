@@ -2,6 +2,7 @@
     onPlayerRespawn.sqf - runs on the player's machine after each respawn
 */
 params ["_newUnit", "_oldUnit"];
+["respawn"] call CQ_fnc_conduct;   // the new body keeps the server rules agreement
 
 if (!isNil "CQ_savedLoadout") then {
     _newUnit setUnitLoadout CQ_savedLoadout;

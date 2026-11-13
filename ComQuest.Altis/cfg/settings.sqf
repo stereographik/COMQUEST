@@ -472,6 +472,14 @@ CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get tre
 // Radio direction finder (players with a radio): signal from enemy HQ radios
 CQ_rdfRange = 6000;                      // no signal beyond this
 CQ_rdfTop = 40;                          // signal panel: px from the top of the screen (centred)
+// Server rules and conduct (CQ_fnc_conduct; texts in cfg\rules.sqf and cfg\guide.sqf)
+CQ_rulesGate = true;                     // first join: accept the rules before vehicles, arsenal and classes
+CQ_tkWatch = true;                       // teamkill warnings
+CQ_tkWindow = 1800;                      // s: teamkills counted over this window
+CQ_tkLockTime = 300;                     // s: 3rd teamkill and more: back to base, no vehicles / arsenal / class
+CQ_muteTime = 600;                       // s: admin "Mute" (global, side and command channels)
+CQ_reportCooldown = 60;                  // s between two reports from the same player
+CQ_serverCmdPassword = "";               // dedicated server: serverCommandPassword of server.cfg, for a real #kick
 CQ_mapIconScale = 0.5;                   // every map icon (mission markers, drones, relays, debug) at this x its default size
 CQ_threatRange = 1500;                   // threat compass: closest danger the network knows within this (m)
 CQ_threatMemory = 60;                    // s a drone contact stays on the compass at its last seen spot

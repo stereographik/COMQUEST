@@ -271,6 +271,8 @@ class CfgFunctions
         {
             file = "functions\players";
             class mapIconScale {};
+            class conduct {};
+            class guideDiary {};
             class baseSetup {};
             class rdfTick {};
             class rdfClient {};
@@ -313,5 +315,15 @@ class CfgFunctions
             class pilotGuard {};
             class playerSetup {};
         };
+    };
+};
+
+class CfgDebriefing
+{
+    class CQ_kicked
+    {
+        title = "Removed by an admin";
+        subtitle = "ComQuest";
+        description = "An admin removed you from the game for breaking the server rules.";
     };
 };

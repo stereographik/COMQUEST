@@ -6,6 +6,7 @@
     medikit, toolkit...). Magazines are all offered: anyone carries ammo for the squad.
     The catalogue is built once per client (CQ_arsenalCat), the box is a local helper object.
 */
+if !(["can"] call CQ_fnc_conduct) exitWith {};   // rules not accepted yet, or locked out
 if (isNil "CQ_arsenalCat") then {
     private _pub = {
         params ["_c"];

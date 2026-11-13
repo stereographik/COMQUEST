@@ -73,6 +73,9 @@ uiNamespace setVariable ["CQ_dbgSel", {
 // [label, command]; command "!x" = local action, else sent to the server
 // [category, [[subcategory, [[label, command], ...]], ...]]; command "!x" = local action, else sent to the server
 private _cats = [
+    ["PLAYERS  (pick a player and a message below)", [
+        ["Admin", [["Warn", "pWarn"], ["Mute 10 min", "pMute"], ["Send to base", "pBase"], ["Kick", "pKick"]]]
+    ]],
     ["TELEPORTERS", [
         ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Relay vehicle", "tpRelayVeh"], ["Log my position", "logPos"], ["Crash site", "tpCrash"], ["Hostage", "tpHst"], ["Outpost", "tpOp"], ["Base", "tpBase"]]]
     ]],
@@ -113,6 +116,7 @@ private _cats = [
 private _top = _Y + _L * 11.5;
 private _rowsN = 0; private _subsN = 0;
 { { _rowsN = _rowsN + ceil (count (_x select 1) / 3); _subsN = _subsN + 1 } forEach (_x select 1) } forEach _cats;
+_rowsN = _rowsN + 1.1;                                     // the player picker row
 private _u = (((_Y + _H - 0.01) - _top) / (_rowsN + 1.35 * count _cats + 0.15 * _subsN)) min 0.03;   // one row
 private _fh = _u * 0.78;                                   // font height
 private _rx = _X + 0.012;
@@ -130,6 +134,16 @@ private _toggles = [];
     _h ctrlSetTextColor (CQ_ui get "accent");
     (["RscText", -1, [_rx, _y + _u, _rw, 0.002]] call _mk) ctrlSetBackgroundColor (CQ_ui get "accent");
     _y = _y + _u * 1.15;
+    if ((_cat find "PLAYERS") == 0) then {
+        // player picker (name, teamkills, warnings) and the message for Warn / Send to base / Kick
+        private _pc = ["RscCombo", 9010, [_rx, _y, _rw * 0.45, _u * 0.92]] call _mk;
+        _pc ctrlSetFontHeight _fh;
+        private _pe = ["RscEdit", 9011, [_rx + _rw * 0.46, _y, _rw * 0.54, _u * 0.92]] call _mk;
+        _pe ctrlSetFontHeight _fh;
+        _pe ctrlSetText "";
+        _pe ctrlSetTooltip "Message for Warn, Send to base or Kick (optional)";
+        _y = _y + _u * 1.1;
+    };
     {
         _x params ["_sub", "_btns"];
         private _sl = ["RscText", -1, [_rx, _y, _sw, _u * 0.95], _sub] call _mk;
@@ -172,6 +186,15 @@ private _toggles = [];
                         ["playerView", [0, 1] select _on] remoteExec ["CQ_fnc_debugCmd", 2];
                     };
                     case "!arsenal": { (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) closeDisplay 1; ["Open", true] spawn BIS_fnc_arsenal };
+                    case "pWarn";
+                    case "pMute";
+                    case "pBase";
+                    case "pKick": {
+                        private _d = uiNamespace getVariable ["CQ_dbgDisplay", displayNull];
+                        private _pc = _d displayCtrl 9010;
+                        if (lbCurSel _pc < 0) exitWith { hint "Pick a player first" };
+                        [_cmd, [_pc lbData (lbCurSel _pc), ctrlText (_d displayCtrl 9011)]] remoteExec ["CQ_fnc_debugCmd", 2];
+                    };
                     default { [_cmd, call (uiNamespace getVariable "CQ_dbgSel")] remoteExec ["CQ_fnc_debugCmd", 2] };
                 };
                 call (uiNamespace getVariable ["CQ_dbgToggleLabels", {}]);
@@ -205,7 +228,22 @@ call (uiNamespace getVariable "CQ_dbgToggleLabels");
 ["list", -1] remoteExec ["CQ_fnc_debugCmd", 2];
 [] spawn {
     disableSerialization;
+    private _pSig = "";
     while { !isNull (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) } do {
+        // player picker: names with teamkills and warnings (CQ_conductPub), selection kept
+        private _pc = (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) displayCtrl 9010;
+        private _pub = missionNamespace getVariable ["CQ_conductPub", []];
+        private _rows = allPlayers apply {
+            private _u = getPlayerUID _x;
+            private _r = _pub param [_pub findIf { (_x select 0) == _u }, [_u, 0, 0]];
+            [format ["%1   (TK %2, warn %3)", name _x, _r select 1, _r select 2], _u]
+        };
+        if (str _rows != _pSig && { !isNull _pc }) then {
+            _pSig = str _rows;
+            private _keep = if (lbCurSel _pc >= 0) then { _pc lbData (lbCurSel _pc) } else { "" };
+            lbClear _pc;
+            { private _k = _pc lbAdd (_x select 0); _pc lbSetData [_k, _x select 1]; if ((_x select 1) == _keep) then { _pc lbSetCurSel _k } } forEach _rows;
+        };
         sleep 3;
         ["list", call (uiNamespace getVariable ["CQ_dbgSel", { -1 }])] remoteExec ["CQ_fnc_debugCmd", 2];
     };

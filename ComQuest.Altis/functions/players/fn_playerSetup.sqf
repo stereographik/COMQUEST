@@ -23,6 +23,9 @@ player addEventHandler ["HandleDamage", {
         private _nm = getText (configOf _o >> "displayName");
         if (_nm == "") then { _nm = typeOf _o };
         if (_nm != (_u getVariable ["CQ_lastHit", ""])) then { _u setVariable ["CQ_lastHit", _nm, true] };
+        // teamkill watch (CQ_fnc_conduct): who of ours last hurt him, for a death after bleeding out
+        private _pw = [effectiveCommander _w, _w] select (_w isKindOf "CAManBase");
+        if (isPlayer _pw && { _pw != _u }) then { _u setVariable ["CQ_lastHitBy", [_pw, serverTime, vehicle _w != _w || { !(_w isKindOf "CAManBase") }], true] };
     };
     nil
 }];
@@ -33,9 +36,10 @@ player addEventHandler ["FiredMan", { _this call CQ_fnc_safeZoneFired }];
 // adrenalineSurge: a downed medic may get back up on his own (one watcher per life)
 [] spawn CQ_fnc_adrenalineSurge;
 
-// Pilot seats
+// Pilot seats; no vehicle before the server rules are accepted, or while locked out (CQ_fnc_conduct)
 player addEventHandler ["GetInMan", {
     params ["_unit", "", "_veh"];
+    if !(["can"] call CQ_fnc_conduct) exitWith { moveOut _unit };
     [_unit, _veh] call CQ_fnc_pilotGuard;
 }];
 player addEventHandler ["SeatSwitchedMan", {

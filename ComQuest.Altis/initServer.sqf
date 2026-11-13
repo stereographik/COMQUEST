@@ -39,7 +39,17 @@ addMissionEventHandler ["PlayerDisconnected", {
     if (_name != "__SERVER__") then { [format ["%1 left the operation", _name]] remoteExec ["CQ_fnc_feed", 0] };
 }];
 addMissionEventHandler ["EntityKilled", {
-    params ["_u"];
+    params ["_u", "_killer", "_inst"];
+    // teamkill watch (CQ_fnc_conduct): the shooter, or the player who last hurt him (downed, bled out)
+    if (isPlayer _u) then {
+        private _k = [_inst, effectiveCommander _killer] select (isNull _inst);
+        private _acc = !isNull _killer && { !(_killer isKindOf "CAManBase") };            // run over, vehicle crash
+        if (!isPlayer _k || { _k == _u }) then {
+            (_u getVariable ["CQ_lastHitBy", [objNull, -1e6, false]]) params ["_lh", "_lt", "_lv"];
+            if (isPlayer _lh && { _lh != _u } && { serverTime - _lt < 120 }) then { _k = _lh; _acc = _lv } else { _k = objNull };
+        };
+        if (!isNull _k) then { ["tk", [_u, _k, _acc]] call CQ_fnc_conduct };
+    };
     if (!isPlayer _u || { _u getVariable ["CQ_downFed", false] }) exitWith {};   // already announced when he went down
     [format ["%1 killed  ·  %2", name _u, _u getVariable ["CQ_lastHit", "unknown"]]] remoteExec ["CQ_fnc_feed", 0];
 }];

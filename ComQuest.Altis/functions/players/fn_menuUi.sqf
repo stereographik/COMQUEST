@@ -23,7 +23,8 @@ private _items = [
     ["CLASS", ["Only inside the HQ compound", "You are in the HQ compound: pick a class"] select (player inArea [CQ_basePos, (CQ_compoundSize select 0) / 2 + CQ_classChangeRange, (CQ_compoundSize select 1) / 2 + CQ_classChangeRange, CQ_baseDir, true]), { ["class"] spawn CQ_fnc_squadUi }],
     ["STATS", "Ranking and player details", { ["board"] spawn CQ_fnc_squadUi }],
     ["VEHICLE SHOP", ["Browse here, buy at the shop terminal", "You are at the shop terminal"] select _nearShop, { [] spawn CQ_fnc_shopUi }],
-    ["VEHICLE DEPOT", "Free vehicles: browse here, request at a depot (repair station)", { [] spawn CQ_fnc_depotUi }]
+    ["VEHICLE DEPOT", "Free vehicles: browse here, request at a depot (repair station)", { [] spawn CQ_fnc_depotUi }],
+    ["GUIDE & RULES", "How to play, server rules, report a player", { ["guide"] spawn CQ_fnc_squadUi }]
 ];
 if (_admin) then { _items pushBack ["DEBUG PANEL", "Test commands (F3)", { [] spawn CQ_fnc_debugUi }] };
 
