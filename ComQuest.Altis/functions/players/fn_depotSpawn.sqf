@@ -33,7 +33,7 @@ private _sl = leader _g == _p && { !(_g getVariable ["CQ_solo", false]) };
 if (!_pilot && { !_sl }) exitWith { ["Only squad leaders and Falcon pilots can take depot vehicles"] call _say };
 if (_pilot) then {
     if !(_cls isKindOf "Air") exitWith { ["Falcon pilots take aircraft only"] call _say; _cls = "" };
-    if (({ (_x getVariable ["CQ_depotOwner", ""]) == _uid } count CQ_depotVehs) >= CQ_falconPerPilot) exitWith {
+    if (({ _x isKindOf "Air" && { (_x getVariable ["CQ_depotOwner", ""]) == _uid } } count CQ_depotVehs) >= CQ_falconPerPilot) exitWith {
         [format ["You already have %1 aircraft out. Return it at a depot first.", CQ_falconPerPilot]] call _say; _cls = "";
     };
 } else {
