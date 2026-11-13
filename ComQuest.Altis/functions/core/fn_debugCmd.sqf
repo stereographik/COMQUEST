@@ -204,6 +204,14 @@ if (_needHq && { count _hq == 0 }) then {
                 };
             };
         };
+        case "launchGame": {
+            if (!(missionNamespace getVariable ["CQ_gameLaunched", false]) && { serverTime < (missionNamespace getVariable ["CQ_nextRootTime", 0]) }) then {
+                CQ_gameLaunched = true;
+                CQ_nextRootTime = serverTime;
+                _msg = "Game launched: the first insertion leaves the carrier now";
+                ["Debug: game launched, first root insertion now"] call CQ_fnc_log;
+            } else { _msg = "Already launched" };
+        };
         case "sabGo": {
             CQ_magContactMade = true; CQ_sabContactT = -1e6;
             if (isNil "CQ_sab") then { ["tick"] call CQ_fnc_sabotage };
@@ -447,4 +455,4 @@ private _status = format ["<t size='0.85'>Act <t color='#918C3B'>%1</t>   |   ca
     (missionNamespace getVariable ["CQ_specialLeft", createHashMap]) getOrDefault ["engineer", "-"],
     [daytime, "HH:MM"] call BIS_fnc_timeToString, count allPlayers];
 
-[_rows, _msg, _status, [_hq] call CQ_fnc_debugHqDash, [_hq] call CQ_fnc_debugHqInv] remoteExec ["CQ_fnc_debugUiFill", _caller];
+[_rows, _msg, _status] remoteExec ["CQ_fnc_debugUiFill", _caller];

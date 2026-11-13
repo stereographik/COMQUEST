@@ -300,7 +300,7 @@ CQ_testMagDirect = false;                // TEST ONLY, set false before merging 
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 6;                         // root insertions in a campaign (victory after the last one)
 CQ_rootInterval = 3600;                  // seconds between root insertions
-CQ_firstRootDelay = 10;                  // seconds after mission start
+CQ_firstRootDelay = 300;                 // seconds after mission start (debug panel: "Launch game" skips the wait)
 CQ_insertionSpawnDistance = 8000;        // helis appear this far from the site
 CQ_insertionFlyHeight = 80;              // default; each role has its own band below
 // Altitude bands keep formations from colliding (careless transports never dodge)
@@ -761,7 +761,7 @@ CQ_airRearmTime = 60;
 // --- DEBUG overrides (set CQ_debug = false above for the real campaign) -----
 if (CQ_debug) then {
     CQ_debugFirstAtRunway = false;       // true: 1st root lands at the runway end (marker "cq_debug_site" overrides)
-    CQ_firstRootDelay = 30;
+    CQ_firstRootDelay = 300;
     CQ_insertionSpawnDistance = 3500;
     CQ_secureTimeout = 90;
     CQ_baseNoSpawnRadius = 1200;         // the runway HQ is only ~900 m from the base
