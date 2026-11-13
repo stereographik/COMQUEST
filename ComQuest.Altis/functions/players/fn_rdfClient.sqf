@@ -1,13 +1,12 @@
 /*
     CQ_fnc_rdfClient  (client, spawned once from initPlayerLocal)
-    Radio direction finder: a compact signal panel, centred at the top of the screen
-    (CQ_rdfTop px below the top edge), shown to any player carrying a radio.
-
-    It listens to the CLOSEST active emitter only (CQ_rdfSources: fully built HQs with their
-    radio tower standing). None within CQ_rdfRange -> "NO SIGNAL".
-      signal = range falloff x direction factor, shown 0-100 %
-    The antenna is directional: the signal peaks when you LOOK toward the HQ, so sweeping
-    your view finds the bearing; walking toward it raises the level. No map position is given.
+    Threat compass: a compact panel centred at the top of the screen (CQ_rdfTop px below the top
+    edge), for a player carrying a radio AND inside the data link's coverage (a linked node of
+    CQ_linkPub within its range: base, relays, relay vehicle, vehicles, drones). Outside: hidden.
+    It shows the CLOSEST danger the network knows: an enemy a linked MAGPIE drone sees
+    (CQ_magVisible), remembered CQ_threatMemory s at its last seen spot, within CQ_threatRange:
+      type (INF xN, VEH, ARMOR, AIR, AA, STATIC), an arrow relative to where you look, the
+      distance, and a proximity meter. Nothing known: CLEAR. Near the outpost jammer: JAMMED.
 */
 if (!hasInterface) exitWith {};
 waitUntil { sleep 0.5; !isNull findDisplay 46 };
@@ -42,6 +41,9 @@ _lbl ctrlSetFontHeight (15 * _ph);
 _lbl ctrlSetTextColor (CQ_ui get "muted");
 
 private _pct = ["RscStructuredText", _W - 110, 3, 110 - _pad + 4, 22] call _mk;
+private _arw = ["RscPicture", (_W - 22) / 2, 3, 22, 22] call _mk;
+_arw ctrlSetText "\A3\ui_f\data\map\markers\military\arrow2_CA.paa";
+_arw ctrlSetTextColor [0.729, 0.224, 0.173, 1];
 
 // segmented meter
 private _segs = 20;
@@ -52,7 +54,7 @@ for "_i" from 0 to _segs - 1 do {
     private _b = ["RscText", _pad + _i * (_segW + _gap), _H - 14, _segW, 6] call _mk;
     _bars pushBack _b;
 };
-private _all = [_bg, _edge, _lbl, _pct] + _bars;
+private _all = [_bg, _edge, _lbl, _pct, _arw] + _bars;
 // crash event: "enemy securing device" under the panel while the hidden countdown runs (CQ_crashAlarm)
 private _alBg = ["RscText", 0, _H + 4, _W, 24] call _mk;
 _alBg ctrlSetBackgroundColor [0.098, 0.094, 0.07, 0.75];
@@ -72,16 +74,25 @@ private _shown = -1;
 private _disp = 0;
 private _offColor = [0.2, 0.192, 0.122, 0.7];
 private _lastV = -2;
+private _cov = false;
+private _covT = 0;
+private _mem = createHashMap;     // netId -> [object, last seen position, time]
 while { true } do {
     sleep 0.2;
     private _has = alive player && { "ItemRadio" in assignedItems player || { (assignedItems player) findIf { "radio" in toLower _x } > -1 } };
-    private _on = _has && { !visibleMap } && { isNull curatorCamera } && { isNull findDisplay 49 };
+    // data link coverage: inside the range of a linked node (checked once a second)
+    if (time >= _covT) then {
+        _covT = time + 1;
+        private _pp = getPosATL player;
+        _cov = (((missionNamespace getVariable ["CQ_linkPub", []]) param [0, []]) findIf { (_x select 2) && { _pp distance2D (_x select 0) < (_x select 1) } }) > -1;
+    };
+    private _on = _has && { _cov } && { !visibleMap } && { isNull curatorCamera } && { isNull findDisplay 49 };
     if (_on != (_shown == 1)) then {
         { _x ctrlShow _on } forEach _all;
         _shown = [0, 1] select _on;
         _lastV = -2;                                       // redraw once shown again
     };
-    private _alOn = _on && { missionNamespace getVariable ["CQ_crashAlarm", false] };
+    private _alOn = _has && { !visibleMap } && { missionNamespace getVariable ["CQ_crashAlarm", false] };
     if (_alOn != _alShown) then { _alShown = _alOn; { _x ctrlShow _alOn } forEach _al };
     if (!_on) then { continue };
 
@@ -93,51 +104,65 @@ while { true } do {
         _lbl ctrlSetTextColor [0.729, 0.224, 0.173, 1];
         _edge ctrlSetBackgroundColor [0.729, 0.224, 0.173, 0.9];
         _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='0.6' color='#BA392C'>??</t>";
+        _arw ctrlShow false;
         { _x ctrlSetBackgroundColor ([_offColor, [0.729, 0.224, 0.173, 0.4 + random 0.5]] select (random 1 < 0.5)) } forEach _bars;
         continue;
     };
 
-    // closest active emitter
-    private _src = [];
-    private _bestD = 1e10;
+    // what the network sees, remembered CQ_threatMemory s at the last seen spot
     {
-        private _dd = player distance2D (_x select 0);
-        if (_dd < _bestD) then { _bestD = _dd; _src = _x };
-    } forEach (missionNamespace getVariable ["CQ_rdfSources", []]);
+        if (alive _x) then { _mem set [netId _x, [_x, getPosATLVisual _x, time]] };
+    } forEach (missionNamespace getVariable ["CQ_magVisible", []]);
+    private _pp = getPosATL player;
+    private _best = [];
+    private _bestD = CQ_threatRange;
+    {
+        _y params ["_o", "_p", "_t"];
+        if (time - _t > CQ_threatMemory || { !alive _o }) then { _mem deleteAt _x; continue };
+        private _dd = _pp distance2D _p;
+        if (_dd < _bestD) then { _bestD = _dd; _best = _y };
+    } forEach +_mem;
 
-    private _target = -1;          // -1 = no signal
-    if (_src isNotEqualTo [] && { _bestD <= CQ_rdfRange }) then {
-        _src params ["_pos", "_pow"];
-        private _view = getCameraViewDirection player;
-        private _look = (_view select 0) atan2 (_view select 1);
-        private _fall = (1 - _bestD / CQ_rdfRange) ^ 1.6;
-        private _off = abs ((((player getDir _pos) - _look) + 540) % 360 - 180);
-        private _dir = 0.25 + 0.75 * ((cos _off) max 0) ^ 2;
-        _target = ((_pow * _fall * _dir + (random 0.03) - 0.015) max 0) min 1;
-    };
-
-    if (_target < 0) then {
-        if (_lastV == -1) then { continue };               // already showing NO SIGNAL
+    if (_best isEqualTo []) then {
+        if (_lastV == -1) then { continue };               // already showing CLEAR
         _lastV = -1;
         _disp = 0;
-        _lbl ctrlSetText "NO SIGNAL";
+        _lbl ctrlSetText "CLEAR";
         _lbl ctrlSetTextColor (CQ_ui get "dim");
-        _edge ctrlSetBackgroundColor [0.478, 0.471, 0.376, 0.9];
-        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='0.6' color='#7A7860'>--</t>";
-        { _x ctrlSetBackgroundColor _offColor } forEach _bars;
-    } else {
-        _disp = _disp + (_target - _disp) * 0.4;          // smooth the needle
-        private _v = round (_disp * 100);
-        if (_v == _lastV) then { continue };               // nothing to redraw
-        _lastV = _v;
-        _lbl ctrlSetText "SIGNAL";
-        _lbl ctrlSetTextColor (CQ_ui get "muted");
         _edge ctrlSetBackgroundColor (CQ_ui get "accent");
-        _pct ctrlSetStructuredText parseText format [
-            "<t align='right'><t font='PuristaSemibold' size='0.65' color='#F2F1DF'>%1</t><t font='PuristaLight' size='0.5' color='#A6A381'> %%</t></t>", _v];
-        private _n = round (_disp * _segs);
-        {
-            _x ctrlSetBackgroundColor ([_offColor, [0.949, 0.945, 0.875, 0.55 + 0.45 * (_forEachIndex / _segs)]] select (_forEachIndex < _n));
-        } forEach _bars;
+        _pct ctrlSetStructuredText parseText "<t align='right' font='PuristaLight' size='0.6' color='#7A7860'>--</t>";
+        _arw ctrlShow false;
+        { _x ctrlSetBackgroundColor _offColor } forEach _bars;
+        continue;
     };
+    _best params ["_o", "_p", "_t"];
+    private _v = vehicle _o;
+    private _cls = toUpper typeOf _v;
+    private _type = switch (true) do {
+        case (_v isKindOf "Air"): { "AIR" };
+        case ((_cls find "_AA" > -1) || { _cls find "AA_F" > -1 }): { "AA" };
+        case (_v isKindOf "StaticWeapon"): { "STATIC" };
+        case (_v isKindOf "Tank" || { _v isKindOf "Wheeled_APC_F" }): { "ARMOR" };
+        case (_v isKindOf "LandVehicle"): { "VEH" };
+        default {
+            private _n = { (_y select 1) distance2D _p < 75 && { (_y select 0) isKindOf "CAManBase" } } count _mem;
+            format ["INF x%1", _n max 1]
+        };
+    };
+    private _age = round (time - _t);
+    _lastV = -4;
+    _lbl ctrlSetText (if (_age > 5) then { format ["%1  %2s", _type, _age] } else { _type });
+    _lbl ctrlSetTextColor ([[0.949, 0.945, 0.875, 1], (CQ_ui get "muted")] select (_age > 5));
+    _edge ctrlSetBackgroundColor [0.729, 0.224, 0.173, 0.9];
+    private _view = getCameraViewDirection player;
+    private _look = (_view select 0) atan2 (_view select 1);
+    _arw ctrlShow true;
+    _arw ctrlSetAngle [((_pp getDir _p) - _look + 360) % 360, 0.5, 0.5];
+    _pct ctrlSetStructuredText parseText format [
+        "<t align='right'><t font='PuristaSemibold' size='0.65' color='#F2F1DF'>%1</t><t font='PuristaLight' size='0.5' color='#A6A381'> m</t></t>", round _bestD];
+    _disp = _disp + ((1 - _bestD / CQ_threatRange) - _disp) * 0.4;
+    private _n = round (_disp * _segs);
+    {
+        _x ctrlSetBackgroundColor ([_offColor, [0.729, 0.224, 0.173, 0.45 + 0.55 * (_forEachIndex / _segs)]] select (_forEachIndex < _n));
+    } forEach _bars;
 };
