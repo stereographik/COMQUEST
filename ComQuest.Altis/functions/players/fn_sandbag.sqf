@@ -24,7 +24,7 @@ switch (_mode) do {
         CQ_sbGhost = CQ_sbClass createVehicleLocal [0, 0, 0];
         CQ_sbGhost enableSimulation false;
         CQ_sbGhost allowDamage false;
-        CQ_sbRot = 0;
+        CQ_sbRot = CQ_sbDefaultRot;      // default angle offset (Q / E still turn it)
         CQ_sbState = 0;            // 0 placing, 1 confirmed, -1 cancelled
         private _kh = (findDisplay 46) displayAddEventHandler ["KeyDown", {
             params ["", "_k"];

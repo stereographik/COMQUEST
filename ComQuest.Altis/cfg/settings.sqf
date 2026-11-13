@@ -89,6 +89,7 @@ CQ_sbClass = "Land_BagFence_Short_F";
 CQ_sbMax = 2;                            // walls standing per engineer (per player, through respawns)
 CQ_sbBuildTime = 6;                      // s to build one (stay still, on foot)
 CQ_sbDismantleTime = 2;
+CQ_sbDefaultRot = 90;                    // deg added to the ghost wall's default angle (Q / E turn it from there)
 // Heavy lift (CQ_fnc_heavyLift): these helicopters sling load any vehicle up to CQ_hlMax kg (vanilla Mohawk: 5 t)
 CQ_hlClasses = ["I_Heli_Transport_02_F"];
 CQ_hlMax = 12000;                        // kg: Strider 9.7 t, HEMTT family ~10.8-11 t
