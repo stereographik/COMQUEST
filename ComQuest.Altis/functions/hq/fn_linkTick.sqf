@@ -190,7 +190,7 @@ while { true } do {
     private _l = _ok select (_nodes findIf { (_x select 2) == _v });
     if ((_v getVariable ["CQ_linked", -1]) isNotEqualTo _l) then { _v setVariable ["CQ_linked", _l, true] };   // public: the map shows a Darter only while linked
 } forEach _drones;
-if (alive _rv) then { _rv setVariable ["CQ_linked", true] };
+if (alive _rv) then { _rv setVariable ["CQ_linked", _ok select (_nodes findIf { (_x select 2) == _rv }), true] };   // CQ_fnc_linkRepair watches it
 [_drones] call CQ_fnc_objSpot;   // enemy objectives a drone saw, once the intel reaches the base
 
 private _pub = [_nodes apply { [_x select 0, _x select 1, false] }, _edges];

@@ -450,6 +450,19 @@ CQ_story = createHashMapFromArray [
         [["MAGPIE", "Leftovers.%1"]]
     ]],
     // [] - first contact / new focus: every drone encircles it
+    // LINK REPAIR: [node, count] / [node] / []
+    ["lrStart", [
+        [["MAGPIE", "Lost contact with %1. Sending %2 birds to bridge the gap."]],
+        [["MAGPIE", "Lost %1 off my net. %2 Darters going out to stitch it back."]]
+    ]],
+    ["lrDone", [
+        [["MAGPIE", "Back in touch with %1. Holding the chain a minute, then back to work."]],
+        [["MAGPIE", "Link to %1 restored."]]
+    ]],
+    ["lrPull", [
+        [["MAGPIE", "Can't reach WASP from here, not enough birds. Calling it back in."]],
+        [["MAGPIE", "Gap's too wide for the chain. WASP, come home a bit."]]
+    ]],
     ["magFocus", [
         [["MAGPIE", "Contact. Pulling every bird in around it."]],
         [["MAGPIE", "Got something. All drones, circle and tighten."]],

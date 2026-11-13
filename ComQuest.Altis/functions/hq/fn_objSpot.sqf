@@ -29,7 +29,7 @@ private _look = {
     private _p = getPosATL _o;
     private _free = CQ_mag select {
         (_x getOrDefault ["role", ""]) == "dormant" && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) == "air" }
-        && { !(_x getOrDefault ["flee", false]) } && { time >= (_x getOrDefault ["lookUntil", 0]) }
+        && { !(_x getOrDefault ["flee", false]) } && { time >= (_x getOrDefault ["lookUntil", 0]) } && { !(_x getOrDefault ["repair", false]) }
     };
     if (_free isEqualTo []) exitWith {};
     private _m = ([_free, [], { (_x get "veh") distance2D _p }, "ASCEND"] call BIS_fnc_sortBy) select 0;

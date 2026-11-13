@@ -118,6 +118,7 @@ addMissionEventHandler ["EntityKilled", {
     call CQ_fnc_magInit;
     ["magpie", CQ_fnc_magTick] call CQ_fnc_directorAddTask;
     ["magDormant", CQ_fnc_magDormant] call CQ_fnc_directorAddTask;
+    ["linkRepair", CQ_fnc_linkRepair] call CQ_fnc_directorAddTask;
     ["tigris", CQ_fnc_tigrisTick] call CQ_fnc_directorAddTask;
     ["heatmap", CQ_fnc_heatTick] call CQ_fnc_directorAddTask;
     CQ_act = 1;

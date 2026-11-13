@@ -13,7 +13,7 @@ CQ_logFriendlyRx = "(MAGPIE|Sentinel|Squads?|Base|Depot|Vehicle|Respawn|Shop|Sco
 // --- Director -------------------------------------------------------------
 CQ_logVerbose = false;                   // true: also log every drone route / ring / Tigris lock (chatty .rpt)
 CQ_tickSeconds = 5;                      // one server tick every 5 s
-CQ_directorAtomic = ["magpie", "magDormant", "link"];   // director tasks run in one go (unscheduled), not time-sliced with every other script
+CQ_directorAtomic = ["magpie", "magDormant", "link", "linkRepair"];   // director tasks run in one go (unscheduled), not time-sliced with every other script
 CQ_scriptDumpMin = 40;                   // slow tick with more spawned scripts than this: list them in the log (once a minute)
 
 // --- Player base (Altis International Airport) -----------------------------
@@ -271,6 +271,14 @@ CQ_objLookAaR = 1200;                    // m it keeps from a spotted AA pit whi
 
 CQ_linkDeathBack = 500;                  // m: the next relay vehicle parks this far short of where one was lost (toward the base)
 CQ_linkDeathLane = 600;                  // m: a loss this close to the base -> spot line counts
+// LINK REPAIR: WASP or the relay vehicle cut off from the data link: Darters bridge the gap (CQ_fnc_linkRepair)
+CQ_lrOn = true;
+CQ_lrDelay = 120;                        // s out of the network before MAGPIE reacts
+CQ_lrHop = 900;                          // m between two Darters of the chain (90 % of a drone's range)
+CQ_lrMax = 4;                            // Darters at most; more needed (or not enough free): WASP pulls back instead
+CQ_lrEvery = 30;                         // s between two re-plans of the chain
+CQ_lrRelease = 60;                       // s the chain holds once the link is back, then the Darters go back to their jobs
+CQ_lrAlt = 120;                          // m: the chain's flight height
 CQ_linkAlertEvery = 60;                  // s between two "relay vehicle under fire" alerts
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
 CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up

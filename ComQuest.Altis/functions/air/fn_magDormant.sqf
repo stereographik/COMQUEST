@@ -101,7 +101,7 @@ private _wake = {
 // and it rejoins the fleet's flight plans
 {
     private _m = _x;
-    if ((_m getOrDefault ["role", ""]) != "dormant" || { _m getOrDefault ["flee", false] } || { time < (_m getOrDefault ["lookUntil", 0]) }) then { continue };
+    if ((_m getOrDefault ["role", ""]) != "dormant" || { _m getOrDefault ["flee", false] } || { time < (_m getOrDefault ["lookUntil", 0]) } || { _m getOrDefault ["repair", false] }) then { continue };
     private _v = _m get "veh";
     if (!alive _v) then { continue };
     private _idle = time - (_m getOrDefault ["seenT", time]);
