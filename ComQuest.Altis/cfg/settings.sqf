@@ -93,6 +93,7 @@ CQ_sbDismantleTime = 2;
 CQ_hlClasses = ["I_Heli_Transport_02_F"];
 CQ_hlMax = 12000;                        // kg: Strider 9.7 t, HEMTT family ~10.8-11 t
 CQ_hlRadius = 30;                        // m: the pilot's "Hook" action reaches vehicles this close (any height)
+CQ_hlAutoRelease = 2;                    // s the cargo rests on the ground (helicopter < 8 km/h) before it is released by itself (0: off)
 CQ_hlGrace = 20;                         // s: a lightened vehicle keeps its light mass at least this long                  // s: hold to dismantle one of your walls in the field
 CQ_sbMaxSlope = 0.85;                    // ground flatter than this (surface normal z) only
 CQ_depotMaxPerSquad = 2;                 // depot vehicles out at the same time per squad

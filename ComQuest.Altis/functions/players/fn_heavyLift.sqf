@@ -10,7 +10,10 @@
       server  ["hook", [_heli, _cargo, _unit]]      cargo heavier than the helicopter's limit:
                                                     made light enough (real mass kept in
                                                     CQ_hlMass), then setSlingLoad
-      server  ["release", [_heli, _unit]]           setSlingLoad objNull
+      server  ["release", [_heli, _unit]]           setSlingLoad objNull (the "Release cargo" action, or
+                                                    automatic once the cargo has sat on the ground
+                                                    CQ_hlAutoRelease s with the helicopter nearly
+                                                    still)
       server  ["tick"]                              director task "heavyLift": a lightened
                                                     vehicle no longer slung, on the ground,
                                                     gets its real mass back (CQ_hlGrace s after
@@ -72,9 +75,21 @@ switch (_mode) do {
         // client: the pilot's candidate for the "Hook" action
         if (!hasInterface) exitWith {};
         CQ_hlCand = objNull;
+        private _downT = -1;
         while { true } do {
             sleep 0.5;
             private _h = vehicle player;
+            // auto release: the cargo set down on the ground, helicopter nearly still, CQ_hlAutoRelease s
+            private _sl = if (_h != player && { driver _h == player }) then { getSlingLoad _h } else { objNull };
+            if (CQ_hlAutoRelease > 0 && { !isNull _sl } && { isTouchingGround _sl || { ((getPosATL _sl) select 2) < 0.5 } } && { speed _h < 8 }) then {
+                if (_downT < 0) then { _downT = time };
+                if (time - _downT >= CQ_hlAutoRelease) then {
+                    _downT = -1;
+                    ["release", [_h, player]] remoteExec ["CQ_fnc_heavyLift", 2];
+                    hint format ["%1 set down and released", getText (configOf _sl >> "displayName")];
+                    sleep 2;
+                };
+            } else { _downT = -1 };
             CQ_hlCand = if (_h != player && { driver _h == player } && { (typeOf _h) in CQ_hlClasses } && { isNull getSlingLoad _h }) then {
                 private _c = (_h nearEntities [["LandVehicle", "Ship"], CQ_hlRadius]) select {
                     alive _x && { _x != _h } && { (_x getVariable ["CQ_hlMass", getMass _x]) <= CQ_hlMax }
