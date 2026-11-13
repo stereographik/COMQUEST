@@ -468,6 +468,22 @@ CQ_huntTime = 1800;                      // s of hunt, then front-line patrol
 CQ_huntPatrolR = 600;                    // m: patrol around the western-most HQ
 CQ_huntSpotChance = 0.25;                // MAGPIE identification chance per pass
 CQ_huntBounty = 150;                     // squad points for wiping a team out
+// SABOTAGE: CSAT's elite team hunting the exposed nodes of our data link, WASP or the relay vehicle (CQ_fnc_sabotage)
+CQ_sabOn = true;
+CQ_sabClasses = ["O_recon_TL_F", "O_Soldier_AA_F", "O_recon_exp_F", "O_Soldier_AT_F", "O_recon_M_F", "O_Soldier_AR_F"];   // leader, Titan AA, satchel expert, Titan AT, marksman, autorifleman (index 2 plants the satchel)
+CQ_sabVehicles = ["O_MRAP_02_F", "O_Truck_02_covered_F"];   // unarmed Ifrit, the Zamak if missing
+CQ_sabSkill = 0.75;
+CQ_sabTeams = 3;                         // teams in all; the first waits at home, the next ones are paradropped near the root HQ
+CQ_sabDelay = 20;                        // s after MAGPIE's first contact reaches our base
+CQ_sabCooldown = 1800;                   // s between two hunts, from the start of the last one
+CQ_sabDismount = 700;                    // m short of the target: on foot from there
+CQ_sabFuzz = 300;                        // m of error on the target position (exact once they know it)
+CQ_sabUpdate = [75, 150];                // s between two position updates: target transmitting / silent
+CQ_sabHuntTime = 1800;                   // s of hunt, then back home
+CQ_sabSatchelR = 25;                     // m: the satchel expert plants his charge on a relay vehicle he reaches (20 s fuse)
+CQ_sabWarnR = 1000;                      // m: MAGPIE seeing them this close to their target makes CROSSROAD warn
+CQ_sabWaspR = 800;                       // m: WASP pulls back halfway to its anchor while they were seen this close (last 2 min)
+CQ_sabBounty = 200;                      // squad points for wiping a team out
 CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get treated
 // Radio direction finder (players with a radio): signal from enemy HQ radios
 CQ_rdfRange = 6000;                      // no signal beyond this

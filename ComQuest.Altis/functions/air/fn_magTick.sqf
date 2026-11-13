@@ -460,6 +460,10 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
         while { surfaceIsWater _s && { _k < 20 } } do { _s = _s getPos [-100, _a getDir _cp]; _k = _k + 1 };
         _s = _s getPos [(_k * 100) min 1000, _a getDir _cp];
     };
+    // SABOTAGE seen near its post in the last 2 min: halfway back toward the anchor
+    if (!isNil "CQ_sabSeenT" && { time - CQ_sabSeenT < 120 } && { CQ_sabSeenPos distance2D _s < CQ_sabWaspR }) then {
+        _s = _a getPos [(_s distance2D _a) / 2, _a getDir _s];
+    };
     if ((_m get "target") isNotEqualTo [] && { (_m get "target") distance2D _s < 100 }) then { continue };
     private _g = group effectiveCommander _v;
     [_g] call CQ_fnc_clearWaypoints;

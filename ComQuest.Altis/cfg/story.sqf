@@ -253,6 +253,18 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "Suppressed fire, good discipline. That's not a garrison. Somebody sent professionals after you."]],
         [["CROSSROAD", "All stations, enemy special forces in the field. They don't patrol, they hunt. Move like it."]]
     ]],
+    ["sabWarn", [
+        [["CROSSROAD", "MAGPIE has a team in a hurry, %2 metres from %1. Not a patrol. Somebody wants our eyes out."]],
+        [["CROSSROAD", "Heads up: hunter team closing on %1, %2 metres out. They know what they're looking for."]]
+    ]],
+    ["sabSuccess", [
+        [["CROSSROAD", "We lost %1. That was no accident, that was a sabotage team. The network is shorter by one link."]],
+        [["CROSSROAD", "%1 is gone. Clean job, enemy saboteurs. Expect them back."]]
+    ]],
+    ["sabDown", [
+        [["CROSSROAD", "Their sabotage team is down. The network breathes easier. Bonus to the squad that did it."]],
+        [["CROSSROAD", "Saboteurs neutralised. Good hunting, the link stays up."]]
+    ]],
     ["huntDown", [
         [["CROSSROAD", "Their special forces team is down. Somewhere a colonel is filing a very awkward report."]],
         [["CROSSROAD", "Spectre team neutralised. Good work. The squad that did it has earned a bonus."]],

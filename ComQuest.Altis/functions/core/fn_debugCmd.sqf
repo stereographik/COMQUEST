@@ -204,6 +204,28 @@ if (_needHq && { count _hq == 0 }) then {
                 };
             };
         };
+        case "sabGo": {
+            CQ_magContactMade = true; CQ_sabContactT = -1e6;
+            if (isNil "CQ_sab") then { ["tick"] call CQ_fnc_sabotage };
+            CQ_sab set ["started", true]; CQ_sab set ["huntT", -1e6]; CQ_sab set ["nextT", 0];
+            ["tick"] call CQ_fnc_sabotage;
+            _msg = format ["SABOTAGE phase %1, %2 team(s) left", CQ_sab get "phase", CQ_sab get "left"];
+        };
+        case "tpSab": {
+            private _g = if (isNil "CQ_sab") then { grpNull } else { CQ_sab get "grp" };
+            if (isNull _g || { (leader _g) isEqualTo objNull }) then { _msg = "no SABOTAGE team" } else {
+                if (!isNull _p) then {
+                    private _q = (getPosATL leader _g) getPos [400, random 360];
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, _q] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
+                    _msg = format ["teleported 400 m from SABOTAGE (%1)", CQ_sab get "phase"];
+                };
+            };
+        };
+        case "sabKill": {
+            private _g = if (isNil "CQ_sab") then { grpNull } else { CQ_sab get "grp" };
+            if (isNull _g) then { _msg = "no SABOTAGE team" } else { { _x setDamage 1 } forEach units _g; _msg = "SABOTAGE team wiped" };
+        };
         case "hst": {
             CQ_hstLastT = time;
             _msg = if (call CQ_fnc_hostageStart) then { format ["hostage held at %1", mapGridPosition CQ_hstPos] } else { "no house found (!)" };

@@ -96,7 +96,8 @@ private _cats = [
         ["Crash", [["Trigger crash", "crash"], ["Timer out", "crashOut"], ["Decrypt now", "decrypt"]]],
         ["Outpost", [["Build", "opBuild"], ["Jammer off", "opJam"], ["Destroy", "opKill"]]],
         ["Hostage", [["Start hostage", "hst"], ["Clear house", "hstClear"], ["Firmware now", "hstFw"],
-                     ["Into the heli", "hstBoard"], ["Home now", "hstHome"], ["End event", "hstEnd"]]]
+                     ["Into the heli", "hstBoard"], ["Home now", "hstHome"], ["End event", "hstEnd"]]],
+        ["SABOTAGE", [["Launch now", "sabGo"], ["Teleport near", "tpSab"], ["Wipe team", "sabKill"]]]
     ]],
     ["FRIENDLY", [
         ["MAGPIE", [["Report now", "magReport"], ["Launch missing", "magLaunch"], ["Shoot down", "magKill"]]],
