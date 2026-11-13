@@ -137,6 +137,7 @@ class CfgFunctions
             class opClient {};
             class introDone {};
             class debugUiFill {};
+            class debugHqDash {};
         };
 
         class hq
