@@ -431,7 +431,7 @@ CQ_objGuardSize = 3;                     // ...each site guarded by this many so
 CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is finished: compass direction from the HQ (270 = west)
 CQ_hmgTowerDist = 45;                    // ...and distance
 // Enemy support teams: one medic team, one engineer team, dropped again after destruction
-CQ_specialVehicle = "I_MRAP_03_hmg_F";   // Strider HMG
+CQ_specialVehicle = "O_APC_Wheeled_02_rcws_v2_F";   // MSE-3 Marid (8 cargo seats: the team + the snipers)
 CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Mohawk vehicle paradrop of the game (engineers 20 s later)
 CQ_specialRespawn = 900;                 // a wiped-out team is dropped again 15 min later
 CQ_specialRespawns = 3;                  // ...at most this many times per team (first drop not counted)
@@ -440,7 +440,7 @@ CQ_specialRange = 6000;
 // west side, driven by the medic and engineer teams to CQ_sniperDrop m short of their spots
 CQ_snipersPerWave = 4;
 CQ_sniperClass = "O_sniper_F";           // falls back to the marksman if missing or DLC
-CQ_sniperSeats = 2;                      // Strider cargo seats each team keeps free for them
+CQ_sniperSeats = 2;                      // Marid cargo seats each team keeps free for them
 CQ_sniperDist = [800, 1200];             // m from the HQ
 CQ_sniperArc = [200, 340];               // bearings from the HQ (west side)
 CQ_sniperGap = 200;                      // m between two spots

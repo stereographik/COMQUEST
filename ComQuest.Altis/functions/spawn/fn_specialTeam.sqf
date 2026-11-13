@@ -5,9 +5,9 @@
     first Mohawk drop of the game, next to that first HQ, and dropped again
     CQ_specialRespawn s (15 min) after it is wiped out (vehicle destroyed or crew dead), at most
     CQ_specialRespawns times (shown on the carrier marker):
-      medic     white Strider HMG, white-clad medics: drives to wounded CSAT soldiers
+      medic     white Marid APC, white-clad medics: drives to wounded CSAT soldiers
                 (damage > CQ_medicHealAbove) and treats everyone within 40 m back to health
-      engineer  Strider HMG, engineers in urban camo: drives to damaged CSAT vehicles and
+      engineer  Marid APC, engineers in urban camo: drives to damaged CSAT vehicles and
                 statics (damage or broken wheels/tracks) and repairs them on the spot
     Between jobs the team waits near the main HQ. Runs for the whole mission.
     Each team keeps CQ_sniperSeats seats free: with every insertion it drives snipers out to
@@ -30,7 +30,7 @@ while { true } do {
     private _lz = (_home get "pos") getPos [150 + random 100, random 360];
     ["%1: paradrop near HQ #%2 (grid %3)", [_tag, _home get "id", mapGridPosition _lz]] call CQ_fnc_log;
 
-    // --- paradrop the Strider, then crew it with the team
+    // --- paradrop the Marid, then crew it with the team
     missionNamespace setVariable [format ["CQ_team_%1", _kind], objNull];
     [CQ_specialVehicle, _lz, compile format ["
         params ['_v'];

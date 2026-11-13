@@ -2,7 +2,7 @@
     CQ_fnc_sniperQueue  (server, spawned once per carrier insertion)
     [_hqId] spawn CQ_fnc_sniperQueue;
     CQ_snipersPerWave snipers for this HQ, on high ground about 1 km on its west side
-    (CQ_fnc_sniperSpots). They ride in the medic and engineer teams' Striders: each team gets a
+    (CQ_fnc_sniperSpots). They ride in the medic and engineer teams' Marids: each team gets a
     job with half of the spots (CQ_sniperJobs), picks it up before its next medic / repair job,
     drives to CQ_sniperDrop m from the spots and drops them (CQ_fnc_sniperRun). A job no team
     has taken after CQ_sniperWait s (team dead, none left) is done on foot from the HQ.

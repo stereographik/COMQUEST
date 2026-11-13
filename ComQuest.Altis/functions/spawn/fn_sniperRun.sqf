@@ -1,7 +1,7 @@
 /*
     CQ_fnc_sniperRun  (server, scheduled)
     [_vehicle, _teamGroup, [_key, _spots, _hqId], _tag] call CQ_fnc_sniperRun;
-    One sniper per spot. With a support team: they board its Strider (seats kept free for
+    One sniper per spot. With a support team: they board its Marid (seats kept free for
     them, CQ_sniperSeats), the team drives to CQ_sniperDrop m short of the spots (on the HQ
     side) and drops them, then goes back to work. Without (objNull): they start at their HQ
     and walk. On its spot each sniper goes prone, watches the west and stays.
