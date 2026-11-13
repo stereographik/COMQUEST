@@ -440,10 +440,40 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     } forEach _chain;
 };
 
+// ---- WASP: as far toward the carrier as the data link holds. Its anchor is the relay vehicle
+// while that one is alive, else the base; it sits CQ_waspMargin m inside the edge of their
+// overlapping ranges, on the line anchor -> carrier
+{
+    private _m = _x;
+    if (time - (_m get "planT") < 20) then { continue };
+    _m set ["planT", time];
+    private _v = _m get "veh";
+    private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
+    (if (alive _rv) then { [getPosATL _rv, CQ_linkRelayVehR] } else { [CQ_basePos, CQ_netCoverBase] }) params ["_a", "_ar"];
+    private _cp = missionNamespace getVariable ["CQ_carrierPos", _a];
+    private _s = _a getPos [_ar + CQ_linkDroneR - CQ_waspMargin, _a getDir _cp];
+    if (surfaceIsWater _s) then {
+        // over the sea it can still relay: keep it, but never past the coast by more than 1 km
+        private _k = 0;
+        while { surfaceIsWater _s && { _k < 20 } } do { _s = _s getPos [-100, _a getDir _cp]; _k = _k + 1 };
+        _s = _s getPos [(_k * 100) min 1000, _a getDir _cp];
+    };
+    if ((_m get "target") isNotEqualTo [] && { (_m get "target") distance2D _s < 100 }) then { continue };
+    private _g = group effectiveCommander _v;
+    [_g] call CQ_fnc_clearWaypoints;
+    _v flyInHeight (_m get "alt");
+    private _wp = _g addWaypoint [_s, 0];
+    _wp setWaypointType "LOITER";
+    _wp setWaypointLoiterRadius 150;
+    _g setCurrentWaypoint _wp;
+    _m set ["target", _s];
+    ["MAGPIE: WASP heads to grid %1 (%2 m from the %3, toward the carrier)", [mapGridPosition _s, round (_s distance2D _a), ["base", "relay vehicle"] select (alive _rv)]] call CQ_fnc_log;
+} forEach (_flying select { (_x getOrDefault ["role", ""]) == "wasp" });
+
 {
     private _m = _x;
     private _v = _m get "veh";
-    if (_focusOn || { (_m getOrDefault ["role", ""]) == "chain" } || { _m getOrDefault ["flee", false] }) then { continue };
+    if (_focusOn || { (_m getOrDefault ["role", ""]) in ["chain", "wasp"] } || { _m getOrDefault ["flee", false] }) then { continue };
     if (((getPosATL _v) select 2) < 40 && { time - (_m get "planT") < 300 }) then { continue };
     private _tgt = _m get "target";
     private _arrived = (_m get "explore") && { _tgt isNotEqualTo [] } && { _v distance2D _tgt < 500 };

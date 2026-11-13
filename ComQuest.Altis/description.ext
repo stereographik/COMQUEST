@@ -166,6 +166,7 @@ class CfgFunctions
             class hqStatusMarker {};
             class hqNerves {};
             class hqFallen {};
+            class objSpot {};
             class hqBalance {};
             class moveGroups {};
             class cmdCapture {};

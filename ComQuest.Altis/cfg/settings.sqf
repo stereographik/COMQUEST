@@ -260,6 +260,12 @@ CQ_linkRelayFrac = 1 / 3;                // it parks this share of the way from 
 CQ_linkRelaySpawn = [14444, 16163, 0];   // where the base's relay vehicle is created
 CQ_linkRelayRespawn = 300;               // s before another one leaves after it is lost
 CQ_linkLegLen = 400;                     // m: the relay vehicle drives in legs this long, each ending on a road
+// WASP: one unique autonomous Darter that flies as far toward the carrier as the data link allows
+// (anchored on the relay vehicle while it is alive, else on the base), CQ_waspMargin m inside the
+// edge of their overlapping ranges
+CQ_wasp = true;
+CQ_waspAlt = 250;                        // m
+CQ_waspMargin = 150;                     // m inside the link edge
 CQ_linkAlertEvery = 60;                  // s between two "relay vehicle under fire" alerts
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
 CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up

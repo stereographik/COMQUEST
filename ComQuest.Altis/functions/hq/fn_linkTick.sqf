@@ -125,6 +125,10 @@ private _drones = [];
     private _v = _x get "veh";
     if (alive _v && { (_x getOrDefault ["phase", ""]) == "air" }) then { _drones pushBack _v; _nodes pushBack [getPosATL _v, CQ_linkDroneR, _v, "d"] };
 } forEach (missionNamespace getVariable ["CQ_mag", []]);
+// players' own drones relay and report too
+{
+    if (alive _x && { side _x == west } && { !(_x in _drones) } && { ((getPosATL _x) select 2) > 20 }) then { _drones pushBack _x; _nodes pushBack [getPosATL _x, CQ_linkDroneR, _x, "d"] };
+} forEach allUnitsUAV;
 {
     // ours, crewed or not (a parked empty vehicle relays until it despawns or blows up): a BLUFOR
     // model, or anything with our people inside
@@ -169,6 +173,7 @@ while { true } do {
     if ((_v getVariable ["CQ_linked", -1]) isNotEqualTo _l) then { _v setVariable ["CQ_linked", _l, true] };   // public: the map shows a Darter only while linked
 } forEach _drones;
 if (alive _rv) then { _rv setVariable ["CQ_linked", true] };
+[_drones] call CQ_fnc_objSpot;   // enemy objectives a drone saw, once the intel reaches the base
 
 private _pub = [_nodes apply { [_x select 0, _x select 1, false] }, _edges];
 { ((_pub select 0) select _forEachIndex) set [2, _x] } forEach _ok;

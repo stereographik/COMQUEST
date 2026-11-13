@@ -8,9 +8,9 @@
     updated by CQ_fnc_hqTick (text only rewritten when it changes); the dot and the AO circle
     appear only when the HQ is fully built (last objective ready); a fallen HQ loses its circle
     and keeps a black [NAME (rank)][destroyed] dot.
-    Every objective gets its own marker as soon as it is set up during the construction (called
-    every tick by CQ_fnc_hqTick, building included), orange [Depot][active], removed as soon as
-    the objective is destroyed.
+    Every objective gets its own marker once a UAV has seen it and the intel reached the base over
+    the data link (CQ_spotted, CQ_fnc_objSpot), orange [Depot][active], removed as soon as the
+    objective is destroyed.
 */
 params ["_hq"];
 private _id = _hq get "id";
@@ -27,6 +27,7 @@ if (isNil "CQ_objMarkDone") then { CQ_objMarkDone = [] };
         CQ_objMarkDone pushBack _om;
         continue;
     };
+    if (markerType _om == "" && { !(_o getVariable ["CQ_spotted", false]) }) then { continue };   // not seen by a drone yet (CQ_fnc_objSpot)
     if (markerType _om == "") then {
         createMarker [_om, getPosATL _o];
         _om setMarkerType "mil_objective";
