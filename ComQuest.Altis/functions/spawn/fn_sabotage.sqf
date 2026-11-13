@@ -88,6 +88,7 @@ switch (_mode) do {
             _s set ["veh", _v];
         };
         _s set ["phase", ["home", "toHome"] select _byAir];
+        _s set ["boardT", time + 120];                       // paradropped: time to land before the boarding failsafe
         _s set ["t0", time];
         ["SABOTAGE: team %1/%2 %3 at grid %4", [CQ_sabTeams - (_s get "left") + 1, CQ_sabTeams, ["ready at home", "paradropped"] select _byAir, mapGridPosition _pos]] call CQ_fnc_log;
         _s set ["left", (_s get "left") - 1];
@@ -138,6 +139,10 @@ switch (_mode) do {
         };
         private _mount = {
             if (!alive _v) exitWith {};
+            // failsafe: past CQ_sabBoardTime, whoever is close is seated by script
+            if (time - (_s getOrDefault ["boardT", time]) > CQ_sabBoardTime) exitWith {
+                { if (alive _x && { vehicle _x == _x } && { _x distance _v < 60 }) then { if (isNull driver _v) then { _x moveInDriver _v } else { _x moveInAny _v } } } forEach units _g;
+            };
             { if (alive _x && { vehicle _x == _x }) then { _x assignAsCargo _v; [_x] orderGetIn true } } forEach units _g;
             if (isNull driver _v) then { private _d = (units _g) select { alive _x } select 0; _d assignAsDriver _v; [_d] orderGetIn true };
         };
@@ -164,9 +169,10 @@ switch (_mode) do {
                 if (time - (_s get "huntT") < CQ_sabCooldown) exitWith {};
                 private _t = call _pickTarget;
                 if (isNull _t) exitWith {};
-                _s set ["target", _t]; _s set ["huntT", time]; _s set ["warned", false]; _s set ["t0", 0];
+                _s set ["target", _t]; _s set ["huntT", time]; _s set ["driveLog", false]; _s set ["boardLog", true]; _s set ["warned", false]; _s set ["t0", 0];
                 _s set ["tPos", [_t] call _fuzzy];
                 _s set ["phase", "drive"];
+                _s set ["boardT", time];
                 call _mount;
                 ["SABOTAGE: hunt %1 started from grid %2, target %3 at grid %4", [CQ_sabTeams - (_s get "left"), mapGridPosition _home, ["relay vehicle", "WASP"] select (_t isKindOf "Air"), mapGridPosition _t]] call CQ_fnc_log;
             };
@@ -177,7 +183,14 @@ switch (_mode) do {
                 if (time - (_s get "t0") > 20) then {
                     _s set ["t0", time];
                     _s set ["tPos", [_t] call _fuzzy];
-                    if ((units _g) findIf { alive _x && { vehicle _x != _v } } > -1) exitWith { call _mount };
+                    private _out = (units _g) select { alive _x && { vehicle _x != _v } };
+                    if (_out isNotEqualTo [] && { time - (_s get "boardT") < CQ_sabBoardTime + 30 }) exitWith { call _mount };
+                    // still not aboard after the failsafe: they walk and the vehicle goes without them
+                    if (_out isNotEqualTo []) then {
+                        { unassignVehicle _x; [_x] orderGetIn false; _x doMove (_s get "tPos") } forEach _out;
+                        if (_s getOrDefault ["boardLog", true]) then { _s set ["boardLog", false]; ["SABOTAGE: %1 man/men could not board, they follow on foot", [count _out]] call CQ_fnc_log };
+                    };
+                    if !(_s getOrDefault ["driveLog", false]) then { _s set ["driveLog", true]; ["SABOTAGE: driving, %1/%2 aboard, %3 m to the target", [{ alive _x && { vehicle _x == _v } } count units _g, call _alive, round (_v distance2D (_s get "tPos"))]] call CQ_fnc_log };
                     private _tp = _s get "tPos";
                     private _dp = _tp getPos [CQ_sabDismount, _tp getDir _v];
                     (driver _v) doMove _dp;

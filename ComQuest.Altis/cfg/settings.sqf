@@ -470,8 +470,9 @@ CQ_huntSpotChance = 0.25;                // MAGPIE identification chance per pas
 CQ_huntBounty = 150;                     // squad points for wiping a team out
 // SABOTAGE: CSAT's elite team hunting the exposed nodes of our data link, WASP or the relay vehicle (CQ_fnc_sabotage)
 CQ_sabOn = true;
-CQ_sabClasses = ["O_recon_TL_F", "O_Soldier_AA_F", "O_recon_exp_F", "O_Soldier_AT_F", "O_recon_M_F", "O_Soldier_AR_F"];   // leader, Titan AA, satchel expert, Titan AT, marksman, autorifleman (index 2 plants the satchel)
+CQ_sabClasses = ["O_recon_TL_F", "O_Soldier_AA_F", "O_recon_exp_F", "O_Soldier_AT_F", "O_recon_M_F"];   // leader, Titan AA, satchel expert, Titan AT, marksman: fits the Ifrit (index 2 plants the satchel)
 CQ_sabVehicles = ["O_MRAP_02_F", "O_Truck_02_covered_F"];   // unarmed Ifrit, the Zamak if missing
+CQ_sabBoardTime = 60;                    // s: men still outside the vehicle by then are seated by script (within 60 m) or go on foot
 CQ_sabSkill = 0.75;
 CQ_sabTeams = 3;                         // teams in all; the first waits at home, the next ones are paradropped near the root HQ
 CQ_sabDelay = 20;                        // s after MAGPIE's first contact reaches our base
