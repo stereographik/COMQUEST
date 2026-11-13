@@ -122,24 +122,34 @@ private _drones = [];
     };
 } forEach vehicles;
 
-// ---- links: overlapping ranges, flood from the base
+// ---- links: overlapping ranges, grown from the base as a shortest-link tree: each step joins
+// the unlinked node closest to any linked one (Prim), so the map shows the real chain
+// device -> device -> base instead of a star from the base
 private _n = count _nodes;
 private _ok = [true] + ((_nodes select [1]) apply { false });
 private _edges = [];
-private _grow = true;
-while { _grow } do {
-    _grow = false;
-    for "_a" from 0 to _n - 1 do {
-        if !(_ok select _a) then { continue };
-        (_nodes select _a) params ["_pa", "_ra", "", "_ka"];
-        for "_b" from 0 to _n - 1 do {
-            if (_ok select _b) then { continue };
-            (_nodes select _b) params ["_pb", "_rb", "", "_kb"];
-            // overlapping ranges; the base and the relays we hold also talk to each other over
-            // CQ_linkBackbone m (radio backbone)
-            if (_pa distance2D _pb <= _ra + _rb || { _ka in ["b", "r"] && { _kb in ["b", "r"] } && { _pa distance2D _pb <= CQ_linkBackbone } }) then { _ok set [_b, true]; _edges pushBack [_pa, _pb]; _grow = true };
+private _canLink = {
+    params ["_a", "_b"];
+    (_nodes select _a) params ["_pa", "_ra", "", "_ka"];
+    (_nodes select _b) params ["_pb", "_rb", "", "_kb"];
+    // overlapping ranges; the base and the relays we hold also talk to each other over
+    // CQ_linkBackbone m (radio backbone)
+    _pa distance2D _pb <= _ra + _rb || { _ka in ["b", "r"] && { _kb in ["b", "r"] } && { _pa distance2D _pb <= CQ_linkBackbone } }
+};
+while { true } do {
+    private _bestD = 1e9; private _bA = -1; private _bB = -1;
+    for "_b" from 0 to _n - 1 do {
+        if (_ok select _b) then { continue };
+        private _pb = (_nodes select _b) select 0;
+        for "_a" from 0 to _n - 1 do {
+            if !(_ok select _a) then { continue };
+            private _d = ((_nodes select _a) select 0) distance2D _pb;
+            if (_d < _bestD && { [_a, _b] call _canLink }) then { _bestD = _d; _bA = _a; _bB = _b };
         };
     };
+    if (_bB < 0) exitWith {};
+    _ok set [_bB, true];
+    _edges pushBack [(_nodes select _bA) select 0, (_nodes select _bB) select 0];
 };
 {
     private _v = _x;
