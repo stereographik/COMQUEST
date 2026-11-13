@@ -375,9 +375,29 @@ CQ_fuelConsumption = 5;                  // every enemy vehicle and helicopter b
 CQ_guerillaSquads = 2;
 CQ_guerillaSize = [6, 8];
 CQ_guerillaVillageRange = 1500;          // they patrol the nearest village this close, else the HQ surroundings
-CQ_guerillaLeader = "O_G_Soldier_SL_F";
-CQ_guerillaClasses = ["O_G_Soldier_F", "O_G_Soldier_F", "O_G_Soldier_AR_F", "O_G_Soldier_LAT_F", "O_G_Soldier_GL_F",
-    "O_G_Soldier_M_F", "O_G_medic_F", "O_G_Soldier_lite_F", "O_G_Soldier_A_F"];
+CQ_guerillaLeader = "leader";            // roles of CQ_civKits (armed civilians, CQ_fnc_civArm)
+CQ_guerillaClasses = ["rifle", "rifle", "mg", "at", "gl", "marksman", "medic", "carbine", "rifle"];
+
+// Armed civilians: every guerilla of the mission (HQ villages, the hostage chasers, armed Offroad
+// crews, the intro) is a local in civilian clothes with a bandolier, on the CSAT side.
+// Base game only (no DLC): the Katiba family, Zafir, Rahim, RPG-42.
+CQ_civClasses = ["C_man_1", "C_man_polo_1_F", "C_man_polo_2_F", "C_man_polo_3_F", "C_man_polo_4_F", "C_man_polo_5_F",
+    "C_man_polo_6_F", "C_man_shorts_1_F", "C_man_shorts_2_F", "C_man_shorts_3_F", "C_man_shorts_4_F",
+    "C_man_w_worker_F", "C_man_p_fugitive_F", "C_man_p_shorts_1_F", "C_man_hunter_1_F"];
+CQ_civVests = ["V_BandollierB_khk", "V_BandollierB_cbr", "V_BandollierB_rgr", "V_BandollierB_blk", "V_BandollierB_oli"];
+CQ_civPacks = ["B_FieldPack_cbr", "B_FieldPack_blk", "B_FieldPack_khk"];   // AT only (rockets)
+CQ_civHats = ["H_Cap_blk", "H_Cap_grn", "H_Cap_red", "H_Bandanna_khk", "H_Bandanna_cbr", "H_Booniehat_khk", "H_ShemagOpen_khk"];
+// role -> [weapon, magazine, magazines, optic, launcher, rocket, rockets, [[item, n], ...]]
+CQ_civKits = createHashMapFromArray [
+    ["leader",   ["arifle_Katiba_F",    "30Rnd_65x39_caseless_green", 6]],
+    ["rifle",    ["arifle_Katiba_F",    "30Rnd_65x39_caseless_green", 6]],
+    ["carbine",  ["arifle_Katiba_C_F",  "30Rnd_65x39_caseless_green", 6]],
+    ["gl",       ["arifle_Katiba_GL_F", "30Rnd_65x39_caseless_green", 5, "", "", "", 0, [["1Rnd_HE_Grenade_shell", 4]]]],
+    ["mg",       ["LMG_Zafir_F",        "150Rnd_762x54_Box", 2]],
+    ["at",       ["arifle_Katiba_C_F",  "30Rnd_65x39_caseless_green", 4, "", "launch_RPG32_F", "RPG32_F", 2]],
+    ["marksman", ["srifle_DMR_01_F",    "10Rnd_762x54_Mag", 6, "optic_DMS"]],
+    ["medic",    ["arifle_Katiba_C_F",  "30Rnd_65x39_caseless_green", 5, "", "", "", 0, [["FirstAidKit", 3]]]]
+];
 CQ_balanceInterval = 60;                 // every minute, infantry is evened out over the fully built HQs
 CQ_balanceMargin = 6;                    // only when an HQ is this many soldiers off the average
 CQ_balanceNewBonus = 8;                  // an HQ still securing / building counts this many soldiers short: helped first

@@ -244,6 +244,8 @@ class CfgFunctions
         class spawn
         {
             file = "functions\spawn";
+            class civArm {};
+            class civKit {};
             class callsignTick {};
             class spawnHeli {};
             class carrierSetup {};

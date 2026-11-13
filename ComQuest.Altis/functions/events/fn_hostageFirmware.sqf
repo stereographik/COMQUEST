@@ -46,7 +46,7 @@ for "_i" from 1 to 10 do {
 if (_from isEqualTo []) then { _from = _hp getPos [CQ_hstGuerDist select 1, random 360] };
 private _gg = createGroup [east, true];
 private _classes = [CQ_guerillaLeader] + ((CQ_guerillaClasses call BIS_fnc_arrayShuffle) select [0, _n - 1]);
-{ _gg createUnit [_x, _from, [], 10, "NONE"] } forEach _classes;
+{ [_gg, _from, _x, 10] call CQ_fnc_civArm } forEach _classes;
 [units _gg] call CQ_fnc_unitPrep;
 _gg setVariable ["CQ_role", "guerilla"];
 _gg setBehaviour "AWARE"; _gg setCombatMode "RED"; _gg setSpeedMode "FULL";

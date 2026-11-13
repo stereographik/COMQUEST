@@ -265,14 +265,15 @@ call {
     {
         (_sForm select _forEachIndex) params ["_side", "_back"];
         private _p = (_best getPos [_back, _walkDir + 180]) getPos [_side, _seaDir];
-        private _u = (_x select 0) createVehicleLocal [0, 0, 0];
+        private _u = (selectRandom ["C_man_polo_1_F", "C_man_polo_2_F", "C_man_shorts_1_F", "C_man_w_worker_F", "C_man_hunter_1_F"]) createVehicleLocal [0, 0, 0];
+        [_u, _x select 0] call CQ_fnc_civKit;   // armed locals
         _u setVariable ["CQ_introVeh", true];
         _u allowDamage false;
         _u setPosATL [_p select 0, _p select 1, 0];
         _u setDir _walkDir;
         _locals pushBack _u;
         _men pushBack _u;
-    } forEach [["O_G_Soldier_SL_F"], ["O_G_Soldier_AR_F"], ["O_G_Soldier_LAT_F"]];
+    } forEach [["leader"], ["mg"], ["at"]];
     {
         private _f = (_sForm select _forEachIndex) select 2;
         _x setDir (switch (_f) do {
