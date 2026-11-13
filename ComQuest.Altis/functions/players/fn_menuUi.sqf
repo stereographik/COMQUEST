@@ -55,11 +55,13 @@ private _rows = ceil (count _items / _cols);
 private _gx = _sw * 0.03; private _gy = _sh * 0.05;
 private _bw = (_sw - _gx * (_cols + 1)) / _cols;
 private _bh = (_sh - _gy * (_rows + 1)) / _rows;
+// text size of the original 3-row menu, whatever the number of choices (more rows: same text)
+private _fh = ((_sh - _gy * 4) / 3) * 0.42;
 {
     _x params ["_label", "_tip", "_code"];
     private _c = _forEachIndex mod _cols; private _r = floor (_forEachIndex / _cols);
     private _b = ["RscButton", [_sx + _gx + _c * (_bw + _gx), _sy + _gy + _r * (_bh + _gy), _bw, _bh], _label] call _mk;
-    _b ctrlSetFontHeight (_bh * 0.42);
+    _b ctrlSetFontHeight (_fh);
     _b ctrlSetFont "PuristaMedium";
     _b ctrlSetBackgroundColor (CQ_ui get "button");
     _b ctrlSetActiveColor (CQ_ui get "buttonActive");
