@@ -447,4 +447,4 @@ private _status = format ["<t size='0.85'>Act <t color='#918C3B'>%1</t>   |   ca
     (missionNamespace getVariable ["CQ_specialLeft", createHashMap]) getOrDefault ["engineer", "-"],
     [daytime, "HH:MM"] call BIS_fnc_timeToString, count allPlayers];
 
-[_rows, _msg, _status, [_hq] call CQ_fnc_debugHqDash] remoteExec ["CQ_fnc_debugUiFill", _caller];
+[_rows, _msg, _status, [_hq] call CQ_fnc_debugHqDash, [_hq] call CQ_fnc_debugHqInv] remoteExec ["CQ_fnc_debugUiFill", _caller];

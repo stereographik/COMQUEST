@@ -3,7 +3,7 @@
     [_rows, _message, _status, _dash]: refreshes the panel list (keeps the selection), status line
     and the selected HQ's dashboard.
 */
-params [["_rows", []], ["_msg", ""], ["_status", ""], ["_dash", ""]];
+params [["_rows", []], ["_msg", ""], ["_status", ""], ["_dash", ""], ["_inv", ""]];
 disableSerialization;
 CQ_dbgPending = -1e6;      // answer in: the panel may ask again
 
@@ -26,3 +26,4 @@ if (_rows isEqualTo []) then { _lb lbAdd "No HQ yet - press 'Landing now'" };
 
 (_d displayCtrl 9001) ctrlSetStructuredText parseText _status;
 if (_dash != "") then { (_d displayCtrl 9002) ctrlSetStructuredText parseText _dash };
+if (_inv != "") then { (_d displayCtrl 9003) ctrlSetStructuredText parseText _inv };

@@ -61,6 +61,15 @@ player addAction ["<t color='#918C3B'>Build a sandbag wall</t>", { ["place"] spa
 player addAction ["<t color='#918C3B'>Recall my sandbag walls</t>", { ["recall", [player]] remoteExec ["CQ_fnc_sandbag", 2] }, nil, 1.1, false, true, "",
     "_this distance2D CQ_basePos < CQ_baseRadius && { (missionNamespace getVariable ['CQ_sb_' + getPlayerUID _this, 0]) > 0 }"];
 
+// ...and dismantled in the field by their owner: hold 2 s looking at the wall
+[player, "Dismantle my sandbag wall",
+    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_takeOff1_ca.paa", "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_takeOff1_ca.paa",
+    "_this getUnitTrait 'engineer' && { vehicle _this == _this } && { typeOf cursorObject == CQ_sbClass } && { _this distance cursorObject < 4 } && { (cursorObject getVariable ['CQ_sbOwner', '']) == getPlayerUID _this }",
+    "typeOf cursorObject == CQ_sbClass && { _caller distance cursorObject < 4 }",
+    { CQ_sbTarget = cursorObject }, {},
+    { ["remove", [player, CQ_sbTarget]] remoteExec ["CQ_fnc_sandbag", 2] }, {},
+    [], CQ_sbDismantleTime, 1.15, false, false] call BIS_fnc_holdActionAdd;
+
 // Loadout zones: auto-fill / empty the inventory of the vehicle you sit in or look at
 private _zoneVeh = "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); !isNull _v && { _v isKindOf 'AllVehicles' } && { !(_v isKindOf 'CAManBase') } && { _this distance _v < 10 } && { speed _v < 3 } && { [_v] call CQ_fnc_vehFillSpot }";
 player addAction ["<t color='#918C3B'>Autofill for my squad</t>",

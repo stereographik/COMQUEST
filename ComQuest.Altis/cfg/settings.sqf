@@ -87,6 +87,7 @@ CQ_earplugLevel = 0.08;                  // earplugs (End key / scroll menu): ga
 CQ_sbClass = "Land_BagFence_Short_F";
 CQ_sbMax = 2;                            // walls standing per engineer (per player, through respawns)
 CQ_sbBuildTime = 6;                      // s to build one (stay still, on foot)
+CQ_sbDismantleTime = 2;                  // s: hold to dismantle one of your walls in the field
 CQ_sbMaxSlope = 0.85;                    // ground flatter than this (surface normal z) only
 CQ_depotMaxPerSquad = 2;                 // depot vehicles out at the same time per squad
 CQ_depotCooldown = [["light", 120], ["truck", 180], ["air", 300]];   // s before the same player can request again, by type taken

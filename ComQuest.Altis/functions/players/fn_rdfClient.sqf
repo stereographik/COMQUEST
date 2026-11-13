@@ -145,7 +145,7 @@ while { true } do {
         case (_v isKindOf "Tank" || { _v isKindOf "Wheeled_APC_F" }): { "ARMOR" };
         case (_v isKindOf "LandVehicle"): { "VEH" };
         default {
-            private _n = { (_y select 1) distance2D _p < 75 && { (_y select 0) isKindOf "CAManBase" } } count _mem;
+            private _n = { (_x select 1) distance2D _p < 75 && { (_x select 0) isKindOf "CAManBase" } } count (values _mem);
             format ["INF x%1", _n max 1]
         };
     };

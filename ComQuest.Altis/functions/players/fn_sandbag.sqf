@@ -6,6 +6,7 @@
                                                   CQ_sbBuildTime s build (stay still, on foot)
       server  ["build",  [_unit, _pos, _dir]]     checks the cap and creates the wall
       server  ["recall", [_unit]]                 removes every wall this player left (in base only)
+      server  ["remove", [_unit, _wall]]          the owner dismantles one wall in the field (hold action)
     Walls are indestructible and belong to the player's UID (CQ_sbWalls), not to his body: the
     cap (CQ_sbMax) holds through death, respawn and reconnects. Count published as CQ_sb_<uid>.
 */
@@ -104,6 +105,22 @@ switch (_mode) do {
         missionNamespace setVariable ["CQ_sb_" + _uid, count _mine, true];
         [format ["Sandbag wall built (%1/%2). Recall your walls from the base.", count _mine, CQ_sbMax]] remoteExec ["hint", _unit];
         ["%1 built a sandbag wall at grid %2 (%3/%4)", [name _unit, mapGridPosition _w, count _mine, CQ_sbMax]] call CQ_fnc_log;
+    };
+
+    // the owner dismantles one of his walls in the field (hold action, CQ_sbDismantleTime s)
+    case "remove": {
+        if (!isServer) exitWith {};
+        _args params ["_unit", "_w"];
+        private _uid = getPlayerUID _unit;
+        if (isNull _w || { (_w getVariable ["CQ_sbOwner", ""]) != _uid } || { _unit distance _w > 6 }) exitWith {};
+        if (isNil "CQ_sbWalls") then { CQ_sbWalls = createHashMap };
+        private _mine = (CQ_sbWalls getOrDefault [_uid, []]) select { !isNull _x && { _x != _w } };
+        private _g = mapGridPosition _w;
+        deleteVehicle _w;
+        CQ_sbWalls set [_uid, _mine];
+        missionNamespace setVariable ["CQ_sb_" + _uid, count _mine, true];
+        [format ["Sandbag wall dismantled (%1/%2).", count _mine, CQ_sbMax]] remoteExec ["hint", _unit];
+        ["%1 dismantled a sandbag wall at grid %2", [name _unit, _g]] call CQ_fnc_log;
     };
 
     case "recall": {
