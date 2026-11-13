@@ -4,7 +4,7 @@
 author = "Django";
 onLoadName = "ComQuest";
 onLoadMission = "Destroy the CSAT HQ network on Altis.";
-loadScreen = "media\loading.jpg";          // the mission visual, native 2048 x 512, no crop
+loadScreen = "media\loading.jpg";          // the mission visual, 2048 x 1024 (2:1)
 overviewPicture = "media\loading.jpg";     // same picture in the mission list / lobby
 overviewText = "Co-op, up to 26 players. A CSAT carrier plants a network of HQs on Altis: find it and cut it apart.";
 briefingName = "ComQuest";
@@ -137,6 +137,7 @@ class CfgFunctions
             class opClient {};
             class introDone {};
             class debugUiFill {};
+            class debugHqDash {};
         };
 
         class hq
@@ -164,6 +165,8 @@ class CfgFunctions
             class hqTick {};
             class hqStatusMarker {};
             class hqNerves {};
+            class hqFallen {};
+            class objSpot {};
             class hqBalance {};
             class moveGroups {};
             class cmdCapture {};
@@ -205,6 +208,12 @@ class CfgFunctions
             class crashSecure {};
             class crashRoam {};
             class crashDrop {};
+            class hostageStart {};
+            class hostageTick {};
+            class hostageFirmware {};
+            class hostageHeli {};
+            class hostageEnd {};
+            class hostageCarry {};
             class outpostBuild {};
             class outpostTick {};
         };
@@ -237,6 +246,8 @@ class CfgFunctions
         class spawn
         {
             file = "functions\spawn";
+            class civArm {};
+            class civKit {};
             class callsignTick {};
             class spawnHeli {};
             class carrierSetup {};
@@ -259,6 +270,7 @@ class CfgFunctions
         class players
         {
             file = "functions\players";
+            class mapIconScale {};
             class baseSetup {};
             class rdfTick {};
             class rdfClient {};

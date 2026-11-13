@@ -1,8 +1,9 @@
 /*
     CQ_fnc_debugUiFill  (client, answer of CQ_fnc_debugCmd)
-    [_rows, _message, _status]: refreshes the panel list (keeps the selection) and status line.
+    [_rows, _message, _status, _dash]: refreshes the panel list (keeps the selection), status line
+    and the selected HQ's dashboard.
 */
-params [["_rows", []], ["_msg", ""], ["_status", ""]];
+params [["_rows", []], ["_msg", ""], ["_status", ""], ["_dash", ""]];
 disableSerialization;
 
 if (_msg != "") then { systemChat format ["[CQ debug] %1", _msg] };
@@ -23,3 +24,4 @@ lbClear _lb;
 if (_rows isEqualTo []) then { _lb lbAdd "No HQ yet - press 'Landing now'" };
 
 (_d displayCtrl 9001) ctrlSetStructuredText parseText _status;
+if (_dash != "") then { (_d displayCtrl 9002) ctrlSetStructuredText parseText _dash };

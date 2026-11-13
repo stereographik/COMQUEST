@@ -5,7 +5,8 @@
     every path counts, the network is whatever is connected to the base.
       base                    CQ_netCoverBase       always linked
       relay vehicle           CQ_linkRelayVehR      sent by the base 1/3 of the way to the first HQ
-      relays we hold          CQ_netCoverRelay      hacked towers, engineer relays
+      relays we hold          CQ_netCoverRelay      hacked towers, engineer relays; the base and the
+                                                    relays also link to each other within CQ_linkBackbone
       friendly vehicle        CQ_linkVehR           any of ours, crewed or empty, until it despawns or blows up
       MAGPIE drone in the air CQ_linkDroneR         Sentinels and woken Darters
     A drone that is not linked flies on but reports nothing (CQ_fnc_magTick: "CQ_linked").
@@ -17,6 +18,20 @@ if (time < (missionNamespace getVariable ["CQ_linkNext", 0])) exitWith {};
 CQ_linkNext = time + CQ_linkEvery;
 
 // ---- relay vehicle
+// relay vehicle: drives in legs of CQ_linkLegLen m, each ending on a road (one far order made the
+// AI plan, roll 10 m, stop the engine and plan again)
+private _leg = {
+    params ["_rv", "_dest"];
+    private _d = _rv distance2D _dest;
+    private _p = if (_d <= CQ_linkLegLen * 1.3) then { _dest } else {
+        private _q = _rv getPos [CQ_linkLegLen, _rv getDir _dest];
+        private _rd = (_q nearRoads 150) select { (getPosATL _x) distance2D _dest < _d };
+        if (_rd isEqualTo []) then { _q } else { getPosATL (([_rd, [], { _x distance2D _q }, "ASCEND"] call BIS_fnc_sortBy) select 0) }
+    };
+    _rv setVariable ["CQ_linkLeg", _p];
+    _rv engineOn true;
+    (driver _rv) doMove _p;
+};
 private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
 if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) }) then {
     private _roots = ((values CQ_hqs) select { (_x getOrDefault ["parent", -1]) == -1 && { (_x get "state") in CQ_activeStates } });
@@ -36,13 +51,13 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
     _rv lock 2;                                   // the base's relay: not a ride
     _rv enableDynamicSimulation false;
     _g enableDynamicSimulation false;
-    // armed: the gunner fires at will on the way; the driver never stops to fight
-    _g setBehaviour "AWARE"; _g setCombatMode "YELLOW"; _g setSpeedMode "FULL";
-    (driver _rv) disableAI "AUTOCOMBAT"; (driver _rv) disableAI "TARGET"; (driver _rv) disableAI "AUTOTARGET";
-    _rv engineOn true;
-    _g move _dest;
-    (driver _rv) doMove _dest;
+    // on the road: careless, the driver leads and never stops to fight (an alert crew would not
+    // drive at all); parked: the gunner engages anything that comes
+    _g selectLeader (driver _rv);
+    _g setBehaviourStrong "CARELESS"; _g setCombatMode "BLUE"; _g setSpeedMode "FULL";
+    { _x disableAI "AUTOCOMBAT" } forEach units _g;
     _rv setVariable ["CQ_linkMoveT", time];
+    [_rv, _dest] call _leg;
     _rv setVariable ["CQ_linkLastP", getPosATL _rv];
     _rv setVariable ["CQ_linkDest", _dest];
     // under fire: everyone is told (once a minute at most)
@@ -76,61 +91,81 @@ if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
         private _moved = _rv distance2D (_rv getVariable ["CQ_linkLastP", getPosATL _rv]);
         ["Relay vehicle: %1 m from its spot (moved %2 m in 30 s)", [round (_rv distance2D _dest), round _moved]] call CQ_fnc_log;
         if (_moved < 10) then {
+            private _dr = driver _rv;
+            ["Relay vehicle stuck: driver %1 (leader %2), command %3, ready %4, behaviour %5, fuel %6, canMove %7",
+                [alive _dr, _dr == leader group _dr, currentCommand _dr, unitReady _dr, behaviour _dr, round (fuel _rv * 100), canMove _rv]] call CQ_fnc_log;
             if (_moved < 2 && { (_rv getVariable ["CQ_linkStuck", 0]) >= 1 }) then {
                 private _p = (_rv getPos [25, _rv getDir _dest]) findEmptyPosition [0, 40, typeOf _rv];
                 if (_p isNotEqualTo []) then { _rv setVelocity [0, 0, 0]; _rv setPosATL [_p select 0, _p select 1, 0.3] };
             };
             _rv setVariable ["CQ_linkStuck", (_rv getVariable ["CQ_linkStuck", 0]) + 1];
-            _rv engineOn true;
-            (group driver _rv) move _dest;
-            (driver _rv) doMove _dest;
+            [_rv, _dest] call _leg;
         } else { _rv setVariable ["CQ_linkStuck", 0] };
         _rv setVariable ["CQ_linkMoveT", time];
         _rv setVariable ["CQ_linkLastP", getPosATL _rv];
     };
-    if (_rv distance2D _dest < 40 || { speed _rv < 1 && { _rv distance2D _dest < 200 } }) then {
+    // leg reached: the next one
+    if (_rv distance2D (_rv getVariable ["CQ_linkLeg", _dest]) < 40 && { _rv distance2D _dest >= 40 }) then { [_rv, _dest] call _leg };
+    if (_rv distance2D _dest < 40 || { speed _rv < 1 && { _rv distance2D _dest < 200 } && { time - (_rv getVariable ["CQ_linkMoveT", 0]) > 20 } }) then {
         _rv setVariable ["CQ_linkParked", true];
         doStop (driver _rv);
         _rv engineOn false;
+        (group driver _rv) setBehaviour "AWARE";
         (group driver _rv) setCombatMode "RED";      // parked: engages anything that comes
         ["Relay vehicle parked at grid %1 (%2 m from the base)", [mapGridPosition _rv, round (_rv distance2D CQ_basePos)]] call CQ_fnc_log;
     };
 };
 
 // ---- nodes
-private _nodes = [[CQ_basePos, CQ_netCoverBase, objNull]];
-{ if (alive (_x select 1)) then { _nodes pushBack [_x select 2, CQ_netCoverRelay, _x select 1] } } forEach (missionNamespace getVariable ["CQ_relays", []]);
-if (alive _rv) then { _nodes pushBack [getPosATL _rv, CQ_linkRelayVehR, _rv] };
+private _nodes = [[CQ_basePos, CQ_netCoverBase, objNull, "b"]];
+{ if (alive (_x select 1)) then { _nodes pushBack [_x select 2, CQ_netCoverRelay, _x select 1, "r"] } } forEach (missionNamespace getVariable ["CQ_relays", []]);
+if (alive _rv) then { _nodes pushBack [getPosATL _rv, CQ_linkRelayVehR, _rv, "v"] };
 private _drones = [];
 {
     private _v = _x get "veh";
-    if (alive _v && { (_x getOrDefault ["phase", ""]) == "air" }) then { _drones pushBack _v; _nodes pushBack [getPosATL _v, CQ_linkDroneR, _v] };
+    if (alive _v && { (_x getOrDefault ["phase", ""]) == "air" }) then { _drones pushBack _v; _nodes pushBack [getPosATL _v, CQ_linkDroneR, _v, "d"] };
 } forEach (missionNamespace getVariable ["CQ_mag", []]);
+// players' own drones relay and report too
+{
+    if (alive _x && { side _x == west } && { !(_x in _drones) } && { ((getPosATL _x) select 2) > 20 }) then { _drones pushBack _x; _nodes pushBack [getPosATL _x, CQ_linkDroneR, _x, "d"] };
+} forEach allUnitsUAV;
 {
     // ours, crewed or not (a parked empty vehicle relays until it despawns or blows up): a BLUFOR
     // model, or anything with our people inside
     if (alive _x && { _x != _rv } && { !(_x in _drones) } && { !(_x isKindOf "StaticWeapon") } && { !(_x isKindOf "ParachuteBase") }
         && { getNumber (configOf _x >> "side") == 1 || { (crew _x) isNotEqualTo [] && { side group effectiveCommander _x == west } } }) then {
-        _nodes pushBack [getPosATL _x, CQ_linkVehR, _x];
+        _nodes pushBack [getPosATL _x, CQ_linkVehR, _x, "v"];
     };
 } forEach vehicles;
 
-// ---- links: overlapping ranges, flood from the base
+// ---- links: overlapping ranges, grown from the base as a shortest-link tree: each step joins
+// the unlinked node closest to any linked one (Prim), so the map shows the real chain
+// device -> device -> base instead of a star from the base
 private _n = count _nodes;
 private _ok = [true] + ((_nodes select [1]) apply { false });
 private _edges = [];
-private _grow = true;
-while { _grow } do {
-    _grow = false;
-    for "_a" from 0 to _n - 1 do {
-        if !(_ok select _a) then { continue };
-        (_nodes select _a) params ["_pa", "_ra"];
-        for "_b" from 0 to _n - 1 do {
-            if (_ok select _b) then { continue };
-            (_nodes select _b) params ["_pb", "_rb"];
-            if (_pa distance2D _pb <= _ra + _rb) then { _ok set [_b, true]; _edges pushBack [_pa, _pb]; _grow = true };
+private _canLink = {
+    params ["_a", "_b"];
+    (_nodes select _a) params ["_pa", "_ra", "", "_ka"];
+    (_nodes select _b) params ["_pb", "_rb", "", "_kb"];
+    // overlapping ranges; the base and the relays we hold also talk to each other over
+    // CQ_linkBackbone m (radio backbone)
+    _pa distance2D _pb <= _ra + _rb || { _ka in ["b", "r"] && { _kb in ["b", "r"] } && { _pa distance2D _pb <= CQ_linkBackbone } }
+};
+while { true } do {
+    private _bestD = 1e9; private _bA = -1; private _bB = -1;
+    for "_b" from 0 to _n - 1 do {
+        if (_ok select _b) then { continue };
+        private _pb = (_nodes select _b) select 0;
+        for "_a" from 0 to _n - 1 do {
+            if !(_ok select _a) then { continue };
+            private _d = ((_nodes select _a) select 0) distance2D _pb;
+            if (_d < _bestD && { [_a, _b] call _canLink }) then { _bestD = _d; _bA = _a; _bB = _b };
         };
     };
+    if (_bB < 0) exitWith {};
+    _ok set [_bB, true];
+    _edges pushBack [(_nodes select _bA) select 0, (_nodes select _bB) select 0];
 };
 {
     private _v = _x;
@@ -138,6 +173,7 @@ while { _grow } do {
     if ((_v getVariable ["CQ_linked", -1]) isNotEqualTo _l) then { _v setVariable ["CQ_linked", _l, true] };   // public: the map shows a Darter only while linked
 } forEach _drones;
 if (alive _rv) then { _rv setVariable ["CQ_linked", true] };
+[_drones] call CQ_fnc_objSpot;   // enemy objectives a drone saw, once the intel reaches the base
 
 private _pub = [_nodes apply { [_x select 0, _x select 1, false] }, _edges];
 { ((_pub select 0) select _forEachIndex) set [2, _x] } forEach _ok;

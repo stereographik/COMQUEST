@@ -29,6 +29,7 @@ CQ_dbgMapHooked = true;
             }
         };
         private _want = { private _s = _this; [CQ_dbgShowFriend, CQ_dbgShowEnemy] select (_s in [east, independent]) };
+        private _teamCol = { [[0.55, 0.66, 0.82, 1], [1, 1, 1, 1]] select (_this == "medic") };
         private _icon = {
             private _i = getText (configOf _this >> "icon");
             private _p = getText (configFile >> "CfgVehicleIcons" >> _i);
@@ -42,8 +43,13 @@ CQ_dbgMapHooked = true;
                     if ((side _g) call _want) then {
                         private _bt = _x getVariable ["CQ_btHq", -1];     // the HQ build truck and its Kajman: black
                         if (_bt < 0) then { _bt = _x getVariable ["CQ_btKaj", -1] };
-                        _map drawIcon [_x call _icon, [(side _g) call _col, [0, 0, 0, 1]] select (_bt > -1), getPosASLVisual _x, [24, 30] select (_bt > -1), [24, 30] select (_bt > -1), getDirVisual _x,
+                        private _tm = _x getVariable ["CQ_team", ""];     // support teams: medic white, engineer grey-blue
+                        if (_tm != "") then {
+                            _map drawIcon [_x call _icon, _tm call _teamCol, getPosASLVisual _x, 30 * CQ_mapIconScale, 30 * CQ_mapIconScale, getDirVisual _x, format ["%1 TEAM", toUpper _tm], 1, 0.035, "PuristaMedium", "right"];
+                        } else {
+                        _map drawIcon [_x call _icon, [(side _g) call _col, [0, 0, 0, 1]] select (_bt > -1), getPosASLVisual _x, ([24, 30] select (_bt > -1)) * CQ_mapIconScale, ([24, 30] select (_bt > -1)) * CQ_mapIconScale, getDirVisual _x,
                             [format ["%1 %2", groupId _g, _x getVariable ["CQ_dbg", ""]], format [["BUILD TRUCK HQ #%1", "BUILD TRUCK KAJMAN HQ #%1"] select ((_x getVariable ["CQ_btKaj", -1]) > -1), _bt]] select (_bt > -1), 1, 0.035, "PuristaMedium", "right"];
+                        };
                     };
                 };
             } forEach vehicles;
@@ -52,8 +58,9 @@ CQ_dbgMapHooked = true;
                 if (vehicle _x == _x && { alive _x }) then {
                     private _g = group _x;
                     if ((side _g) call _want) then {
-                        private _txt = ["", format ["%1 %2", groupId _g, _g getVariable ["CQ_dbg", ""]]] select (leader _g == _x);
-                        _map drawIcon [_x call _icon, (side _g) call _col, getPosASLVisual _x, 16, 16, getDirVisual _x, _txt, 1, 0.03, "PuristaMedium", "right"];
+                        private _tm = _g getVariable ["CQ_team", ""];
+                        private _txt = ["", [format ["%1 %2", groupId _g, _g getVariable ["CQ_dbg", ""]], format ["%1 TEAM", toUpper _tm]] select (_tm != "")] select (leader _g == _x);
+                        _map drawIcon [_x call _icon, [(side _g) call _col, _tm call _teamCol] select (_tm != ""), getPosASLVisual _x, 16 * CQ_mapIconScale, 16 * CQ_mapIconScale, getDirVisual _x, _txt, 1, 0.03, "PuristaMedium", "right"];
                     };
                 };
             } forEach allUnits;
@@ -62,7 +69,7 @@ CQ_dbgMapHooked = true;
             {
                 _x params ["_id", "_txt", "_pos"];
                 if (_pos isEqualTo []) then { continue };
-                _map drawIcon ["\A3\ui_f\data\map\markers\military\objective_CA.paa", [0.95, 0.2, 0.2, 1], _pos, 30, 30, 0,
+                _map drawIcon ["\A3\ui_f\data\map\markers\military\objective_CA.paa", [0.95, 0.2, 0.2, 1], _pos, 30 * CQ_mapIconScale, 30 * CQ_mapIconScale, 0,
                     format ["HQ #%1", _id], 2, 0.045, "PuristaBold", "right"];
                 _map drawEllipse [_pos, 300, 300, 0, [0.95, 0.2, 0.2, 0.6], ""];
             } forEach (missionNamespace getVariable ["CQ_dbgHqList", []]);

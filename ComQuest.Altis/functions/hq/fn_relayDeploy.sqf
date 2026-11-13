@@ -21,8 +21,8 @@ private _pos = getPosATL _r;
 CQ_relays pushBack [_id, _r, _pos];
 call CQ_fnc_relaySites;
 CQ_netNext = 0;                          // the map and MAGPIE coverage update at once
-["Relay deployed", format ["%1 put up a relay on the ruins of %2 (grid %3): MAGPIE now covers %4 m around it",
-    name _u, [_id] call CQ_fnc_objName, mapGridPosition _pos, CQ_netCoverRelay]] call CQ_fnc_announce;
+["Relay deployed", format ["%1 put up a relay on the ruins of %2 (grid %3): it links our network within %4 m and to the base or other relays within %5 km",
+    name _u, [_id] call CQ_fnc_objName, mapGridPosition _pos, CQ_netCoverRelay, round (CQ_linkBackbone / 1000)]] call CQ_fnc_announce;
 ["relayUp", [[_id] call CQ_fnc_objName]] call CQ_fnc_say;
 [_u, 50, "relay"] call CQ_fnc_scoreAdd;
 

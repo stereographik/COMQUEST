@@ -136,6 +136,7 @@ switch (_mode) do {
         _hq set ["kajLoop", true];
         private _e = createHashMap;
         private _nextT = time + 90;  // when a (new) Kajman may be fetched (90 s: the landing's own Kajman joins the fleet first)
+        private _carrierT = time + 240;  // first fetch: the carrier sends one only if no fleet Kajman frees up within 240 s
         private _ptT = 0;
         private _release = {
             if (count _e > 0 && { alive (_e get "veh") }) then {
@@ -161,10 +162,15 @@ switch (_mode) do {
                 ["HQ #%1: build truck Kajman low on ammo or fuel, swapped", [_id]] call CQ_fnc_log;
                 call _release; _nextT = time;
             };
+            private _free = [];
             if (count _e == 0 && { time >= _nextT }) then {
-                private _free = CQ_air select {
+                _free = CQ_air select {
                     alive (_x get "veh") && { (typeOf (_x get "veh")) find "O_Heli_Attack_02" == 0 } && { (_x get "state") in ["parked", "toPark", "patrolling"] }
+                    && { ([_x get "veh"] call CQ_fnc_vehAmmoLevel) >= CQ_airLowAmmo } && { fuel (_x get "veh") >= CQ_airLowFuel }   // not the one just sent to rearm
                 };
+            };
+            // no free one yet and the landing's escorts may still be on their way to the fleet: wait
+            if (count _e == 0 && { time >= _nextT } && { _free isNotEqualTo [] || { time >= _carrierT } }) then {
                 if (_free isNotEqualTo []) then {
                     _free = [_free, [], { (_x get "veh") distance2D _ctr }, "ASCEND"] call BIS_fnc_sortBy;
                     _e = _free select 0;

@@ -18,6 +18,8 @@ CQ_magDormantNext = time + 3;
 
 CQ_magSensor params ["_r0", "_rk", "_rmax"];
 private _range = (_r0 + CQ_magDormantAlt * _rk) min _rmax;
+private _boost = [1, CQ_hstBoost] select (time < (missionNamespace getVariable ["CQ_hstBoostUntil", -1]));   // rescued technician's firmware
+_range = _range * _boost;
 
 // forget the lost woken Darters (the replacement is queued in CQ_magDormantDead by CQ_fnc_magTick)
 CQ_mag = CQ_mag select { !((_x getOrDefault ["role", ""]) == "dormant" && { _x get "lost" }) };
@@ -122,7 +124,7 @@ private _gap = CQ_magDormantGap;
         for "_dj" from -1 to 1 do {
             private _k = [_ci + _di, _cj + _dj];
             private _p = CQ_magDormantPts getOrDefault [_k, []];
-            if (_p isNotEqualTo [] && { _p distance2D _pos < CQ_magDormantWake } && { [_p] call _aaSafe }) exitWith { _hit = _k };
+            if (_p isNotEqualTo [] && { _p distance2D _pos < CQ_magDormantWake * _boost } && { [_p] call _aaSafe }) exitWith { _hit = _k };
         };
         if (_hit isNotEqualTo []) exitWith {};
     };

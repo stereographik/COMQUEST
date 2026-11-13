@@ -21,14 +21,28 @@ for "_k" from 1 to 12 do {
     _lz = _lz getPos [100, _away];
 };
 
-private _pl = createVehicle [CQ_dropPlaneClass, [_start select 0, _start select 1, 1500 + 50 * CQ_dropSlot], [], 0, "FLY"];
-_pl setPosASL [_start select 0, _start select 1, (getTerrainHeightASL _start max 0) + _alt];
-_pl setDir _away;
-_pl setVelocityModelSpace [0, 60, 0];
-private _pg = [_pl] call CQ_fnc_crewVehicle;
-_pg setBehaviourStrong "CARELESS";
-_pg setCombatMode "BLUE";
-_pl flyInHeight _alt;
+// terrain on the way: the plane starts and stays above the highest ground between the carrier and
+// the LZ (a Mohawk spawned low behind an island flew straight into it)
+private _hiASL = 0;
+private _len = _start distance2D _lz;
+for "_s" from 0 to _len step 100 do { _hiASL = _hiASL max (getTerrainHeightASL (_start getPos [_s, _away])) };
+_alt = _alt max (_hiASL + 120 - ((getTerrainHeightASL _start) max 0));
+// plane, crew and speed in one frame (unscheduled): with a busy scheduler an empty plane created
+// in the air fell for seconds before its crew existed and crashed
+private _pl = objNull;
+private _pg = grpNull;
+isNil {
+    _pl = createVehicle [CQ_dropPlaneClass, [_start select 0, _start select 1, 1500 + 50 * CQ_dropSlot], [], 0, "FLY"];
+    _pl setPosASL [_start select 0, _start select 1, (getTerrainHeightASL _start max 0) + _alt];
+    _pl setDir _away;
+    _pl setVelocityModelSpace [0, 60, 0];
+    _pg = [_pl] call CQ_fnc_crewVehicle;
+    _pg setBehaviourStrong "CARELESS";
+    _pg setCombatMode "BLUE";
+    _pl engineOn true;
+    _pl flyInHeight _alt;
+    _pl flyInHeightASL [_hiASL + 100, _hiASL + 100, _hiASL + 100];
+};
 
 private _cargo = objNull;
 private _viv = false;
@@ -55,7 +69,9 @@ waitUntil {
     if (_d < 900) then { _pl limitSpeed 220 };
     if (_d < _minD) then { _minD = _d };
     private _safe = [getPosATL _pl, CQ_dropCoastGap] call CQ_fnc_coastSafe;
-    if ((_d < CQ_dropLead && _safe) || { _d < 80 } || { _minD < CQ_dropLead && { _d > _minD + 40 } && _safe } || { time - _t0 > 500 && _safe }) then {
+    if ((_d < CQ_dropLead && _safe) || { _d < 80 } || { _minD < CQ_dropLead && { _d > _minD + 40 } && _safe } || { time - _t0 > 500 && _safe }
+        || { time - _t0 > 200 && { !surfaceIsWater getPosATL _pl } && { _d < 1500 } }) then {   // never kept circling: any land near the LZ will do
+        if (time - _t0 > 200) then { ["%1: Mohawk forced to drop after %2 s (%3 m from its LZ)", [_tag, round (time - _t0), round _d]] call CQ_fnc_log };
         if (_viv) then { _pl setVehicleCargo objNull } else {
             detach _cargo;
             _cargo hideObjectGlobal false;

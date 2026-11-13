@@ -177,6 +177,7 @@ if (time >= CQ_magDetectT) then {
         if (!(_v getVariable ["CQ_linked", false]) && { time >= (missionNamespace getVariable ["CQ_decryptUntil", -1]) }) then { continue };   // no data link
         CQ_magSensor params ["_r0", "_rk", "_rmax"];
         private _r = (_r0 + _alt * _rk) min _rmax;
+        if (_v isKindOf "UAV_01_base_F" && { time < (missionNamespace getVariable ["CQ_hstBoostUntil", -1]) }) then { _r = _r * CQ_hstBoost };   // rescued technician's firmware
         private _eye = getPosASL _v vectorAdd [0, 0, -1.5];
         // search cells seen
         { if (!(_x select 1) && { (_x select 0) distance2D _v < _r * 0.8 }) then { _x set [1, true] } } forEach CQ_magCells;
@@ -325,7 +326,7 @@ private _focusOn = _focus isNotEqualTo [];
 if (_focusOn) then {
     _focus = [_focus select 0, _focus select 1, 0];
     CQ_magRingR = (CQ_magRingStart - CQ_magRingShrink * (time - CQ_magFocusT) / 60) max CQ_magRingMin;
-    private _ring = [_flying select { !(_x getOrDefault ["flee", false]) }, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;   // a woken Darter getting away joins once clear
+    private _ring = [_flying select { !(_x getOrDefault ["flee", false]) && { (_x getOrDefault ["role", ""]) != "wasp" } && { time >= (_x getOrDefault ["lookUntil", 0]) } }, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;   // a woken Darter getting away joins once clear; WASP keeps to the link edge
     private _n = count _ring;
     private _step = 360 / (_n max 1);
     private _rot = (time - CQ_magFocusT) * CQ_magRingTurn;
@@ -439,10 +440,40 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     } forEach _chain;
 };
 
+// ---- WASP: as far toward the carrier as the data link holds. Its anchor is the relay vehicle
+// while that one is alive, else the base; it sits CQ_waspMargin m inside the edge of their
+// overlapping ranges, on the line anchor -> carrier
+{
+    private _m = _x;
+    if (time - (_m get "planT") < 20) then { continue };
+    _m set ["planT", time];
+    private _v = _m get "veh";
+    private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
+    (if (alive _rv) then { [getPosATL _rv, CQ_linkRelayVehR] } else { [CQ_basePos, CQ_netCoverBase] }) params ["_a", "_ar"];
+    private _cp = missionNamespace getVariable ["CQ_carrierPos", _a];
+    private _s = _a getPos [_ar + CQ_linkDroneR - CQ_waspMargin, _a getDir _cp];
+    if (surfaceIsWater _s) then {
+        // over the sea it can still relay: keep it, but never past the coast by more than 1 km
+        private _k = 0;
+        while { surfaceIsWater _s && { _k < 20 } } do { _s = _s getPos [-100, _a getDir _cp]; _k = _k + 1 };
+        _s = _s getPos [(_k * 100) min 1000, _a getDir _cp];
+    };
+    if ((_m get "target") isNotEqualTo [] && { (_m get "target") distance2D _s < 100 }) then { continue };
+    private _g = group effectiveCommander _v;
+    [_g] call CQ_fnc_clearWaypoints;
+    _v flyInHeight (_m get "alt");
+    private _wp = _g addWaypoint [_s, 0];
+    _wp setWaypointType "LOITER";
+    _wp setWaypointLoiterRadius 150;
+    _g setCurrentWaypoint _wp;
+    _m set ["target", _s];
+    ["MAGPIE: WASP heads to grid %1 (%2 m from the %3, toward the carrier)", [mapGridPosition _s, round (_s distance2D _a), ["base", "relay vehicle"] select (alive _rv)]] call CQ_fnc_log;
+} forEach (_flying select { (_x getOrDefault ["role", ""]) == "wasp" });
+
 {
     private _m = _x;
     private _v = _m get "veh";
-    if (_focusOn || { (_m getOrDefault ["role", ""]) == "chain" } || { _m getOrDefault ["flee", false] }) then { continue };
+    if (_focusOn || { (_m getOrDefault ["role", ""]) in ["chain", "wasp"] } || { _m getOrDefault ["flee", false] } || { time < (_m getOrDefault ["lookUntil", 0]) }) then { continue };
     if (((getPosATL _v) select 2) < 40 && { time - (_m get "planT") < 300 }) then { continue };
     private _tgt = _m get "target";
     private _arrived = (_m get "explore") && { _tgt isNotEqualTo [] } && { _v distance2D _tgt < 500 };

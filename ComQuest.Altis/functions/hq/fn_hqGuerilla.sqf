@@ -1,8 +1,8 @@
 /*
     CQ_fnc_hqGuerilla  (server, from CQ_fnc_hqBuild when stage 4 is done)
     [_hq] call CQ_fnc_hqGuerilla;
-    The HQ arms the locals: CQ_guerillaSquads squads of FIA irregulars (vanilla O_G_* units,
-    on the CSAT side) appear in the nearest village within CQ_guerillaVillageRange, or around
+    The HQ arms the locals: CQ_guerillaSquads squads of armed civilians (CQ_fnc_civArm,
+    roles CQ_guerillaClasses, on the CSAT side) appear in the nearest village within CQ_guerillaVillageRange, or around
     the HQ, and patrol there. Limited ammo like every enemy soldier (CQ_fnc_unitPrep).
     Kept in the HQ's "guerilla" list: they never leave on colonisations, QRFs or transfers.
     Respects the CQ_maxInfantry and CQ_maxAI caps.
@@ -24,7 +24,7 @@ for "_i" from 1 to CQ_guerillaSquads do {
     private _g = createGroup [east, true];
     private _classes = [CQ_guerillaLeader] + ((CQ_guerillaClasses call BIS_fnc_arrayShuffle) select [0, _size - 1]);
     while { count _classes < _size } do { _classes pushBack (selectRandom CQ_guerillaClasses) };
-    { _g createUnit [_x, _p, [], 8, "NONE"] } forEach _classes;
+    { [_g, _p, _x] call CQ_fnc_civArm } forEach _classes;
     [units _g] call CQ_fnc_unitPrep;
     _g setVariable ["CQ_role", "guerilla"];
     _g setBehaviour "SAFE";

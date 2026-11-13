@@ -152,6 +152,41 @@ CQ_assaultBreach = 70;                   // ...and this close, the infantry stor
 // is not secured by then, the carrier paradrops one of CQ_crashDropClasses with a squad, which
 // roams around the site for CQ_crashRoam s, then joins the nearest enemy HQ. A player reaching
 // the crate secures it (no condition): CQ_crashDecrypt s of decryption = MAGPIE sees everywhere
+
+// Hostage event (CQ_fnc_hostageTick): a civilian radio technician held by CSAT in a village house
+// between the base and an enemy HQ, marked exactly. Same trigger as the crash (front still for
+// CQ_crashStagnant s, at most every CQ_crashCooldown s), never while a crash runs, CQ_hstGap s
+// apart from it. Anyone reaching him holds "Download firmware" on him (the guards need not be
+// dead) -> a friendly helicopter waits on the ground CQ_hstLzR m away; he is too hurt
+// to walk: players carry him to it (or load him into any vehicle) while CQ_hstGuer guerillas
+// chase him -> it flies him to the base. Over the base perimeter:
+// Darter detection range x CQ_hstBoost for CQ_hstBoostTime s (stacks time), CQ_hstPoints to the
+// player who downloaded the firmware. He dies: CROSSROAD reports it, no penalty.
+// Debug panel: EVENTS > Hostage, TELEPORTERS > Hostage.
+CQ_hst = true;
+CQ_hstGap = 1200;                        // s between a crash and a hostage event (either order)
+CQ_hstSiteFrac = [0.35, 0.65];           // search point between the base (0) and an enemy HQ (1)
+CQ_hstSearchR = 1500;                    // m: villages around the search point
+CQ_hstSearchStep = 1500;                 // m added each time nothing fits (limits relax from the 3rd round)
+CQ_hstPlayerGap = 800;                   // m: no player this close to the village (halved when relaxed)
+CQ_hstBaseGap = 1000;                    // m from the base
+CQ_hstHqGap = 600;                       // m from an enemy HQ
+CQ_hstMinBp = 4;                         // building positions the house needs (2 when relaxed)
+CQ_hstCivClass = "C_man_polo_1_F";
+CQ_hstSitAnim = "Acts_AidlPsitMstpSsurWnonDnon_loop";   // sitting, hands tied
+CQ_hstDamageMul = 0.5;                   // damage the hostage takes (x)
+CQ_hstGuards = ["O_Soldier_TL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_F", "O_Soldier_LAT_F"];
+CQ_hstGuardsIn = 3;                      // of them at the house's windows, the rest covering the approaches
+CQ_hstSkill = 0.65;
+CQ_hstFwTime = 10;                       // s: "Download firmware" hold
+CQ_hstHeliClass = "B_Heli_Transport_01_F";   // Ghost Hawk, AI crew
+CQ_hstLzR = [80, 500];                   // m from the hostage: the helicopter's clear spot
+CQ_hstFlyHeight = 70;                    // m
+CQ_hstGuer = [3, 4];                     // guerillas sent after him
+CQ_hstGuerDist = [300, 500];             // m from him where they appear
+CQ_hstBoost = 1.5;                       // Darter detection range x
+CQ_hstBoostTime = 1200;                  // s (20 min), added on each rescue
+CQ_hstPoints = 100;                      // score to the player who downloaded the firmware
 // and every enemy HQ and radio tower is shown on the map.
 // When: the front has not moved (no HQ built, fallen or launched, no relay) for CQ_crashStagnant
 // s; at most every CQ_crashCooldown s; plus a CQ_crashEarlyChance chance of one in the first
@@ -216,6 +251,7 @@ CQ_netEvery = 10;                        // s between two network updates (links
 CQ_netCoverBase = 5000;                  // m: the base's data-link range (CQ_fnc_linkTick: nodes link when their ranges overlap)
 CQ_netCoverRelay = 4000;                 // m: range of a relay we hold (hacked tower, engineer relay)
 CQ_linkEvery = 3;                        // s between two data-link updates
+CQ_linkBackbone = 10000;                 // m: the base and the relays we hold (hacked towers, engineer relays) link to each other this far
 CQ_linkRelayVehR = 2500;                 // m: range of the base's relay vehicle
 CQ_linkVehR = 1000;                      // m: range of any friendly vehicle, crewed or empty
 CQ_linkDroneR = 1000;                    // m: range of a MAGPIE drone in the air (it reports only while linked)
@@ -223,10 +259,19 @@ CQ_linkRelayClass = "B_MRAP_01_hmg_F";   // the relay vehicle (Hunter HMG, AI cr
 CQ_linkRelayFrac = 1 / 3;                // it parks this share of the way from the base to the first enemy HQ
 CQ_linkRelaySpawn = [14444, 16163, 0];   // where the base's relay vehicle is created
 CQ_linkRelayRespawn = 300;               // s before another one leaves after it is lost
+CQ_linkLegLen = 400;                     // m: the relay vehicle drives in legs this long, each ending on a road
+// WASP: MAGPIE's autonomous Darter (CQ_magDrones) flies as far toward the carrier as the data link
+// allows (anchored on the relay vehicle while it is alive, else on the base), CQ_waspMargin m
+// inside the edge of their overlapping ranges
+CQ_wasp = true;
+CQ_objLookTime = 60;                     // s a Watcher Darter looks around a newly spotted objective (plus its flight there)
+CQ_objLookAaR = 1200;                    // m it keeps from a spotted AA pit while looking
+CQ_waspMargin = 150;                     // m inside the link edge
 CQ_linkAlertEvery = 60;                  // s between two "relay vehicle under fire" alerts
 CQ_netTrunkStub = 1500;                  // m of the trunk line drawn from a root HQ toward the carrier (its position stays unknown)
 CQ_relayClass = "Land_TTowerSmall_1_F";  // the friendly relay an engineer puts up
 CQ_hackTime = 20;                        // s an engineer holds "Hack radio tower" at its foot: the tower becomes our relay (no demolition)
+CQ_hackSlowFactor = 2;                   // anyone can hack a tower; a non-engineer takes this many times longer
 CQ_hackRange = 15;                       // m from the tower's centre
 CQ_towerGuard = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_soldier_M_F", "O_Soldier_GL_F", "O_Soldier_F", "O_Soldier_AR_F", "O_Soldier_F"];   // its own guard squad (scaled, out of the AI caps)
 CQ_towerGuardSkill = 0.65;
@@ -279,6 +324,7 @@ CQ_siteMinHqSpacing = 1500;
 // Build truck (CQ_fnc_buildTruck): no build timer any more, each stage goes up when the truck got there
 CQ_btTruckClass = "O_Truck_02_transport_F";   // Zamak: the first one comes with the root insertion's paradrop
 CQ_btSquad = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_engineer_F", "O_engineer_F", "O_Soldier_GL_F", "O_Soldier_F", "O_Soldier_F"];   // rides in the back
+CQ_btLandSafe = 20;                     // s the landed build truck stays unhurt (loads landing next to it)
 CQ_btStopDist = 20;                      // m from the stage's site: the truck stops, the squad gets out
 CQ_btSpawnDelay = 3;                     // s after the stop before the stage appears
 CQ_btBoardTime = 25;                     // s the squad gets to board before the truck leaves (near ones are put in)
@@ -286,6 +332,7 @@ CQ_btStuck = 45;                         // s without moving 5 m: new route, the
 CQ_btLegMax = 240;                       // s per leg at most: the truck is put at its stop (safety)
 CQ_btReplaceDelay = 300;                 // s before the carrier paradrops a replacement truck
 CQ_btMaxDrops = 16;                      // build trucks the carrier can paradrop in the whole game (replacements + new trucks for founding HQs)
+CQ_btFallbackTime = 120;                 // s per stage when the carrier has no build truck left (the build goes on without one)
 CQ_btEscortClass = "O_MRAP_02_hmg_F";    // escort of a replacement truck (Ifrit HMG, CSAT's Hunter)
 CQ_btEscortMax = 3;                      // one escort more per truck the HQ lost, up to this
 CQ_btKajClass = "O_Heli_Attack_02_dynamicLoadout_F";   // Kajman teaming with the build truck while an HQ is built
@@ -305,6 +352,7 @@ CQ_carrierHqs = 6;                       // the carrier has supplies for this ma
 CQ_secureRadius = 1000;                  // squads post out to this perimeter before building
 CQ_secureShare = 0.5;                    // perimeter counts as secured once every squad is this far out
 CQ_secureTimeout = 60;                   // build starts anyway after 1 min (squads keep walking to their posts)
+CQ_hqFallenBlow = 60;           // s after an HQ falls: its depot and tanker are blown up by the leaving troops
 CQ_holdTime = 60;                        // hold after installation, before calling reinforcements
 CQ_waveInterval = 600;                   // a new reinforcement wave every 10 min per HQ
 CQ_waveSpawnDist = [1000, 1500];         // convoy spawns on a road this far from the HQ
@@ -336,9 +384,29 @@ CQ_fuelConsumption = 5;                  // every enemy vehicle and helicopter b
 CQ_guerillaSquads = 2;
 CQ_guerillaSize = [6, 8];
 CQ_guerillaVillageRange = 1500;          // they patrol the nearest village this close, else the HQ surroundings
-CQ_guerillaLeader = "O_G_Soldier_SL_F";
-CQ_guerillaClasses = ["O_G_Soldier_F", "O_G_Soldier_F", "O_G_Soldier_AR_F", "O_G_Soldier_LAT_F", "O_G_Soldier_GL_F",
-    "O_G_Soldier_M_F", "O_G_medic_F", "O_G_Soldier_lite_F", "O_G_Soldier_A_F"];
+CQ_guerillaLeader = "leader";            // roles of CQ_civKits (armed civilians, CQ_fnc_civArm)
+CQ_guerillaClasses = ["rifle", "rifle", "mg", "at", "gl", "marksman", "medic", "carbine", "rifle"];
+
+// Armed civilians: every guerilla of the mission (HQ villages, the hostage chasers, armed Offroad
+// crews, the intro) is a local in civilian clothes with a bandolier, on the CSAT side.
+// Base game only (no DLC): the Katiba family, Zafir, Rahim, RPG-42.
+CQ_civClasses = ["C_man_1", "C_man_polo_1_F", "C_man_polo_2_F", "C_man_polo_3_F", "C_man_polo_4_F", "C_man_polo_5_F",
+    "C_man_polo_6_F", "C_man_shorts_1_F", "C_man_shorts_2_F", "C_man_shorts_3_F", "C_man_shorts_4_F",
+    "C_man_w_worker_F", "C_man_p_fugitive_F", "C_man_p_shorts_1_F", "C_man_hunter_1_F"];
+CQ_civVests = ["V_BandollierB_khk", "V_BandollierB_cbr", "V_BandollierB_rgr", "V_BandollierB_blk", "V_BandollierB_oli"];
+CQ_civPacks = ["B_FieldPack_cbr", "B_FieldPack_blk", "B_FieldPack_khk"];   // AT only (rockets)
+CQ_civHats = ["H_Cap_blk", "H_Cap_grn", "H_Cap_red", "H_Bandanna_khk", "H_Bandanna_cbr", "H_Booniehat_khk", "H_ShemagOpen_khk"];
+// role -> [weapon, magazine, magazines, optic, launcher, rocket, rockets, [[item, n], ...]]
+CQ_civKits = createHashMapFromArray [
+    ["leader",   ["arifle_Katiba_F",    "30Rnd_65x39_caseless_green", 6]],
+    ["rifle",    ["arifle_Katiba_F",    "30Rnd_65x39_caseless_green", 6]],
+    ["carbine",  ["arifle_Katiba_C_F",  "30Rnd_65x39_caseless_green", 6]],
+    ["gl",       ["arifle_Katiba_GL_F", "30Rnd_65x39_caseless_green", 5, "", "", "", 0, [["1Rnd_HE_Grenade_shell", 4]]]],
+    ["mg",       ["LMG_Zafir_F",        "150Rnd_762x54_Box", 2]],
+    ["at",       ["arifle_Katiba_C_F",  "30Rnd_65x39_caseless_green", 4, "", "launch_RPG32_F", "RPG32_F", 2]],
+    ["marksman", ["srifle_DMR_01_F",    "10Rnd_762x54_Mag", 6, "optic_DMS"]],
+    ["medic",    ["arifle_Katiba_C_F",  "30Rnd_65x39_caseless_green", 5, "", "", "", 0, [["FirstAidKit", 3]]]]
+];
 CQ_balanceInterval = 60;                 // every minute, infantry is evened out over the fully built HQs
 CQ_balanceMargin = 6;                    // only when an HQ is this many soldiers off the average
 CQ_balanceNewBonus = 8;                  // an HQ still securing / building counts this many soldiers short: helped first
@@ -372,8 +440,9 @@ CQ_objGuardSize = 3;                     // ...each site guarded by this many so
 CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is finished: compass direction from the HQ (270 = west)
 CQ_hmgTowerDist = 45;                    // ...and distance
 // Enemy support teams: one medic team, one engineer team, dropped again after destruction
-CQ_specialVehicle = "I_MRAP_03_hmg_F";   // Strider HMG
-CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Blackfish drop of the game
+CQ_specialVehicle = "O_APC_Wheeled_02_rcws_v2_F";   // MSE-3 Marid (8 cargo seats: the team + the snipers)
+CQ_specialLzR = [100, 1000];             // m from the HQ: where each team is paradropped (random)
+CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Mohawk vehicle paradrop of the game (engineers 20 s later)
 CQ_specialRespawn = 900;                 // a wiped-out team is dropped again 15 min later
 CQ_specialRespawns = 3;                  // ...at most this many times per team (first drop not counted)
 CQ_specialRange = 6000;
@@ -381,7 +450,7 @@ CQ_specialRange = 6000;
 // west side, driven by the medic and engineer teams to CQ_sniperDrop m short of their spots
 CQ_snipersPerWave = 4;
 CQ_sniperClass = "O_sniper_F";           // falls back to the marksman if missing or DLC
-CQ_sniperSeats = 2;                      // Strider cargo seats each team keeps free for them
+CQ_sniperSeats = 2;                      // Marid cargo seats each team keeps free for them
 CQ_sniperDist = [800, 1200];             // m from the HQ
 CQ_sniperArc = [200, 340];               // bearings from the HQ (west side)
 CQ_sniperGap = 200;                      // m between two spots
@@ -403,6 +472,9 @@ CQ_medicHealAbove = 0.25;                // soldiers hurt more than this get tre
 // Radio direction finder (players with a radio): signal from enemy HQ radios
 CQ_rdfRange = 6000;                      // no signal beyond this
 CQ_rdfTop = 40;                          // signal panel: px from the top of the screen (centred)
+CQ_mapIconScale = 0.5;                   // every map icon (mission markers, drones, relays, debug) at this x its default size
+CQ_threatRange = 1500;                   // threat compass: closest danger the network knows within this (m)
+CQ_threatMemory = 60;                    // s a drone contact stays on the compass at its last seen spot
 CQ_playerMapMarkers = false;             // true = enemy HQ areas and the carrier shown on the players' map
 // Base defence spots (AA + HMG, NATO gunners), around the camp, off the runway
 CQ_baseDefAngles = [45, 225, 315];       // relative to the camp front (135 removed: it sat on the taxiway the drones use)
@@ -472,6 +544,7 @@ CQ_menuOverhang = 0.18;                  // share of the picture pushed past the
 CQ_sqSize = 0.85;                        // squads / class / stats window: field tablet picture height (share of the screen height), centred
 CQ_sqScreen = [0.2773, 0.2672, 0.7920, 0.7719];   // its green screen zone in the picture (fractions), under the status bar, right of the icon column
 CQ_sqTint = 0.72;                        // opacity of the dark tint over the green screen (readability)
+CQ_sqFont = 0.75;                        // squads / class / stats window: labels, buttons and lists at this x the default text size (descriptions unchanged)
 CQ_menuScreen = [0.4102, 0.4062, 0.7070, 0.5410];   // its green screen zone in the picture (fractions), under the status bar, right of the icon column
 CQ_bleedOut = 300;                       // s a downed player waits for a medic (ReviveBleedOutDelay in description.ext)
 CQ_surgeChance = 0.10;                   // adrenalineSurge: chance for a downed medic to get up on his own over the whole wait
@@ -694,7 +767,7 @@ CQ_shopRange = 6;                        // metres from the shop terminal to use
 // The two large drones are Greyhawk airframes named Sentinel_Argos (low) and Sentinel_Hermes
 // (high, wider sensor); the Sentinel UCAV itself needs the Jets DLC. Weapons are removed: MAGPIE only looks.
 CQ_magDrones = [
-    ["Darter",   ["B_UAV_01_F"],                                  250, 0.8],
+    ["WASP",     ["B_UAV_01_F"],                                  250, 0.8],   // the autonomous Darter (CQ_wasp)
     ["Sentinel_Argos",  ["B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"],     900, 1.2],
     ["Sentinel_Hermes", ["B_UAV_05_F", "B_UAV_02_dynamicLoadout_F", "B_UAV_02_F"], 1500, 1.6]
 ];

@@ -52,6 +52,7 @@ switch (_mode) do {
     case "lock": {
         if (_g getVariable ["CQ_solo", false] || { leader _g != _p }) exitWith { ["Only a squad leader can set the squad respawn vehicle"] call _say };
         if (!alive _v || { !(_v isKindOf "LandVehicle" || { _v isKindOf "Air" }) } || { side group effectiveCommander _v == east }) exitWith {};
+        if (getNumber (configOf _v >> "side") == 0) exitWith { ["An enemy vehicle cannot be the squad respawn vehicle"] call _say };   // CSAT models
         if ((_v getVariable ["CQ_rspLeft", CQ_rspCredits]) <= 0) exitWith { [format ["This %1 has no respawn credits left", [_v] call _vName]] call _say };
         private _old = _g getVariable ["CQ_rspVeh", objNull];
         private _owner = (allGroups select { (_x getVariable ["CQ_rspVeh", objNull]) == _v && { _x != _g } }) param [0, grpNull];

@@ -308,6 +308,35 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "%1 has the crate. The techs are on it... we're in their network. MAGPIE sees everything for a while."]],
         [["CROSSROAD", "Crate secured by %1. Decrypting now: every HQ and tower they have is on your map."]]
     ]],
+    // hostage event: [grid]
+    ["hstStart", [
+        [["CROSSROAD", "All stations: CSAT is holding one of our radio technicians in a house at grid %1. Five guards. He has our firmware in his head. Bring him home."]],
+        [["COMHAT", "...the civilian technician is secured in the house, awaiting transport..."], ["CROSSROAD", "That's our radio tech they're talking about. Grid %1, marked on your maps. Get him out."]]
+    ]],
+    // [name, lz grid]
+    ["hstFirmware", [
+        [["CROSSROAD", "%1 has the firmware. A bird is on the ground at grid %2, green smoke. Get him aboard, locals are already moving on him."]],
+        [["CROSSROAD", "Firmware's ours, thanks to %1. Extraction waiting at grid %2. Cover him all the way to the chopper."]]
+    ]],
+    ["hstHeliLost", [
+        [["CROSSROAD", "We lost the extraction bird. Another one is setting down near him now. Keep him alive."]]
+    ]],
+    ["hstAboard", [
+        [["CROSSROAD", "Technician aboard. The bird is heading home."]],
+        [["CROSSROAD", "He's on the chopper. Wheels up, back to base."]]
+    ]],
+    // [name, minutes]
+    ["hstHome", [
+        [["CROSSROAD", "The technician is home. The firmware is going on the Darters now: they see further for %2 minutes. Good work, %1."], ["MAGPIE", "Oh, that's better. My little birds can see a lot more now."]],
+        [["CROSSROAD", "He's safe at base. %1, well done. New firmware loaded: Darter sensors extended for %2 minutes."]]
+    ]],
+    ["hstDead", [
+        [["CROSSROAD", "The technician is dead. And the firmware with him. Back to work."]],
+        [["CROSSROAD", "We lost him. Nothing more to do there."]]
+    ]],
+    ["hstBoostEnd", [
+        [["MAGPIE", "The Darters are back on the old firmware. Shorter eyes again."]]
+    ]],
     ["decryptEnd", [
         [["CROSSROAD", "They've changed their keys. Decryption is over: back to the old ways."]],
         [["CROSSROAD", "We've lost the decryption. It was nice while it lasted."]]
@@ -444,7 +473,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen", "towerHacked"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "hstStart", "hstFirmware", "hstHeliLost", "hstAboard", "hstHome", "hstDead", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen", "towerHacked"];
 
 CQ_uiCardX = 19;                          // px from the screen's left edge to the card (its border then lines up with the vehicle panel, ~16 px)
 CQ_uiCardY = 300;                         // px from the top: first card (below the map screen's menu)

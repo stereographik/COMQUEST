@@ -149,6 +149,13 @@ private _truckWait = {
             };
             if (alive _tr && { !alive driver _tr || { !canMove _tr } }) then { _tr setDamage 1 };   // crippled: counts as lost
             _legT = -1;
+            // the carrier has no build truck left: the build goes on the old way, one stage
+            // every CQ_btFallbackTime s (the men carry it in)
+            if (_hq getOrDefault ["btNone", false] && { time - _frozenT > CQ_btFallbackTime }) exitWith {
+                ["HQ #%1: no build truck left, stage built without one", [_id]] call CQ_fnc_log;
+                _frozenT = time;
+                true
+            };
             false
         };
         _frozen = false;
@@ -207,9 +214,9 @@ private _guardNow = {
     private _donors = ((_hq get "infantry") select {
         (_x getVariable ["CQ_role", ""]) in ["patrol", "secure"] && { ({ alive _x } count units _x) >= CQ_objGuardSize + 2 }
     });
-    // depot and tanker: no squad to spare -> the build truck's squad leaves a team behind
+    // depot and tanker: the build truck's squad leaves a team behind first, else the nearest squad
     private _sg = _hq getOrDefault ["btSquad", grpNull];
-    if (_donors isEqualTo [] && { _truckSquad } && { !isNull _sg } && { ({ alive _x } count units _sg) >= CQ_objGuardSize + 2 }) then { _donors = [_sg] };
+    if (_truckSquad && { !isNull _sg } && { ({ alive _x } count units _sg) >= CQ_objGuardSize + 2 }) then { _donors = [_sg] };
     if (_donors isEqualTo []) exitWith { ["HQ #%1: no squad free to guard the new %2", [_id, typeOf _obj]] call CQ_fnc_log };
     private _donor = ([_donors, [], { (leader _x) distance2D _site }, "ASCEND"] call BIS_fnc_sortBy) select 0;
     private _men = ((units _donor) select { alive _x && { _x != leader _donor } && { vehicle _x == _x } }) select [0, CQ_objGuardSize];
@@ -257,7 +264,6 @@ private _aaGroup = createGroup [east, true];
         createVehicleCrew _aa;
         _aa setVariable ["CQ_objType", "AA"];
         (_hq get "installations") pushBack _aa;
-        [_aa] call _guardNow;
         (crew _aa) joinSilent _aaGroup;
         [_aa, 1] call CQ_fnc_vehAmmoInit;
     };
@@ -308,7 +314,7 @@ _radio addEventHandler ["HandleDamage", {
 }];
 _radio setVariable ["CQ_hackable", true, true];
 // the hack is done like defusing a bomb: on a field terminal at the tower's foot, it opens while
-// an Engineer works on it (CQ_hackTime s, interrupted if he moves away or is hit)
+// anyone works on it (an Engineer CQ_hackTime s, others CQ_hackSlowFactor times longer; interrupted if he moves away or is hit)
 if (!isNull _radio) then {
     private _tp = (getPosATL _radio) getPos [6, (getPosATL _radio) getDir _c];
     _tp = [_tp select 0, _tp select 1, 0];
@@ -319,18 +325,25 @@ if (!isNull _radio) then {
     _term setVariable ["CQ_tower", _radio, true];
     _radio setVariable ["CQ_terminal", _term, true];
     (_hq get "objects") pushBack _term;
-    [_term,
-        "<t color='#BA392C'>Hack radio tower</t>",
-        "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
-        "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
-        "(_this getVariable ['CQ_class', '']) == 'Engineer' && { _this distance _target < 3 } && { (_target getVariable ['CQ_tower', objNull]) getVariable ['CQ_hackable', false] }",
-        "_caller distance _target < 3 && { alive _caller } && { lifeState _caller != 'INCAPACITATED' }",
-        { params ["_target"]; [_target, 3] call BIS_fnc_dataTerminalAnimate },
-        {},
-        { params ["_target", "_caller"]; [_target getVariable ["CQ_tower", objNull], _caller] remoteExec ["CQ_fnc_towerHack", 2] },
-        { params ["_target"]; [_target, 0] call BIS_fnc_dataTerminalAnimate },
-        [], CQ_hackTime, 1000, false, false
-    ] remoteExec ["BIS_fnc_holdActionAdd", 0, _term];
+    // anyone can hack; an Engineer twice as fast (two actions, one shows per player)
+    {
+        _x params ["_cond", "_time", "_label"];
+        [_term,
+            format ["<t color='#BA392C'>Hack radio tower%1</t>", _label],
+            "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
+            "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_hack_ca.paa",
+            _cond + " && { _this distance _target < 3 } && { (_target getVariable ['CQ_tower', objNull]) getVariable ['CQ_hackable', false] }",
+            "_caller distance _target < 3 && { alive _caller } && { lifeState _caller != 'INCAPACITATED' }",
+            { params ["_target"]; [_target, 3] call BIS_fnc_dataTerminalAnimate },
+            {},
+            { params ["_target", "_caller"]; [_target getVariable ["CQ_tower", objNull], _caller] remoteExec ["CQ_fnc_towerHack", 2] },
+            { params ["_target"]; [_target, 0] call BIS_fnc_dataTerminalAnimate },
+            [], _time, 1000, false, false
+        ] remoteExec ["BIS_fnc_holdActionAdd", 0, _term];
+    } forEach [
+        ["(_this getVariable ['CQ_class', '']) == 'Engineer'", CQ_hackTime, ""],
+        ["(_this getVariable ['CQ_class', '']) != 'Engineer'", CQ_hackTime * CQ_hackSlowFactor, " (slow: not an engineer)"]
+    ];
 };
 // heavily guarded: a squad of its own around the tower (scaled, out of the AI caps)
 if (!isNull _radio) then {
@@ -376,7 +389,7 @@ _depot setVariable ["CQ_hqId", _id];
 _hq set ["depot", _depot];
 _depot addEventHandler ["Killed", {
     private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
-    if (isNil "_hq") exitWith {};
+    if (isNil "_hq" || { !((_hq get "state") in CQ_activeStates) }) exitWith {};   // fallen HQ: no score, no announce
     ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
     ["killDepot", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
     params ["", "_k", "_i"];
@@ -413,7 +426,7 @@ if (!isNull _tanker) then {
     _tanker setVariable ["CQ_hqId", _id];
     _tanker addEventHandler ["Killed", {
         private _hq = CQ_hqs get ((_this select 0) getVariable ["CQ_hqId", -1]);
-        if (isNil "_hq") exitWith {};
+        if (isNil "_hq" || { !((_hq get "state") in CQ_activeStates) }) exitWith {};   // fallen HQ: nothing to announce
         ["Fuel tanker destroyed", format ["HQ #%1 lost its %2 fuel: no more refuelling there", _hq get "id", round (_hq get "fuel")]] call CQ_fnc_announce;
         _hq set ["fuel", 0];
     }];
