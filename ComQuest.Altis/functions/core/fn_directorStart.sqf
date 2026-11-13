@@ -17,7 +17,9 @@ CQ_directorHandle = [] spawn {
         {
             _x params ["_name", "_code"];
             private _t1 = diag_tickTime;
-            [] call _code;
+            // heavy tasks run in one go (unscheduled): no time-slicing against every other script,
+            // so they finish in the frame they start and their time is their real cost
+            if (_name in CQ_directorAtomic) then { isNil _code } else { [] call _code };
             _times pushBack [diag_tickTime - _t1, _name];
         } forEach CQ_directorTasks;
 
@@ -29,6 +31,15 @@ CQ_directorHandle = [] spawn {
             diag_activeScripts params [["_sp", 0], ["_ex", 0], ["_sq", 0], ["_fsm", 0]];
             ["Slow tick: %1 s (slowest: %2) | scripts spawn %3 execVM %4 fsm %5 | fps %6 | units %7, groups %8",
                 [_dt toFixed 2, _top joinString ", ", _sp, _ex, _fsm, round diag_fps, count allUnits, count allGroups]] call CQ_fnc_log;
+            // once a minute: which scripts are running (file:line, most common first)
+            if (time - (missionNamespace getVariable ["CQ_scriptDumpT", -1e6]) > 60 && { _sp > CQ_scriptDumpMin }) then {
+                CQ_scriptDumpT = time;
+                private _h = createHashMap;
+                { private _f = (_x select 1) splitString "\/"; private _k = format ["%1 (%2:%3)", _x select 0, _f param [count _f - 1, "?"], _x select 3]; _h set [_k, (_h getOrDefault [_k, 0]) + 1] } forEach diag_activeSQFScripts;
+                private _l = (_h toArray false) apply { [_x select 1, _x select 0] };
+                _l sort false;
+                ["Scripts running: %1", [((_l select [0, 8]) apply { format ["%1x %2", _x select 0, _x select 1] }) joinString " | "]] call CQ_fnc_log;
+            };
         };
 
         sleep CQ_tickSeconds;

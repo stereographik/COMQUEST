@@ -13,6 +13,8 @@ CQ_logFriendlyRx = "(MAGPIE|Sentinel|Squads?|Base|Depot|Vehicle|Respawn|Shop|Sco
 // --- Director -------------------------------------------------------------
 CQ_logVerbose = false;                   // true: also log every drone route / ring / Tigris lock (chatty .rpt)
 CQ_tickSeconds = 5;                      // one server tick every 5 s
+CQ_directorAtomic = ["magpie", "magDormant", "link"];   // director tasks run in one go (unscheduled), not time-sliced with every other script
+CQ_scriptDumpMin = 40;                   // slow tick with more spawned scripts than this: list them in the log (once a minute)
 
 // --- Player base (Altis International Airport) -----------------------------
 CQ_basePos = [14267, 16099, 0];         // base compound centre (HQ zone drawn on the map)
