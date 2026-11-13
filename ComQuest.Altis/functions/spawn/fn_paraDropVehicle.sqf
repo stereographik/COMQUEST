@@ -21,6 +21,12 @@ for "_k" from 1 to 12 do {
     _lz = _lz getPos [100, _away];
 };
 
+// terrain on the way: the plane starts and stays above the highest ground between the carrier and
+// the LZ (a Mohawk spawned low behind an island flew straight into it)
+private _hiASL = 0;
+private _len = _start distance2D _lz;
+for "_s" from 0 to _len step 100 do { _hiASL = _hiASL max (getTerrainHeightASL (_start getPos [_s, _away])) };
+_alt = _alt max (_hiASL + 120 - ((getTerrainHeightASL _start) max 0));
 private _pl = createVehicle [CQ_dropPlaneClass, [_start select 0, _start select 1, 1500 + 50 * CQ_dropSlot], [], 0, "FLY"];
 _pl setPosASL [_start select 0, _start select 1, (getTerrainHeightASL _start max 0) + _alt];
 _pl setDir _away;
@@ -29,6 +35,7 @@ private _pg = [_pl] call CQ_fnc_crewVehicle;
 _pg setBehaviourStrong "CARELESS";
 _pg setCombatMode "BLUE";
 _pl flyInHeight _alt;
+_pl flyInHeightASL [_hiASL + 100, _hiASL + 100, _hiASL + 100];
 
 private _cargo = objNull;
 private _viv = false;

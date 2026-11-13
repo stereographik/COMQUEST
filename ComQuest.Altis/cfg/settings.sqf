@@ -316,6 +316,7 @@ CQ_siteMinHqSpacing = 1500;
 // Build truck (CQ_fnc_buildTruck): no build timer any more, each stage goes up when the truck got there
 CQ_btTruckClass = "O_Truck_02_transport_F";   // Zamak: the first one comes with the root insertion's paradrop
 CQ_btSquad = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_engineer_F", "O_engineer_F", "O_Soldier_GL_F", "O_Soldier_F", "O_Soldier_F"];   // rides in the back
+CQ_btLandSafe = 20;                     // s the landed build truck stays unhurt (loads landing next to it)
 CQ_btStopDist = 20;                      // m from the stage's site: the truck stops, the squad gets out
 CQ_btSpawnDelay = 3;                     // s after the stop before the stage appears
 CQ_btBoardTime = 25;                     // s the squad gets to board before the truck leaves (near ones are put in)

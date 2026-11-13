@@ -268,12 +268,16 @@ while { true } do {
                         params ["_c", "_hq", "_id", "_label"];
                         private _t = time;
                         waitUntil { sleep 1; !alive _c || { isTouchingGround _c && { speed _c < 3 } } || { time - _t > 120 } };
-                        if (_label == "Zamak truck") then { _hq set ["btIncoming", false] };
                         if (alive _c && { _label == "Zamak truck" }) exitWith {
-                            // the Zamak is the HQ's build truck: crew, a squad in the back (CQ_fnc_buildTruck)
-                            _c allowDamage true;
+                            // the Zamak is the HQ's build truck: crew, a squad in the back (CQ_fnc_buildTruck);
+                            // still unhurt for CQ_btLandSafe s (another load landing next to it), and the
+                            // "incoming" flag only drops once it is assigned (no replacement asked meanwhile)
                             ["landed", [_c, _id]] call CQ_fnc_buildTruck;
+                            _hq set ["btIncoming", false];
+                            sleep CQ_btLandSafe;
+                            _c allowDamage true;
                         };
+                        if (_label == "Zamak truck") then { _hq set ["btIncoming", false] };
                         if (alive _c) then {
                             _c allowDamage true;
                             [_c] call CQ_fnc_crewVehicle;
