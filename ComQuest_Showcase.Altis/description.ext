@@ -1,0 +1,35 @@
+// ComQuest SHOWCASE - side test mission (branch "showcase", never merged into main)
+// Eden compositions from https://github.com/CntoDev/compositions (CC-BY-SA-4.0) laid out around
+// the main airport, to pick base decoration for ComQuest.
+author = "ComQuest";
+onLoadName = "ComQuest Showcase";
+onLoadMission = "Composition showcase around the main airport (CntoDev compositions, CC-BY-SA-4.0).";
+briefingName = "ComQuest Showcase";
+respawn = "BASE";
+respawnDelay = 3;
+respawnOnStart = -1;
+disabledAI = 1;
+enableDebugConsole = 1;
+
+class Header
+{
+    gameType = "Sandbox";
+    minPlayers = 1;
+    maxPlayers = 1;
+};
+
+class CfgFunctions
+{
+    class SC
+    {
+        class showcase
+        {
+            file = "functions";
+            class validate {};
+            class spawnComp {};
+            class layout {};
+            class menu {};
+            class place {};
+        };
+    };
+};
