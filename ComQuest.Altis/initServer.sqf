@@ -97,6 +97,7 @@ addMissionEventHandler ["EntityKilled", {
     CQ_baseDefNext = 0;
     ["baseDef", CQ_fnc_baseDefTick] call CQ_fnc_directorAddTask;
     ["sabotage", { ["tick"] call CQ_fnc_sabotage }] call CQ_fnc_directorAddTask;
+    ["heavyLift", { ["tick"] call CQ_fnc_heavyLift }] call CQ_fnc_directorAddTask;
     CQ_baseHot = false;
     publicVariable "CQ_baseHot";
     ["safeZone", CQ_fnc_safeZoneTick] call CQ_fnc_directorAddTask;

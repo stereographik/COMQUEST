@@ -32,7 +32,8 @@ CQ_baseVehicles = [
     ["B_G_Offroad_01_armed_F",    "pickup",     4],   // Offroad HMG
     ["B_Truck_01_transport_F",    "hemtt",      2],   // HEMTT troop transport
     ["B_Heli_Light_01_F",         "littlebird", 6],   // MH-6 Little Bird
-    ["B_Heli_Transport_01_F",     "ghosthawk",  4]    // UH-80 Ghost Hawk (one line per class: the quota is read from the first match)
+    ["B_Heli_Transport_01_F",     "ghosthawk",  4],   // UH-80 Ghost Hawk
+    ["I_Heli_Transport_02_F",     "mohawk",     1]    // CH-49 Mohawk: heavy lift, any vehicle up to CQ_hlMax (CQ_fnc_heavyLift) (one line per class: the quota is read from the first match)
 ];
 CQ_baseVehPadding = 25;                  // metres between base vehicles (fallback search)
 // Base layout (CQ_fnc_baseSetup), from the zones drawn on the map:
@@ -87,7 +88,12 @@ CQ_earplugLevel = 0.08;                  // earplugs (End key / scroll menu): ga
 CQ_sbClass = "Land_BagFence_Short_F";
 CQ_sbMax = 2;                            // walls standing per engineer (per player, through respawns)
 CQ_sbBuildTime = 6;                      // s to build one (stay still, on foot)
-CQ_sbDismantleTime = 2;                  // s: hold to dismantle one of your walls in the field
+CQ_sbDismantleTime = 2;
+// Heavy lift (CQ_fnc_heavyLift): these helicopters sling load any vehicle up to CQ_hlMax kg (vanilla Mohawk: 5 t)
+CQ_hlClasses = ["I_Heli_Transport_02_F"];
+CQ_hlMax = 12000;                        // kg: Strider 9.7 t, HEMTT family ~10.8-11 t
+CQ_hlAlt = 25;                           // m: the helicopter must hover this low...
+CQ_hlRadius = 20;                        // m: ...this close to the vehicle for it to be made liftable                  // s: hold to dismantle one of your walls in the field
 CQ_sbMaxSlope = 0.85;                    // ground flatter than this (surface normal z) only
 CQ_depotMaxPerSquad = 2;                 // depot vehicles out at the same time per squad
 CQ_depotCooldown = [["light", 120], ["truck", 180], ["air", 300]];   // s before the same player can request again, by type taken

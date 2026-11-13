@@ -37,6 +37,7 @@ player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [
     CQ_version, CQ_build]]];
 [] spawn CQ_fnc_mapIconScale;   // every mission icon marker at CQ_mapIconScale
 [] spawn CQ_fnc_rdfClient;   // radio direction finder panel
+[] spawn CQ_fnc_heavyLift;   // heavy lifters (Mohawk) hook vehicles up to 12 t
 [] spawn CQ_fnc_statsClient; // shots, heals, distances, time played
 call CQ_fnc_heatMapClient;   // MAGPIE heatmap under everything else
 call CQ_fnc_rangeMapClient;   // range map: ground the seen enemies can fire on (drawn by magMapClient)
