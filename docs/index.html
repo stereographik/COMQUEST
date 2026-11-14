@@ -286,28 +286,29 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
 <section id="base">
   <div class="head">
     <div class="num">06</div>
-    <div><span class="mono">Your base</span><h2>An airfield compound and its motor pool</h2>
-    <p class="lead">Built by script at the AAC airfield from zones drawn on the map: a walled HQ, four vehicle rows, four repair depots around the runway, a vehicle shop and a field of drone pads.</p></div>
+    <div><span class="mono">Your base</span><h2>Camp Harlan, behind two walls</h2>
+    <p class="lead">Built by script on the AAC airfield inside a perimeter drawn on the map: the ground is levelled, then the walls go up, the keep, the motor pool, the aviation apron, the shop and a field of drone pads.</p></div>
   </div>
   <div class="split">
-    <div class="plate"><canvas id="base" width="600" height="420" aria-label="Base layout: runway, HQ compound, four vehicle rows, repair depots, shop and UAV field"></canvas></div>
+    <div class="plate"><canvas id="baseplan" width="600" height="420" aria-label="Camp Harlan: outer wall with two gates, the keep, the motor pool, the aviation apron, the shop, the UAV field and the cargo tower, next to the taxiway and the runway"></canvas></div>
     <div class="stack">
-      <div><h3>HQ compound</h3><p>H-barrier walls, a gate between two towers, guard towers on the corners. Inside: offices, warehouse, radar, medical post, and one arsenal box per squad. Classes can only be changed inside these walls. A squad respawn vehicle can carry the spawn point to the front; while it does, it is locked, never despawns and pitches a camp: camo net, tent and campfire. Captured enemy vehicles can't be used.</p></div>
-      <div><h3>Vehicle rows</h3><p>Four parallel rows, smallest vehicle first, spaced by each model's width plus 5 m, ending at a repair depot. Every row gets a similar mix. Two more repair depots face them across the northern runway.</p></div>
-      <div><h3>Autofill</h3><p>Park on a depot helipad and pick Autofill: the cargo is loaded with the magazines and rockets your squad's own weapons use, balanced and scaled to the space. 40 s cooldown.</p></div>
-      <div><h3>Runway and defence</h3><p>The runway is kept clear for MAGPIE. AA and HMG positions around the perimeter are rebuilt 10 minutes after they fall. Light towers, a Hesco watchtower and a crewed GMG cover the north side.</p></div>
+      <div><h3>Walls and gates</h3><p>An H-barrier outer wall following the drawn perimeter, a continuous concrete inner wall with low windows to shoot over, corner sangars, watchtowers, floodlights and a cargo tower. Two ways in: an entry control point with a chicane on the loop road, and a runway gate on the taxiway.</p></div>
+      <div><h3>The keep</h3><p>A walled compound inside the camp: Colonel Harlan's command post, the medical post, four squad bays with their arsenal boxes, and the muster point. Classes can only be changed inside it. A squad respawn vehicle can carry the spawn point to the front; while it does, it is locked and pitches a camp.</p></div>
+      <div><h3>Motor pool and apron</h3><p>Four free vehicle depots for squad leaders (two in a row, then a cooldown), four helipads reserved for FALCON pilots (one aircraft each, no cooldown). Every pad repairs, and Autofill loads the magazines and rockets your squad uses. Squad vehicles are for their squad only; enemy vehicles can't be used.</p></div>
+      <div><h3>Weapons safe</h3><p>Within 800 m of the base the trigger does nothing, until enemies come inside the ring: then the base goes weapons free. Four crewed AA and HMG posts cover the corners and are rebuilt after they fall.</p></div>
     </div>
   </div>
   <div class="tblbox" style="margin-top:28px">
     <table class="tbl">
-      <thead><tr><th>Base fleet</th><th class="n">Count</th><th>Role</th></tr></thead>
+      <thead><tr><th>Free depots</th><th class="n">Out at once</th><th>Role</th></tr></thead>
       <tbody>
         <tr><td>Offroad HMG</td><td class="n">4</td><td>Fast, armed, fragile</td></tr>
         <tr><td>Hunter</td><td class="n">4</td><td>Unarmed MRAP transport</td></tr>
         <tr><td>Strider</td><td class="n">4</td><td>Unarmed MRAP, better armour</td></tr>
         <tr><td>HEMTT transport</td><td class="n">2</td><td>Moves a whole squad</td></tr>
-        <tr><td>MH-6 Little Bird</td><td class="n">2</td><td>Light transport helicopter</td></tr>
-        <tr><td>UH-80 Ghost Hawk</td><td class="n">3</td><td>Squad transport helicopter</td></tr>
+        <tr><td>MH-6 Little Bird</td><td class="n">6</td><td>Light transport helicopter, pilots only</td></tr>
+        <tr><td>UH-80 Ghost Hawk</td><td class="n">4</td><td>Squad transport helicopter, pilots only</td></tr>
+        <tr><td>CH-49 Mohawk</td><td class="n">4</td><td>Heavy lift: carries any vehicle up to 12 t, pilots only</td></tr>
       </tbody>
     </table>
   </div>
@@ -317,14 +318,14 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
   <div class="head">
     <div class="num">07</div>
     <div><span class="mono">Players</span><h2>26 slots, everything on U</h2>
-    <p class="lead">The lobby has 26 identical Rifleman slots. You land in the compound unassigned and press U: one small menu leads to everything.</p></div>
+    <p class="lead">The lobby has 26 identical Rifleman slots. You land in Camp Harlan unassigned and press U: one small menu leads to everything.</p></div>
   </div>
   <div class="split">
     <div>
       <div class="menu" role="img" aria-label="The U menu">
         <div class="t"><span>COMQUEST</span><span>X</span></div>
         <button>SQUADS <span>join · invite</span></button>
-        <button>CLASS <span>in compound</span></button>
+        <button>CLASS <span>in the keep</span></button>
         <button>STATS <span>ranking</span></button>
         <button>VEHICLE SHOP <span>squad points</span></button>
         <button>DEBUG PANEL <span>admin</span></button>
@@ -344,13 +345,13 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
           <tr><td>Anti-Air</td><td class="n">2</td><td></td></tr>
           <tr><td>Engineer</td><td class="n">4</td><td>Repairs, explosives, sandbags, hacks towers 2× faster</td></tr>
           <tr><td>Sniper</td><td class="n">2</td><td>GM6 Lynx, ghillie</td></tr>
-          <tr><td>Pilot</td><td class="n">4</td><td>Flight gear</td></tr>
+          <tr><td>Pilot</td><td class="n">4</td><td>FALCON: flies every squad, only class at the controls</td></tr>
         </tbody>
       </table>
     </div>
   </div>
   <div class="grid g3" style="margin-top:24px">
-    <div class="cell"><h3>Squads</h3><p>Create, join, leave or disband. A leader invites an unassigned player, who answers in an accept or decline window.</p></div>
+    <div class="cell"><h3>Squads</h3><p>Create, join, leave or disband, 8 players at most. A leader invites an unassigned player, who answers in an accept or decline window. The squad's vehicles are for its members only, and a disbanded squad's vehicles are gone a minute later.</p></div>
     <div class="cell"><h3>Classes</h3><p>Shown as used / limit. Each class starts with the best vanilla kit for its role and a suppressor, kept through respawns. The arsenal is role-aware: only medics take medikits, only launcher classes take launchers, but anyone can carry magazines and rockets for the squad. No personal drones.</p></div>
     <div class="cell"><h3>Earplugs</h3><p>On the scroll menu and the End key. One press brings the noise of battle down to a whisper; press again to take them out.</p></div>
     <div class="cell"><h3>Stats</h3><p>Every player's combat is tracked for the session: filter by class, sort by any column, open a player's details.</p></div>
@@ -504,19 +505,46 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
     size(); window.addEventListener('resize',()=>{size(); if(reduce) draw(0)}); requestAnimationFrame(draw);
   })();
 
-  // base plan
-  const b=document.getElementById('base'), q=b.getContext('2d'), bw=b.width, bh=b.height;
+  // base plan: Camp Harlan, drawn from the perimeter and the zones of cfg/settings.sqf
+  const b=document.getElementById("baseplan"), q=b.getContext('2d'), bw=b.width, bh=b.height;
   q.fillStyle='#001E21'; q.fillRect(0,0,bw,bh);
   q.strokeStyle='rgba(145,140,59,.08)'; for(let x=0;x<bw;x+=30){q.beginPath();q.moveTo(x,0);q.lineTo(x,bh);q.stroke()} for(let y=0;y<bh;y+=30){q.beginPath();q.moveTo(0,y);q.lineTo(bw,y);q.stroke()}
-  q.save(); q.translate(bw*0.5,bh*0.5); q.rotate(-0.68);
-  q.fillStyle='#1E4A4C'; q.fillRect(-380,-150,760,44); q.setLineDash([14,12]); q.strokeStyle='rgba(242,241,223,.5)'; q.beginPath(); q.moveTo(-370,-128); q.lineTo(370,-128); q.stroke(); q.setLineDash([]);
-  q.strokeStyle=T; q.lineWidth=2; q.strokeRect(-70,0,140,100); q.fillStyle='rgba(145,140,59,.12)'; q.fillRect(-70,0,140,100);
-  for(let i=0;i<4;i++){ for(let k=0;k<6;k++){ q.fillStyle='rgba(242,241,223,'+(0.35+k*0.08)+')'; q.fillRect(-60+i*34, -20-k*14-(k*k), 14+k*2, 8) } q.fillStyle=R; q.fillRect(-60+i*34,-100-10, 18, 6) }
-  q.fillStyle=R; q.fillRect(110,20,36,26);
-  for(let i=0;i<10;i++){ q.strokeStyle='rgba(145,140,59,.7)'; q.strokeRect(-200+(i%4)*24, 40+Math.floor(i/4)*24, 14, 14) }
+  const P=[[14372,16113],[14211,16199],[14154,15963],[14186,15927]], O=P[3], r2=Math.SQRT1_2;
+  const sc=1.32, cx=14262, cy=16060;
+  const C=(x,y)=>[bw*0.42+(x-cx)*sc, bh*0.5-(y-cy)*sc];                 // world -> canvas, north up
+  const BL=(u,v)=>C(O[0]+(u-v)*r2, O[1]+(u+v)*r2);                       // base frame: u along the taxiway wall, v inward
+  const poly=(pts,fill,stroke,w)=>{q.beginPath(); pts.forEach((p,i)=>i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1])); q.closePath(); if(fill){q.fillStyle=fill;q.fill()} if(stroke){q.strokeStyle=stroke;q.lineWidth=w||1;q.stroke()}};
+  const box=(u,v,w,l,col)=>poly([BL(u-w/2,v-l/2),BL(u+w/2,v-l/2),BL(u+w/2,v+l/2),BL(u-w/2,v+l/2)],col);
+  const dot=(u,v,r,col,line)=>{const p=BL(u,v); q.beginPath(); q.arc(p[0],p[1],r*sc,0,7); if(line){q.strokeStyle=col;q.lineWidth=1.5;q.stroke()}else{q.fillStyle=col;q.fill()}};
+  // taxiway and runway, parallel to the front wall
+  poly([BL(-150,-14),BL(420,-14),BL(420,-34),BL(-150,-34)],'#123A3C');
+  poly([BL(-150,-110),BL(420,-110),BL(420,-150),BL(-150,-150)],'#1E4A4C');
+  q.setLineDash([14,12]); q.strokeStyle='rgba(242,241,223,.5)'; q.lineWidth=1; q.beginPath(); let a1=BL(-150,-130), a2=BL(420,-130); q.moveTo(a1[0],a1[1]); q.lineTo(a2[0],a2[1]); q.stroke(); q.setLineDash([]);
+  // the ground inside, the walls (gates left open), the concrete inner wall
+  poly(P.map(p=>C(p[0],p[1])),'rgba(145,140,59,.10)');
+  const edge=(i,t0,t1,off,col,w)=>{const A=P[i],B=P[(i+1)%4],l=Math.hypot(B[0]-A[0],B[1]-A[1]),ux=(B[0]-A[0])/l,uy=(B[1]-A[1])/l,nx=-uy,ny=ux;
+    const p0=C(A[0]+ux*t0+nx*off,A[1]+uy*t0+ny*off), p1=C(A[0]+ux*t1+nx*off,A[1]+uy*t1+ny*off); q.strokeStyle=col; q.lineWidth=w; q.beginPath(); q.moveTo(p0[0],p0[1]); q.lineTo(p1[0],p1[1]); q.stroke(); return l};
+  const gates={1:[145.7,163.7],3:[119,133]};
+  [0,1,2,3].forEach(i=>{const A=P[i],B=P[(i+1)%4],l=Math.hypot(B[0]-A[0],B[1]-A[1]); const g=gates[i];
+    if(g){edge(i,0,g[0],0,T,3); edge(i,g[1],l,0,T,3)} else edge(i,0,l,0,T,3);
+    q.setLineDash([5,4]); edge(i,12,l-12,3.5,'rgba(242,241,223,.45)',1.5); q.setLineDash([])});
+  // the keep (rotated with the west wall)
+  const kc=C(14233.9,16106.7); q.save(); q.translate(kc[0],kc[1]); q.rotate((283.6-270)*Math.PI/180);
+  q.fillStyle='rgba(145,140,59,.18)'; q.fillRect(-32*sc,-38*sc,64*sc,76*sc); q.strokeStyle='#F2F1DF'; q.lineWidth=1.5; q.strokeRect(-32*sc,-38*sc,64*sc,76*sc);
+  q.fillStyle=R; q.fillRect(-28*sc,-7*sc,12*sc,14*sc);                               // command post
+  q.fillStyle='rgba(242,241,223,.55)'; [[2,-25],[-18,-25],[2,25],[-18,25]].forEach(p=>q.fillRect((p[0]-5)*sc,(p[1]-5)*sc,10*sc,10*sc));   // squad bays
   q.restore();
+  // motor pool, apron, shop, UAV field, cargo tower, radar, defence spots
+  [30,56,82,108].forEach(u=>{box(u,9,9,6,'rgba(242,241,223,.75)'); box(u,21,10,10,'rgba(145,140,59,.55)'); dot(u,38,12,'rgba(145,140,59,.6)',true)});
+  [136,164,192,220].forEach(u=>{dot(u,24,9.3,'rgba(242,241,223,.7)',true); box(u,24,10,10,'rgba(145,140,59,.45)'); box(u,42,2.5,2.5,'#F2F1DF')});
+  dot(104,64,10,'#7FB069',true); box(118,64,2.5,2.5,'#7FB069');
+  for(let k=0;k<4;k++) box(222+(k-1.5)*12*-0.29, 68+(k-1.5)*12*0.957, 4,4,'rgba(127,176,105,.8)');
+  box(212,115,11,11,'rgba(242,241,223,.85)'); box(205,138,6,6,'rgba(242,241,223,.5)');
+  [[14,24],[52,64],[196,152],[238,20]].forEach(p=>dot(p[0],p[1],5,R));
   q.fillStyle='rgba(242,241,223,.85)'; q.font='11px "IBM Plex Mono",monospace';
-  [['RUNWAY',bw*0.08,bh*0.32],['HQ COMPOUND',bw*0.56,bh*0.68],['4 VEHICLE ROWS',bw*0.5,bh*0.2],['REPAIR',bw*0.66,bh*0.3],['SHOP',bw*0.72,bh*0.5],['UAV FIELD',bw*0.12,bh*0.72],['N ↑',bw-40,24]].forEach(t=>q.fillText(t[0],t[1],t[2]));
+  const lab=(t,p,dx,dy)=>q.fillText(t,p[0]+(dx||0),p[1]+(dy||0));
+  lab('RUNWAY',BL(215,-175)); lab('TAXIWAY',BL(290,-60)); lab('KEEP',C(14233.9,16106.7),-15,-56); lab('MOTOR POOL',BL(10,30),-90,0); lab('APRON · FALCON',BL(250,30),10,14);
+  lab('ECP',BL(60,110),-34,0); lab('RUNWAY GATE',BL(126,-6),-20,22); lab('SHOP',BL(104,64),12,4); lab('UAV',BL(250,90),4,0); lab('CARGO TOWER',BL(250,135),6,0); lab('N ↑',[bw-40,24]);
 })();
 </script>
 </body>
