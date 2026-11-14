@@ -46,6 +46,7 @@ if (_pilot) then {
 if (_cls == "") exitWith {};
 (CQ_depots select _di) params ["", "_pad", "_padDir", ["_kind", ""]];
 // motor pool pads take ground vehicles, apron pads aircraft
+if (_kind == "air" && { !_pilot }) exitWith { ["The aviation apron is reserved for Falcon pilots"] call _say };
 if (_kind == "air" && { !(_cls isKindOf "Air") }) exitWith { ["Ground vehicles come from the motor pool"] call _say };
 if (_kind == "ground" && { _cls isKindOf "Air" }) exitWith { ["Aircraft come from the aviation apron"] call _say };
 if (((nearestObjects [_pad, ["LandVehicle", "Air"], 9]) select { alive _x }) isNotEqualTo []) exitWith { ["The depot pad is blocked: move the vehicle off the pad"] call _say };

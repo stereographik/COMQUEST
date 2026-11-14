@@ -210,7 +210,7 @@ for "_i" from 0 to _nP - 1 do {
         [["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], [_i, _t + 3, 16] call _onEdge, _out, true] call _mk;
         { [_lamp, [_i, _t + _x * (_hw + 2), 11] call _onEdge, _out, true] call _mk } forEach [-1, 1];
     } else {
-        { [["Land_BagBunker_Small_F", "Land_BagFence_Round_F"], [_i, _t + _x * (_hw + 2.5), 3] call _onEdge, _out, true] call _mk } forEach [-1, 1];
+        { [["Land_BagBunker_Small_F", "Land_BagFence_Round_F"], [_i, _t + _x * (_hw + 2.5), -3] call _onEdge, _out + 180, true] call _mk } forEach [-1, 1];   // 3 m outside the wall, open side to the wall
     };
 } forEach CQ_baseGates;
 // watchtowers and floodlights along the walls ([edge, m along it, m inside])
@@ -231,7 +231,7 @@ private _door = [-11, -6];                           // side doors (y from / to)
     [_hbMid, [_x * _hw, -_hd], [_x * _hw, _door select 0]] call _wall;
     [_hbMid, [_x * _hw, _door select 1], [_x * _hw, _hd]] call _wall;
 } forEach [-1, 1];
-{ [["Land_BagBunker_Small_F", "Land_BagFence_Round_F"], _x * (_kg + 3), -_hd - 2.5, 180, true] call _put } forEach [-1, 1];
+{ [["Land_BagBunker_Small_F", "Land_BagFence_Round_F"], _x * (_kg + 3), -_hd - 3, 0, true] call _put } forEach [-1, 1];
 
 // back row (deep in the keep, +y): ops | command post (commander) | medical, facing the plaza
 private _cmdCls = [["Land_Cargo_HQ_V1_F", "Land_MilOffices_V1_F"]] call _pick;
@@ -308,7 +308,6 @@ private _bayX = _hw - 13;
     private _bx = _side * _bayX;
     private _in = -_side;
     private _face = [270, 90] select (_in > 0);
-    [["CamoNet_BLUFOR_open_F", "CamoNet_BLUFOR_F"], _bx, _by, 90, true] call _put;
     private _p = [_bx + _in * 1.5, _by] call _at;
     private _b = createVehicle [_boxCls, _p, [], 0, "CAN_COLLIDE"];
     _b setDir (_d + _face);
