@@ -47,6 +47,7 @@ CQ_baseFrontStart = 3;                   // corner where the front (runway side)
 // gates: [edge (corner i -> i+1), m from the edge start, half width, "ecp" (towers + chicane) or "gate"]
 CQ_baseGates = [[1, 154.7, 9, "ecp"], [3, 126, 7, "gate"]];   // entry control point on the west wall (loop road), runway gate on the taxiway side
 CQ_baseInnerWall = ["Land_Mil_WallBig_4m_F", "Land_Mil_WallBig_4m_battered_F"];   // concrete sections 3.5 m inside the H-barriers, one of two
+CQ_baseWallTop = ["Land_HBarrier_3_F", "Land_HBarrier_5_F"];   // second H-barrier layer on top of the outer wall where no concrete is behind it
 CQ_baseWatchtowers = [[0, 91.3], [1, 210.9]];                  // [edge, m along it]: 6 m inside the wall
 CQ_baseFloodlights = [[3, 69], [3, 178], [0, 52.2], [0, 135.8], [1, 29.3], [1, 70.3], [1, 117.2], [1, 187.5]];
 // zones in the base frame [u, v ...]

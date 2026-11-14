@@ -221,6 +221,8 @@ for "_i" from 0 to _nP - 1 do {
 // inner concrete wall (CQ_baseInnerWall), 3.5 m inside the H-barriers: one section of two, the
 // gaps let people through; none at the gates, the corners, or by a tower or a floodlight
 private _cwCls = [CQ_baseInnerWall] call _pick;
+private _cBack = [];                                   // per edge: [t from, t to] stretches backed by concrete
+for "_i" from 0 to _nP - 1 do { _cBack pushBack [] };
 if (_cwCls != "") then {
     private _sl = (([_cwCls] call _dims) select 0) max 2;
     for "_i" from 0 to _nP - 1 do {
@@ -233,8 +235,42 @@ if (_cwCls != "") then {
             if (_gw findIf { _t > (_x select 0) - _sl / 2 && { _t < (_x select 1) + _sl / 2 } } > -1) then { continue };
             if (_ko findIf { _x distance2D _q < 5 + _sl / 2 } > -1) then { continue };
             [[_cwCls], _q, _h + 90, true] call _mk;
+            (_cBack select _i) pushBack [_t - _sl / 2, _t + _sl / 2];
         };
     };
+};
+// second H-barrier layer on top of the outer wall wherever no concrete stands behind it
+private _upCls = [CQ_baseWallTop] call _pick;
+if (_upCls != "") then {
+    private _zTop = 2.5;
+    private _bc = [_hbBig] call _pick;
+    private _tmp = createSimpleObject [_bc, [60, 60, 600]];
+    if (!isNull _tmp) then { (boundingBoxReal _tmp) params ["_lo", "_hi"]; _zTop = ((_hi select 2) - (_lo select 2)) - 0.15; deleteVehicle _tmp };
+    private _us = (([_upCls] call _dims) select 0) max 1;
+    private _nUp = 0;
+    for "_i" from 0 to _nP - 1 do {
+        ([_i] call _edge) params ["_a", "_b"];
+        private _len = _a distance2D _b;
+        private _h = _a getDir _b;
+        private _cut = ((CQ_baseGates select { (_x select 0) == _i }) apply { [(_x select 1) - (_x select 2), (_x select 1) + (_x select 2)] }) + (_cBack select _i);
+        _cut sort true;
+        private _free = [];
+        private _t0 = 0;
+        { if ((_x select 0) > _t0) then { _free pushBack [_t0, _x select 0] }; _t0 = _t0 max (_x select 1) } forEach _cut;
+        if (_len > _t0) then { _free pushBack [_t0, _len] };
+        {
+            _x params ["_f0", "_f1"];
+            private _l = _f1 - _f0;
+            if (_l < 1.5) then { continue };
+            private _n = ceil (_l / _us);
+            for "_k" from 0 to _n - 1 do {
+                private _q = [_i, _f0 + (_k + 0.5) * (_l / _n), 0] call _onEdge;
+                private _o2 = [[_upCls], _q, _h + 90, true] call _mk;
+                if (!isNull _o2) then { _o2 setPosATL [_q select 0, _q select 1, _zTop]; _nUp = _nUp + 1 };
+            };
+        } forEach _free;
+    };
+    ["Base: wall top layer %1 pieces (%2) at %3 m where no concrete stands behind", [_nUp, _upCls, _zTop toFixed 2]] call CQ_fnc_log;
 };
 
 // ---------------------------------------------------------------- the keep
