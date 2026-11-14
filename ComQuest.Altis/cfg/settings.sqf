@@ -54,6 +54,7 @@ CQ_baseMotorPool = [[30, 9, 21, 38], [56, 9, 21, 38], [82, 9, 21, 38], [108, 9, 
 CQ_baseHelipads = [[136, 24, 42], [164, 24, 42], [192, 24, 42], [220, 24, 42]];          // [u, pad v, pilot terminal v]
 CQ_baseShopLZ = [104, 64, 180];          // [u, v, vehicle direction from the front]
 CQ_baseRadar = [205, 138];
+CQ_baseCargoTower = [212, 115, -107];   // [u, v, direction from the front]: big cargo tower between the keep and the north-east wall ([] = none)
 CQ_baseRelaySpawn = [128, 56];
 CQ_baseUavField = [222, 68, -17];        // [u, v, row direction from the inward axis]: MAGPIE's Darter pads
 CQ_baseDefSpots = [[14, 24], [52, 64], [196, 152], [238, 20]];   // crewed defence spots (AA + HMG)

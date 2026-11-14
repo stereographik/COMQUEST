@@ -399,6 +399,7 @@ private _shm = createMarker ["cq_shop", CQ_shopLZ];
 _shm setMarkerType "c_car"; _shm setMarkerColor "ColorWEST"; _shm setMarkerText "Vehicle shop";
 // radar, supply stacks
 [["Land_Radar_Small_F", "Land_TTowerSmall_2_F"], CQ_baseRadar select 0, CQ_baseRadar select 1, 0] call _putB;
+if (CQ_baseCargoTower isNotEqualTo []) then { [["Land_Cargo_Tower_V1_F", "Land_Cargo_Tower_V3_F"], CQ_baseCargoTower select 0, CQ_baseCargoTower select 1, CQ_baseCargoTower select 2] call _putB };
 { [_x select 0, _x select 1, _x select 2, _x select 3] call _putB } forEach [
     [["Land_Pallets_stack_F"], 70, 54, 0], [["Land_CratesWooden_F"], 78, 58, 90]];
 CQ_linkRelaySpawn = CQ_baseRelaySpawn call _atB;     // the relay vehicle leaves from the yard, by the runway gate
