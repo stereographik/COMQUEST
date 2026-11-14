@@ -29,7 +29,18 @@ player createDiarySubject ["CQ_op", "Operation"];     // first in the map's brie
 // Briefing tab: the opening orders
 player createDiaryRecord ["Diary", ["Orders", "<font face='PuristaSemibold' size='16' color='#F2F1DF'>GET YOUR STUFF UP FAST, SOLDIERS</font><br/><br/>CSAT has a carrier group offshore and will start landing troops on Altis within minutes.<br/><br/><font color='#918C3B'>1.</font> Press <font color='#F2F1DF'>U</font>: join or create a squad, pick your class inside the HQ compound. Every class comes fully kitted.<br/><font color='#918C3B'>2.</font> Grab a ride at the shop pad.<br/><font color='#918C3B'>3.</font> Find where they ground, then cut the network: HQs, radio towers, supply lines.<br/><br/><font color='#A6A381'>Progress is tracked in the Operation tab.</font>"]];
 call CQ_fnc_guideDiary;   // map briefing: Player guide, Server rules
-["check", [player]] remoteExec ["CQ_fnc_conduct", 2];   // first join: the rules to accept
+// join music (CfgMusic CQ_baseReady), once the loading screen is really gone
+[] spawn {
+    waitUntil { sleep 0.1; !isNull player && { !isNull (findDisplay 46) } && { time > 0 } && { isServer || { getClientStateNumber >= 10 } } };
+    0 fadeMusic CQ_joinMusicVol;
+    playMusic "CQ_baseReady";
+};
+// first join: the rules to accept, once the player sees the world (intro over or skipped)
+[] spawn {
+    waitUntil { sleep 0.25; !isNil "CQ_introFinished" && { !isNull player } && { alive player } };
+    uiSleep CQ_rulesDelay;
+    ["check", [player]] remoteExec ["CQ_fnc_conduct", 2];
+};
 // Credits (map diary)
 player createDiarySubject ["CQ_credits", "Credits"];
 player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [

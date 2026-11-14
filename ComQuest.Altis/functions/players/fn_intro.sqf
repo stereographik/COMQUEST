@@ -16,7 +16,7 @@
     CQ_startAfterIntro s after the FIRST player's intro (CQ_fnc_introDone).
 */
 if (!hasInterface) exitWith {};
-private _done = { [] remoteExec ["CQ_fnc_introDone", 2] };
+private _done = { CQ_introFinished = true; [] remoteExec ["CQ_fnc_introDone", 2] };
 if (!CQ_introEnabled) exitWith { call _done };
 // black at once (no glimpse of the game), then wait until the loading screen is really gone:
 // mission time running, the game display up, the client in game
@@ -51,6 +51,7 @@ CQ_introCam = _cam;
     showCinemaBorder false;
     ("CQ_introType" call BIS_fnc_rscLayer) cutText ["", "PLAIN"];
     ("CQ_introBlack" call BIS_fnc_rscLayer) cutText ["", "BLACK IN", 0.5];
+    CQ_introFinished = true;
     [] remoteExec ["CQ_fnc_introDone", 2];
     diag_log text "[CQ] intro watchdog: cleaned up";
 };

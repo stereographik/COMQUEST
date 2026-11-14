@@ -691,6 +691,8 @@ CQ_arsenalGates = [
 ];
 CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
 CQ_classChangeRange = 2;                 // classes are changed inside the HQ compound walls (+ this margin, m)
+CQ_joinMusicVol = 0.8;                   // volume of the join music (CfgMusic CQ_baseReady, played once when the loading screen is gone)
+CQ_rulesDelay = 2;                       // s after the intro (or its skip) before the rules window opens
 CQ_squadMax = 8;                         // players per squad at most (Falcon, the pilots' squad, has no limit)
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads
 // Contact / heavy support
