@@ -97,8 +97,11 @@ while { true } do {
     };
     if (([_all] call CQ_fnc_aliveCount) == 0) exitWith {};
     // Arrived once most of the colonists are on site, not when the first truck gets there
+    // the squad sent on foot for ground presence (_forcedWalk) does not hold the others up: it
+    // keeps walking and joins the HQ on arrival
     private _men = [];
-    { _men append ((units _x) select { alive _x }) } forEach _all;
+    { _men append ((units _x) select { alive _x }) } forEach (_all - [_forcedWalk]);
+    if (_men isEqualTo []) then { { _men append ((units _x) select { alive _x }) } forEach _all };
     private _onSite = { _x distance2D _site < 300 } count _men;
     if (_onSite >= CQ_colonistArrivalShare * count _men) exitWith {};
     // Mounted groups whose vehicle died walk the rest of the way
