@@ -705,6 +705,16 @@ CQ_flareCooldown = 600;
 CQ_rootDefendCooldown = 1200;            // contact at a root HQ: all its child HQs rally (once per 20 min)
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
+// Covered approach (CQ_fnc_covRoute): once per enemy HQ, the best covered way in, shown to the
+// players once the HQ is on their map
+CQ_covRadius = 1500;                     // m around the HQ (start points at 90% of it)
+CQ_covCell = 30;                         // m per cell
+CQ_covHqEye = 12;                        // m: the HQ's eye (tower height)
+CQ_covHills = 5;                         // highest points around the HQ used as watchers too
+CQ_covNear = 12;                         // m: a building, wall or rock this close gives cover
+CQ_covDitch = 1;                         // m below the mean of its neighbours: a ditch
+CQ_covExposeCost = 6;                    // how much a fully seen cell costs more than a hidden one
+CQ_covCone = 45;                         // deg: no start in this cone from the HQ toward the carrier
 CQ_colonistWalkNear = 1000;              // the squad that walks counts as arrived once within this many m of the site
 CQ_minInfantryToExpand = 16;
 CQ_minDefenders = 8;                     // never send away the last 8 infantry of an HQ

@@ -52,6 +52,7 @@ player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [
 [] spawn CQ_fnc_statsClient; // shots, heals, distances, time played
 call CQ_fnc_heatMapClient;   // MAGPIE heatmap under everything else
 call CQ_fnc_rangeMapClient;   // range map: ground the seen enemies can fire on (drawn by magMapClient)
+call CQ_fnc_covRouteClient;   // covered approach to each known enemy HQ (under the drones)
 call CQ_fnc_magMapClient;    // MAGPIE drones + enemies in their sight, live on the map
 // version, branch and build stamp, tiny at the bottom right of the screen
 [] spawn {
