@@ -390,6 +390,11 @@ if (_needHq && { count _hq == 0 }) then {
             { [_x] call CQ_fnc_baseDefBuild; _x set ["lostT", -1] } forEach CQ_baseDefs;
             _msg = format ["%1 base defence spots rebuilt", count CQ_baseDefs];
         };
+        case "dbgStates": {
+            CQ_dbgStatesOn = (_id isEqualTo 1);
+            CQ_dbgStNext = 0;
+            ["Debug: enemy states %1", [["off", "on"] select CQ_dbgStatesOn]] call CQ_fnc_log;
+        };
         case "fullPower": {
             CQ_testFullPower = _id == 1;
             publicVariable "CQ_testFullPower";

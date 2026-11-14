@@ -35,6 +35,7 @@ CQ_dbgMapHooked = true;
             private _p = getText (configFile >> "CfgVehicleIcons" >> _i);
             [_p, _i] select (_p == "")
         };
+        private _st = missionNamespace getVariable ["CQ_dbgShowStates", false];   // enemy vehicles: their state instead of role/ammo
         if (CQ_dbgShowEnemy || CQ_dbgShowFriend) then {
             // crewed vehicles (one icon for the vehicle and everyone inside)
             {
@@ -48,7 +49,8 @@ CQ_dbgMapHooked = true;
                             _map drawIcon [_x call _icon, _tm call _teamCol, getPosASLVisual _x, 30 * CQ_mapIconScale, 30 * CQ_mapIconScale, getDirVisual _x, format ["%1 TEAM", toUpper _tm], 1, 0.035, "PuristaMedium", "right"];
                         } else {
                         _map drawIcon [_x call _icon, [(side _g) call _col, [0, 0, 0, 1]] select (_bt > -1), getPosASLVisual _x, ([24, 30] select (_bt > -1)) * CQ_mapIconScale, ([24, 30] select (_bt > -1)) * CQ_mapIconScale, getDirVisual _x,
-                            [format ["%1 %2", groupId _g, _x getVariable ["CQ_dbg", ""]], format [["BUILD TRUCK HQ #%1", "BUILD TRUCK KAJMAN HQ #%1"] select ((_x getVariable ["CQ_btKaj", -1]) > -1), _bt]] select (_bt > -1), 1, 0.035, "PuristaMedium", "right"];
+                            ([format ["%1 %2", groupId _g, [_x getVariable ["CQ_dbg", ""], _x getVariable ["CQ_dbgSt", ""]] select _st], format [["BUILD TRUCK HQ #%1", "BUILD TRUCK KAJMAN HQ #%1"] select ((_x getVariable ["CQ_btKaj", -1]) > -1), _bt]] select (_bt > -1))
+                                + (["", format [": %1", _x getVariable ["CQ_dbgSt", ""]]] select (_st && { _bt > -1 })), 1, 0.035, "PuristaMedium", "right"];
                         };
                     };
                 };
