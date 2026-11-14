@@ -1,25 +1,28 @@
 /*
-    CQ_fnc_baseSetup  (server)  -  CAMP HARLAN v3
-    One outer wall (CQ_baseOuter) around everything the players use, kept CQ_baseRunwayGap m off
-    the runway centre line (the whole site is moved inland if needed, CQ_basePos follows), the
-    ground levelled first (CQ_baseLevel):
-      outer wall    H-barriers, corner sangars, mid-side watchtowers, floodlights, an entry
-                    control point with a concrete chicane (back) and an apron gate (front)
-      the keep      inner wall (CQ_compoundSize: class change / arsenal zone), keep gate and side
-                    doors; command post with the friendly commander (CQ_cmdPost), ops, medical,
-                    plaza + flag, 4 squad bays (squad boxes), muster point, billboard
-      motor pool    (left) 4 repair points + free-vehicle depots ("ground"), vehicle shop LZ
-      aviation      (right) 4 helipads: Falcon depots ("air") and repair / refuel points
-      defences      4 crewed defence spots in the corners (CQ_fnc_baseDefBuild)
+    CQ_fnc_baseSetup  (server)  -  CAMP HARLAN v4 (drawn perimeter)
+    The outer wall follows CQ_basePerimeter (corners drawn on the map, any shape), with the gates
+    of CQ_baseGates; the ground inside is levelled first (CQ_baseLevel). Inside:
+      the keep      inner wall (CQ_compoundSize, centred on CQ_basePos, facing CQ_baseDir: class
+                    change / arsenal zone), keep gate toward the yard and the apron, side doors;
+                    command post with the friendly commander (CQ_cmdPost), ops, medical, plaza +
+                    flag, 4 squad bays (squad boxes), muster point, billboard
+      motor pool    4 free-vehicle depots ("ground") against the runway-side wall + repair points,
+                    vehicle shop LZ by the entry control point
+      aviation      4 helipads along the runway-side wall: Falcon depots ("air"), repair points
+      UAV field     MAGPIE's Darter pads (CQ_magPadPos / CQ_magPadDir, used by CQ_fnc_magInit)
+      defences      sangars on the corners, watchtowers, floodlights, 4 crewed defence spots
+    Zones are laid out in the base frame: u metres along the front edge (CQ_basePerimeter corner
+    CQ_baseFrontStart to the next one, the runway side), v metres inward from it.
     Every class is checked (exists, no DLC); a missing one falls back or is skipped and logged.
 */
 if (!isServer) exitWith {};
 
 private _o = CQ_basePos;
 private _d = CQ_baseDir;
-CQ_baseDir = _d;
+publicVariable "CQ_basePos";
 publicVariable "CQ_baseDir";
 
+// keep frame: x right, y toward CQ_baseDir, origin = keep centre
 private _at = {
     params ["_x0", "_y0"];
     private _p = _o getPos [sqrt (_x0 ^ 2 + _y0 ^ 2), _d + (_x0 atan2 _y0)];
@@ -51,101 +54,102 @@ private _dims = {
     CQ_dimCache set [_cls, _r];
     _r
 };
+// ================================================================= the perimeter
+private _P = CQ_basePerimeter apply { [_x select 0, _x select 1, 0] };
+private _nP = count _P;
+private _area = 0;
+for "_i" from 0 to _nP - 1 do {
+    private _a = _P select _i; private _b = _P select ((_i + 1) mod _nP);
+    _area = _area + (_a select 0) * (_b select 1) - (_b select 0) * (_a select 1);
+};
+private _inS = [90, -90] select (_area > 0);         // inward = edge heading + _inS (the inside is on the left of a counter-clockwise outline)
+private _edge = { params ["_i"]; [_P select _i, _P select ((_i + 1) mod _nP)] };
+// point _t m along edge _i, _in m inside the wall
+private _onEdge = {
+    params ["_i", "_t", ["_in", 0]];
+    ([_i] call _edge) params ["_a", "_b"];
+    private _h = _a getDir _b;
+    private _p = (_a getPos [_t, _h]) getPos [_in, _h + _inS];
+    [_p select 0, _p select 1, 0]
+};
+private _edgeOut = { params ["_i"]; ([_i] call _edge) params ["_a", "_b"]; (_a getDir _b) - _inS };   // outward heading of edge _i
+// base frame: u along the front edge, v inward
+private _fs = CQ_baseFrontStart;
+private _bO = _P select _fs;
+private _uDir = _bO getDir (_P select ((_fs + 1) mod _nP));
+private _fDir = _uDir - _inS;                        // the front (runway side) faces this way
+private _atB = {
+    params ["_u", "_v"];
+    private _p = (_bO getPos [_u, _uDir]) getPos [_v, _uDir + _inS];
+    [_p select 0, _p select 1, 0]
+};
+private _distOut = {                                 // m outside the outline (0 inside)
+    params ["_p"];
+    if ([_p select 0, _p select 1, 0] inPolygon _P) exitWith { 0 };
+    private _m = 1e9;
+    for "_i" from 0 to _nP - 1 do {
+        ([_i] call _edge) params ["_a", "_b"];
+        private _ab = _b vectorDiff _a;
+        private _l2 = (_ab select 0) ^ 2 + (_ab select 1) ^ 2;
+        private _t = ((((_p select 0) - (_a select 0)) * (_ab select 0) + ((_p select 1) - (_a select 1)) * (_ab select 1)) / (_l2 max 0.01)) max 0 min 1;
+        _m = _m min ([_p select 0, _p select 1, 0] distance2D (_a vectorAdd (_ab vectorMultiply _t)));
+    };
+    _m
+};
+private _cx = 0; private _cy = 0;
+{ _cx = _cx + (_x select 0) / _nP; _cy = _cy + (_x select 1) / _nP } forEach _P;
+private _ctr = [_cx, _cy, 0];
+private _reach = selectMax (_P apply { _x distance2D _ctr });
+
 private _placed = 0;
-private _put = {
-    params ["_list", "_x0", "_y0", ["_rot", 0], ["_upright", false]];
+private _mk = {                                      // create one piece at a world position, absolute direction
+    params ["_list", "_p", "_dir", ["_upright", false]];
     private _cls = [_list] call _pick;
     if (_cls == "") exitWith { objNull };
-    private _p = [_x0, _y0] call _at;
     private _obj = createVehicle [_cls, _p, [], 0, "CAN_COLLIDE"];
-    _obj setDir (_d + _rot);
+    _obj setDir _dir;
     _obj setPosATL _p;
     if (_upright) then { _obj setVectorUp [0, 0, 1] } else { _obj setVectorUp surfaceNormal _p };
     _obj allowDamage false;
     _placed = _placed + 1;
     _obj
 };
-// straight wall of segments from A to B (local coordinates)
-private _wall = {
+private _put = { params ["_list", "_x0", "_y0", ["_rot", 0], ["_upright", false]]; [_list, [_x0, _y0] call _at, _d + _rot, _upright] call _mk };      // keep frame
+private _putB = { params ["_list", "_u", "_v", ["_rot", 0], ["_upright", true]]; [_list, [_u, _v] call _atB, _fDir + _rot, _upright] call _mk };  // base frame, rot 0 = facing the front
+private _wallW = {                                   // straight wall from world point A to B
     params ["_list", "_a", "_b"];
     private _cls = [_list] call _pick;
     if (_cls == "") exitWith {};
     private _seg = (([_cls] call _dims) select 0) max 2;
-    private _len = (_a distance2D _b);
+    private _len = _a distance2D _b;
     if (_len < 1) exitWith {};
     private _n = ceil (_len / _seg);
-    private _ux = ((_b select 0) - (_a select 0)) / _len;
-    private _uy = ((_b select 1) - (_a select 1)) / _len;
-    private _rot = (_ux atan2 _uy) - 90;
-    for "_i" from 0 to _n - 1 do {
-        private _t = (_i + 0.5) * (_len / _n);
-        [[_cls], (_a select 0) + _ux * _t, (_a select 1) + _uy * _t, _rot] call _put;
-    };
+    private _h = _a getDir _b;
+    for "_i" from 0 to _n - 1 do { [[_cls], _a getPos [(_i + 0.5) * (_len / _n), _h], _h + 90] call _mk };
+};
+private _wall = {                                    // keep frame wall
+    params ["_list", "_a", "_b"];
+    [_list, _a call _at, _b call _at] call _wallW;
 };
 
-// ================================================================= CAMP HARLAN v3
-// One outer wall (CQ_baseOuter, H-barriers, corner sangars) around everything the players use,
-// in compound coordinates (x right, y toward the runway / CQ_baseDir, origin = keep centre):
-//
-//   [sangar] ===== H-barrier ======================= APRON GATE ===== [sangar]   <- runway side
-//   | MOTOR POOL        |   THE KEEP (inner wall)    |   AVIATION APRON       |
-//   |  4 x repair +     |   command post (+y)        |   4 x helipad          |
-//   |  free-depot pads  |   4 squad bays, plaza,     |   (Falcon depot,       |
-//   |  vehicle shop LZ  |   muster, keep gate (-y)   |   repair + refuel)     |
-//   [sangar] =================== ENTRY CONTROL POINT ======================== [sangar]
-//
-// The keep is CQ_compoundSize (class change, arsenal zone). The whole site is levelled first.
-CQ_baseOuter params ["_OW", "_OD"];
-private _ohw = _OW / 2;
-private _ohd = _OD / 2;
-
-// ---- keep the walls off the runway: shift the whole site inland if a corner is too close
-private _ils = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsPosition");
-private _ilsDir = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsDirection");
-if (count _ils >= 2 && { count _ilsDir >= 3 }) then {
-    private _h = (_ilsDir select 0) atan2 (_ilsDir select 2);
-    private _ip = [_ils select 0, _ils select 1, 0];
-    private _sd = { params ["_p"]; private _r = _p vectorDiff _ip; (_r select 0) * cos _h - (_r select 1) * sin _h };   // signed distance to the centre line
-    private _side = [-1, 1] select (([_o] call _sd) >= 0);
-    private _worst = selectMin ([[-_ohw, -_ohd], [_ohw, -_ohd], [-_ohw, _ohd], [_ohw, _ohd]] apply { _side * ([[_x select 0, _x select 1] call _at] call _sd) });
-    if (_worst < CQ_baseRunwayGap) then {
-        private _move = CQ_baseRunwayGap - _worst;
-        private _nrm = [_side * cos _h, -_side * sin _h, 0];     // away from the runway
-        _o = _o vectorAdd (_nrm vectorMultiply _move);
-        _o set [2, 0];
-        CQ_basePos = _o; publicVariable "CQ_basePos";
-        ["Base: moved %1 m away from the runway (a wall corner was %2 m from its centre line)", [round _move, round _worst]] call CQ_fnc_log;
-    } else {
-        ["Base: nearest wall corner %1 m from the runway centre line", [round _worst]] call CQ_fnc_log;
-    };
-};
-
-// ---- clear and level the ground of the whole site
+// ---- the ground: terrain objects inside hidden, then levelled
 private _hidden = 0;
 {
-    private _p = getPosATL _x;
-    private _dx = (_p select 0) - (_o select 0);
-    private _dy = (_p select 1) - (_o select 1);
-    private _lx = _dx * cos _d - _dy * sin _d;
-    private _ly = _dx * sin _d + _dy * cos _d;
-    if (abs _lx < _ohw + 6 && { abs _ly < _ohd + 6 }) then { hideObjectGlobal _x; _hidden = _hidden + 1 };
-} forEach (nearestTerrainObjects [_o, [], sqrt ((_ohw + 6) ^ 2 + (_ohd + 6) ^ 2), false, true]);
+    if ([getPosATL _x] call _distOut < 6) then { hideObjectGlobal _x; _hidden = _hidden + 1 };
+} forEach (nearestTerrainObjects [_ctr, [], _reach + 8, false, true]);
 if (CQ_baseLevel) then {
     private _g = (getTerrainInfo select 3) max 1;
     private _blend = CQ_baseLevelBlend;
-    private _reach = sqrt ((_ohw + _blend) ^ 2 + (_ohd + _blend) ^ 2);
+    private _r = _reach + _blend + 5;
     private _pts = [];
     private _sum = 0; private _n = 0;
-    for "_gx" from (floor (((_o select 0) - _reach) / _g)) to (ceil (((_o select 0) + _reach) / _g)) do {
-        for "_gy" from (floor (((_o select 1) - _reach) / _g)) to (ceil (((_o select 1) + _reach) / _g)) do {
-            private _px = _gx * _g; private _py = _gy * _g;
-            private _dx = _px - (_o select 0); private _dy = _py - (_o select 1);
-            private _lx = abs (_dx * cos _d - _dy * sin _d);
-            private _ly = abs (_dx * sin _d + _dy * cos _d);
-            private _out = ((_lx - _ohw - 4) max 0) max ((_ly - _ohd - 4) max 0);
+    for "_gx" from (floor ((_cx - _r) / _g)) to (ceil ((_cx + _r) / _g)) do {
+        for "_gy" from (floor ((_cy - _r) / _g)) to (ceil ((_cy + _r) / _g)) do {
+            private _q = [_gx * _g, _gy * _g, 0];
+            private _out = (([_q] call _distOut) - 4) max 0;
             if (_out < _blend) then {
-                private _z = getTerrainHeight [_px, _py];
-                _pts pushBack [_px, _py, _z, _out];
+                private _z = getTerrainHeight _q;
+                _pts pushBack [_q select 0, _q select 1, _z, _out];
                 if (_out == 0) then { _sum = _sum + _z; _n = _n + 1 };
             };
         };
@@ -161,38 +165,65 @@ if (CQ_baseLevel) then {
         ["Base: site levelled at %1 m (%2 grid points), %3 terrain objects hidden", [_flat toFixed 1, count _pts, _hidden]] call CQ_fnc_log;
     };
 };
+// how far the runway-side wall stands from the runway centre line (information)
+private _ils = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsPosition");
+private _ilsDir = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsDirection");
+if (count _ils >= 2 && { count _ilsDir >= 3 }) then {
+    private _h = (_ilsDir select 0) atan2 (_ilsDir select 2);
+    private _ip = [_ils select 0, _ils select 1, 0];
+    ["Base: nearest wall corner %1 m from the runway centre line", [round selectMin (_P apply { private _r = _x vectorDiff _ip; abs ((_r select 0) * cos _h - (_r select 1) * sin _h) })]] call CQ_fnc_log;
+};
 
-// ---------------------------------------------------------------- outer wall
+// ---------------------------------------------------------------- outer wall and gates
 private _hbBig = ["Land_HBarrier_Big_F", "Land_HBarrier_5_F", "Land_HBarrier_3_F"];
-private _ecp = 10;                                   // half width of the entry control point (back)
-private _apx = _ohw - 35; private _apg = 12;         // apron gate centre x and half width (front)
-[_hbBig, [-_ohw, -_ohd], [-_ecp, -_ohd]] call _wall;
-[_hbBig, [_ecp, -_ohd], [_ohw, -_ohd]] call _wall;
-[_hbBig, [-_ohw, _ohd], [_apx - _apg, _ohd]] call _wall;
-[_hbBig, [_apx + _apg, _ohd], [_ohw, _ohd]] call _wall;
-[_hbBig, [-_ohw, -_ohd], [-_ohw, _ohd]] call _wall;
-[_hbBig, [_ohw, -_ohd], [_ohw, _ohd]] call _wall;
-// corner sangars (H-barrier towers) and watchtowers mid-side
-{ [["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"], (_x select 0) * (_ohw - 5), (_x select 1) * (_ohd - 5), [180, 0] select ((_x select 1) > 0), true] call _put } forEach [[-1, -1], [1, -1], [-1, 1], [1, 1]];
-{ [["Land_Cargo_Patrol_V1_F", "Land_BagBunker_Tower_F"], _x select 0, _x select 1, _x select 2, true] call _put } forEach [[-_ohw + 5, 0, 270], [_ohw - 5, 0, 90], [-40, _ohd - 5, 0], [-40, -_ohd + 5, 180]];
-// entry control point: two towers inside, a concrete chicane outside
-[["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"], -_ecp - 5, -_ohd + 4, 180, true] call _put;
-[["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"], _ecp + 5, -_ohd + 4, 180, true] call _put;
-{ [["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], _x select 0, _x select 1, 0, true] call _put } forEach [[-5, -_ohd - 9], [5, -_ohd - 18], [-5, -_ohd - 27]];
-// apron gate towers
-{ [["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"], _x, _ohd - 4, 0, true] call _put } forEach [_apx - _apg - 5, _apx + _apg + 5];
-// floodlights along the inside of the wall
-{ [["Land_LampHalogen_F", "Land_LampShabby_F"], _x select 0, _x select 1, _x select 2, true] call _put } forEach [
-    [-_ohw + 3, -_ohd / 2, 270], [-_ohw + 3, _ohd / 2, 270], [_ohw - 3, -_ohd / 2, 90], [_ohw - 3, _ohd / 2, 90],
-    [-_ohw / 2, _ohd - 3, 0], [0, _ohd - 3, 0], [-_ohw / 2, -_ohd + 3, 180], [_ohw / 2, -_ohd + 3, 180], [-_ecp - 2, -_ohd + 12, 180], [_ecp + 2, -_ohd + 12, 180]];
+private _tower = ["Land_HBarrierTower_F", "Land_BagBunker_Tower_F"];
+private _lamp = ["Land_LampHalogen_F", "Land_LampShabby_F"];
+private _perim = 0;
+for "_i" from 0 to _nP - 1 do {
+    ([_i] call _edge) params ["_a", "_b"];
+    private _len = _a distance2D _b;
+    _perim = _perim + _len;
+    private _gaps = (CQ_baseGates select { (_x select 0) == _i }) apply { [(_x select 1) - (_x select 2), (_x select 1) + (_x select 2)] };
+    _gaps sort true;
+    private _t0 = 0;
+    { [_hbBig, [_i, _t0] call _onEdge, [_i, (_x select 0) max _t0] call _onEdge] call _wallW; _t0 = _x select 1 } forEach _gaps;
+    [_hbBig, [_i, _t0] call _onEdge, _b] call _wallW;
+};
+// corner sangars, 6 m clear of both walls, facing out
+for "_i" from 0 to _nP - 1 do {
+    private _c = _P select _i;
+    private _va = vectorNormalized ((_P select ((_i - 1 + _nP) mod _nP)) vectorDiff _c);
+    private _vb = vectorNormalized ((_P select ((_i + 1) mod _nP)) vectorDiff _c);
+    private _bis = vectorNormalized (_va vectorAdd _vb);
+    private _half = acos ((_va vectorDotProduct _vb) max -1 min 1) / 2;
+    private _p = _c vectorAdd (_bis vectorMultiply (6 / (sin _half max 0.2)));
+    [_tower, [_p select 0, _p select 1, 0], ((_bis select 0) atan2 (_bis select 1)) + 180, true] call _mk;
+};
+// gates: entry control point (towers, concrete chicane inside) or a plain gate (bar + sandbag posts)
+{
+    _x params ["_i", "_t", "_hw", "_kind"];
+    private _out = [_i] call _edgeOut;
+    if (_kind == "ecp") then {
+        [_tower, [_i, _t - _hw - 4, 5] call _onEdge, _out, true] call _mk;
+        [_tower, [_i, _t + _hw + 4, 5] call _onEdge, _out, true] call _mk;
+        [["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], [_i, _t - 3, 9] call _onEdge, _out, true] call _mk;
+        [["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], [_i, _t + 3, 16] call _onEdge, _out, true] call _mk;
+        { [_lamp, [_i, _t + _x * (_hw + 2), 11] call _onEdge, _out, true] call _mk } forEach [-1, 1];
+    } else {
+        { [["Land_BagBunker_Small_F", "Land_BagFence_Round_F"], [_i, _t + _x * (_hw + 2.5), 3] call _onEdge, _out, true] call _mk } forEach [-1, 1];
+    };
+} forEach CQ_baseGates;
+// watchtowers and floodlights along the walls ([edge, m along it, m inside])
+{ [["Land_Cargo_Patrol_V1_F", "Land_BagBunker_Tower_F"], [_x select 0, _x select 1, 6] call _onEdge, [_x select 0] call _edgeOut, true] call _mk } forEach CQ_baseWatchtowers;
+{ [_lamp, [_x select 0, _x select 1, 3] call _onEdge, [_x select 0] call _edgeOut, true] call _mk } forEach CQ_baseFloodlights;
 
 // ---------------------------------------------------------------- the keep
 CQ_compoundSize params ["_W", "_D"];
 private _hw = _W / 2;
 private _hd = _D / 2;
 private _hbMid = ["Land_HBarrier_5_F", "Land_HBarrier_3_F", "Land_HBarrier_Big_F"];
-private _kg = 8;                                     // half width of the keep gate (back, toward the ECP)
-private _door = [-11, -6];                           // side doors (y from / to), toward motor pool and apron
+private _kg = 8;                                     // half width of the keep gate (-y, toward the yard and the apron)
+private _door = [-11, -6];                           // side doors (y from / to)
 [_hbMid, [-_hw, _hd], [_hw, _hd]] call _wall;
 [_hbMid, [-_hw, -_hd], [-_kg, -_hd]] call _wall;
 [_hbMid, [_kg, -_hd], [_hw, -_hd]] call _wall;
@@ -212,13 +243,13 @@ if (_cmdCls != "") then {
     _ops = [[_cmdCls], 0, _hd - 5 - _cl / 2, 180, true] call _put;
     if (_opsCls != "") then {
         ([_opsCls] call _dims) params ["_ow", "_ol"];
-        private _ox = -(_cw / 2) - 7 - (_ow / 2);
-        if (_ox - _ow / 2 > -_hw + 4) then { [[_opsCls], _ox, _hd - 5 - _ol / 2, 180, true] call _put };
+        private _ox = -(_cw / 2) - 6 - (_ow / 2);
+        if (_ox - _ow / 2 > -_hw + 3) then { [[_opsCls], _ox, _hd - 4 - _ol / 2, 180, true] call _put } else { ["Base: ops building does not fit in the keep, skipped", []] call CQ_fnc_log };
     };
     if (_medCls != "") then {
         ([_medCls] call _dims) params ["_mw", "_ml"];
-        private _mx = (_cw / 2) + 9 + (_mw / 2);
-        if (_mx + _mw / 2 < _hw - 4) then { [[_medCls], _mx, _hd - 5 - _ml / 2, 180, true] call _put };
+        private _mx = (_cw / 2) + 8 + (_mw / 2);
+        if (_mx + _mw / 2 < _hw - 3) then { [[_medCls], _mx, _hd - 4 - _ml / 2, 180, true] call _put } else { ["Base: medical building does not fit in the keep, skipped", []] call CQ_fnc_log };
     };
 };
 
@@ -298,43 +329,44 @@ private _bayX = _hw - 13;
     _bm setMarkerColor "ColorWEST";
     _bm setMarkerSize [0.5, 0.5];
     _bm setMarkerText _sq;
-} forEach [["Alpha", -1, 6], ["Bravo", -1, -24], ["Charlie", 1, 6], ["Delta", 1, -24]];
+} forEach [["Alpha", -1, 2], ["Bravo", -1, -18], ["Charlie", 1, 2], ["Delta", 1, -18]];
 publicVariable "CQ_arsenalBoxes";
 CQ_arsenalBox = CQ_arsenalBoxes select 0;
 publicVariable "CQ_arsenalBox";
 
-// ---------------------------------------------------------------- motor pool (left band)
+// ---------------------------------------------------------------- motor pool (base frame)
 private _clearSoft = { params ["_p", "_rad"]; { hideObjectGlobal _x } forEach (nearestTerrainObjects [_p, ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "FENCE", "WALL", "HIDE", "STACK"], _rad + 1, false, true]) };
 CQ_repairPoints = [];
 CQ_depots = [];
-private _mpX = -(_hw + _ohw) / 2;                    // middle of the band
 private _free = ["Land_RepairDepot_01_tan_F", "Land_RepairDepot_01_green_F", "Land_RepairDepot_01_civ_F"];
 private _stCls = [_free + ["B_Slingload_01_Repair_F", "Land_Cargo20_military_green_F"], _free] call _pick;
 {
-    private _y = _x;
-    private _rp = [_mpX + 14, _y] call _at;          // service spot, by the ring road
-    private _pad = [_mpX - 6, _y] call _at;          // depot pad: new vehicles appear here
-    private _sp = [-_ohw + 9, _y] call _at;          // repair depot against the wall (the depot terminal)
+    _x params ["_u", "_vDepot", "_vPad", "_vRep"];
+    private _rp = [_u, _vRep] call _atB;             // service spot
+    private _pad = [_u, _vPad] call _atB;            // depot pad: new vehicles appear here, facing inward
+    private _sp = [_u, _vDepot] call _atB;           // repair depot against the runway-side wall (the depot terminal)
     if (_stCls != "") then {
         private _s = createVehicle [_stCls, _sp, [], 0, "CAN_COLLIDE"];
-        _s setDir (_d + 90 + CQ_repairDepotRot);
+        _s setDir (_fDir + 180 + CQ_repairDepotRot);
         _s setPosATL _sp;
         _s setVectorUp [0, 0, 1];
         _s allowDamage false;
-        (createVehicle ["Land_HelipadSquare_F", _pad, [], 0, "CAN_COLLIDE"]) setDir (_d + 90);
-        CQ_depots pushBack [_s, _pad, _d + 90, "ground"];
+        (createVehicle ["Land_HelipadSquare_F", _pad, [], 0, "CAN_COLLIDE"]) setDir (_fDir + 180);
+        CQ_depots pushBack [_s, _pad, _fDir + 180, "ground"];
     };
-    { (createVehicle ["RoadCone_L_F", _rp getPos [CQ_repairRadius - 1, _d + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
+    { (createVehicle ["RoadCone_L_F", _rp getPos [CQ_repairRadius - 1, _fDir + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [45, 135, 225, 315];
     CQ_repairPoints pushBack _rp;
-} forEach [_ohd - 24, _ohd - 56, _ohd - 88, _ohd - 120];
-private _mm = createMarker ["cq_motorpool", [_mpX, 10] call _at];
+} forEach CQ_baseMotorPool;
+private _mu = 0;
+{ _mu = _mu + (_x select 0) / count CQ_baseMotorPool } forEach CQ_baseMotorPool;
+private _mm = createMarker ["cq_motorpool", [_mu, 30] call _atB];
 _mm setMarkerType "loc_repair"; _mm setMarkerColor "ColorWEST"; _mm setMarkerText "Motor pool: repair & vehicle depot";
-// vehicle shop at the back of the motor pool, by the entry control point
-CQ_shopLZ = [_mpX, -_ohd + 20] call _at;
-CQ_shopDir = _d;
-(createVehicle ["Land_HelipadCircle_F", CQ_shopLZ, [], 0, "CAN_COLLIDE"]) setDir _d;
-{ (createVehicle ["RoadCone_L_F", CQ_shopLZ getPos [10, _d + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [0, 90, 180, 270];
-private _tp = [_mpX + 18, -_ohd + 20] call _at;
+// vehicle shop by the entry control point
+CQ_shopLZ = (CQ_baseShopLZ select [0, 2]) call _atB;
+CQ_shopDir = _fDir + (CQ_baseShopLZ select 2);
+(createVehicle ["Land_HelipadCircle_F", CQ_shopLZ, [], 0, "CAN_COLLIDE"]) setDir CQ_shopDir;
+{ (createVehicle ["RoadCone_L_F", CQ_shopLZ getPos [10, CQ_shopDir + _x], [], 0, "CAN_COLLIDE"]) allowDamage false } forEach [0, 90, 180, 270];
+private _tp = [(CQ_baseShopLZ select 0) + 14, CQ_baseShopLZ select 1] call _atB;
 private _tblCls = [["Land_CampingTable_F"]] call _pick;
 if (_tblCls != "") then { private _tb = createVehicle [_tblCls, _tp, [], 0, "CAN_COLLIDE"]; _tb setDir (_tp getDir CQ_shopLZ); _tb allowDamage false };
 private _termCls = [["Land_DataTerminal_01_F", "Land_Laptop_unfolded_F", "Land_SatellitePhone_F"]] call _pick;
@@ -346,30 +378,34 @@ CQ_shopTerminal enableSimulationGlobal false;
 publicVariable "CQ_shopTerminal"; publicVariable "CQ_shopLZ"; publicVariable "CQ_shopDir";
 private _shm = createMarker ["cq_shop", CQ_shopLZ];
 _shm setMarkerType "c_car"; _shm setMarkerColor "ColorWEST"; _shm setMarkerText "Vehicle shop";
-// radar between the last depot and the shop; supply stacks at the front of the motor pool
-[["Land_Radar_Small_F", "Land_TTowerSmall_2_F"], _mpX, -_ohd + 45, 0, true] call _put;
-[["Land_Pallets_stack_F"], _mpX + 16, _ohd - 8, 0, true] call _put;
-[["Land_CratesWooden_F"], _mpX + 20, _ohd - 12, 90, true] call _put;
+// radar, supply stacks
+[["Land_Radar_Small_F", "Land_TTowerSmall_2_F"], CQ_baseRadar select 0, CQ_baseRadar select 1, 0] call _putB;
+{ [_x select 0, _x select 1, _x select 2, _x select 3] call _putB } forEach [
+    [["Land_Pallets_stack_F"], 70, 54, 0], [["Land_CratesWooden_F"], 78, 58, 90]];
+CQ_linkRelaySpawn = CQ_baseRelaySpawn call _atB;     // the relay vehicle leaves from the yard, by the runway gate
 
-// ---------------------------------------------------------------- aviation apron (right band)
-private _avX = (_hw + _ohw) / 2;
+// ---------------------------------------------------------------- aviation apron (base frame)
 private _termA = [["Land_DataTerminal_01_F", "Land_Laptop_unfolded_F"]] call _pick;
 {
-    private _y = _x;
-    private _pad = [_avX + 6, _y] call _at;
-    (createVehicle ["Land_HelipadSquare_F", _pad, [], 0, "CAN_COLLIDE"]) setDir (_d + 270);
-    private _tp2 = [_hw + 8, _y] call _at;           // pilot terminal by the keep wall
+    _x params ["_u", "_vPad", "_vTerm"];
+    private _pad = [_u, _vPad] call _atB;
+    (createVehicle ["Land_HelipadSquare_F", _pad, [], 0, "CAN_COLLIDE"]) setDir _fDir;
+    private _tp2 = [_u, _vTerm] call _atB;           // pilot terminal behind the pad, facing it
     private _t = createVehicle [_termA, _tp2, [], 0, "CAN_COLLIDE"];
-    _t setDir (_d + 90);
+    _t setDir _fDir;
     _t setPosATL _tp2;
     _t allowDamage false;
     _t enableSimulationGlobal false;
-    CQ_depots pushBack [_t, _pad, _d + 270, "air"];
+    CQ_depots pushBack [_t, _pad, _fDir, "air"];
     CQ_repairPoints pushBack _pad;                   // landed helicopters are repaired, refuelled, rearmed
-} forEach [_ohd - 22, _ohd - 58, _ohd - 94, _ohd - 130];
-private _am = createMarker ["cq_apron", [_avX, 0] call _at];
+} forEach CQ_baseHelipads;
+private _au = 0;
+{ _au = _au + (_x select 0) / count CQ_baseHelipads } forEach CQ_baseHelipads;
+private _am = createMarker ["cq_apron", [_au, 45] call _atB];
 _am setMarkerType "b_air"; _am setMarkerColor "ColorWEST"; _am setMarkerText "Aviation apron (Falcon)";
-CQ_linkRelaySpawn = [_avX, -_ohd + 14] call _at;     // the relay vehicle leaves from the back of the apron
+// MAGPIE's Darter pads (built by CQ_fnc_magInit)
+CQ_magPadPos = (CQ_baseUavField select [0, 2]) call _atB;
+CQ_magPadDir = _uDir + _inS + (CQ_baseUavField select 2);
 publicVariable "CQ_repairPoints";
 publicVariable "CQ_depots";
 CQ_vehBoxes = []; publicVariable "CQ_vehBoxes";
@@ -377,12 +413,12 @@ CQ_vehBoxesDone = true; publicVariable "CQ_vehBoxesDone";
 CQ_loadZones = []; publicVariable "CQ_loadZones";
 CQ_crateSpots = [];
 
-// ---------------------------------------------------------------- defences on the corners
+// ---------------------------------------------------------------- crewed defence spots (base frame), facing away from the keep
 CQ_baseDefs = [];
 {
-    private _p = [(_x select 0) * (_ohw - 16), (_x select 1) * (_ohd - 16)] call _at;
-    CQ_baseDefs pushBack createHashMapFromArray [["pos", _p], ["dir", _d + (_x select 2)], ["objs", []], ["lostT", -1]];
-} forEach [[-1, 1, -45], [1, 1, 45], [-1, -1, 225], [1, -1, 135]];
+    private _p = _x call _atB;
+    CQ_baseDefs pushBack createHashMapFromArray [["pos", _p], ["dir", _o getDir _p], ["objs", []], ["lostT", -1]];
+} forEach CQ_baseDefSpots;
 { [_x] call CQ_fnc_baseDefBuild } forEach CQ_baseDefs;
 
 // billboard inside the keep, on its back wall right of the keep gate, picture toward the plaza
@@ -404,14 +440,17 @@ private _respawn = createMarker ["respawn_west", CQ_musterPos];
 _respawn setMarkerType "Empty";
 private _hq = createMarker ["cq_base", _o];
 _hq setMarkerType "b_hq"; _hq setMarkerColor "ColorWEST"; _hq setMarkerText "Camp Harlan";
-private _zone = createMarker ["cq_base_zone", _o];
-_zone setMarkerShape "RECTANGLE";
-_zone setMarkerSize [_ohw, _ohd];
-_zone setMarkerDir _d;
-_zone setMarkerBrush "Border";
-_zone setMarkerColor "ColorWEST";
-["Base built at %1 (front %2 deg): %3 pieces, outer wall %4 x %5 m, keep %6 x %7 m, %8 depots, %9 repair points",
-    [mapGridPosition _o, round _d, _placed, _OW, _OD, _W, _D, count CQ_depots, count CQ_repairPoints]] call CQ_fnc_log;
+for "_i" from 0 to _nP - 1 do {
+    ([_i] call _edge) params ["_a", "_b"];
+    private _zm = createMarker [format ["cq_base_zone_%1", _i], (_a vectorAdd _b) vectorMultiply 0.5];
+    _zm setMarkerShape "RECTANGLE";
+    _zm setMarkerSize [1.5, (_a distance2D _b) / 2];
+    _zm setMarkerDir (_a getDir _b);
+    _zm setMarkerBrush "SolidFull";
+    _zm setMarkerColor "ColorWEST";
+};
+["Base built at %1 (keep facing %2 deg, front %3 deg): %4 pieces, outer wall %5 corners / %6 m, %7 gates, keep %8 x %9 m, %10 depots, %11 repair points",
+    [mapGridPosition _o, round _d, round _fDir, _placed, _nP, round _perim, count CQ_baseGates, _W, _D, count CQ_depots, count CQ_repairPoints]] call CQ_fnc_log;
 
 // Map footprints: buildings created by script are not drawn on the map (only the terrain's own
 // buildings are), so every base building and wall gets a filled rectangle marker of its real

@@ -25,18 +25,22 @@ true call CQ_fnc_runwayClear;
 private _nDarters = ({ (_x select 1) find "B_UAV_01_F" > -1 } count CQ_magDrones) + CQ_magChainCount;
 private _rows = ceil (_nDarters / 4);
 private _half = (4 max _rows) * CQ_magPadGap / 2 + 6;
-private _want = CQ_basePos getPos [CQ_magPadDist, CQ_baseDir + 180];
-private _pad = [_want, _half, 400] call CQ_fnc_clearPos;
-if (_pad isEqualTo []) then { _pad = _want };
+private _rowDir = missionNamespace getVariable ["CQ_magPadDir", CQ_baseDir + 90];
+private _pad = [];
+if (!isNil "CQ_magPadPos") then { _pad = CQ_magPadPos } else {     // the base has its own UAV field
+    private _want = CQ_basePos getPos [CQ_magPadDist, CQ_baseDir + 180];
+    _pad = [_want, _half, 400] call CQ_fnc_clearPos;
+    if (_pad isEqualTo []) then { _pad = _want };
+};
 _pad = [_pad select 0, _pad select 1, 0];
 { hideObjectGlobal _x } forEach (nearestTerrainObjects [_pad, ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "FENCE", "WALL", "HIDE", "STACK"], _half + 4, false, true]);
 CQ_magPads = [];
 for "_k" from 0 to _nDarters - 1 do {
     private _c = _k mod 4; private _r = floor (_k / 4);
-    private _p = (_pad getPos [(_c - 1.5) * CQ_magPadGap, CQ_baseDir + 90]) getPos [(_r - (_rows - 1) / 2) * CQ_magPadGap, CQ_baseDir];
+    private _p = (_pad getPos [(_c - 1.5) * CQ_magPadGap, _rowDir]) getPos [(_r - (_rows - 1) / 2) * CQ_magPadGap, _rowDir - 90];
     _p = [_p select 0, _p select 1, 0];
     CQ_magPads pushBack _p;
-    (createVehicle ["Land_HelipadSquare_F", _p, [], 0, "CAN_COLLIDE"]) setDir CQ_baseDir;
+    (createVehicle ["Land_HelipadSquare_F", _p, [], 0, "CAN_COLLIDE"]) setDir _rowDir;
 };
 private _pm = createMarker ["cq_magpads", _pad];
 _pm setMarkerType "b_uav";

@@ -17,13 +17,13 @@ CQ_directorAtomic = ["magpie", "magDormant", "link", "linkRepair"];   // directo
 CQ_scriptDumpMin = 40;                   // slow tick with more spawned scripts than this: list them in the log (once a minute)
 
 // --- Player base (Altis International Airport) -----------------------------
-CQ_basePos = [14267, 16099, 0];         // base compound centre (HQ zone drawn on the map)
+CQ_basePos = [14233.9, 16106.7, 0];     // centre of the keep (class change zone), inside CQ_basePerimeter
 CQ_baseRadius = 300;                     // base zone drawn on the map
 CQ_safeZoneRadius = 800;                 // weapons-safe perimeter: players cannot fire inside it...
 CQ_safeZoneHold = 30;                    // ...unless an enemy is inside (and for 30 s after the last one left)
 CQ_baseNoSpawnRadius = 2500;             // no enemy site closer than this (milestone 2)
 
-CQ_baseDir = 38;                         // compound front and vehicle rows compass direction
+CQ_baseDir = 283.6;                      // the keep faces this way (back row toward the west wall, keep gate toward the apron)
 // --- Vehicle depot quotas: free vehicles requested at the depots (repair stations) --
 // [classname, role (only lays out the vehicle zone rows), max out at the same time]
 CQ_baseVehicles = [
@@ -41,13 +41,26 @@ CQ_baseVehPadding = 25;                  // metres between base vehicles (fallba
 //   (start point next to the HQ, running along CQ_baseDir); a crate dispenser + loadout zone
 //   at the far end of each row; 2 repair stations east of the vehicle zone
 CQ_billboardFlip = false;                // true if the base billboard (front wall, right of the gate) shows its back to the courtyard
-CQ_baseOuter = [260, 190];               // Camp Harlan outer wall width x depth (m): motor pool | keep | aviation apron
-CQ_baseRunwayGap = 110;                  // m: no outer wall corner closer than this to the runway centre line (the site moves inland)
-CQ_compoundSize = [100, 90];             // the keep (inner wall): command post, plaza, 4 squad bays; class change / arsenal zone
+// Camp Harlan v4: outer wall drawn on the map (Altis location picker, Hesco line), corners in order
+CQ_basePerimeter = [[14372, 16113], [14211, 16199], [14154, 15963], [14186, 15927]];
+CQ_baseFrontStart = 3;                   // corner where the front (runway side) edge starts: zones are laid out in metres along it (u) and inward from it (v)
+// gates: [edge (corner i -> i+1), m from the edge start, half width, "ecp" (towers + chicane) or "gate"]
+CQ_baseGates = [[1, 154.7, 9, "ecp"], [3, 126, 7, "gate"]];   // entry control point on the west wall (loop road), runway gate on the taxiway side
+CQ_baseWatchtowers = [[0, 91.3], [1, 210.9]];                  // [edge, m along it]: 6 m inside the wall
+CQ_baseFloodlights = [[3, 69], [3, 178], [0, 52.2], [0, 135.8], [1, 29.3], [1, 70.3], [1, 117.2], [1, 187.5]];
+// zones in the base frame [u, v ...]
+CQ_baseMotorPool = [[30, 7, 20, 38], [56, 7, 20, 38], [82, 7, 20, 38], [108, 7, 20, 38]];   // [u, depot v, pad v, repair point v]
+CQ_baseHelipads = [[136, 24, 42], [164, 24, 42], [192, 24, 42], [220, 24, 42]];          // [u, pad v, pilot terminal v]
+CQ_baseShopLZ = [104, 64, 180];          // [u, v, vehicle direction from the front]
+CQ_baseRadar = [205, 138];
+CQ_baseRelaySpawn = [128, 56];
+CQ_baseUavField = [222, 68, -17];        // [u, v, row direction from the inward axis]: MAGPIE's Darter pads
+CQ_baseDefSpots = [[14, 24], [52, 64], [196, 152], [244, 16]];   // crewed defence spots (AA + HMG)
+CQ_compoundSize = [76, 64];               // the keep (inner wall): command post, plaza, 4 squad bays; class change / arsenal zone
 CQ_baseLevel = true;                     // level the compound's ground before building (setTerrainHeight)
 CQ_baseLevelBlend = 25;                  // m outside the walls over which the levelled ground blends back into the terrain
 CQ_grassCut = true;                      // false: no grass cutting at all (test switch)
-CQ_grassCutRadius = 170;                 // no grass this far around the base centre (m)...
+CQ_grassCutRadius = 195;                 // no grass this far around the base centre (m)...
 CQ_grassCutSpacing = 10;                 // ...normal-size clutter cutters this far apart (lower it if grass shows between them)
 CQ_rayStarts = [[14255, 16151, 0], [14282, 16143, 0], [14304, 16130, 0], [14330, 16116, 0]];
 CQ_dispensers = [[14293, 16200, 0], [14310, 16189, 0], [14339, 16175, 0], [14364, 16166, 0]];   // pushed further out if a row is longer
