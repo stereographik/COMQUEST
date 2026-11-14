@@ -691,6 +691,7 @@ CQ_arsenalGates = [
 ];
 CQ_inviteTimeout = 30;                   // s before an unanswered squad invite expires
 CQ_classChangeRange = 2;                 // classes are changed inside the HQ compound walls (+ this margin, m)
+CQ_squadMax = 8;                         // players per squad at most (Falcon, the pilots' squad, has no limit)
 CQ_squadNames = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet"];   // names given to new player squads
 // Contact / heavy support
 CQ_helpRadius = 700;                     // patrolling squads this close to a contact join in

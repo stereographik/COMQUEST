@@ -95,6 +95,7 @@ switch (_cmd) do {
     };
     case "join": {
         if (isNull _g || { side _g != west } || { group _p isEqualTo _g }) exitWith {};
+        if (count units _g >= CQ_squadMax) exitWith { [format ["%1 is full (%2 players)", groupId _g, CQ_squadMax]] remoteExec ["hint", _p] };
         private _old = group _p;
         [_p] joinSilent _g;
         [_p] call _revoke;
@@ -136,6 +137,7 @@ switch (_cmd) do {
         if (isNull _t || { !isPlayer _t } || { _t == _p }) exitWith {};
         private _grp = group _p;
         if (_grp getVariable ["CQ_solo", false] || { leader _grp != _p }) exitWith {};
+        if (count units _grp >= CQ_squadMax) exitWith { [format ["Your squad is full (%1 players)", CQ_squadMax]] remoteExec ["hint", _p] };
         if !((group _t) getVariable ["CQ_solo", false]) exitWith {
             [format ["%1 is already in a squad", name _t]] remoteExec ["hint", _p];
         };
@@ -154,6 +156,10 @@ switch (_cmd) do {
         private _valid = time < (_p getVariable ["CQ_inviteUntil", -1]);
         _p setVariable ["CQ_inviteUntil", -1];
         _p setVariable ["CQ_inviteGroup", grpNull];
+        if (_extra && { _valid } && { !isNull _grp } && { count units _grp >= CQ_squadMax }) exitWith {
+            [format ["%1 is full (%2 players)", groupId _grp, CQ_squadMax]] remoteExec ["hint", _p];
+            if (!isNull _leader) then { [format ["%1 could not join: your squad is full", name _p]] remoteExec ["hint", _leader] };
+        };
         if (!_extra || { !_valid } || { isNull _grp } || { units _grp isEqualTo [] } || { _grp getVariable ["CQ_solo", false] }) exitWith {
             if (!isNull _leader) then {
                 [format ["%1 %2 your invite", name _p, ["declined", "could not accept"] select _extra]] remoteExec ["hint", _leader];
