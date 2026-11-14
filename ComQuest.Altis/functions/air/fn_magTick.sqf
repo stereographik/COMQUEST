@@ -328,7 +328,7 @@ private _focusOn = _focus isNotEqualTo [];
 if (_focusOn) then {
     _focus = [_focus select 0, _focus select 1, 0];
     CQ_magRingR = (CQ_magRingStart - CQ_magRingShrink * (time - CQ_magFocusT) / 60) max CQ_magRingMin;
-    private _ring = [_flying select { !(_x getOrDefault ["flee", false]) && { (_x getOrDefault ["role", ""]) != "wasp" } && { time >= (_x getOrDefault ["lookUntil", 0]) } && { !(_x getOrDefault ["sneak", false]) } && { !(_x getOrDefault ["repair", false]) } }, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;   // a woken Darter getting away joins once clear; WASP keeps to the link edge
+    private _ring = [_flying select { !(_x getOrDefault ["flee", false]) && { (_x getOrDefault ["role", ""]) != "wasp" } && { time >= (_x getOrDefault ["lookUntil", 0]) } && { !(_x getOrDefault ["sneak", false]) } && { !(_x getOrDefault ["repair", false]) } && { (_x getOrDefault ["wjob", ""]) == "" } }, [], { _x get "i" }, "ASCEND"] call BIS_fnc_sortBy;   // a woken Darter getting away joins once clear; WASP keeps to the link edge
     private _n = count _ring;
     private _step = 360 / (_n max 1);
     private _rot = (time - CQ_magFocusT) * CQ_magRingTurn;
@@ -481,7 +481,7 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
 {
     private _m = _x;
     private _v = _m get "veh";
-    if (_focusOn || { (_m getOrDefault ["role", ""]) in ["chain", "wasp"] } || { _m getOrDefault ["flee", false] } || { time < (_m getOrDefault ["lookUntil", 0]) } || { _m getOrDefault ["sneak", false] } || { _m getOrDefault ["repair", false] }) then { continue };
+    if (_focusOn || { (_m getOrDefault ["role", ""]) in ["chain", "wasp"] } || { _m getOrDefault ["flee", false] } || { time < (_m getOrDefault ["lookUntil", 0]) } || { _m getOrDefault ["sneak", false] } || { _m getOrDefault ["repair", false] } || { (_m getOrDefault ["wjob", ""]) != "" }) then { continue };
     if (((getPosATL _v) select 2) < 40 && { time - (_m get "planT") < 300 }) then { continue };
     private _tgt = _m get "target";
     private _arrived = (_m get "explore") && { _tgt isNotEqualTo [] } && { _v distance2D _tgt < 500 };
