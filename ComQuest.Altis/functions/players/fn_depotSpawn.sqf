@@ -59,6 +59,7 @@ clearWeaponCargoGlobal _v; clearMagazineCargoGlobal _v; clearItemCargoGlobal _v;
 _v addItemCargoGlobal ["FirstAidKit", 4];
 _v setVariable ["CQ_depotGroup", _g, true];
 _v setVariable ["CQ_depotOwner", _uid, true];
+if !(_v isKindOf "Air") then { _v setVariable ["CQ_squadGroup", _g, true] };   // ground vehicles: this squad's members only (aircraft carry everyone)
 // who destroyed it (MPKilled fires on every machine, also when a player drives it): logged by CQ_fnc_depotTick
 _v addMPEventHandler ["MPKilled", {
     params ["_v", "_k", "_i"];

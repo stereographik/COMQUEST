@@ -28,6 +28,7 @@ _v allowDamage false;
 clearWeaponCargoGlobal _v; clearMagazineCargoGlobal _v; clearItemCargoGlobal _v; clearBackpackCargoGlobal _v;
 _v addItemCargoGlobal ["FirstAidKit", 4];
 _v setVariable ["CQ_boughtBy", groupId _g, true];
+if !(_v isKindOf "Air") then { _v setVariable ["CQ_squadGroup", _g, true] };   // this squad's members only
 _g setVariable ["CQ_sqPts", _pts - _cost, true];
 _g setVariable ["CQ_sqBought", _owned + [_v], true];
 private _msg = format ["%1 bought a %2 for the squad (%3 points left)", name _p, _name, _pts - _cost];

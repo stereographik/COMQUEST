@@ -36,6 +36,36 @@ private _toSolo = {
     _grp setVariable ["CQ_solo", true, true];
     _grp setVariable ["CQ_sqPts", 0, true];          // squad points are lost when the squad ends
 };
+// squad vehicles (CQ_squadGroup): a player who left the squad is put out of its vehicle
+private _revoke = {
+    params ["_u"];
+    private _v = vehicle _u;
+    private _sg = _v getVariable ["CQ_squadGroup", grpNull];
+    if (_v != _u && { !isNull _sg } && { group _u != _sg }) then {
+        _u remoteExec ["moveOut", _u];
+        [format ["You left %1: its vehicles are for its members only", groupId _sg]] remoteExec ["hint", _u];
+    };
+};
+// the squad ended: its vehicles are removed after CQ_squadVehClear s (people put out first)
+private _clearVehs = {
+    params ["_grp", "_name"];
+    private _vs = vehicles select { (_x getVariable ["CQ_squadGroup", grpNull]) == _grp };
+    { _x setVariable ["CQ_squadGroup", grpNull, true] } forEach _vs;
+    _grp setVariable ["CQ_sqBought", [], true];
+    if (_vs isEqualTo []) exitWith {};
+    { if (isPlayer _x) then { [format ["Squad %1 disbanded: its %2 vehicle(s) are removed in %3 s", _name, count _vs, CQ_squadVehClear]] remoteExec ["hint", _x] } } forEach allPlayers;
+    ["Squads: %1 disbanded, %2 vehicle(s) removed in %3 s", [_name, count _vs, CQ_squadVehClear]] call CQ_fnc_log;
+    [_vs] spawn {
+        params ["_vs"];
+        { [_x, 2] remoteExec ["lock", _x] } forEach _vs;   // nobody gets in meanwhile (lock runs where the vehicle is local)
+        sleep CQ_squadVehClear;
+        { private _v = _x; { _x remoteExec ["moveOut", _x] } forEach crew _v } forEach (_vs select { !isNull _x });
+        sleep 1.5;
+        { deleteVehicle _x } forEach (_vs select { !isNull _x });
+        CQ_depotVehs = CQ_depotVehs select { !isNull _x && { alive _x } };
+        publicVariable "CQ_depotVehs";
+    };
+};
 switch (_cmd) do {
     // the player became a pilot: into Falcon (created when needed)
     case "falcon": {
@@ -67,6 +97,7 @@ switch (_cmd) do {
         if (isNull _g || { side _g != west } || { group _p isEqualTo _g }) exitWith {};
         private _old = group _p;
         [_p] joinSilent _g;
+        [_p] call _revoke;
         if (count units _old == 0) then { deleteGroup _old };
         ["Squads: %1 joined %2", [name _p, groupId _g]] call CQ_fnc_log;
     };
@@ -75,10 +106,12 @@ switch (_cmd) do {
         if (_old getVariable ["CQ_solo", false]) exitWith {};
         private _name = groupId _old;
         if (count units _old <= 1) then {
-            // alone in his squad: the squad itself goes back to "unassigned"
+            // alone in his squad: the squad itself goes back to "unassigned", its vehicles go
+            [_old, _name] call _clearVehs;
             [_old] call _toSolo;
         } else {
             [_p] call _solo;
+            [_p] call _revoke;
         };
         ["Squads: %1 left %2", [name _p, _name]] call CQ_fnc_log;
     };
@@ -129,6 +162,7 @@ switch (_cmd) do {
         };
         private _old = group _p;
         [_p] joinSilent _grp;
+        [_p] call _revoke;
         if (count units _old == 0) then { deleteGroup _old };
         if (!isNull _leader) then { [format ["%1 joined your squad", name _p]] remoteExec ["hint", _leader] };
         ["Squads: %1 accepted the invite and joined %2", [name _p, groupId _grp]] call CQ_fnc_log;
@@ -137,7 +171,8 @@ switch (_cmd) do {
         private _grp = group _p;
         if (leader _grp != _p || { _grp getVariable ["CQ_solo", false] }) exitWith {};
         private _name = groupId _grp;
-        { if (_x != _p) then { [_x] call _solo } } forEach units _grp;
+        { if (_x != _p) then { [_x] call _solo; [_x] call _revoke } } forEach units _grp;
+        [_grp, _name] call _clearVehs;
         // the leader is unassigned too: his group becomes a solo group again, the name is freed
         [_grp] call _toSolo;
         ["Squads: %1 disbanded %2", [name _p, _name]] call CQ_fnc_log;

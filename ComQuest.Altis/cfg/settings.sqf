@@ -801,6 +801,7 @@ if (CQ_debug) then {
 };
 
 // --- Roles ----------------------------------------------------------------
+CQ_squadVehClear = 60;                   // s after a squad is disbanded before its vehicles (depot / shop, ground) are removed
 CQ_pilotClasses = ["B_Helipilot_F"];     // only these may fly aircraft
 CQ_engineerClasses = ["B_engineer_F"];   // get engineer + explosiveSpecialist traits
 

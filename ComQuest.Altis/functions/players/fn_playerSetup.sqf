@@ -54,6 +54,12 @@ player addEventHandler ["FiredMan", { _this call CQ_fnc_safeZoneFired }];
 player addEventHandler ["GetInMan", {
     params ["_unit", "", "_veh"];
     if !(["can"] call CQ_fnc_conduct) exitWith { moveOut _unit };
+    // squad vehicles (depot / shop, ground): members of that squad only
+    private _sg = _veh getVariable ["CQ_squadGroup", grpNull];
+    if (!isNull _sg && { group _unit != _sg }) exitWith {
+        moveOut _unit;
+        hint format ["This vehicle belongs to squad %1: its members only.", groupId _sg];
+    };
     [_unit, _veh] call CQ_fnc_pilotGuard;
 }];
 player addEventHandler ["SeatSwitchedMan", {
