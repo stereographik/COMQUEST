@@ -189,23 +189,25 @@ for "_i" from 0 to _nP - 1 do {
     { [_hbBig, [_i, _t0] call _onEdge, [_i, (_x select 0) max _t0] call _onEdge] call _wallW; _t0 = _x select 1 } forEach _gaps;
     [_hbBig, [_i, _t0] call _onEdge, _b] call _wallW;
 };
-// corner sangars, 6 m clear of both walls, facing out
+// corner sangars, 9 m clear of both walls (room for the plank), facing out
+private _ko = [];                                    // spots the inner concrete wall leaves free
 for "_i" from 0 to _nP - 1 do {
     private _c = _poly select _i;
     private _va = vectorNormalized ((_poly select ((_i - 1 + _nP) mod _nP)) vectorDiff _c);
     private _vb = vectorNormalized ((_poly select ((_i + 1) mod _nP)) vectorDiff _c);
     private _bis = vectorNormalized (_va vectorAdd _vb);
     private _half = acos ((_va vectorDotProduct _vb) max -1 min 1) / 2;
-    private _p = _c vectorAdd (_bis vectorMultiply (6 / (sin _half max 0.2)));
-    [_tower, [_p select 0, _p select 1, 0], ((_bis select 0) atan2 (_bis select 1)) + 180, true] call _mk;
+    private _p = _c vectorAdd (_bis vectorMultiply (9 / (sin _half max 0.2)));
+    _p = [_p select 0, _p select 1, 0];
+    [_tower, _p, (_bis select 0) atan2 (_bis select 1), true] call _mk;   // the model faces -y: its plank side to the inside
+    _ko pushBack _p;
 };
 // gates: entry control point (towers, concrete chicane inside) or a plain gate (bar + sandbag posts)
 {
     _x params ["_i", "_t", "_hw", "_kind"];
     private _out = [_i] call _edgeOut;
     if (_kind == "ecp") then {
-        [_tower, [_i, _t - _hw - 4, 5] call _onEdge, _out, true] call _mk;
-        [_tower, [_i, _t + _hw + 4, 5] call _onEdge, _out, true] call _mk;
+        { private _q = [_i, _t + _x * (_hw + 4), 9] call _onEdge; [_tower, _q, _out + 180, true] call _mk; _ko pushBack _q } forEach [-1, 1];
         [["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], [_i, _t - 3, 9] call _onEdge, _out, true] call _mk;
         [["Land_CncBarrierMedium4_F", "Land_CncBarrier_F"], [_i, _t + 3, 16] call _onEdge, _out, true] call _mk;
         { [_lamp, [_i, _t + _x * (_hw + 2), 11] call _onEdge, _out, true] call _mk } forEach [-1, 1];
@@ -214,8 +216,26 @@ for "_i" from 0 to _nP - 1 do {
     };
 } forEach CQ_baseGates;
 // watchtowers and floodlights along the walls ([edge, m along it, m inside])
-{ [["Land_Cargo_Patrol_V1_F", "Land_BagBunker_Tower_F"], [_x select 0, _x select 1, 6] call _onEdge, [_x select 0] call _edgeOut, true] call _mk } forEach CQ_baseWatchtowers;
-{ [_lamp, [_x select 0, _x select 1, 3] call _onEdge, [_x select 0] call _edgeOut, true] call _mk } forEach CQ_baseFloodlights;
+{ private _q = [_x select 0, _x select 1, 8] call _onEdge; [["Land_Cargo_Patrol_V1_F", "Land_BagBunker_Tower_F"], _q, [_x select 0] call _edgeOut, true] call _mk; _ko pushBack _q } forEach CQ_baseWatchtowers;
+{ private _q = [_x select 0, _x select 1, 6] call _onEdge; [_lamp, _q, [_x select 0] call _edgeOut, true] call _mk; _ko pushBack _q } forEach CQ_baseFloodlights;
+// inner concrete wall (CQ_baseInnerWall), 3.5 m inside the H-barriers: one section of two, the
+// gaps let people through; none at the gates, the corners, or by a tower or a floodlight
+private _cwCls = [CQ_baseInnerWall] call _pick;
+if (_cwCls != "") then {
+    private _sl = (([_cwCls] call _dims) select 0) max 2;
+    for "_i" from 0 to _nP - 1 do {
+        ([_i] call _edge) params ["_a", "_b"];
+        private _len = _a distance2D _b;
+        private _h = _a getDir _b;
+        private _gw = (CQ_baseGates select { (_x select 0) == _i }) apply { [(_x select 1) - (_x select 2) - 3, (_x select 1) + (_x select 2) + 3] };
+        for "_t" from 9 + _sl / 2 to _len - 9 - _sl / 2 step 2 * _sl do {
+            private _q = [_i, _t, 3.5] call _onEdge;
+            if (_gw findIf { _t > (_x select 0) - _sl / 2 && { _t < (_x select 1) + _sl / 2 } } > -1) then { continue };
+            if (_ko findIf { _x distance2D _q < 5 + _sl / 2 } > -1) then { continue };
+            [[_cwCls], _q, _h + 90, true] call _mk;
+        };
+    };
+};
 
 // ---------------------------------------------------------------- the keep
 CQ_compoundSize params ["_kW", "_kD"];

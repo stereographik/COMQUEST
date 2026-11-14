@@ -46,16 +46,17 @@ CQ_basePerimeter = [[14372, 16113], [14211, 16199], [14154, 15963], [14186, 1592
 CQ_baseFrontStart = 3;                   // corner where the front (runway side) edge starts: zones are laid out in metres along it (u) and inward from it (v)
 // gates: [edge (corner i -> i+1), m from the edge start, half width, "ecp" (towers + chicane) or "gate"]
 CQ_baseGates = [[1, 154.7, 9, "ecp"], [3, 126, 7, "gate"]];   // entry control point on the west wall (loop road), runway gate on the taxiway side
+CQ_baseInnerWall = ["Land_Mil_WallBig_4m_F", "Land_Mil_WallBig_4m_battered_F"];   // concrete sections 3.5 m inside the H-barriers, one of two
 CQ_baseWatchtowers = [[0, 91.3], [1, 210.9]];                  // [edge, m along it]: 6 m inside the wall
 CQ_baseFloodlights = [[3, 69], [3, 178], [0, 52.2], [0, 135.8], [1, 29.3], [1, 70.3], [1, 117.2], [1, 187.5]];
 // zones in the base frame [u, v ...]
-CQ_baseMotorPool = [[30, 7, 20, 38], [56, 7, 20, 38], [82, 7, 20, 38], [108, 7, 20, 38]];   // [u, depot v, pad v, repair point v]
+CQ_baseMotorPool = [[30, 9, 21, 38], [56, 9, 21, 38], [82, 9, 21, 38], [108, 9, 21, 38]];   // [u, depot v, pad v, repair point v]
 CQ_baseHelipads = [[136, 24, 42], [164, 24, 42], [192, 24, 42], [220, 24, 42]];          // [u, pad v, pilot terminal v]
 CQ_baseShopLZ = [104, 64, 180];          // [u, v, vehicle direction from the front]
 CQ_baseRadar = [205, 138];
 CQ_baseRelaySpawn = [128, 56];
 CQ_baseUavField = [222, 68, -17];        // [u, v, row direction from the inward axis]: MAGPIE's Darter pads
-CQ_baseDefSpots = [[14, 24], [52, 64], [196, 152], [244, 16]];   // crewed defence spots (AA + HMG)
+CQ_baseDefSpots = [[14, 24], [52, 64], [196, 152], [238, 20]];   // crewed defence spots (AA + HMG)
 CQ_compoundSize = [76, 64];               // the keep (inner wall): command post, plaza, 4 squad bays; class change / arsenal zone
 CQ_baseLevel = true;                     // level the compound's ground before building (setTerrainHeight)
 CQ_baseLevelBlend = 25;                  // m outside the walls over which the levelled ground blends back into the terrain
