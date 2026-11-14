@@ -3,7 +3,7 @@
 
 author = "Django";
 onLoadName = "ComQuest";
-onLoadMission = "Destroy the CSAT HQ network on Altis.   v0.13.0  -  main  -  2026-11-14 14:07";   // version line: updated with every deploy
+onLoadMission = "Destroy the CSAT HQ network on Altis.   v0.13.0  -  main  -  2026-11-14 14:37";   // version line: updated with every deploy
 loadScreen = "media\loading.jpg";          // the mission visual, 2048 x 1024 (2:1)
 overviewPicture = "media\loading.jpg";     // same picture in the mission list / lobby
 overviewText = "Co-op, up to 26 players. A CSAT carrier plants a network of HQs on Altis: find it and cut it apart.";
@@ -103,6 +103,7 @@ class CfgSounds
 {
     sounds[] = {};
     class CQ_radioIn { name = "CQ_radioIn"; sound[] = {"@A3\Dubbing_Radio_F\sfx\in2a.ogg", 0.6, 1}; titles[] = {}; };
+    class CQ_bossSupport { name = "CQ_bossSupport"; sound[] = {"media\boss_support.ogg", 1, 1}; titles[] = {}; };   // first wave: the boss's message
     class CQ_alarm   { name = "CQ_alarm";   sound[] = {"@A3\Sounds_F\sfx\alarm_independent.wss", 1, 1}; titles[] = {}; };
 };
 

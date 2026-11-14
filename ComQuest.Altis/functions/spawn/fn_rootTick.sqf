@@ -58,4 +58,5 @@ CQ_nextRootTime = serverTime + CQ_rootInterval;
 ["Root insertion %1/%2 launched", [CQ_rootsLaunched, CQ_maxRoots]] call CQ_fnc_log;
 
 [_site, _level] spawn CQ_fnc_insertion;
+if (CQ_rootsLaunched == 1) then { "CQ_bossSupport" remoteExec ["playSound", 0] };   // the mission begins: the boss's radio message, for everyone
 if (CQ_rootsLaunched == 1 && { CQ_outpost }) then { [_site] spawn CQ_fnc_outpostBuild };   // the first HQ's corridor outpost
