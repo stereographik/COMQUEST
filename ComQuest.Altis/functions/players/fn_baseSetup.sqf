@@ -55,15 +55,15 @@ private _dims = {
     _r
 };
 // ================================================================= the perimeter
-private _P = CQ_basePerimeter apply { [_x select 0, _x select 1, 0] };
-private _nP = count _P;
+private _poly = CQ_basePerimeter apply { [_x select 0, _x select 1, 0] };
+private _nP = count _poly;
 private _area = 0;
 for "_i" from 0 to _nP - 1 do {
-    private _a = _P select _i; private _b = _P select ((_i + 1) mod _nP);
+    private _a = _poly select _i; private _b = _poly select ((_i + 1) mod _nP);
     _area = _area + (_a select 0) * (_b select 1) - (_b select 0) * (_a select 1);
 };
 private _inS = [90, -90] select (_area > 0);         // inward = edge heading + _inS (the inside is on the left of a counter-clockwise outline)
-private _edge = { params ["_i"]; [_P select _i, _P select ((_i + 1) mod _nP)] };
+private _edge = { params ["_i"]; [_poly select _i, _poly select ((_i + 1) mod _nP)] };
 // point _t m along edge _i, _in m inside the wall
 private _onEdge = {
     params ["_i", "_t", ["_in", 0]];
@@ -75,8 +75,8 @@ private _onEdge = {
 private _edgeOut = { params ["_i"]; ([_i] call _edge) params ["_a", "_b"]; (_a getDir _b) - _inS };   // outward heading of edge _i
 // base frame: u along the front edge, v inward
 private _fs = CQ_baseFrontStart;
-private _bO = _P select _fs;
-private _uDir = _bO getDir (_P select ((_fs + 1) mod _nP));
+private _bO = _poly select _fs;
+private _uDir = _bO getDir (_poly select ((_fs + 1) mod _nP));
 private _fDir = _uDir - _inS;                        // the front (runway side) faces this way
 private _atB = {
     params ["_u", "_v"];
@@ -85,7 +85,7 @@ private _atB = {
 };
 private _distOut = {                                 // m outside the outline (0 inside)
     params ["_p"];
-    if ([_p select 0, _p select 1, 0] inPolygon _P) exitWith { 0 };
+    if ([_p select 0, _p select 1, 0] inPolygon _poly) exitWith { 0 };
     private _m = 1e9;
     for "_i" from 0 to _nP - 1 do {
         ([_i] call _edge) params ["_a", "_b"];
@@ -97,9 +97,9 @@ private _distOut = {                                 // m outside the outline (0
     _m
 };
 private _cx = 0; private _cy = 0;
-{ _cx = _cx + (_x select 0) / _nP; _cy = _cy + (_x select 1) / _nP } forEach _P;
+{ _cx = _cx + (_x select 0) / _nP; _cy = _cy + (_x select 1) / _nP } forEach _poly;
 private _ctr = [_cx, _cy, 0];
-private _reach = selectMax (_P apply { _x distance2D _ctr });
+private _reach = selectMax (_poly apply { _x distance2D _ctr });
 
 private _placed = 0;
 private _mk = {                                      // create one piece at a world position, absolute direction
@@ -171,7 +171,7 @@ private _ilsDir = getArray (configFile >> "CfgWorlds" >> worldName >> "ilsDirect
 if (count _ils >= 2 && { count _ilsDir >= 3 }) then {
     private _h = (_ilsDir select 0) atan2 (_ilsDir select 2);
     private _ip = [_ils select 0, _ils select 1, 0];
-    ["Base: nearest wall corner %1 m from the runway centre line", [round selectMin (_P apply { private _r = _x vectorDiff _ip; abs ((_r select 0) * cos _h - (_r select 1) * sin _h) })]] call CQ_fnc_log;
+    ["Base: nearest wall corner %1 m from the runway centre line", [round selectMin (_poly apply { private _r = _x vectorDiff _ip; abs ((_r select 0) * cos _h - (_r select 1) * sin _h) })]] call CQ_fnc_log;
 };
 
 // ---------------------------------------------------------------- outer wall and gates
@@ -191,9 +191,9 @@ for "_i" from 0 to _nP - 1 do {
 };
 // corner sangars, 6 m clear of both walls, facing out
 for "_i" from 0 to _nP - 1 do {
-    private _c = _P select _i;
-    private _va = vectorNormalized ((_P select ((_i - 1 + _nP) mod _nP)) vectorDiff _c);
-    private _vb = vectorNormalized ((_P select ((_i + 1) mod _nP)) vectorDiff _c);
+    private _c = _poly select _i;
+    private _va = vectorNormalized ((_poly select ((_i - 1 + _nP) mod _nP)) vectorDiff _c);
+    private _vb = vectorNormalized ((_poly select ((_i + 1) mod _nP)) vectorDiff _c);
     private _bis = vectorNormalized (_va vectorAdd _vb);
     private _half = acos ((_va vectorDotProduct _vb) max -1 min 1) / 2;
     private _p = _c vectorAdd (_bis vectorMultiply (6 / (sin _half max 0.2)));
@@ -218,9 +218,9 @@ for "_i" from 0 to _nP - 1 do {
 { [_lamp, [_x select 0, _x select 1, 3] call _onEdge, [_x select 0] call _edgeOut, true] call _mk } forEach CQ_baseFloodlights;
 
 // ---------------------------------------------------------------- the keep
-CQ_compoundSize params ["_W", "_D"];
-private _hw = _W / 2;
-private _hd = _D / 2;
+CQ_compoundSize params ["_kW", "_kD"];
+private _hw = _kW / 2;
+private _hd = _kD / 2;
 private _hbMid = ["Land_HBarrier_5_F", "Land_HBarrier_3_F", "Land_HBarrier_Big_F"];
 private _kg = 8;                                     // half width of the keep gate (-y, toward the yard and the apron)
 private _door = [-11, -6];                           // side doors (y from / to)
@@ -450,7 +450,7 @@ for "_i" from 0 to _nP - 1 do {
     _zm setMarkerColor "ColorWEST";
 };
 ["Base built at %1 (keep facing %2 deg, front %3 deg): %4 pieces, outer wall %5 corners / %6 m, %7 gates, keep %8 x %9 m, %10 depots, %11 repair points",
-    [mapGridPosition _o, round _d, round _fDir, _placed, _nP, round _perim, count CQ_baseGates, _W, _D, count CQ_depots, count CQ_repairPoints]] call CQ_fnc_log;
+    [mapGridPosition _o, round _d, round _fDir, _placed, _nP, round _perim, count CQ_baseGates, _kW, _kD, count CQ_depots, count CQ_repairPoints]] call CQ_fnc_log;
 
 // Map footprints: buildings created by script are not drawn on the map (only the terrain's own
 // buildings are), so every base building and wall gets a filled rectangle marker of its real
