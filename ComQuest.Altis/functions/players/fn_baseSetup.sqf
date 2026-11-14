@@ -218,8 +218,9 @@ for "_i" from 0 to _nP - 1 do {
 // watchtowers and floodlights along the walls ([edge, m along it, m inside])
 { private _q = [_x select 0, _x select 1, 8] call _onEdge; [["Land_Cargo_Patrol_V1_F", "Land_BagBunker_Tower_F"], _q, [_x select 0] call _edgeOut, true] call _mk; _ko pushBack _q } forEach CQ_baseWatchtowers;
 { private _q = [_x select 0, _x select 1, 6] call _onEdge; [_lamp, _q, [_x select 0] call _edgeOut, true] call _mk; _ko pushBack _q } forEach CQ_baseFloodlights;
-// inner concrete wall (CQ_baseInnerWall), 3.5 m inside the H-barriers: one section of two, the
-// gaps let people through; none at the gates, the corners, or by a tower or a floodlight
+// inner concrete wall (CQ_baseInnerWall), 3.5 m inside the H-barriers, continuous, with a low
+// H-barrier "view window" about every CQ_baseWindowEvery m; left open at the gates, the corners,
+// and by a tower or a floodlight (the ways in)
 private _cwCls = [CQ_baseInnerWall] call _pick;
 private _cBack = [];                                   // per edge: [t from, t to] stretches backed by concrete
 for "_i" from 0 to _nP - 1 do { _cBack pushBack [] };
@@ -230,17 +231,23 @@ if (_cwCls != "") then {
         private _len = _a distance2D _b;
         private _h = _a getDir _b;
         private _gw = (CQ_baseGates select { (_x select 0) == _i }) apply { [(_x select 1) - (_x select 2) - 3, (_x select 1) + (_x select 2) + 3] };
-        for "_t" from 9 + _sl / 2 to _len - 9 - _sl / 2 step 2 * _sl do {
+        private _win = 0;
+        for "_t" from 9 + _sl / 2 to _len - 9 - _sl / 2 step _sl do {
             private _q = [_i, _t, 3.5] call _onEdge;
             if (_gw findIf { _t > (_x select 0) - _sl / 2 && { _t < (_x select 1) + _sl / 2 } } > -1) then { continue };
             if (_ko findIf { _x distance2D _q < 5 + _sl / 2 } > -1) then { continue };
-            [[_cwCls], _q, _h + 90, true] call _mk;
+            if (floor (_t / CQ_baseWindowEvery) > _win) then {
+                _win = floor (_t / CQ_baseWindowEvery);
+                [CQ_baseWindow, _q, _h + 90, true] call _mk;            // view window: a low H-barrier to look over
+            } else {
+                [[_cwCls], _q, _h + 90, true] call _mk;
+            };
             (_cBack select _i) pushBack [_t - _sl / 2, _t + _sl / 2];
         };
     };
 };
 // second H-barrier layer on top of the outer wall wherever no concrete stands behind it
-private _upCls = [CQ_baseWallTop] call _pick;
+private _upCls = if (CQ_baseWallTop isEqualTo []) then { "" } else { [CQ_baseWallTop] call _pick };
 if (_upCls != "") then {
     private _zTop = 2.5;
     private _bc = [_hbBig] call _pick;
