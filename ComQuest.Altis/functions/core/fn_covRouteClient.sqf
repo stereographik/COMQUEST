@@ -23,6 +23,6 @@ if (!hasInterface) exitWith {};
             private _s = _pts select 0;
             _map drawIcon ["\A3\ui_f\data\map\markers\military\start_CA.paa", [0.35, 0.75, 0.35, 1], [_s select 0, _s select 1, 0], 22, 22, 0,
                 format ["COVERED APPROACH  %1 %%", _pct], 2, 0.04, "PuristaMedium", "right"];
-        } forEach (missionNamespace getVariable ["CQ_covRoutes", []]);
+        } forEach (missionNamespace getVariable [["CQ_covRoutes", "CQ_covRoutesAll"] select (missionNamespace getVariable ["CQ_dbgShowCov", false]), []]);
     }];
 };

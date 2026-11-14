@@ -36,6 +36,12 @@ switch (_mode) do {
             };
         } forEach CQ_covDone;
         if (_pub isNotEqualTo CQ_covRoutes) then { CQ_covRoutes = _pub; publicVariable "CQ_covRoutes" };
+        // debug panel "All HQs": every computed route, known or not (CQ_covRoutesAll)
+        if (missionNamespace getVariable ["CQ_covShowAll", false]) then {
+            private _all = [];
+            { private _h = CQ_hqs getOrDefault [_x, createHashMap]; if (count _h > 0 && { (_h get "state") in CQ_activeStates }) then { _all pushBack ([_x] + _y) } } forEach CQ_covDone;
+            if (_all isNotEqualTo (missionNamespace getVariable ["CQ_covRoutesAll", []])) then { CQ_covRoutesAll = _all; publicVariable "CQ_covRoutesAll" };
+        };
         if (CQ_covBusy) exitWith {};
         private _todo = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { !((_x get "id") in CQ_covDone) } };
         if (_todo isEqualTo []) exitWith {};

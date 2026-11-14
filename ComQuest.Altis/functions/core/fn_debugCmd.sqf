@@ -390,6 +390,15 @@ if (_needHq && { count _hq == 0 }) then {
             { [_x] call CQ_fnc_baseDefBuild; _x set ["lostT", -1] } forEach CQ_baseDefs;
             _msg = format ["%1 base defence spots rebuilt", count CQ_baseDefs];
         };
+        case "covAll": {
+            CQ_covShowAll = (_id isEqualTo 1);
+            CQ_covAllNext = 0;
+            ["Debug: covered routes of all HQs %1", [["off", "on"] select CQ_covShowAll]] call CQ_fnc_log;
+        };
+        case "covRedo": {
+            CQ_covDone = createHashMap;                 // every active HQ is computed again, one after the other
+            ["Debug: covered routes recomputed", []] call CQ_fnc_log;
+        };
         case "dbgStates": {
             CQ_dbgStatesOn = (_id isEqualTo 1);
             CQ_dbgStNext = 0;
