@@ -23,6 +23,7 @@ private _who = if (isNull _p) then { "Command" } else { name _p };
 if (!isNull _p) then { [_p, 100, "crash crate"] call CQ_fnc_scoreAdd };
 ["Crash event: crate secured by %1, decryption for %2 s", [_who, CQ_crashDecrypt]] call CQ_fnc_log;
 ["crashSecured", [_who]] call CQ_fnc_say;
+if (!isNil "CQ_crashKey") then { [CQ_crashKey, 2, format ["Crash site at grid %1", mapGridPosition (missionNamespace getVariable ["CQ_crashPos", [0, 0, 0]])], "crate secured", _p] call CQ_fnc_opSide };
 // reverse engineering (permanent): the corridor outpost's jammer no longer hides it
 if !(missionNamespace getVariable ["CQ_counterJam", false]) then {
     CQ_counterJam = true; publicVariable "CQ_counterJam";

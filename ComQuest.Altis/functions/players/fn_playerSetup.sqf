@@ -44,6 +44,12 @@ player addAction ["", {}, nil, 0, false, true, "DefaultAction",
 player addEventHandler ["GetInMan", {
     params ["_unit", "", "_veh"];
     if !(["can"] call CQ_fnc_conduct) exitWith { moveOut _unit };
+    // enemy vehicles (CSAT classes, or AAF ones the enemy fields) are not ours to use
+    private _cs = getNumber (configOf _veh >> "side");
+    if (!(_veh isKindOf "ParachuteBase") && { _cs == 0 || { _cs == 2 && { (_veh getVariable ["CQ_depotOwner", ""]) == "" } && { (_veh getVariable ["CQ_boughtBy", ""]) == "" } } }) exitWith {
+        moveOut _unit;
+        hint "Enemy vehicles can't be used.";
+    };
     // squad vehicles (depot / shop, ground): members of that squad only
     private _sg = _veh getVariable ["CQ_squadGroup", grpNull];
     if (!isNull _sg && { group _unit != _sg }) exitWith {

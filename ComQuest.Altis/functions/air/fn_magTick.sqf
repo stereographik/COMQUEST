@@ -87,7 +87,7 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         createVehicleCrew _nv;
         { _nv setPylonLoadout [_forEachIndex + 1, ""] } forEach (getPylonMagazines _nv);
         private _g = group effectiveCommander _nv;
-        _g setGroupIdGlobal [format ["MAGPIE %1", _m get "name"]];
+        _g setGroupIdGlobal [_m get "name"];
         _g setBehaviour "CARELESS";
         _g setCombatMode "BLUE";
         _nv flyInHeight (_m get "alt");

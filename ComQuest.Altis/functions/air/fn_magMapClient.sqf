@@ -84,7 +84,7 @@ CQ_echoes = [];
             if (alive _x && { !(_x isKindOf "UAV_01_base_F") || { _x getVariable ["CQ_linked", false] } }) then {   // a Darter shows only while linked to the base
                 private _sz = ([26, 13] select (_x isKindOf "UAV_01_base_F")) * CQ_mapIconScale;   // Darters: half the others
                 _map drawIcon [_x call _icon, [0.25, 0.55, 1, 1], getPosASLVisual _x, _sz, _sz, getDirVisual _x,
-                    format ["MAGPIE %1", _x getVariable ["CQ_magName", ""]], 1, 0.035, "PuristaMedium", "right"];
+                    _x getVariable ["CQ_magName", ""], 1, 0.035, "PuristaMedium", "right"];
             };
         } forEach (missionNamespace getVariable ["CQ_magVehs", []]);
     }];

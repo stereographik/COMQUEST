@@ -131,4 +131,6 @@ private _town = (nearestLocations [_site, _types, 2000]) param [0, locationNull]
 ["Hostage event: technician held at %1 (%2, %3 m from the base, %4 guards, %5 positions in %6, search radius %7 m)",
     [mapGridPosition _site, if (isNull _town) then { "no town" } else { text _town }, round (_site distance2D CQ_basePos), count CQ_hstGuards, count (_house buildingPos -1), typeOf _house, _r]] call CQ_fnc_log;
 ["hstStart", [mapGridPosition _site]] call CQ_fnc_say;
+CQ_hstKey = format ["hst%1", round time];
+[CQ_hstKey, 1, format ["Hostage at grid %1", mapGridPosition _site], "technician held"] call CQ_fnc_opSide;
 true

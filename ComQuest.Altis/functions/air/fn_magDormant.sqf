@@ -48,7 +48,7 @@ private _wake = {
     CQ_magDormantN = CQ_magDormantN + 1;
     private _name = format ["Watcher %1", CQ_magDormantN];
     private _g = group effectiveCommander _nv;
-    _g setGroupIdGlobal [format ["MAGPIE %1", _name]];
+    _g setGroupIdGlobal [_name];
     _g setBehaviour "CARELESS";
     _g setCombatMode "BLUE";
     _nv flyInHeight CQ_magDormantAlt;

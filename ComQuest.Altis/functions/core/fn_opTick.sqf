@@ -110,7 +110,7 @@ private _withObj = [_hqs select { (_x get "installations") isNotEqualTo [] }, []
             };
         };
         // fallback (died before the briefing first saw it): the HQ's last known attacker
-        if ((_c select 1) < 0 && { !alive _o }) then { _c set [1, time]; _c set [2, [_h getOrDefault ["lastKiller", objNull]] call _squad] };
+        if ((_c select 1) < 0 && { !alive _o || { _o getVariable ["CQ_neutral", false] } }) then { _c set [1, time]; _c set [2, [_h getOrDefault ["lastKiller", objNull]] call _squad] };
         private _type = _c select 0;
         if (_type == "") then { continue };
         private _k = (_n getOrDefault [_type, 0]) + 1;
@@ -119,7 +119,7 @@ private _withObj = [_hqs select { (_x get "installations") isNotEqualTo [] }, []
         private _label = if (_total > 1 || { _type == "AA" }) then { format ["%1  #%2", _name, _k] } else { _name };
         private _rows = _objRows getOrDefault [_type, []];
         _rows pushBack (if ((_c select 1) < 0) then { [1, format ["%1  ·  standing", _label]] }
-            else { [2, format ["%1  ·  %2 %3", _label, ["destroyed", "down"] select (_type == "Radio tower"), [_c select 1, _c select 2] call _when]] });
+            else { [2, format ["%1  ·  %2 %3", _label, switch (true) do { case (_type == "Radio tower"): { "down" }; case (alive _o && { _o getVariable ["CQ_neutral", false] }): { "neutralised" }; default { "destroyed" } }, [_c select 1, _c select 2] call _when]] });
         _objRows set [_type, _rows];
     } forEach (_h get "installations");
 } forEach _withObj;
@@ -157,6 +157,17 @@ for "_i" from 0 to CQ_huntTeams - 1 do {
     });
 };
 
+// ---- side events: crash sites, hostages (CQ_fnc_opSide), the corridor outpost once spotted
+private _sdRows = (CQ_op getOrDefault ["side", []]) apply {
+    _x params ["", "_st", "_label", "_res", "_t", "_sq"];
+    [_st, if (_st == 2) then { format ["%1  ·  %2  ·  %3", _label, _res, [_t, _sq] call _when] } else { format ["%1  ·  %2", _label, _res] }]
+};
+if (!isNil "CQ_outpostState" && { CQ_outpostState get "spotted" }) then {
+    _sdRows pushBack ([[1, "Corridor outpost  ·  standing (jams MAGPIE, guards the supply flights)"], [2, "Corridor outpost  ·  taken"]] select (CQ_outpostState get "fallen"));
+};
+private _sdDone = { (_x select 0) == 2 } count _sdRows;
+if (_sdRows isEqualTo []) then { _sdRows = [[0, "nothing yet"]] };
+
 // ---- 7 carrier, 8 victory
 private _pct = round (100 * ((missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs]) max 0) / (CQ_carrierHqs max 1));
 private _won = !isNil "CQ_victory";
@@ -170,6 +181,7 @@ private _steps = [
     [_won, "Hostile HQs", format ["%1 / %2 destroyed", _dead, count _built], _hqRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\destroy_ca.paa"],
     [_cvDone > 0, "Supply convoys", format ["%1 destroyed", _cvDone], _cvRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\truck_ca.paa"],
     [_flDone > 0, "Supply flights", format ["%1 destroyed", _flDone], _flRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\heli_ca.paa"],
+    [_sdRows findIf { (_x select 0) == 1 } == -1 && { _sdDone > 0 }, "Side events", format ["%1 done", _sdDone], _sdRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\help_ca.paa"],
     [(count _spList) >= CQ_huntTeams, "Special forces", format ["%1 / %2 teams neutralised", count _spList, CQ_huntTeams], _spRows, "\A3\ui_f\data\igui\cfg\simpleTasks\types\kill_ca.paa"],
     [_pct <= 0, "Carrier empty", format ["carrier at %1 %%", _pct], [], "\A3\ui_f\data\igui\cfg\simpleTasks\types\boat_ca.paa"],
     [_won, "Last HQ destroyed", ["VICTORY when the carrier is empty and no HQ stands", "VICTORY"] select _won, [], "\A3\ui_f\data\igui\cfg\simpleTasks\types\attack_ca.paa"]

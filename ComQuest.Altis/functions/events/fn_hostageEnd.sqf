@@ -34,9 +34,11 @@ switch (_res) do {
         if (!isNull _p) then { [_p, CQ_hstPoints, "hostage rescue"] call CQ_fnc_scoreAdd };
         ["Hostage event: technician home, Darter range x%1 until %2 s (%3 points to %4)", [CQ_hstBoost, round CQ_hstBoostUntil, CQ_hstPoints, if (isNull _p) then { "nobody" } else { name _p }]] call CQ_fnc_log;
         ["hstHome", [if (isNull _p) then { "the team" } else { name _p }, round (CQ_hstBoostTime / 60)]] call CQ_fnc_say;
+        if (!isNil "CQ_hstKey") then { [CQ_hstKey, 2, format ["Hostage at grid %1", mapGridPosition (_s get "pos")], "technician brought home", _p] call CQ_fnc_opSide };
     };
     case "dead": {
         ["Hostage event: the technician is dead"] call CQ_fnc_log;
         ["hstDead", []] call CQ_fnc_say;
+        if (!isNil "CQ_hstKey") then { [CQ_hstKey, 2, format ["Hostage at grid %1", mapGridPosition (_s get "pos")], "technician killed"] call CQ_fnc_opSide };
     };
 };

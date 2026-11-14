@@ -34,7 +34,7 @@ private _look = {
     if (_free isEqualTo []) exitWith {};
     private _m = ([_free, [], { (_x get "veh") distance2D _p }, "ASCEND"] call BIS_fnc_sortBy) select 0;
     private _aa = (((values CQ_magSeen) select { alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } && { (typeOf (_x select 0)) in CQ_magAaClasses } }) apply { [_x select 3, CQ_magAaAvoid] })
-        + ((flatten ((values CQ_hqs) apply { _x get "installations" })) select { alive _x && { _x getVariable ["CQ_spotted", false] } && { (_x getVariable ["CQ_objType", ""]) == "AA" } } apply { [getPosATL _x, CQ_objLookAaR] });
+        + ((flatten ((values CQ_hqs) apply { _x get "installations" })) select { alive _x && { !(_x getVariable ["CQ_neutral", false]) } && { _x getVariable ["CQ_spotted", false] } && { (_x getVariable ["CQ_objType", ""]) == "AA" } } apply { [getPosATL _x, CQ_objLookAaR] });
     private _t = _p;
     { _x params ["_ap", "_ar"]; if (_t distance2D _ap < _ar) then { _t = _ap getPos [_ar, _ap getDir ((_m get "veh") getPos [0, 0])] } } forEach _aa;
     private _v = _m get "veh";

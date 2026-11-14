@@ -98,4 +98,6 @@ CQ_crashLastT = time;
 CQ_crashPos = _site; publicVariable "CQ_crashPos";
 ["Crash event: CSAT transport down at %1 (%2 m from the base, %3 survivors, wreck %4)", [mapGridPosition _site, round (_site distance2D CQ_basePos), count units _g, _wcls]] call CQ_fnc_log;
 ["crashDown", [mapGridPosition _site]] call CQ_fnc_say;
+CQ_crashKey = format ["crash%1", round time];
+[CQ_crashKey, 1, format ["Crash site at grid %1", mapGridPosition _site], "crate to secure"] call CQ_fnc_opSide;
 true

@@ -265,6 +265,20 @@ private _aaGroup = createGroup [east, true];
         _aa setVariable ["CQ_objType", "AA"];
         (_hq get "installations") pushBack _aa;
         (crew _aa) joinSilent _aaGroup;
+        // the pit is neutralised once its crew is dead: marker gone, counted as destroyed
+        { _x setVariable ["CQ_crewOf", _aa]; _x addEventHandler ["Killed", {
+            params ["_u", "_k", "_i"];
+            private _aa = _u getVariable ["CQ_crewOf", objNull];
+            if (isNull _aa || { _aa getVariable ["CQ_neutral", false] } || { ((crew _aa) findIf { alive _x }) > -1 }) exitWith {};
+            _aa setVariable ["CQ_neutral", true, true];
+            private _w = [_i, _k] select (isNull _i);
+            if (!isNull _w && { !(_w isKindOf "CAManBase") }) then { _w = effectiveCommander _w };
+            private _c = _aa getVariable ["CQ_opEntry", []];
+            if (_c isNotEqualTo [] && { (_c select 1) < 0 }) then { _c set [1, time]; _c set [2, if (!isNull _w && { isPlayer _w }) then { groupId group _w } else { "" }] };
+            _aa lock 2;
+            CQ_opNext = 0;
+            ["AA pit at %1 neutralised (crew dead)", [mapGridPosition _aa]] call CQ_fnc_log;
+        }] } forEach crew _aa;
         [_aa, 1] call CQ_fnc_vehAmmoInit;
     };
 } forEach (_sites select [3, 3]);
