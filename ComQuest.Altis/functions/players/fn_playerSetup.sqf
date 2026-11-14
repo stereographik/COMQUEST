@@ -13,20 +13,6 @@ if (typeOf player in CQ_engineerClasses) then {
 // Every preset carries binoculars and a GPS (class loadouts get them in CQ_fnc_setClass)
 if (isNil "CQ_savedLoadout") then { ["Rifleman"] call CQ_fnc_classKit };
 
-// Safe base: no weapon fires inside the outer wall (CQ_basePerimeter); the round is given back
-if (isNil "CQ_basePoly") then { CQ_basePoly = CQ_basePerimeter apply { [_x select 0, _x select 1, 0] } };
-player addEventHandler ["FiredMan", {
-    params ["_u", "_wpn", "", "", "", "_mag", "_proj", "_veh"];
-    private _p = getPosATL _u;
-    if !([_p select 0, _p select 1, 0] inPolygon CQ_basePoly) exitWith {};
-    deleteVehicle _proj;
-    if (isNull _veh && { _wpn in [primaryWeapon _u, handgunWeapon _u, secondaryWeapon _u] }) then { _u setAmmo [_wpn, (_u ammo _wpn) + 1] };
-    if (time > (missionNamespace getVariable ["CQ_safeHintT", -1])) then {
-        CQ_safeHintT = time + 3;
-        hint "Weapons are safe inside the base.";
-    };
-}];
-
 // Player feed: what last hit him (the enemy's class, or its vehicle), told to everyone when he
 // goes down (CQ_fnc_adrenalineSurge) or dies outright (initServer.sqf)
 player addEventHandler ["HandleDamage", {
@@ -46,6 +32,10 @@ player addEventHandler ["HandleDamage", {
 
 // Weapons-safe perimeter around the base (CQ_fnc_safeZoneFired)
 player addEventHandler ["FiredMan", { _this call CQ_fnc_safeZoneFired }];
+// ...and the trigger itself does nothing there (no shot, no sound): an empty action bound to the
+// fire key swallows the click while the base is safe; grenades and charges are caught above
+player addAction ["", {}, nil, 0, false, true, "DefaultAction",
+    "!(missionNamespace getVariable ['CQ_baseHot', false]) && { _this distance2D CQ_basePos < CQ_safeZoneRadius }"];
 
 // adrenalineSurge: a downed medic may get back up on his own (one watcher per life)
 [] spawn CQ_fnc_adrenalineSurge;
