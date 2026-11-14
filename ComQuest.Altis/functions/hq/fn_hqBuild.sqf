@@ -143,6 +143,7 @@ private _truckWait = {
         if (_hq get "skipStage") exitWith { if (alive _tr) then { [_tr] call _stop }; true };
         if (!alive _tr || { !canMove _tr } || { !alive driver _tr }) exitWith {
             if (!_frozen) then { _frozen = true; _frozenT = time; ["HQ #%1: construction frozen, no build truck", [_id]] call CQ_fnc_log };
+            _hq set ["btPhase", ["frozen: no truck", "frozen: truck coming"] select ((_hq getOrDefault ["btPending", false]) || { _hq getOrDefault ["btIncoming", false] })];
             // 60 s grace: the root's Zamak may still be under its parachute
             if (!alive _tr && { time - _frozenT > 60 } && { !(_hq getOrDefault ["btIncoming", false]) } && { !(_hq getOrDefault ["btPending", false]) } && { !(_hq getOrDefault ["btNone", false]) }) then {
                 ["request", [_hq]] spawn CQ_fnc_buildTruck;
@@ -166,6 +167,7 @@ private _truckWait = {
             _dg setBehaviour "SAFE"; _dg setSpeedMode "NORMAL"; _dg setFormation "COLUMN";
             _dg move _dest;
             _legT = time; _moveT = time; _lastP = getPosATL _tr; _stuckN = 0;
+            _hq set ["btPhase", format ["to site %1/6", (_hq getOrDefault ["buildStage", 0]) + 1]];
         };
         if (_tr distance2D _dest <= CQ_btStopDist) exitWith { true };
         if (_tr distance2D _lastP > 5) then { _lastP = getPosATL _tr; _moveT = time };
@@ -180,6 +182,7 @@ private _truckWait = {
                 ["HQ #%1: build truck still stuck, moved onto free ground at grid %2", [_id, mapGridPosition _tr]] call CQ_fnc_log;
             };
             _stuckN = _stuckN + 1; _moveT = time; _lastP = getPosATL _tr;
+            _hq set ["btPhase", format ["stuck x%1", _stuckN]];
         };
         if (time - _legT > CQ_btLegMax) exitWith {
             ["HQ #%1: build truck leg over %2 s, put at its stop", [_id, CQ_btLegMax]] call CQ_fnc_log;
@@ -200,6 +203,7 @@ private _truckWait = {
             _sg setBehaviour "AWARE";
         };
         ["HQ #%1: build truck at its stop (%2 m from the site)", [_id, round (_tr distance2D _dest)]] call CQ_fnc_log;
+        _hq set ["btPhase", format ["building %1/6", (_hq getOrDefault ["buildStage", 0]) + 1]];
     };
     if (!_skip) then { sleep CQ_btSpawnDelay };
 };

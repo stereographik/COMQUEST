@@ -97,13 +97,14 @@ while { true } do {
     };
     if (([_all] call CQ_fnc_aliveCount) == 0) exitWith {};
     // Arrived once most of the colonists are on site, not when the first truck gets there
-    // the squad sent on foot for ground presence (_forcedWalk) does not hold the others up: it
-    // keeps walking and joins the HQ on arrival
+    // everyone counts; the squad sent on foot for ground presence (_forcedWalk) counts as arrived
+    // once it is within CQ_colonistWalkNear m (the others wait for it to get that close)
     private _men = [];
-    { _men append ((units _x) select { alive _x }) } forEach (_all - [_forcedWalk]);
-    if (_men isEqualTo []) then { { _men append ((units _x) select { alive _x }) } forEach _all };
-    private _onSite = { _x distance2D _site < 300 } count _men;
-    if (_onSite >= CQ_colonistArrivalShare * count _men) exitWith {};
+    { _men append ((units _x) select { alive _x }) } forEach _all;
+    private _onSite = { _x distance2D _site < ([300, CQ_colonistWalkNear] select (group _x isEqualTo _forcedWalk)) } count _men;
+    private _wl = if (isNull _forcedWalk || { ({ alive _x } count units _forcedWalk) == 0 }) then { -1 } else { round ((leader _forcedWalk) distance2D _site) };
+    _child set ["colWait", if (_wl > CQ_colonistWalkNear) then { format ["wait: walkers %1 km", (round (_wl / 100)) / 10] } else { format ["wait: colonists %1/%2", _onSite, ceil (CQ_colonistArrivalShare * count _men)] }];
+    if (_onSite >= CQ_colonistArrivalShare * count _men && { _wl <= CQ_colonistWalkNear }) exitWith {};
     // Mounted groups whose vehicle died walk the rest of the way
     // (also re-sends any group that stopped short of the site)
     {
@@ -139,5 +140,6 @@ _child set ["cmdGroup", _cmdG];
 _child set ["vehicles", _vehs select { alive _x }];
 _child set ["incomingCol", 0];
 _child set ["state", "Securing"];
+_child deleteAt "colWait";
 _child set ["stateT", time];
 ["Enemy colonists arrived", format ["HQ #%1: on site at grid %2, securing the perimeter before building", _id, mapGridPosition _site]] call CQ_fnc_announce;

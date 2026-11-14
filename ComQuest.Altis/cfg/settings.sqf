@@ -705,6 +705,7 @@ CQ_flareCooldown = 600;
 CQ_rootDefendCooldown = 1200;            // contact at a root HQ: all its child HQs rally (once per 20 min)
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
+CQ_colonistWalkNear = 1000;              // the squad that walks counts as arrived once within this many m of the site
 CQ_minInfantryToExpand = 16;
 CQ_minDefenders = 8;                     // never send away the last 8 infantry of an HQ
 CQ_childDistance = [3000, 4000];         // child HQ 3-4 km from its parent (the front reaches the base in fewer generations)

@@ -71,7 +71,7 @@ private _cats = [
         ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Relay vehicle", "tpRelayVeh"], ["Log my position", "logPos"], ["Crash site", "tpCrash"], ["Hostage", "tpHst"], ["Outpost", "tpOp"], ["Base", "tpBase"]]]
     ]],
     ["MAP VISIBILITY", [
-        ["Show", [["Enemies", "!mapEnemy"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"]]]
+        ["Show", [["Enemies", "!mapEnemy"], ["Enemy states", "!mapStates"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"]]]
     ]],
     ["ENEMY HQ  (selected in the list)", [
         ["Phase", [["FULL HQ NOW", "fullHq"], ["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"], ["Reinf. wave", "wave"]]],
@@ -158,6 +158,11 @@ private _toggles = [];
                     case "!mapEnemy": { CQ_dbgShowEnemy = !CQ_dbgShowEnemy };
                     case "!mapFriend": { CQ_dbgShowFriend = !CQ_dbgShowFriend };
                     case "!mapHq": { CQ_dbgShowHq = !CQ_dbgShowHq };
+                    case "!mapStates": {
+                        CQ_dbgShowStates = !(missionNamespace getVariable ["CQ_dbgShowStates", false]);
+                        if (CQ_dbgShowStates) then { CQ_dbgShowEnemy = true };
+                        ["dbgStates", [0, 1] select CQ_dbgShowStates] remoteExec ["CQ_fnc_debugCmd", 2];
+                    };
                     case "!fullPower": {
                         private _on = !(missionNamespace getVariable ["CQ_testFullPower", false]);
                         CQ_testFullPower = _on;        // label right away; the server applies it
@@ -205,6 +210,7 @@ uiNamespace setVariable ["CQ_dbgToggleLabels", {
             case "!mapEnemy": { CQ_dbgShowEnemy };
             case "!mapFriend": { CQ_dbgShowFriend };
             case "!mapHq": { CQ_dbgShowHq };
+            case "!mapStates": { missionNamespace getVariable ["CQ_dbgShowStates", false] };
             case "!fullPower": { missionNamespace getVariable ["CQ_testFullPower", false] };
             case "!logEnemy": { (missionNamespace getVariable ["CQ_myLogs", [false, false]]) select 0 };
             case "!logFriend": { (missionNamespace getVariable ["CQ_myLogs", [false, false]]) select 1 };

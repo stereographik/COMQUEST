@@ -86,6 +86,7 @@ addMissionEventHandler ["EntityKilled", {
     ["hqs", CQ_fnc_hqTick] call CQ_fnc_directorAddTask;
     ["logistics", CQ_fnc_logiTick] call CQ_fnc_directorAddTask;
     ["air", CQ_fnc_airTick] call CQ_fnc_directorAddTask;
+    ["dbgStates", CQ_fnc_dbgStates] call CQ_fnc_directorAddTask;
     CQ_balanceNext = 0;
     CQ_balanceForceT = -1;
     ["balance", CQ_fnc_hqBalance] call CQ_fnc_directorAddTask;
