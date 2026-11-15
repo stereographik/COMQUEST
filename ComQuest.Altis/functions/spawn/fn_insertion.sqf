@@ -405,8 +405,8 @@ while { true } do {
         if !([_heli, _hg, "armed", _id, objNull, _site] call CQ_fnc_airRegister) then {
             [_hg] call CQ_fnc_clearWaypoints;
             _heli doMove _exit;
-            [_heli, _hg, _site, _deleteHeli] spawn {
-                params ["_heli", "_hg", "_site", "_del"];
+            [_heli, _hg, _site, _deleteHeli, _exit] spawn {
+                params ["_heli", "_hg", "_site", "_del", "_exit"];   // _exit passed in: a spawned script does not see the caller's locals
                 private _t = time;
                 waitUntil { sleep 5; !alive _heli || { _heli distance2D _exit < 600 } || { time - _t > 300 } };
                 [_heli, _hg] call _del;
