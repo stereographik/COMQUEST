@@ -607,6 +607,8 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
 // MAGPIE card. HQ news (new position, construction stage) leads the card.
 if (time - CQ_magReportT >= CQ_magReportEvery) then {
     CQ_magReportT = time;
+    CQ_magReportNextT = serverTime + CQ_magReportEvery;      // tablet countdown (CQ_fnc_magReportUi)
+    publicVariable "CQ_magReportNextT";
     private _aos = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { (_x get "id") in CQ_magHqSeen || { _x getOrDefault ["revealed", false] } } };
     private _tab = createHashMap;            // AO name -> [inf, veh, air]
     private _order = [];

@@ -72,6 +72,7 @@ CQ_magPhotoN = 0;                        // photos taken (CQ_fnc_magPhoto); the 
 CQ_magPhotoPend = [];                    // [id, class] photographed since the last report
 CQ_magHqSeen = createHashMap;             // hq id -> last reported stage (-1 = site only)
 CQ_magReportT = time;
+CQ_magReportNextT = serverTime + CQ_magReportEvery; publicVariable "CQ_magReportNextT";   // tablet countdown
 CQ_magDetectT = 0;
 CQ_magNewSince = 0;                       // new identifications in the last report
 CQ_mag = [];
