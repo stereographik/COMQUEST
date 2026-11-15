@@ -135,11 +135,11 @@ if (_needHq && { count _hq == 0 }) then {
             private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
             if (!alive _rv) then { _msg = "No relay vehicle out yet" } else {
                 if (!isNull _p) then {
-                    private _t = _rv getPos [10, getDir _rv + 150];
+                    private _t = _rv getPos [CQ_dbgTpDist, getDir _rv + 150];
                     [_p] remoteExec ["moveOut", _p];
                     [_p, _t] spawn { params ["_p", "_t"]; sleep 0.5; _p setPosATL [_t select 0, _t select 1, 0] };
                 };
-                _msg = format ["Next to the relay vehicle (grid %1, %2 m from its spot)", mapGridPosition _rv, round (_rv distance2D (_rv getVariable ["CQ_linkDest", getPosATL _rv]))];
+                _msg = format ["100 m from the relay vehicle (grid %1, %2 m from its spot)", mapGridPosition _rv, round (_rv distance2D (_rv getVariable ["CQ_linkDest", getPosATL _rv]))];
             };
         };
         case "btKill": {
@@ -155,11 +155,11 @@ if (_needHq && { count _hq == 0 }) then {
             private _tr = _hq getOrDefault ["buildTruck", objNull];
             if (!alive _tr) then { _msg = format ["HQ #%1 has no build truck", _id] } else {
                 if (!isNull _p) then {
-                    private _t = _tr getPos [12, getDir _tr + 150];
+                    private _t = _tr getPos [CQ_dbgTpDist, getDir _tr + 150];
                     [_p] remoteExec ["moveOut", _p];
                     [_p, _t] spawn { params ["_p", "_t"]; sleep 0.5; _p setPosATL [_t select 0, _t select 1, 0] };
                 };
-                _msg = format ["HQ #%1: next to its build truck (grid %2)", _id, mapGridPosition _tr];
+                _msg = format ["HQ #%1: 100 m from its build truck (grid %2)", _id, mapGridPosition _tr];
             };
         };
         case "hack": {
@@ -199,8 +199,8 @@ if (_needHq && { count _hq == 0 }) then {
             if (isNil "CQ_crashPos") then { _msg = "no crash yet" } else {
                 if (!isNull _p) then {
                     [_p] remoteExec ["moveOut", _p];
-                    [_p, CQ_crashPos getPos [400, CQ_crashPos getDir CQ_basePos]] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
-                    _msg = "teleported 400 m from the crash site";
+                    [_p, CQ_crashPos getPos [CQ_dbgTpDist, CQ_crashPos getDir CQ_basePos]] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
+                    _msg = format ["teleported %1 m from the crash site", CQ_dbgTpDist];
                 };
             };
         };
@@ -223,10 +223,10 @@ if (_needHq && { count _hq == 0 }) then {
             private _g = if (isNil "CQ_sab") then { grpNull } else { CQ_sab get "grp" };
             if (isNull _g || { (leader _g) isEqualTo objNull }) then { _msg = "no SABOTAGE team" } else {
                 if (!isNull _p) then {
-                    private _q = (getPosATL leader _g) getPos [400, random 360];
+                    private _q = (getPosATL leader _g) getPos [CQ_dbgTpDist, random 360];
                     [_p] remoteExec ["moveOut", _p];
                     [_p, _q] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
-                    _msg = format ["teleported 400 m from SABOTAGE (%1)", CQ_sab get "phase"];
+                    _msg = format ["teleported %1 m from SABOTAGE (%2)", CQ_dbgTpDist, CQ_sab get "phase"];
                 };
             };
         };
@@ -244,8 +244,8 @@ if (_needHq && { count _hq == 0 }) then {
                     private _h = CQ_hstState get "hostage";
                     private _c = if (alive _h) then { getPosATL _h } else { CQ_hstState get "pos" };
                     [_p] remoteExec ["moveOut", _p];
-                    [_p, _c getPos [300, _c getDir CQ_basePos]] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
-                    _msg = format ["teleported 300 m from the hostage (phase %1)", CQ_hstState get "phase"];
+                    [_p, _c getPos [CQ_dbgTpDist, _c getDir CQ_basePos]] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
+                    _msg = format ["teleported %1 m from the hostage (phase %2)", CQ_dbgTpDist, CQ_hstState get "phase"];
                 };
             };
         };
@@ -309,10 +309,10 @@ if (_needHq && { count _hq == 0 }) then {
         case "tpOp": {
             if (isNil "CQ_outpostState") then { _msg = "no outpost" } else {
                 if (!isNull _p) then {
-                    private _q = (CQ_outpostState get "pos") getPos [600, (CQ_outpostState get "pos") getDir CQ_basePos];
+                    private _q = (CQ_outpostState get "pos") getPos [CQ_dbgTpDist, (CQ_outpostState get "pos") getDir CQ_basePos];
                     [_p] remoteExec ["moveOut", _p];
                     [_p, _q] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
-                    _msg = "teleported 600 m from the outpost (base side)";
+                    _msg = format ["teleported %1 m from the outpost (base side)", CQ_dbgTpDist];
                 };
             };
         };
@@ -349,18 +349,18 @@ if (_needHq && { count _hq == 0 }) then {
             if (isNull _r) then { _msg = format ["HQ #%1 has no radio tower yet", _id] } else {
                 if (!isNull _p) then {
                     private _tm = _r getVariable ["CQ_terminal", objNull];
-                    private _t = if (isNull _tm) then { (getPosATL _r) getPos [9, (getPosATL _r) getDir (_hq get "pos")] } else { (getPosATL _tm) getPos [2, getDir _tm] };
+                    private _t = (getPosATL _r) getPos [CQ_dbgTpDist, (_hq get "pos") getDir (getPosATL _r)];   // on the far side from the HQ
                     [_p] remoteExec ["moveOut", _p];
                     [_p, _t] spawn { params ["_p", "_t"]; sleep 0.5; _p setPosATL [_t select 0, _t select 1, 0] };
-                    _msg = format ["teleported to the foot of HQ #%1's radio tower", _id];
+                    _msg = format ["teleported %1 m from HQ #%2's radio tower", CQ_dbgTpDist, _id];
                 };
             };
         };
         case "tpHq": {
             if (!isNull _p) then {
-                private _t = (_hq get "pos") getPos [250, random 360];
+                private _t = (_hq get "pos") getPos [CQ_dbgTpDist, random 360];
                 if (vehicle _p != _p) then { (vehicle _p) setPosATL [_t select 0, _t select 1, 0] } else { _p setPosATL [_t select 0, _t select 1, 0] };
-                _msg = format ["teleported 250 m from HQ #%1", _id];
+                _msg = format ["teleported %1 m from HQ #%2", CQ_dbgTpDist, _id];
             };
         };
         case "points": {
