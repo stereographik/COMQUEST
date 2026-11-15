@@ -743,6 +743,14 @@ CQ_menuOverhang = 0.18;                  // share of the picture pushed past the
 CQ_aimSway = 0.15;                       // weapon sway multiplier for players (1 = vanilla, 0 = none); stamina stays vanilla
 CQ_recoil = 0.7;                         // recoil multiplier for players (1 = vanilla)
 CQ_uDoubleTap = 0.4;                     // s: U twice within this opens the MAGPIE report
+CQ_tabletCol = [0.2271, 0.2676, 0.2759, 0.7725];   // the tablet's icon column in the picture (fractions [x0, y0, x1, y1], media\comtablet_l/r_ca.paa)
+CQ_tabletCloseMap = false;               // true: opening a tablet window (U menu, squads, MAGPIE report) closes the map first (fallback if it does not draw over the map)
+CQ_tabletColSlots = 7;                   // slots in that column (each window fills them from the top)
+CQ_tabletIconSize = 0.64;                // icon width: share of the column width
+CQ_tabletColors = createHashMapFromArray [
+    ["icon", [0.09, 0.19, 0.08, 0.95]], ["iconOn", [0.04, 0.10, 0.04, 1]], ["hover", [0.02, 0.06, 0.02, 1]],
+    ["box", [0.59, 0.78, 0.53, 1]], ["boxEdge", [0.12, 0.24, 0.11, 1]], ["line", [0.24, 0.43, 0.22, 0.8]]
+];
 CQ_sqSize = 0.85;                        // squads / class / stats window: field tablet picture height (share of the screen height), centred
 CQ_sqScreen = [0.2773, 0.2672, 0.7920, 0.7719];   // its green screen zone in the picture (fractions), under the status bar, right of the icon column
 CQ_netSpan = 1800;                       // s: the NETWORK tab timeline shows (and the server keeps) this much history

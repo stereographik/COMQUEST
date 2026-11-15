@@ -19,8 +19,9 @@ private _open = uiNamespace getVariable ["CQ_mrDisplay", displayNull];
 if (!isNull _open) exitWith { _open closeDisplay 1 };
 { if (!isNull (uiNamespace getVariable [_x, displayNull])) then { (uiNamespace getVariable _x) closeDisplay 1 } } forEach ["CQ_menuDisplay", "CQ_sqDisplay", "CQ_shopDisplay", "CQ_depotDisplay"];
 
-private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
+private _d = (call CQ_fnc_uiParent) createDisplay "RscDisplayEmpty";   // on the map while it is open
 uiNamespace setVariable ["CQ_mrDisplay", _d];
+["MAGPIE report window: map open %1, parent %2", [visibleMap, displayParent _d]] call CQ_fnc_log;
 _d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];
 
 // the field tablet, laid out like CQ_fnc_squadUi
@@ -45,23 +46,14 @@ private _mk = {
     _c ctrlCommit 0;
     _c
 };
-// the tablet picture is the window's first control (under everything else, and above the map when
-// the map is open: a title layer is drawn under the map); the same picture on a title layer stays
-// as a fallback under it
-private _picW = _d ctrlCreate ["RscPicture", -1];
-_picW ctrlSetPosition [_picX, _picY, _pw, _ph];
-_picW ctrlCommit 0;
-_picW ctrlSetText (getMissionPath "media\comtablet_ca.paa");
-"CQ_mrBg" cutRsc ["RscTitleDisplayEmpty", "PLAIN", 0, false];
-private _bg = uiNamespace getVariable ["RscTitleDisplayEmpty", displayNull];
-private _pic = _bg ctrlCreate ["RscPicture", -1];
-_pic ctrlSetPosition [_picX, _picY, _pw, _ph];
-_pic ctrlCommit 0;
-_pic ctrlSetText (getMissionPath "media\comtablet_ca.paa");
-_d displayAddEventHandler ["Unload", { "CQ_mrBg" cutText ["", "PLAIN"] }];
+// the tablet picture, the dark background and the header bar: one controls group created first
+// (CQ_fnc_tabletBg: drawn at the back, also over the open map). No title layer: the U menu, which
+// never made one, was the only tablet drawn over the open map
+private _bgGrp = [_d, [_picX, _picY, _pw, _ph], [
+    [[_X, _Y, _W, _H], [0.02, 0.03, 0.02, CQ_mrTint]],              // darker than the other windows: dense table
+    [[_X, _Y, _W, _L * 1.1], CQ_ui get "header"]
+]] call CQ_fnc_tabletBg;
 
-(["RscText", [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0.02, 0.03, 0.02, CQ_mrTint];   // darker than the other windows: dense table
-(["RscText", [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
 private _tabL = ["RscButton", [_X + 0.01, _Y + 0.004, _W * 0.22, _L], "LAST SEEN"] call _mk;
 private _tabG = ["RscButton", [_X + 0.02 + _W * 0.22, _Y + 0.004, _W * 0.3, _L], "GLOBAL SITUATION"] call _mk;
 private _tabN = ["RscButton", [_X + 0.03 + _W * 0.52, _Y + 0.004, _W * 0.2, _L], "NETWORK"] call _mk;
@@ -70,6 +62,10 @@ uiNamespace setVariable ["CQ_mrTabN", _tabN];
 uiNamespace setVariable ["CQ_mrTab", uiNamespace getVariable ["CQ_mrTab", "last"]];
 _tabL ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_mrTab", "last"]; uiNamespace setVariable ["CQ_mrDirty", true] }];
 _tabG ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_mrTab", "global"]; uiNamespace setVariable ["CQ_mrDirty", true] }];
+// the icon column on the tablet's left side: the same tabs
+["create", [_d, [_picX, _picY, _pw, _ph], [
+    ["tab_lastseen", "Last seen", "last"], ["tab_global", "Global situation", "global"], ["tab_network", "Network", "network"]
+], "CQ_mrTab", "CQ_mrDirty"]] call CQ_fnc_tabletCol;
 private _close = ["RscButton", [_X + _W - 0.05, _Y + 0.004, 0.04, _L], "X"] call _mk;
 _close ctrlAddEventHandler ["ButtonClick", { (uiNamespace getVariable ["CQ_mrDisplay", displayNull]) closeDisplay 1 }];
 
@@ -204,6 +200,7 @@ private _fill = {
     _tabL ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select (_tab == "last")));
     _tabG ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select (_tab == "global")));
     (uiNamespace getVariable ["CQ_mrTabN", controlNull]) ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select (_tab == "network")));
+    ["sel", ["CQ_mrTab", _tab]] call CQ_fnc_tabletCol;
     // NETWORK tab: its own controls instead of the list
     private _net = _tab == "network";
     { _x ctrlShow _net } forEach ((uiNamespace getVariable ["CQ_mrNet", [[]]]) select 0);
