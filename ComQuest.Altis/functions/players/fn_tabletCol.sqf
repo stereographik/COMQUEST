@@ -1,6 +1,6 @@
 /*
     CQ_fnc_tabletCol  (client)
-    The icon column on the field tablet's left side (media\comtablet_ca.paa): CQ_tabletColSlots
+    The icon column on the field tablet's left side (media\comtablet_l_ca.paa, comtablet_r_ca.paa): CQ_tabletColSlots
     slots in CQ_tabletCol ([x0, y0, x1, y1] as fractions of the picture), filled from the top.
     Each icon (media\icons\<name>_ca.paa, white, tinted here) switches the window's tab; the
     selected one sits in a lighter box.
