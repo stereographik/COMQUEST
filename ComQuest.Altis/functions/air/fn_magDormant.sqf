@@ -153,8 +153,11 @@ private _wake = {
 
 // ---- TENTACLE (every 3 s, recomputed only when something changed): the woken Darters reach out
 // from the data link toward the fight, then encircle it.
-//   memory     a woken Darter connecting for the first time sends where it woke (CQ_tntMem: [pos, lastT]); a
-//              memory stays while MAGPIE still sees enemies around it, else it goes after CQ_magMemory s
+//   memory     starts with the wake points: a woken Darter connecting for the first time sends where it
+//              woke (CQ_tntMem: [pos, lastT]). Then at every report check (2 min, CQ_fnc_magTick) it
+//              holds the ground contacts MAGPIE saw in the last CQ_magMemory s (CQ_tntUnits, aircraft
+//              excluded), at their live position while seen; a wake point is dropped once such a
+//              contact lies within CQ_magWjZone of it (else it goes after CQ_magMemory s with nothing around)
 //   zones      memories within CQ_magWjZone of each other; the tentacle serves the zone nearest
 //              to the network, the next nearest once that one is gone
 //   perimeter  smallest circle around the zone's memories and live contacts + CQ_tntStandoff x
@@ -190,7 +193,14 @@ call {
         if ((_live findIf { _x distance2D _mp < CQ_magWjZone }) > -1) then { _y set [1, time] };
     } forEach CQ_tntMem;
     { if (time - ((CQ_tntMem get _x) select 1) > CQ_magMemory) then { CQ_tntMem deleteAt _x } } forEach (keys CQ_tntMem);
-    if (_woke isEqualTo [] || { count CQ_tntMem == 0 }) exitWith {
+    // memory points: the wake points still kept + the ground contacts of the last report check
+    // (CQ_tntUnits, CQ_fnc_magTick), each at its live position while seen, else where last seen
+    CQ_tntUnits = (missionNamespace getVariable ["CQ_tntUnits", []]) select { alive _x };
+    private _memPts = ((values CQ_tntMem) apply { _x select 0 }) + (CQ_tntUnits apply {
+        private _rec = CQ_magSeen getOrDefault [hashValue _x, []];
+        if (_rec isEqualTo []) then { getPosATL _x } else { _rec select 3 }
+    });
+    if (_woke isEqualTo [] || { _memPts isEqualTo [] }) exitWith {
         if (!isNil "CQ_tntPub" && { CQ_tntPub isNotEqualTo [] }) then { CQ_tntPub = []; publicVariable "CQ_tntPub" };
         CQ_tntZoneC = [];
         { _x set ["wjob", ""]; _x set ["tntI", -1] } forEach _woke;
@@ -199,10 +209,10 @@ call {
     // zones of memories
     private _zones = [];                                     // [[centroid of memories, [points]], ...]
     {
-        private _p = _y select 0;
+        private _p = _x;
         private _zi = _zones findIf { ((_x select 1) findIf { _x distance2D _p < CQ_magWjZone }) > -1 };
         if (_zi < 0) then { _zones pushBack [[], [_p]] } else { ((_zones select _zi) select 1) pushBack _p };
-    } forEach CQ_tntMem;
+    } forEach _memPts;
     // anchors: every linked node that is not a woken Darter
     // ...and not WASP while it faces the carrier
     // WASP only while it bridges toward the zone (CQ_waspBridge): then it is the natural root
