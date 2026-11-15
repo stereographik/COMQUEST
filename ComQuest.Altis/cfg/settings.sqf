@@ -446,6 +446,8 @@ CQ_fullPowerPlayers = 24;
 CQ_scaleMin = 0.35;                      // fewest players: 35 % of the infantry cap, waves up to twice as slow
 CQ_testFullPower = true;                 // TEST: play as if CQ_fullPowerPlayers were connected (debug panel toggle)
 CQ_dbgTpDist = 100;                      // m: debug teleporters put you this far from their target
+CQ_magOrbitR = [1500, 2500];             // m: before the first contact the Sentinels orbit WASP: Argos (inner, clockwise), Hermes (outer, counter-clockwise)
+CQ_magOrbitMove = 400;                   // m: their orbit follows WASP when it has moved this far
 CQ_testMagDirect = false;                // TEST ONLY, set false before merging to main: the two Sentinels fly straight to the first enemy HQ site instead of their search circuits
 
 // --- Enemy root insertions --------------------------------------------------

@@ -12,7 +12,7 @@
                                 last CQ_magMemory s (principal axes), wider for the higher
                                 drones (CQ_magDrones scale); Sentinel_Hermes alternates ellipse and
                                 exploration, Sentinel_Argos explores when the last report was empty
-      before MAGPIE's first contact the two Sentinels fly their search circuits instead
+      before MAGPIE's first contact the two Sentinels orbit WASP instead (CQ_magOrbitR)
                                 (CQ_magPatrol: shared trunk from the base, then a loop flown over and over)
     Report (every CQ_magReportEvery s, if anything is new): a MAGPIE card with the count of new
     identifications by kind and the HQ news, and dots on every player's map for 10 s. Every
@@ -535,21 +535,36 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
         ["MAGPIE TEST: %1 flies straight to %2 at %3", [_m get "name", [_h get "id"] call CQ_fnc_objName, mapGridPosition (_h get "pos")]] call CQ_fnc_log;
     };
     if (CQ_testMagDirect && { _route isEqualTo [] } && { isNil "CQ_magContactMade" } && { (_m getOrDefault ["directHq", -1]) > -1 }) then { continue };
+    // before the first contact the two Sentinels orbit WASP (CQ_magOrbitR: Argos inner circle
+    // clockwise, Hermes outer counter-clockwise), staying linked to it; no WASP in the air: the
+    // relay vehicle, else the base. The orbit follows its centre when it moves CQ_magOrbitMove m.
+    // (Their old search circuits, CQ_magPatrol, are no longer flown.)
     if (_route isNotEqualTo [] && { isNil "CQ_magContactMade" }) then {
-        private _on = (_m getOrDefault ["patrolVeh", objNull]) == _v;
-        if (_on && { currentWaypoint _gr < count waypoints _gr }) then { continue };
-        _route params ["_trunk", "_loop"];
-        private _pts = if (_on) then { _loop } else { _trunk + _loop };
+        private _wm = CQ_mag select { (_x getOrDefault ["role", ""]) == "wasp" && { alive (_x get "veh") } && { ((getPosATL (_x get "veh")) select 2) > 20 } };
+        private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
+        private _oc = switch (true) do {
+            case (_wm isNotEqualTo []): { getPosATL ((_wm select 0) get "veh") };
+            case (alive _rv): { getPosATL _rv };
+            default { CQ_basePos };
+        };
+        _oc = [_oc select 0, _oc select 1, 0];
+        private _inner = "Argos" in (_m get "name");
+        private _r = CQ_magOrbitR select ([1, 0] select _inner);
+        private _old = _m getOrDefault ["orbitC", []];
+        if ((_m getOrDefault ["patrolVeh", objNull]) == _v && { _old isNotEqualTo [] } && { _old distance2D _oc < CQ_magOrbitMove } && { currentWaypoint _gr < count waypoints _gr }) then { continue };
+        _m set ["orbitC", _oc];
         _m set ["patrolVeh", _v];
         _m set ["planT", time];
         _m set ["explore", false];
         _m set ["target", []];
         [_gr] call CQ_fnc_clearWaypoints;
         _v flyInHeight (_m get "alt");
-        private _first = -1;
-        { private _wp = _gr addWaypoint [[_x select 0, _x select 1, 0], 0]; _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 400; if (_first < 0) then { _first = _wp select 1 } } forEach _pts;
-        if (_first >= 0) then { _gr setCurrentWaypoint [_gr, _first] };
-        ["MAGPIE: %1 %2 its search circuit (%3 points)", [_m get "name", ["starts", "loops"] select _on, count _pts]] call CQ_fnc_log;
+        private _wp = _gr addWaypoint [_oc, 0];
+        _wp setWaypointType "LOITER";
+        _wp setWaypointLoiterType (["CIRCLE_L", "CIRCLE"] select _inner);
+        _wp setWaypointLoiterRadius _r;
+        _gr setCurrentWaypoint _wp;
+        ["MAGPIE: %1 orbits %2 at %3 (radius %4 m, %5)", [_m get "name", ["the base", "the relay vehicle", "WASP"] select ([0, 1, 2] select ((if (_wm isNotEqualTo []) then { 2 } else { [0, 1] select (alive _rv) }))), mapGridPosition _oc, _r, ["counter-clockwise", "clockwise"] select _inner]] call CQ_fnc_log;
         continue;
     };
     if (time - (_m get "planT") < CQ_magPlanEvery && { !_arrived }) then { continue };
