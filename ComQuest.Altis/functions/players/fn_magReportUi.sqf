@@ -132,7 +132,7 @@ CQ_mrDrawNet = {
     _geo params ["_laneX", "_laneW", "_tlY", "_th"];
     (missionNamespace getVariable ["CQ_mnetPub", []]) params [["_ev", []], ["_hl", ["OK", 0, 0, [], "-"]], ["_st", ["", ""]], ["_ss", [0, 0, 0, 0]]];
     _hl params ["_link", "_nl", "_nn", "_drones", "_rvTxt"];
-    private _lc = ["#C0DD97", "#FAC775", "#F09595"] select (["OK", "DEGRADED", "CUT"] find _link max 0);
+    private _lc = ["#C0DD97", "#FAC775", "#F09595"] select ((["OK", "DEGRADED", "CUT"] find _link) max 0);
     private _dr = (_drones apply { format ["%1 %2", _x select 0, ["<t color='#F09595'>" + (_x select 1) + "</t>", "&#10003;"] select ((_x select 1) == "up")] }) joinString "  ·  ";
     private _txt = format ["<t size='0.9'><t color='%1'>LINK %2</t>   <t color='#E8E6D9'>NODES %3/%4</t>   <t color='#E8E6D9'>%5</t>   <t color='#FAC775'>RELAY VEHICLE %6</t></t>", _lc, _link, _nl, _nn, _dr, _rvTxt];
     _txt = _txt + format ["<br/><t size='0.95' color='#F2F1DF'>%1</t><br/><t size='0.85' color='#B4B2A9'>%2</t>", _st select 0, _st select 1];
