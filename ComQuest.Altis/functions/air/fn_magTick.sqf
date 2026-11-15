@@ -611,10 +611,12 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
     private _tab = createHashMap;            // AO name -> [inf, veh, air]
     private _order = [];
     private _new = 0;
+    private _newObjs = [];                 // identified since the last report (tablet: LAST SEEN)
     {
         if !(_y select 5) then {
             _y set [5, true];
             _new = _new + 1;
+            _newObjs pushBack (_y select 0);
             private _p = _y select 3;
             private _ao = "Outside known AOs";
             private _best = CQ_magAoRange;
@@ -689,7 +691,8 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
         };
         // the tablet copy of this report (CQ_fnc_magReportUi, U twice): HQ news + every contact still
         // remembered, by category, infantry one row per squad:
-        // CQ_magReportPub = [serverTime, [news...], [[cat, type, hdg, spd, owner, inSight], ...]]
+        // CQ_magReportPub = [serverTime, [news...], [[cat, type, hdg, spd, owner, inSight, newInThisReport], ...]]
+        // (LAST SEEN tab: the new ones; GLOBAL SITUATION tab: every enemy still remembered)
         private _own = createHashMap;                  // group -> HQ name
         {
             private _nm = [_x get "id"] call CQ_fnc_objName;
@@ -709,7 +712,7 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
         private _squads = createHashMap;               // infantry: group -> [records]
         {
             _x params ["_o", "", "_tl", "_p", "_c", "", ["_hs", [0, 0]]];
-            if (!alive _o || { time - _tl > CQ_magMemory }) then { continue };
+            if (!alive _o) then { continue };
             private _vis = time - _tl <= CQ_magDetectEvery + 2;
             if (_c == "inf") then {
                 private _g = group _o;
@@ -718,7 +721,7 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
             } else {
                 private _hd = [_hs select 0, round getDir _o] select _vis;
                 private _sp = [_hs select 1, round speed _o] select _vis;
-                _rows pushBack [_c, getText (configOf _o >> "displayName"), _hd mod 360, _sp, [_o, _p] call _ownerOf, _vis];
+                _rows pushBack [_c, getText (configOf _o >> "displayName"), _hd mod 360, _sp, [_o, _p] call _ownerOf, _vis, _o in _newObjs];
             };
         } forEach (values CQ_magSeen);
         {
@@ -729,7 +732,7 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
             private _hs = _r param [6, [0, 0]];
             private _hd = [_hs select 0, round getDir _o] select _vis;
             private _sp = [_hs select 1, round speed _o] select _vis;
-            _rows pushBack ["inf", format ["Infantry squad x%1", count _recs], _hd mod 360, _sp, [_o, _r select 3] call _ownerOf, _vis];
+            _rows pushBack ["inf", format ["Infantry squad x%1", count _recs], _hd mod 360, _sp, [_o, _r select 3] call _ownerOf, _vis, _recs findIf { (_x select 0) in _newObjs } > -1];
         } forEach _squads;
         CQ_magReportPub = [serverTime, _news, _rows];
         publicVariable "CQ_magReportPub";
