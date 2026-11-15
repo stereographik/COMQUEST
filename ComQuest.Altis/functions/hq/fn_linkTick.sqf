@@ -167,7 +167,7 @@ private _drones = [];
 
 // ---- links: overlapping ranges, grown from the base as a shortest-link tree: each step joins
 // the unlinked node closest to any linked one (Prim), so the map shows the real chain
-// device -> device -> base instead of a star from the base
+// device -> device -> base instead of a star from the base (weighted, see below)
 private _n = count _nodes;
 private _ok = [true] + ((_nodes select [1]) apply { false });
 private _edges = [];
@@ -180,14 +180,22 @@ private _canLink = {
     // (radio backbone)
     _pa distance2D _pb <= (_ra max _rb) || { _ka in ["b", "r"] && { _kb in ["b", "r"] } && { _pa distance2D _pb <= CQ_linkBackbone } }
 };
+// drones chain through drones: a link drone -> drone costs its length; a drone hanging from the
+// base, a relay or a vehicle costs 1e6 more, so a group of drones in reach of each other joins the
+// network once, at its drone nearest to it (usually WASP, which holds the edge), and the others
+// hang from that drone; a ground node reached only through drones costs 2e6 more (last)
 while { true } do {
-    private _bestD = 1e9; private _bA = -1; private _bB = -1;
+    private _bestD = 1e12; private _bA = -1; private _bB = -1;
     for "_b" from 0 to _n - 1 do {
         if (_ok select _b) then { continue };
         private _pb = (_nodes select _b) select 0;
+        private _kb = (_nodes select _b) select 3;
         for "_a" from 0 to _n - 1 do {
             if !(_ok select _a) then { continue };
+            private _ka = (_nodes select _a) select 3;
             private _d = ((_nodes select _a) select 0) distance2D _pb;
+            if (_kb == "d" && { _ka != "d" }) then { _d = _d + 1e6 };
+            if (_kb != "d" && { _ka == "d" }) then { _d = _d + 2e6 };
             if (_d < _bestD && { [_a, _b] call _canLink }) then { _bestD = _d; _bA = _a; _bB = _b };
         };
     };
