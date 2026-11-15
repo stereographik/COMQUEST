@@ -4,7 +4,7 @@
       LAST SEEN         what that report identified (new since the one before) + its HQ news
       GLOBAL SITUATION  every enemy MAGPIE knows and still alive, at the time of that report
       NETWORK           health of the data link, current state, statistics, and a timeline with
-                        one track per message category (CQ_netPub, CQ_fnc_netPub)
+                        one track per message category (CQ_mnetPub, CQ_fnc_netPub)
     Contacts by category (INFANTRY one row per squad, STATIC, LIGHT VEHICLES, ARMOUR, AIR):
       type | heading | speed | HQ owner | in sight (when the report was made)
     Header: age of the report and the countdown to the next one (CQ_magReportNextT); the LED on the
@@ -116,13 +116,13 @@ _axis ctrlSetStructuredText parseText format ["<t size='0.75' color='#888780'>-%
 private _lastMsg = ["RscStructuredText", [_X + 0.01, _tlY + _tlH + _L, _W - 0.02, _L * 1.1]] call _mk;
 _netCtrls append [_axis, _lastMsg];
 uiNamespace setVariable ["CQ_mrNet", [_netCtrls, _netTxt, _lastMsg, [_laneX, _laneW, _tlY, _th], _tracks]];
-// draws the NETWORK tab from CQ_netPub (pins rebuilt each time)
+// draws the NETWORK tab from CQ_mnetPub (pins rebuilt each time)
 CQ_mrDrawNet = {
     params ["_d"];
     disableSerialization;
     (uiNamespace getVariable ["CQ_mrNet", []]) params ["", "_netTxt", "_lastMsg", "_geo", "_tracks"];
     _geo params ["_laneX", "_laneW", "_tlY", "_th"];
-    (missionNamespace getVariable ["CQ_netPub", []]) params [["_ev", []], ["_hl", ["OK", 0, 0, [], "-"]], ["_st", ["", ""]], ["_ss", [0, 0, 0, 0]]];
+    (missionNamespace getVariable ["CQ_mnetPub", []]) params [["_ev", []], ["_hl", ["OK", 0, 0, [], "-"]], ["_st", ["", ""]], ["_ss", [0, 0, 0, 0]]];
     _hl params ["_link", "_nl", "_nn", "_drones", "_rvTxt"];
     private _lc = ["#C0DD97", "#FAC775", "#F09595"] select (["OK", "DEGRADED", "CUT"] find _link max 0);
     private _dr = (_drones apply { format ["%1 %2", _x select 0, ["<t color='#F09595'>" + (_x select 1) + "</t>", "&#10003;"] select ((_x select 1) == "up")] }) joinString "  ·  ";

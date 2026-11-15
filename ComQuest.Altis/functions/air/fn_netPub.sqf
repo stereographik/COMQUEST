@@ -1,6 +1,6 @@
 /*
     CQ_fnc_netPub  (server, end of every CQ_fnc_magTick pass)
-    The NETWORK tab's data: CQ_netPub = [events, health, state, stats] (published every
+    The NETWORK tab's data: CQ_mnetPub = [events, health, state, stats] (published every
     CQ_netPubEvery s, or at once after a new message)
       health  [link "OK"|"DEGRADED"|"CUT", nodes linked, nodes, [[drone, "up"|"lost mm:ss"|"pad"]...], relay text]
       state   [phase line, WASP line]
@@ -66,10 +66,10 @@ private _waspTxt = switch (true) do {
     default { "WASP facing the carrier" };
 };
 private _lt = (CQ_netStats get "linkT") max 1;
-CQ_netPub = [
+CQ_mnetPub = [
     missionNamespace getVariable ["CQ_netEvents", []],
     [_link, _nl, count _nodes, _drones, _rvTxt],
     [_phase, _waspTxt],
     [CQ_netStats get "contact", CQ_netStats get "report", CQ_netStats get "loss", round (100 * (CQ_netStats get "upT") / _lt)]
 ];
-publicVariable "CQ_netPub";
+publicVariable "CQ_mnetPub";
