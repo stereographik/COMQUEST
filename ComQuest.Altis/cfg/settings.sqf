@@ -902,10 +902,9 @@ CQ_magDormantAlt = 250;                  // m flight altitude (sensor ~600 m)
 CQ_magDormantFlee = 0.9;                 // flee until this fraction of the sensor range from the enemy (> 80 %)
 CQ_magDormantReplace = 60;               // s before a destroyed woken Darter is replaced
 CQ_magDormantRelay = true;               // woken Darters extend the data link like a relay
-CQ_magWjEvery = 15;                      // s between two plans of the woken Darters: connect first (chain from the network), then spread
+CQ_magWjEvery = 15;                      // s between two layouts of the woken Darters (stretched tree from the data link toward their zone)
 CQ_magWjZone = 1500;                     // m: woken Darters this close to each other (where they woke) work one zone together
-CQ_magWjRing = 0.8;                      // spread ring around the zone, in sensor ranges
-CQ_magRelaxEvery = 10;                   // s between two relax steps of the spread Darters (they push apart to CQ_lrHop, leashed to the network)
+CQ_magWjRing = 0.8;                      // ring around the zone's enemies the tree branches along, in sensor ranges
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
 CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2, max 2400 m (Darter ~600, Sentinel_Argos ~1380, Sentinel_Hermes ~2100)

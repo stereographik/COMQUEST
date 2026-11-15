@@ -109,7 +109,7 @@ private _pool = _free select { !(_x in _team) };
 private _new = 0;
 while { count _team < _n && { _pool isNotEqualTo [] } } do {
     private _sl = _slots select (count _team);
-    private _m = ([_pool, [], { ((_x get "veh") distance2D _sl) + ([0, 1e5] select ((_x getOrDefault ["wjob", ""]) == "chain")) }, "ASCEND"] call BIS_fnc_sortBy) select 0;   // a woken Darter holding its own chain goes last
+    private _m = ([_pool, [], { (_x get "veh") distance2D _sl }, "ASCEND"] call BIS_fnc_sortBy) select 0;
     _pool = _pool - [_m];
     _m set ["repair", true]; _m set ["sneak", false]; _m set ["wjob", ""];
     _team pushBack _m; _new = _new + 1;
