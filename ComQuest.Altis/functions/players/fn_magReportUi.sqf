@@ -47,19 +47,12 @@ private _mk = {
     _c
 };
 // the tablet picture, the dark background and the header bar: one controls group created first
-// (CQ_fnc_tabletBg: drawn at the back, also over the open map); the picture on a title layer stays
-// as a fallback under it
+// (CQ_fnc_tabletBg: drawn at the back, also over the open map). No title layer: the U menu, which
+// never made one, was the only tablet drawn over the open map
 private _bgGrp = [_d, [_picX, _picY, _pw, _ph], [
     [[_X, _Y, _W, _H], [0.02, 0.03, 0.02, CQ_mrTint]],              // darker than the other windows: dense table
     [[_X, _Y, _W, _L * 1.1], CQ_ui get "header"]
 ]] call CQ_fnc_tabletBg;
-"CQ_mrBg" cutRsc ["RscTitleDisplayEmpty", "PLAIN", 0, false];
-private _bg = uiNamespace getVariable ["RscTitleDisplayEmpty", displayNull];
-private _pic = _bg ctrlCreate ["RscPicture", -1];
-_pic ctrlSetPosition [_picX, _picY, _pw, _ph];
-_pic ctrlCommit 0;
-_pic ctrlSetText (getMissionPath "media\comtablet_ca.paa");
-_d displayAddEventHandler ["Unload", { "CQ_mrBg" cutText ["", "PLAIN"] }];
 
 private _tabL = ["RscButton", [_X + 0.01, _Y + 0.004, _W * 0.22, _L], "LAST SEEN"] call _mk;
 private _tabG = ["RscButton", [_X + 0.02 + _W * 0.22, _Y + 0.004, _W * 0.3, _L], "GLOBAL SITUATION"] call _mk;
