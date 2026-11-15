@@ -45,6 +45,13 @@ private _mk = {
     _c ctrlCommit 0;
     _c
 };
+// the tablet picture is the window's first control (under everything else, and above the map when
+// the map is open: a title layer is drawn under the map); the same picture on a title layer stays
+// as a fallback under it
+private _picW = _d ctrlCreate ["RscPicture", -1];
+_picW ctrlSetPosition [_picX, _picY, _pw, _ph];
+_picW ctrlCommit 0;
+_picW ctrlSetText (getMissionPath "media\comtablet_ca.paa");
 "CQ_mrBg" cutRsc ["RscTitleDisplayEmpty", "PLAIN", 0, false];
 private _bg = uiNamespace getVariable ["RscTitleDisplayEmpty", displayNull];
 private _pic = _bg ctrlCreate ["RscPicture", -1];

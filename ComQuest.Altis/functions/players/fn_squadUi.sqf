@@ -50,8 +50,13 @@ private _mk = {
     _c ctrlCommit 0;
     _c
 };
-// the tablet goes on its own title layer, under this window (drawn on the window's own display it
-// did not show), removed when the window closes
+// the tablet picture is the window's first control (under everything else, and above the map when
+// the map is open: a title layer is drawn under the map); the same picture on its own title layer
+// stays as a fallback under it, removed when the window closes
+private _picW = _d ctrlCreate ["RscPicture", -1];
+_picW ctrlSetPosition [_picX, _picY, _pw, _ph];
+_picW ctrlCommit 0;
+_picW ctrlSetText (getMissionPath "media\comtablet_ca.paa");
 "CQ_sqBg" cutRsc ["RscTitleDisplayEmpty", "PLAIN", 0, false];
 private _bg = uiNamespace getVariable ["RscTitleDisplayEmpty", displayNull];
 private _pic = _bg ctrlCreate ["RscPicture", -1];
@@ -59,7 +64,7 @@ _pic ctrlSetPosition [_picX, _picY, _pw, _ph];
 _pic ctrlCommit 0;
 _pic ctrlSetText (getMissionPath "media\comtablet_ca.paa");
 _d displayAddEventHandler ["Unload", { "CQ_sqBg" cutText ["", "PLAIN"] }];
-["Squad window: tablet layer %1, picture %2, pos %3", [!isNull _bg, !isNull _pic, ctrlPosition _pic]] call CQ_fnc_log;
+["Squad window: tablet on window %1 (%2), layer %3, pos %4", [!isNull _picW, ctrlText _picW, !isNull _bg, ctrlPosition _picW]] call CQ_fnc_log;
 // dark tint over the green screen: the screen glow shows through, text stays readable
 (["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0, 0.04, 0, CQ_sqTint];
 (["RscText", -1, [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
