@@ -1,0 +1,104 @@
+/*
+    CQ_fnc_magReportUi  (client)   U twice quickly, or MAGPIE REPORT in the U menu
+    The last MAGPIE report on the field tablet (same picture as squads / class / stats):
+      header   time of the report and how long ago
+      HQ news  new enemy positions, construction stages
+      contacts every enemy MAGPIE still remembers at report time, by category
+               (INFANTRY one row per squad, STATIC, LIGHT VEHICLES, ARMOUR, AIR):
+               type | heading | speed | HQ owner | in sight (when the report was made)
+    Data: CQ_magReportPub = [serverTime, [news...], [[cat, type, hdg, spd, owner, inSight], ...]]
+    (CQ_fnc_magTick, with every report). Refreshes every 2 s while open. U or Esc closes it.
+*/
+if (!hasInterface) exitWith {};
+disableSerialization;
+private _open = uiNamespace getVariable ["CQ_mrDisplay", displayNull];
+if (!isNull _open) exitWith { _open closeDisplay 1 };
+{ if (!isNull (uiNamespace getVariable [_x, displayNull])) then { (uiNamespace getVariable _x) closeDisplay 1 } } forEach ["CQ_menuDisplay", "CQ_sqDisplay", "CQ_shopDisplay", "CQ_depotDisplay"];
+
+private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
+uiNamespace setVariable ["CQ_mrDisplay", _d];
+_d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];
+
+// the field tablet, laid out like CQ_fnc_squadUi
+private _ph = safeZoneH * CQ_sqSize;
+private _pw = (_ph / pixelH) * 1.6 * pixelW;
+if (_pw > safeZoneW) then { _ph = _ph * safeZoneW / _pw; _pw = safeZoneW };
+private _picX = safeZoneX + (safeZoneW - _pw) / 2;
+private _picY = safeZoneY + (safeZoneH - _ph) / 2;
+CQ_sqScreen params ["_fx0", "_fy0", "_fx1", "_fy1"];
+private _X = _picX + _pw * _fx0 + 0.004;
+private _Y = _picY + _ph * _fy0 + 0.004;
+private _W = _pw * (_fx1 - _fx0) - 0.008;
+private _H = _ph * (_fy1 - _fy0) - 0.008;
+private _L = (0.042 * _H / (safeZoneH * 0.66)) max 0.03;
+private _mk = {
+    params ["_cls", "_pos", ["_txt", ""]];
+    private _c = _d ctrlCreate [[_cls, "CQ_Button"] select (_cls == "RscButton"), -1];
+    [_c, _cls] call CQ_fnc_uiStyle;
+    if !(_cls in ["RscPicture", "RscStructuredText"]) then { _c ctrlSetFontHeight ((ctrlFontHeight _c) * CQ_sqFont) };
+    _c ctrlSetPosition _pos;
+    if (_txt != "") then { _c ctrlSetText _txt };
+    _c ctrlCommit 0;
+    _c
+};
+"CQ_mrBg" cutRsc ["RscTitleDisplayEmpty", "PLAIN", 0, false];
+private _bg = uiNamespace getVariable ["RscTitleDisplayEmpty", displayNull];
+private _pic = _bg ctrlCreate ["RscPicture", -1];
+_pic ctrlSetPosition [_picX, _picY, _pw, _ph];
+_pic ctrlCommit 0;
+_pic ctrlSetText (getMissionPath "media\comtablet_ca.paa");
+_d displayAddEventHandler ["Unload", { "CQ_mrBg" cutText ["", "PLAIN"] }];
+
+(["RscText", [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0, 0.04, 0, CQ_sqTint];
+(["RscText", [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
+private _title = ["RscText", [_X + 0.01, _Y + 0.004, _W * 0.7, _L], "MAGPIE REPORT"] call _mk;
+_title ctrlSetFont (CQ_ui get "fontHead");
+private _close = ["RscButton", [_X + _W - 0.05, _Y + 0.004, 0.04, _L], "X"] call _mk;
+_close ctrlAddEventHandler ["ButtonClick", { (uiNamespace getVariable ["CQ_mrDisplay", displayNull]) closeDisplay 1 }];
+
+private _top = _Y + _L * 1.5;
+private _info = ["RscStructuredText", [_X + 0.01, _top, _W - 0.02, _L * 2.6]] call _mk;
+private _ly = _top + _L * 2.8;
+private _list = ["RscListNBox", [_X + 0.01, _ly, _W - 0.02, _H - (_ly - _Y) - 0.01]] call _mk;
+_list lnbSetColumnsPos [0, 0.42, 0.54, 0.66, 0.88];
+
+private _fill = {
+    params ["_info", "_list"];
+    (missionNamespace getVariable ["CQ_magReportPub", []]) params [["_t", -1], ["_news", []], ["_rows", []]];
+    lnbClear _list;
+    if (_t < 0) exitWith { _info ctrlSetStructuredText parseText "<t size='0.9' color='#A6A381'>No MAGPIE report yet.</t>" };
+    private _age = round ((serverTime - _t) / 60);
+    private _txt = format ["<t size='0.9' color='#A6A381'>Report of %1 min ago  ·  %2 contacts</t>", _age, count _rows];
+    { _txt = _txt + format ["<br/><t size='0.85' color='#F2F1DF'>%1</t>", _x] } forEach (_news select [0, 2]);
+    if (count _news > 2) then { _txt = _txt + format ["<br/><t size='0.8' color='#A6A381'>+%1 more HQ news</t>", count _news - 2] };
+    _info ctrlSetStructuredText parseText _txt;
+    private _muted = CQ_ui get "muted";
+    private _r = _list lnbAddRow ["CONTACT", "HDG", "SPD", "HQ", "IN SIGHT"];
+    for "_c" from 0 to 4 do { _list lnbSetColor [[_r, _c], _muted] };
+    {
+        _x params ["_cat", "_name"];
+        private _sel = _rows select { (_x select 0) == _cat };
+        if (_sel isEqualTo []) then { continue };
+        _r = _list lnbAddRow [format ["%1 (%2)", _name, count _sel], "", "", "", ""];
+        _list lnbSetColor [[_r, 0], CQ_ui get "accent"];
+        {
+            _x params ["", "_type", "_hdg", "_spd", "_own", "_vis"];
+            private _hx = str (round _hdg);
+            while { count _hx < 3 } do { _hx = "0" + _hx };
+            _r = _list lnbAddRow ["   " + _type, _hx, format ["%1 km/h", round _spd], _own, ["no", "YES"] select _vis];
+            if (_vis) then { _list lnbSetColor [[_r, 4], CQ_ui get "alert"] } else { _list lnbSetColor [[_r, 4], CQ_ui get "dim"] };
+        } forEach _sel;
+    } forEach [["inf", "INFANTRY"], ["static", "STATIC"], ["light", "LIGHT VEHICLES"], ["armour", "ARMOUR"], ["air", "AIR"]];
+};
+[_info, _list] call _fill;
+[_d, _info, _list, _fill] spawn {
+    params ["_d", "_info", "_list", "_fill"];
+    disableSerialization;
+    private _last = (missionNamespace getVariable ["CQ_magReportPub", []]) param [0, -1];
+    while { !isNull _d } do {
+        sleep 2;
+        if (isNull _d) exitWith {};
+        private _t = (missionNamespace getVariable ["CQ_magReportPub", []]) param [0, -1];
+        if (_t != _last) then { _last = _t; [_info, _list] call _fill };   // a new report: redraw (the list keeps its place otherwise)
+    };
+};

@@ -726,6 +726,7 @@ CQ_introPlace = "ALTIS  ·  AEGEAN SEA  ·  AAC AIRFIELD";   // typed on black b
 CQ_introTypeDelay = 0.06;               // s per typed letter
 CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
 CQ_menuOverhang = 0.18;                  // share of the picture pushed past the right screen edge (the side connectors go off screen)
+CQ_uDoubleTap = 0.4;                     // s: U twice within this opens the MAGPIE report
 CQ_sqSize = 0.85;                        // squads / class / stats window: field tablet picture height (share of the screen height), centred
 CQ_sqScreen = [0.2773, 0.2672, 0.7920, 0.7719];   // its green screen zone in the picture (fractions), under the status bar, right of the icon column
 CQ_sqTint = 0.72;                        // opacity of the dark tint over the green screen (readability)

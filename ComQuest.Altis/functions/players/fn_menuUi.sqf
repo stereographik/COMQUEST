@@ -2,6 +2,7 @@
     CQ_fnc_menuUi  (client)   U key, or the scroll menu "Menu (U)"
     Hub with every window of the mission, shown on the screen of a field transceiver picture:
       SQUADS / CLASS / STATS   -> CQ_fnc_squadUi (its three tabs)
+      MAGPIE REPORT            -> CQ_fnc_magReportUi (also U twice quickly)
       VEHICLE SHOP             -> CQ_fnc_shopUi (browse anywhere; buying needs the shop terminal)
       VEHICLE DEPOT            -> CQ_fnc_depotUi (browse anywhere; requests need a depot)
       DEBUG PANEL              -> CQ_fnc_debugUi (the host and logged-in admins only)
@@ -14,7 +15,12 @@ if (!isNull (uiNamespace getVariable ["CQ_menuDisplay", displayNull])) exitWith 
 
 private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
 uiNamespace setVariable ["CQ_menuDisplay", _d];
-_d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];
+_d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then {
+    _d closeDisplay 1;
+    // the second U of a quick double press: the MAGPIE report
+    if (diag_tickTime - (missionNamespace getVariable ["CQ_uLastT", -1]) < CQ_uDoubleTap) then { CQ_uLastT = -1; [] spawn CQ_fnc_magReportUi } else { CQ_uLastT = diag_tickTime };
+    true
+} else { false } }];
 
 private _admin = isServer || { (call BIS_fnc_admin) == 2 };      // host or logged-in admin (#login), even in debug missions
 private _nearShop = !isNil "CQ_shopTerminal" && { player distance CQ_shopTerminal <= CQ_shopRange + 4 };
@@ -22,6 +28,7 @@ private _items = [
     ["SQUADS", "Join, create, invite, leave", { ["squads"] spawn CQ_fnc_squadUi }],
     ["CLASS", ["Only inside the HQ compound", "You are in the HQ compound: pick a class"] select (player inArea [CQ_basePos, (CQ_compoundSize select 0) / 2 + CQ_classChangeRange, (CQ_compoundSize select 1) / 2 + CQ_classChangeRange, CQ_baseDir, true]), { ["class"] spawn CQ_fnc_squadUi }],
     ["STATS", "Ranking and player details", { ["board"] spawn CQ_fnc_squadUi }],
+    ["MAGPIE REPORT", "Last drone report, by category (U twice)", { [] spawn CQ_fnc_magReportUi }],
     ["VEHICLE SHOP", ["Browse here, buy at the shop terminal", "You are at the shop terminal"] select _nearShop, { [] spawn CQ_fnc_shopUi }],
     ["VEHICLE DEPOT", "Free vehicles: browse here, request at a depot (repair station)", { [] spawn CQ_fnc_depotUi }],
     ["GUIDE & RULES", "How to play, server rules, report a player", { ["guide"] spawn CQ_fnc_squadUi }]

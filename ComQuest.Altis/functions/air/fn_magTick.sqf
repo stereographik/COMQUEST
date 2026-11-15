@@ -687,6 +687,52 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
             _rich = _rich + "<ph>" + ((CQ_magPhotoPend apply { format ["%1:%2", _x select 0, _x select 1] }) joinString ",") + "</ph>";
             CQ_magPhotoPend = [];
         };
+        // the tablet copy of this report (CQ_fnc_magReportUi, U twice): HQ news + every contact still
+        // remembered, by category, infantry one row per squad:
+        // CQ_magReportPub = [serverTime, [news...], [[cat, type, hdg, spd, owner, inSight], ...]]
+        private _own = createHashMap;                  // group -> HQ name
+        {
+            private _nm = [_x get "id"] call CQ_fnc_objName;
+            { if (!isNull _x) then { _own set [_x, _nm] } } forEach ((_x getOrDefault ["infantry", []]) + [_x getOrDefault ["cmdGroup", grpNull], _x getOrDefault ["escort", grpNull]]);
+        } forEach (values CQ_hqs);
+        private _ownerOf = {
+            params ["_o", "_p"];
+            private _n = _own getOrDefault [group _o, ""];
+            if (_n == "") then { private _hid = _o getVariable ["CQ_hqId", -1]; if (_hid > -1) then { _n = [_hid] call CQ_fnc_objName } };
+            if (_n == "") then {
+                private _best = CQ_magAoRange;
+                { private _d = (_x get "pos") distance2D _p; if (_d < _best) then { _best = _d; _n = [_x get "id"] call CQ_fnc_objName } } forEach _aos;
+            };
+            ["-", _n] select (_n != "")
+        };
+        private _rows = [];
+        private _squads = createHashMap;               // infantry: group -> [records]
+        {
+            _x params ["_o", "", "_tl", "_p", "_c", "", ["_hs", [0, 0]]];
+            if (!alive _o || { time - _tl > CQ_magMemory }) then { continue };
+            private _vis = time - _tl <= CQ_magDetectEvery + 2;
+            if (_c == "inf") then {
+                private _g = group _o;
+                private _k = [_g, _o] select (isNull _g);
+                _squads set [_k, (_squads getOrDefault [_k, []]) + [_x]];
+            } else {
+                private _hd = [_hs select 0, round getDir _o] select _vis;
+                private _sp = [_hs select 1, round speed _o] select _vis;
+                _rows pushBack [_c, getText (configOf _o >> "displayName"), _hd mod 360, _sp, [_o, _p] call _ownerOf, _vis];
+            };
+        } forEach (values CQ_magSeen);
+        {
+            private _recs = _y;
+            private _vis = _recs findIf { time - (_x select 2) <= CQ_magDetectEvery + 2 } > -1;
+            private _r = _recs select 0;
+            private _o = _r select 0;
+            private _hs = _r param [6, [0, 0]];
+            private _hd = [_hs select 0, round getDir _o] select _vis;
+            private _sp = [_hs select 1, round speed _o] select _vis;
+            _rows pushBack ["inf", format ["Infantry squad x%1", count _recs], _hd mod 360, _sp, [_o, _r select 3] call _ownerOf, _vis];
+        } forEach _squads;
+        CQ_magReportPub = [serverTime, _news, _rows];
+        publicVariable "CQ_magReportPub";
         ["magReport", [_rich]] call CQ_fnc_say;
         ["MAGPIE report: %1 new identifications, %2 HQ news, areas %3", [_new, count _news, _order]] call CQ_fnc_log;
     };
