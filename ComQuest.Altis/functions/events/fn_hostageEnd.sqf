@@ -2,7 +2,7 @@
     CQ_fnc_hostageEnd  (server)
     [_result] call CQ_fnc_hostageEnd;   _result: "" (just clear), "home", "dead"
     Ends the hostage event: markers out, the guerillas patrol where they are, the helicopter and
-    the technician are removed once nobody is near them.
+    the technician are removed once nobody is near them, guards and guerillas CQ_eventCleanup s later.
 */
 params [["_res", ""]];
 if (!isServer || { isNil "CQ_hstState" }) exitWith {};
@@ -13,7 +13,8 @@ deleteMarker "cq_hst"; deleteMarker "cq_hst_lz";
 CQ_hstPos = nil; publicVariable "CQ_hstPos";
 private _gg = _s get "guer";
 if (!isNull _gg && { ({ alive _x } count units _gg) > 0 }) then { [_gg] call CQ_fnc_clearWaypoints; [_gg, getPosATL (leader _gg), 250] call CQ_fnc_infPatrol };
-// the guards left alive stay where they are
+// the guards and guerillas left go CQ_eventCleanup s later (the house is a map building: stays)
+["Hostage event", (_s get "guards") + [_s get "guer"]] call CQ_fnc_eventCleanup;
 private _h = _s get "hostage";
 private _v = _s get "heli";
 [_h, _v, _res == "home"] spawn {

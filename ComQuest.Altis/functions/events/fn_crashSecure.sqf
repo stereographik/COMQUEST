@@ -12,6 +12,8 @@ if (!isNil "CQ_crashState") then {
     CQ_crashState set ["secured", true];
     private _c = CQ_crashState get "crate";
     if (!isNull _c) then { _c setVariable ["CQ_secured", true, true] };
+    // the wreck, its props, the crate and the survivors left go CQ_eventCleanup s later
+    ["Crash event", (CQ_crashState get "objs") + [CQ_crashState get "group"]] call CQ_fnc_eventCleanup;
 };
 CQ_crashAlarm = false; publicVariable "CQ_crashAlarm";
 deleteMarker "cq_crash";

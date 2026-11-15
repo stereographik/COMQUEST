@@ -240,6 +240,7 @@ CQ_crashWrecks = ["Land_Wreck_Plane_Transport_01_F", "Land_Wreck_Heli_Attack_02_
 CQ_crashCrate = "Box_East_Support_F";
 CQ_crashSurvivors = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_LAT_F", "O_Soldier_F"];
 CQ_crashSkill = 0.75;                    // survivors: sharp
+CQ_eventCleanup = 180;                   // s after a side event is over (crash secured, hostage ended, outpost fallen): its props and enemies left are removed
 CQ_crashLeash = 70;                       // m: a crash survivor further than this from the crate walks back to it (they defend, never chase)
 CQ_crashTimer = 600;                     // s after their first contact before the carrier drops help
 CQ_crashWarn = 120;                      // s before the drop: CROSSROAD warns
