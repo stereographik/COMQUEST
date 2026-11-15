@@ -75,7 +75,7 @@ while { alive _u && { _u == player } } do {
         private _by = if (_u getVariable ["CQ_surged", false]) then { "his own adrenaline" } else {
             private _ms = (allPlayers - [_u]) select { alive _x && { _x getUnitTrait "Medic" } && { _x distance _u < 6 } && { lifeState _x != "INCAPACITATED" } };
             _ms = [_ms, [], { _x distance _u }] call BIS_fnc_sortBy;
-            ["", format ["Medic %1", name (_ms select 0)]] select (_ms isNotEqualTo [])
+            if (_ms isEqualTo []) then { "" } else { format ["Medic %1", name (_ms select 0)] }
         };
         _u setVariable ["CQ_surged", false];
         _u setVariable ["CQ_downFed", false, true];   // up again: a later death is announced again
