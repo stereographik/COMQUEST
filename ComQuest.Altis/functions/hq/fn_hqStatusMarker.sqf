@@ -31,7 +31,7 @@ if (isNil "CQ_objMarkDone") then { CQ_objMarkDone = [] };
     if (markerType _om == "") then {
         createMarker [_om, getPosATL _o];
         _om setMarkerType "mil_objective";
-        _om setMarkerSize [0.7, 0.7];
+        _om setMarkerSize [CQ_objMarkSize, CQ_objMarkSize];
         _om setMarkerColor "ColorOrange";
     };
     private _ot = format ["[%1]", _o getVariable ["CQ_objType", "Objective"]];
