@@ -24,7 +24,9 @@ if (isNil "CQ_unassignedDone") then {
 };
 call CQ_fnc_grassCut;      // no grass around the base (local objects)
 [] spawn CQ_fnc_opClient;   // map: Operation (progress checklist) - first section of the briefing
-[] spawn CQ_fnc_intro;   // 5 s cinematic intro
+[] spawn CQ_fnc_intro;
+// graphics settings saved on this PC (CQ_fnc_gfx): applied once the intro has restored the view
+[] spawn { waitUntil { sleep 0.5; !isNil "CQ_introFinished" }; sleep 3; ["load"] call CQ_fnc_gfx };   // 5 s cinematic intro
 player createDiarySubject ["CQ_op", "Operation"];     // first in the map's briefing panel
 // Briefing tab: the opening orders
 player createDiaryRecord ["Diary", ["Orders", "<font face='PuristaSemibold' size='16' color='#F2F1DF'>GET YOUR STUFF UP FAST, SOLDIERS</font><br/><br/>CSAT has a carrier group offshore and will start landing troops on Altis within minutes.<br/><br/><font color='#918C3B'>1.</font> Press <font color='#F2F1DF'>U</font>: join or create a squad, pick your class inside the keep of Camp Harlan. Every class comes fully kitted.<br/><font color='#918C3B'>2.</font> Get moving: your squad leader takes vehicles at the motor pool, Falcon pilots fly you from the apron.<br/><font color='#918C3B'>3.</font> Find where they ground, then cut the network: HQs, radio towers, supply lines.<br/><br/><font color='#A6A381'>Progress is tracked in the Operation tab.</font>"]];

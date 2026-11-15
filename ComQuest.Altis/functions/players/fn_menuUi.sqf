@@ -31,7 +31,8 @@ private _items = [
     ["MAGPIE REPORT", "Last drone report, by category (U twice)", { [] spawn CQ_fnc_magReportUi }],
     ["VEHICLE SHOP", ["Browse here, buy at the shop terminal", "You are at the shop terminal"] select _nearShop, { [] spawn CQ_fnc_shopUi }],
     ["VEHICLE DEPOT", "Free vehicles: browse here, request at a depot (repair station)", { [] spawn CQ_fnc_depotUi }],
-    ["GUIDE & RULES", "How to play, server rules, report a player", { ["guide"] spawn CQ_fnc_squadUi }]
+    ["GUIDE & RULES", "How to play, server rules, report a player", { ["guide"] spawn CQ_fnc_squadUi }],
+    ["SETTINGS", "Graphics: presets, view distance, grass, FPS", { [] spawn CQ_fnc_gfxUi }]
 ];
 if (_admin) then { _items pushBack ["DEBUG PANEL", "Test commands (F3)", { [] spawn CQ_fnc_debugUi }] };
 

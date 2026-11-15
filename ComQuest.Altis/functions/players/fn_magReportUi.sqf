@@ -17,7 +17,7 @@ if (!hasInterface) exitWith {};
 disableSerialization;
 private _open = uiNamespace getVariable ["CQ_mrDisplay", displayNull];
 if (!isNull _open) exitWith { _open closeDisplay 1 };
-{ if (!isNull (uiNamespace getVariable [_x, displayNull])) then { (uiNamespace getVariable _x) closeDisplay 1 } } forEach ["CQ_menuDisplay", "CQ_sqDisplay", "CQ_shopDisplay", "CQ_depotDisplay"];
+{ if (!isNull (uiNamespace getVariable [_x, displayNull])) then { (uiNamespace getVariable _x) closeDisplay 1 } } forEach ["CQ_menuDisplay", "CQ_sqDisplay", "CQ_shopDisplay", "CQ_depotDisplay", "CQ_gfxDisplay"];
 
 private _d = (call CQ_fnc_uiParent) createDisplay "RscDisplayEmpty";   // on the map while it is open
 uiNamespace setVariable ["CQ_mrDisplay", _d];

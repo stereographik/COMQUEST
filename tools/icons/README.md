@@ -13,3 +13,4 @@ Export: 128 x 128 PNG with alpha, then `tools/img2paa.py` -> `media/icons/<name>
 | tab_lastseen.svg | MAGPIE report | LAST SEEN (eye and clock) |
 | tab_global.svg | MAGPIE report | GLOBAL SITUATION (map and target) |
 | tab_network.svg | MAGPIE report | NETWORK |
+| tab_graphics.svg | Graphics settings | GRAPHICS |
