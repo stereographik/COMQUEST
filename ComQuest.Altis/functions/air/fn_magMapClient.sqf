@@ -8,6 +8,7 @@
         no text, at his live position and heading. Out of sight = the icon goes.
       - under them, the range map (CQ_fnc_rangeMapClient): the ground those enemies can fire on.
       - friendlies through the data link (CQ_fnc_bftClient, CQ_bft)
+      - help calls (CQ_fnc_helpCall): red medic cross, white border, callsign
       on the GPS panel (CQ_gpsOverlay): the same enemy icons, range map and friendlies.
 */
 if (!hasInterface) exitWith {};
@@ -43,6 +44,17 @@ CQ_magDrawEnemies = {
         };
     } forEach (_vs arrayIntersect _vs);
 };
+// help calls (CQ_fnc_helpCall): red medic cross with a thin white border, every player
+CQ_helpDraw = {
+    params ["_map"];
+    private _sz = CQ_helpIconPx * CQ_mapIconScale;
+    private _tex = "\A3\ui_f\data\map\vehicleicons\pictureHeal_ca.paa";
+    {
+        _x params ["", "_p", "", "_cs"];
+        _map drawIcon [_tex, [1, 1, 1, 1], _p, _sz + 4, _sz + 4, 0, "", 0];          // white border
+        _map drawIcon [_tex, [0.85, 0.1, 0.1, 1], _p, _sz, _sz, 0, _cs, 1, 0.03, "PuristaMedium", "right"];
+    } forEach (missionNamespace getVariable ["CQ_helpCalls", []]);
+};
 [] spawn {
     disableSerialization;
     waitUntil { sleep 0.5; !isNull ((findDisplay 12) displayCtrl 51) };
@@ -50,6 +62,7 @@ CQ_magDrawEnemies = {
         params ["_map"];
         _map call CQ_magDrawEnemies;
         if (CQ_bft) then { _map call CQ_bftDraw };
+        _map call CQ_helpDraw;
         // nGD: the enemy radio network (CQ_fnc_netTick) and our MAGPIE coverage
         (missionNamespace getVariable ["CQ_netPub", []]) params [["_nNodes", []], ["_nLinks", []], ["_nTrunk", []], ["_nRelays", []], ["_nBase", 0]];
         // our data link (CQ_fnc_linkTick): every node's range (blue linked, grey cut off) and the links
@@ -91,7 +104,7 @@ if (CQ_gpsOverlay) then {
             private _gps = (uiNamespace getVariable ["RscCustomInfoMiniMap", displayNull]) displayCtrl 101;
             if (!isNull _gps && { !(_gps getVariable ["CQ_hooked", false]) }) then {
                 _gps setVariable ["CQ_hooked", true];
-                _gps ctrlAddEventHandler ["Draw", { (_this select 0) call CQ_magDrawEnemies; if (CQ_bft) then { (_this select 0) call CQ_bftDraw } }];
+                _gps ctrlAddEventHandler ["Draw", { (_this select 0) call CQ_magDrawEnemies; if (CQ_bft) then { (_this select 0) call CQ_bftDraw }; (_this select 0) call CQ_helpDraw }];
             };
             sleep 1;
         };
