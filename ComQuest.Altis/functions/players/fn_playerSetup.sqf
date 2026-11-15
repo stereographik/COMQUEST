@@ -16,8 +16,10 @@ if (isNil "CQ_savedLoadout") then { ["Rifleman"] call CQ_fnc_classKit };
 // Player feed: what last hit him (CQ_fnc_killTag: category · shooter · weapon), told to everyone when he
 // goes down (CQ_fnc_adrenalineSurge) or dies outright (initServer.sqf)
 player addEventHandler ["HandleDamage", {
-    params ["_u", "", "_dmg", "_src", "", "", "_inst"];
+    params ["_u", "_sel", "_dmg", "_src", "", "", "_inst"];
     private _w = [_inst, _src] select (isNull _inst);
+    // headshot: a lethal hit on the head (the feed adds a commander's remark, CQ_headshotLines)
+    if (_sel in ["head", "face_hub"] && { _dmg >= 0.9 } && { !isNull _w } && { _w != _u }) then { _u setVariable ["CQ_headT", serverTime, true] };
     if (!isNull _w && { _w != _u } && { _dmg > 0.05 }) then {
         // feed tag (CQ_fnc_killTag): category · shooter · weapon; only re-read for a new shooter or weapon
         private _key = [_w, currentWeapon _w, currentWeapon vehicle _w];
