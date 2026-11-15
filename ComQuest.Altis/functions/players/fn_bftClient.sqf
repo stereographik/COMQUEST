@@ -46,7 +46,7 @@ CQ_bftDraw = {
                 if (alive _x && { !(_v in _done) } && { [getPosASL _v] call _cov }) then {
                     _done pushBack _v;
                     private _g = group _x;
-                    _list pushBack [_v, ["", groupId _g] select (leader _g == _x && { count units _g > 1 || { isPlayer _x } })];
+                    _list pushBack [_v, ["", " " + groupId _g] select (leader _g == _x && { count units _g > 1 || { isPlayer _x } })];
                 };
             } forEach (units west);
         };
