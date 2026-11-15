@@ -794,15 +794,15 @@ private _mx = ["muzzle_snds_H", "acc_pointer_IR"];
 CQ_classGear = createHashMapFromArray [
     ["Rifleman",        ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Squad Leader",    ["arifle_MX_GL_F", _mx + ["optic_Arco"],                   "",                       "U_B_CombatUniform_mcam", "V_PlateCarrierGL_rgr",   "H_HelmetSpecB"]],
-    ["Medic",           ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Medic",           ["arifle_MXC_F",   _mx + ["optic_Holosight", "bipod_01_F_snd"],"",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Grenadier",       ["arifle_MX_GL_F", _mx + ["optic_Arco"],                   "",                       "U_B_CombatUniform_mcam", "V_PlateCarrierGL_rgr",   "H_HelmetSpecB"]],
     ["Autorifleman",    ["LMG_Mk200_F",    ["muzzle_snds_H_MG", "acc_pointer_IR", "optic_Hamr", "bipod_01_F_snd"], "", "U_B_CombatUniform_mcam", "V_PlateCarrierSpec_rgr", "H_HelmetSpecB"]],
     ["Light Anti-Tank", ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_NLAW_F",          "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Heavy Anti-Tank", ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_B_Titan_short_F", "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Anti-Air",        ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_B_Titan_F",       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
-    ["Engineer",        ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Engineer",        ["arifle_MXC_F",   _mx + ["optic_Holosight", "bipod_01_F_snd"],"",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Sniper",          ["srifle_GM6_F",   [["optic_LRPS", "optic_SOS"], "bipod_01_F_snd"], "",            "U_B_GhillieSuit",        "V_Chestrig_rgr",         "-"]],
-    ["Pilot",           ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "",                       "",                       ""]]
+    ["Pilot",           ["arifle_MXC_F",   _mx + ["optic_Holosight", "bipod_01_F_snd"],"",                       "",                       "",                       ""]]
 ];
 CQ_classNvg = "NVGoggles";
 // Arsenal (open to everyone, CQ_fnc_arsenalOpen): role gear is only offered to its classes
