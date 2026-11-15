@@ -13,19 +13,29 @@ if (typeOf player in CQ_engineerClasses) then {
 // Every preset carries binoculars and a GPS (class loadouts get them in CQ_fnc_setClass)
 if (isNil "CQ_savedLoadout") then { ["Rifleman"] call CQ_fnc_classKit };
 
-// Player feed: what last hit him (the enemy's class, or its vehicle), told to everyone when he
+// Player feed: what last hit him (CQ_fnc_killTag: category · shooter · weapon (caliber)), told to everyone when he
 // goes down (CQ_fnc_adrenalineSurge) or dies outright (initServer.sqf)
 player addEventHandler ["HandleDamage", {
     params ["_u", "", "_dmg", "_src", "", "", "_inst"];
     private _w = [_inst, _src] select (isNull _inst);
     if (!isNull _w && { _w != _u } && { _dmg > 0.05 }) then {
-        private _o = [vehicle _w, _w] select (vehicle _w == _w);
-        private _nm = getText (configOf _o >> "displayName");
-        if (_nm == "") then { _nm = typeOf _o };
-        if (_nm != (_u getVariable ["CQ_lastHit", ""])) then { _u setVariable ["CQ_lastHit", _nm, true] };
+        // feed tag (CQ_fnc_killTag): category · shooter · weapon (caliber); only re-read for a new shooter or weapon
+        private _key = [_w, currentWeapon _w, currentWeapon vehicle _w];
+        if !(_key isEqualTo (_u getVariable ["CQ_lastHitKey", []])) then {
+            _u setVariable ["CQ_lastHitKey", _key];
+            private _nm = [_u, _w, _src] call CQ_fnc_killTag;
+            if (_nm != (_u getVariable ["CQ_lastHit", ""])) then { _u setVariable ["CQ_lastHit", _nm, true] };
+        };
+        _u setVariable ["CQ_lastHitT", time];
         // teamkill watch (CQ_fnc_conduct): who of ours last hurt him, for a death after bleeding out
         private _pw = [effectiveCommander _w, _w] select (_w isKindOf "CAManBase");
         if (isPlayer _pw && { _pw != _u }) then { _u setVariable ["CQ_lastHitBy", [_pw, serverTime, vehicle _w != _w || { !(_w isKindOf "CAManBase") }], true] };
+    } else {
+        // no shooter (fall, crash, fire) or his own explosive: an accident, unless a real hit came just before
+        if (_dmg > 0.05 && { time - (_u getVariable ["CQ_lastHitT", -1e6]) > 10 } && { (_u getVariable ["CQ_lastHit", ""]) != "ACCIDENT" }) then {
+            _u setVariable ["CQ_lastHitKey", []];
+            _u setVariable ["CQ_lastHit", "ACCIDENT", true];
+        };
     };
     nil
 }];

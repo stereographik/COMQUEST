@@ -304,6 +304,7 @@ CQ_linkLegLen = 400;                     // m: the relay vehicle drives in legs 
 // allows (anchored on the relay vehicle while it is alive, else on the base), at CQ_linkReach of
 // the anchor's range
 CQ_wasp = true;
+CQ_killMissionSquads = ["Hostage guards", "Corridor outpost", "Tower guard"];   // kill feed: enemy groups named this way (start of the name) are a MISSION SQUAD
 CQ_objMarkSize = 0.35;                   // objective markers ([Depot], [AA pit]...) size (was 0.7)
 CQ_objLookTime = 60;                     // s a Watcher Darter looks around a newly spotted objective (plus its flight there)
 CQ_objLookAaR = 1200;                    // m it keeps from a spotted AA pit while looking

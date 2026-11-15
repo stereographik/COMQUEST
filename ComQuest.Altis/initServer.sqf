@@ -51,7 +51,7 @@ addMissionEventHandler ["EntityKilled", {
         if (!isNull _k) then { ["tk", [_u, _k, _acc]] call CQ_fnc_conduct };
     };
     if (!isPlayer _u || { _u getVariable ["CQ_downFed", false] }) exitWith {};   // already announced when he went down
-    [format ["%1 killed  ·  %2", name _u, _u getVariable ["CQ_lastHit", "unknown"]]] remoteExec ["CQ_fnc_feed", 0];
+    [format ["%1 was killed by %2", name _u, _u getVariable ["CQ_lastHit", "UNKNOWN"]]] remoteExec ["CQ_fnc_feed", 0];
 }];
 
 // The mission starts CQ_startAfterIntro s after the first player's intro (CQ_fnc_introDone).
