@@ -40,6 +40,8 @@ addMissionEventHandler ["PlayerDisconnected", {
 }];
 addMissionEventHandler ["EntityKilled", {
     params ["_u", "_killer", "_inst"];
+    // enemy vehicle destroyed by a player: command laughs (CQ_fnc_vehFeed)
+    if !(_u isKindOf "CAManBase") exitWith { ["kill", [_u, [_inst, effectiveCommander _killer] select (isNull _inst)]] call CQ_fnc_vehFeed };
     // teamkill watch (CQ_fnc_conduct): the shooter, or the player who last hurt him (downed, bled out)
     if (isPlayer _u) then {
         private _k = [_inst, effectiveCommander _killer] select (isNull _inst);
