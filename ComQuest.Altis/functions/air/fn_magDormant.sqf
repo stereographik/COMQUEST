@@ -14,27 +14,27 @@
     While in the air a woken Darter relays MAGPIE's data link (CQ_fnc_magTick, CQ_netCoverRelay).
 */
 if (!CQ_magDormant || { isNil "CQ_magDormantPts" }) exitWith {};
-// TEST ONLY (remove later): every MAGPIE Darter flies CQ_testDarterSpeed x faster toward its
-// current waypoint (velocity pushed every 0.1 s while more than 250 m from it)
-if (CQ_testDarterSpeed > 1 && { isNil "CQ_testDarterLoop" }) then {
-    CQ_testDarterLoop = [] spawn {
-        private _vmax = (getNumber (configFile >> "CfgVehicles" >> "B_UAV_01_F" >> "maxSpeed") max 70) / 3.6 * CQ_testDarterSpeed;
+// grid Darters (woken, role "dormant") cruise at CQ_gridDarterSpeed km/h toward their waypoint
+// (vanilla tops out around 80): horizontal velocity set every 0.2 s while more than 250 m from it
+// and above 40 m; WASP and the other drones fly at their own speed
+if (CQ_gridDarterSpeed > 0 && { isNil "CQ_gridSpeedLoop" }) then {
+    CQ_gridSpeedLoop = [] spawn {
+        private _vmax = CQ_gridDarterSpeed / 3.6;
         while { true } do {
             {
+                if ((_x getOrDefault ["role", ""]) != "dormant") then { continue };
                 private _v = _x get "veh";
-                if (!alive _v || { !(_v isKindOf "UAV_01_base_F") } || { ((getPosATL _v) select 2) < 20 }) then { continue };
+                if (!alive _v || { ((getPosATL _v) select 2) < 40 }) then { continue };
                 private _g = group effectiveCommander _v;
                 if (isNull _g) then { continue };
                 private _wp = waypointPosition [_g, currentWaypoint _g];
                 if (_wp isEqualTo [0, 0, 0] || { _v distance2D _wp < 250 }) then { continue };
-                private _d = (getPosASL _v) vectorFromTo (AGLToASL [_wp select 0, _wp select 1, 0]);
-                private _h = vectorNormalized [_d select 0, _d select 1, 0];
+                private _h = vectorNormalized [(_wp select 0) - ((getPosASL _v) select 0), (_wp select 1) - ((getPosASL _v) select 1), 0];
                 _v setVelocity [(_h select 0) * _vmax, (_h select 1) * _vmax, (velocity _v) select 2];
             } forEach (missionNamespace getVariable ["CQ_mag", []]);
-            sleep 0.1;
+            sleep 0.2;
         };
     };
-    ["TEST: MAGPIE Darters fly x%1 (CQ_testDarterSpeed)", [CQ_testDarterSpeed]] call CQ_fnc_log;
 };
 if (time < (missionNamespace getVariable ["CQ_magDormantNext", 0])) exitWith {};
 CQ_magDormantNext = time + 3;

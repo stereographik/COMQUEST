@@ -445,7 +445,6 @@ CQ_fullPowerPlayers = 24;
 CQ_scaleMin = 0.35;                      // fewest players: 35 % of the infantry cap, waves up to twice as slow
 CQ_testFullPower = true;                 // TEST: play as if CQ_fullPowerPlayers were connected (debug panel toggle)
 CQ_dbgTpDist = 100;                      // m: debug teleporters put you this far from their target
-CQ_testDarterSpeed = 5;                  // TEST ONLY, set 1 before merging to main: every MAGPIE Darter flies this x faster toward its waypoint
 CQ_testMagDirect = false;                // TEST ONLY, set false before merging to main: the two Sentinels fly straight to the first enemy HQ site instead of their search circuits
 
 // --- Enemy root insertions --------------------------------------------------
@@ -1031,6 +1030,7 @@ CQ_magWjZone = 1500;                     // m: woken Darters this close to each 
 CQ_tntStandoff = 1;                      // tentacle tip and ring: this x a Darter's sensor range (~600 m) outside the zone's memories and contacts
 CQ_tntMove = 300;                        // m: the tentacle is recomputed only when the zone's centroid or its root moves more than this
 CQ_tntArrive = 200;                      // m: a Darter this close to its slot has arrived (loiters; the tip's arrival opens the ring)
+CQ_gridDarterSpeed = 150;                // km/h: grid (woken) Darters cruise this fast toward their slot (vanilla ~80; 0 = vanilla)
 CQ_tntAaR = 1200;                        // m: chain and ring slots kept this far from known anti-air
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
