@@ -72,6 +72,11 @@ player addAction ["<t color='#918C3B'>Unload supply crate</t>",
     "private _v = [cursorObject, vehicle _this] select (vehicle _this != _this); count (_v getVariable ['CQ_crates', []]) > 0 && { _this distance _v < 8 }"];
 
 // Engineers: short sandbag walls in the field (CQ_fnc_sandbag), recalled from the base
+// squad leader: call for help (blue flare up, COMHAT message, medic marker for CQ_helpLife s) / cancel it
+player addAction ["<t color='#3B6FD8'>Call for help</t>", { ["call", [player]] remoteExec ["CQ_fnc_helpCall", 2] }, nil, 0.9, false, true, "",
+    "alive _this && { leader group _this == _this } && { _this distance2D CQ_basePos > CQ_baseRadius }"];
+player addAction ["<t color='#3B6FD8'>Cancel help call</t>", { ["cancel", [player]] remoteExec ["CQ_fnc_helpCall", 2] }, nil, 0.85, false, true, "",
+    "leader group _this == _this && { private _id = netId group _this; ((missionNamespace getVariable ['CQ_helpCalls', []]) findIf { (_x select 0) == _id }) > -1 }"];
 player addAction ["<t color='#918C3B'>Build a sandbag wall</t>", { ["place"] spawn CQ_fnc_sandbag }, nil, 1.2, false, true, "",
     "_this getUnitTrait 'engineer' && { vehicle _this == _this } && { isNil 'CQ_sbGhost' } && { _this distance2D CQ_basePos > CQ_baseRadius } && { (missionNamespace getVariable ['CQ_sb_' + getPlayerUID _this, 0]) < CQ_sbMax }"];
 player addAction ["<t color='#918C3B'>Recall my sandbag walls</t>", { ["recall", [player]] remoteExec ["CQ_fnc_sandbag", 2] }, nil, 1.1, false, true, "",

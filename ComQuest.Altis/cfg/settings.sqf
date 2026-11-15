@@ -951,6 +951,12 @@ CQ_bft = true;                           // false: vanilla friendly map content 
 CQ_bftEvery = 2;                         // s between two refreshes of who is in coverage
 CQ_bftIconPx = 22;                       // icon size (x CQ_mapIconScale)
 CQ_bftColor = [0, 0.3, 0.6, 1];          // BLUFOR blue
+// Call for help (fn_helpCall): squad leader action, blue-tinted flare up + COMHAT message + medic marker
+CQ_helpLife = 300;                       // s the medic marker stays (or until the leader cancels it)
+CQ_helpIconPx = 26;                      // marker size (x CQ_mapIconScale)
+CQ_helpFlare = "F_40mm_White";           // vanilla flare fired straight up (no blue flare in vanilla: tinted)
+CQ_helpFlareSpeed = 70;                  // m/s upward
+CQ_helpLightBright = 6;                  // blue light riding the flare
 // MAGPIE heatmap (map overlay, every player; OFF by default since the radar echoes): contacts only, blue -> red
 // contour bands shaped by the terrain, fading (half-life) as the information gets old
 CQ_heatCell = 300;                       // m per cell
