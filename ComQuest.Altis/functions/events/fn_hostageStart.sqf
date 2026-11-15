@@ -109,10 +109,13 @@ private _go = createGroup [east, true];
 } forEach CQ_hstGuards;
 [(units _gi) + (units _go)] call CQ_fnc_unitPrep;
 {
-    _x setBehaviour "AWARE"; _x setCombatMode "RED"; _x enableDynamicSimulation false;
+    _x setBehaviour "COMBAT"; _x setCombatMode "RED"; _x enableDynamicSimulation false;
 } forEach [_gi, _go];
 _gi setGroupIdGlobal ["Hostage guards"];
-if (units _go isNotEqualTo []) then { [_go, _site, 30] call BIS_fnc_taskDefend };
+// the guards outside: alert, each on his own spot around the house (never walk off or chase)
+if (units _go isNotEqualTo []) then { [units _go, _site, CQ_eventHoldR] call CQ_fnc_eventHold };
+// + a crewed armed pickup holding near the house
+private _tech = [_site] call CQ_fnc_eventTechnical;
 
 // ---- marker: the exact house
 private _m = createMarker ["cq_hst", _site];
@@ -122,7 +125,7 @@ _m setMarkerText "Hostage";
 
 CQ_hstState = createHashMapFromArray [
     ["phase", "held"], ["pos", _site], ["house", _house], ["hostage", _h],
-    ["guards", (units _gi) + (units _go)], ["heli", objNull], ["lz", []], ["guer", grpNull],
+    ["guards", (units _gi) + (units _go) + (if (isNull _tech) then { [] } else { [_tech] + crew _tech })], ["heli", objNull], ["lz", []], ["guer", grpNull],
     ["freer", objNull], ["t0", time], ["stuckT", time], ["lastD", 1e6], ["logT", 0]
 ];
 CQ_hstLastT = time;

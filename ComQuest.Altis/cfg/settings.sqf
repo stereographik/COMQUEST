@@ -217,8 +217,9 @@ CQ_hstMinBp = 4;                         // building positions the house needs (
 CQ_hstCivClass = "C_man_polo_1_F";
 CQ_hstSitAnim = "Acts_AidlPsitMstpSsurWnonDnon_loop";   // sitting, hands tied
 CQ_hstDamageMul = 0.5;                   // damage the hostage takes (x)
-CQ_hstGuards = ["O_Soldier_TL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_F", "O_Soldier_LAT_F"];
-CQ_hstGuardsIn = 3;                      // of them at the house's windows, the rest covering the approaches
+CQ_hstGuards = ["O_Soldier_TL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_F", "O_Soldier_LAT_F",
+                "O_Soldier_F", "O_Soldier_GL_F", "O_Soldier_AR_F", "O_Soldier_F", "O_Soldier_LAT_F"];   // 10
+CQ_hstGuardsIn = 6;                      // of them at the house's windows, the rest covering the approaches
 CQ_hstSkill = 0.65;
 CQ_hstFwTime = 10;                       // s: "Download firmware" hold
 CQ_hstHeliClass = "B_Heli_Transport_01_F";   // Ghost Hawk, AI crew
@@ -242,8 +243,12 @@ CQ_crashSiteFrac = [0.35, 0.65];         // site between the base (0) and an ene
 CQ_crashPlayerGap = 800;                 // m: never right next to a player
 CQ_crashWrecks = ["Land_Wreck_Plane_Transport_01_F", "Land_Wreck_Heli_Attack_02_F", "Land_UWreck_Heli_Attack_02_F"];   // first that exists
 CQ_crashCrate = "Box_East_Support_F";
-CQ_crashSurvivors = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_LAT_F", "O_Soldier_F"];
+CQ_crashSurvivors = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_LAT_F", "O_Soldier_F",
+                     "O_Soldier_TL_F", "O_Soldier_AR_F", "O_Soldier_GL_F", "O_Soldier_F", "O_medic_F"];   // 10, each holding a spot around the crate (CQ_fnc_eventHold)
 CQ_crashSkill = 0.75;                    // survivors: sharp
+CQ_eventTechnical = "O_G_Offroad_01_armed_F";   // crash and hostage: a crewed armed pickup (HMG) holding near the objective
+CQ_eventTechR = [25, 45];                // m from the objective
+CQ_eventHoldR = [10, 25];                // m: defenders' ring around the objective (crash crate, hostage house outside)
 CQ_eventCleanup = 180;                   // s after a side event is over (crash secured, hostage ended, outpost fallen): its props and enemies left are removed
 CQ_eventCleanupR = 300;                  // m: ...and only once no player is this close to what is left
 CQ_crashLeash = 70;                       // m: a crash survivor further than this from the crate walks back to it (they defend, never chase)

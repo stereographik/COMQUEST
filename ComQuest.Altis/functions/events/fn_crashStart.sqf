@@ -78,10 +78,12 @@ private _g = createGroup [east, true];
 } forEach CQ_crashSurvivors;
 [units _g] call CQ_fnc_unitPrep;
 _g setGroupIdGlobal ["Crash survivors"];
-_g setBehaviour "AWARE";
-_g setCombatMode "YELLOW";             // fire at will but hold formation: they defend, they do not chase
 _g enableDynamicSimulation false;
-[_g, _cp, 40] call BIS_fnc_taskDefend;   // + leash in CQ_fnc_crashTick: anyone past CQ_crashLeash m walks back
+// alert, each on his own spot around the crate (they turn and shoot, never walk off or chase)
+[units _g, _cp, CQ_eventHoldR] call CQ_fnc_eventHold;
+// + a crewed armed pickup holding near the wreck
+private _tech = [_cp] call CQ_fnc_eventTechnical;
+if (!isNull _tech) then { _objs pushBack _tech };
 
 // marker: the crash area
 private _m = createMarker ["cq_crash", _site];
@@ -91,12 +93,12 @@ _m setMarkerBrush "FDiagonal";
 _m setMarkerColor "ColorOPFOR";
 
 CQ_crashState = createHashMapFromArray [
-    ["pos", _site], ["objs", _objs], ["crate", _crate], ["cratePos", _cp], ["group", _g], ["men", units _g], ["contactT", -1],
+    ["pos", _site], ["objs", _objs], ["crate", _crate], ["cratePos", _cp], ["group", _g], ["men", (units _g) + (if (isNull _tech) then { [] } else { crew _tech })], ["contactT", -1],
     ["warned", false], ["dropped", false], ["secured", false], ["t0", time]
 ];
 CQ_crashLastT = time;
 CQ_crashPos = _site; publicVariable "CQ_crashPos";
-["Crash event: CSAT transport down at %1 (%2 m from the base, %3 survivors, wreck %4)", [mapGridPosition _site, round (_site distance2D CQ_basePos), count units _g, _wcls]] call CQ_fnc_log;
+["Crash event: CSAT transport down at %1 (%2 m from the base, %3 survivors holding, wreck %4, armed pickup %5)", [mapGridPosition _site, round (_site distance2D CQ_basePos), count units _g, _wcls, ["none", typeOf _tech] select !isNull _tech]] call CQ_fnc_log;
 ["crashDown", [mapGridPosition _site]] call CQ_fnc_say;
 CQ_crashKey = format ["crash%1", round time];
 [CQ_crashKey, 1, format ["Crash site at grid %1", mapGridPosition _site], "crate to secure"] call CQ_fnc_opSide;

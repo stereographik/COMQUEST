@@ -117,7 +117,7 @@ private _mortar = [CQ_opMortar, 11, 180] call _put;
 private _men = [];
 {
     private _g = [_x] call CQ_fnc_crewVehicle;
-    _g setBehaviour "AWARE"; _g setCombatMode "RED";
+    _g setBehaviour "COMBAT"; _g setCombatMode "RED";
     { _x setSkill CQ_opSkill; _men pushBack _x } forEach units _g;
     _x setVariable ["CQ_outpost", true, true];
 } forEach (_aa + _hmg + [_mortar]);
@@ -150,7 +150,7 @@ for "_i" from 0 to _n - 1 do {
     _x setSkill ["spotDistance", 0.9]; _x setSkill ["spotTime", 0.85]; _x setSkill ["courage", 1];
     _men pushBack _x;
 } forEach units _g;
-_g setBehaviour "AWARE"; _g setCombatMode "RED";
+_g setBehaviour "COMBAT"; _g setCombatMode "RED";   // alert; already holding (PATH off)
 _g enableDynamicSimulation false;
 
 // gunboats along the coast around the coast point
