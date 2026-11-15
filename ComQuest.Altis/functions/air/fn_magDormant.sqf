@@ -90,6 +90,35 @@ private _wake = {
     ["MAGPIE: %1 wakes at %2 (%3), %4 points left, %5 awake", [_name, mapGridPosition _p, _why, count CQ_magDormantPts, call _awake]] call CQ_fnc_log;
 };
 
+// ---- debug "Full tentacle" (CQ_fnc_debugCmd magTentacle): the CQ_tntTestN sleeping points nearest
+// the outpost (outside CQ_magAaAvoid of it) wake at once, past CQ_magDormantMax, already clear and
+// connected; the tentacle's only memory is the outpost (kept CQ_tntTestPin s), WASP replans now, and
+// the Darters are put straight on their slots for the next 20 s (chain, then the ring)
+if (!isNil "CQ_tntTestReq") then {
+    CQ_tntTestReq = nil;
+    private _op = CQ_outpostState get "pos";
+    private _ks = (keys CQ_magDormantPts) select { (CQ_magDormantPts get _x) distance2D _op > CQ_magAaAvoid };
+    _ks = [_ks, [], { (CQ_magDormantPts get _x) distance2D _op }, "ASCEND"] call BIS_fnc_sortBy;
+    _ks = _ks select [0, CQ_tntTestN];
+    private _names = [];
+    {
+        [_x, _op, "debug full tentacle"] call _wake;
+        private _m = CQ_mag select (count CQ_mag - 1);
+        _m set ["flee", false];
+        _names pushBack (_m get "name");
+    } forEach _ks;
+    CQ_tntMem = createHashMapFromArray [["TEST outpost", [_op, time]]];
+    CQ_tntShared = (missionNamespace getVariable ["CQ_tntShared", []]) + _names;   // no wake-point memory of their own
+    CQ_tntUnits = [];
+    CQ_tntKey = [];
+    CQ_tntRoot = [];
+    CQ_tntTestUntil = time + CQ_tntTestPin;
+    CQ_tntTeleportUntil = time + 20;
+    { if ((_x getOrDefault ["role", ""]) == "wasp") then { _x set ["planT", -1e6] } } forEach CQ_mag;
+    CQ_magNext = 0;
+    ["MAGPIE: debug full tentacle toward the outpost at %1: %2 Darters woken (%3)", [mapGridPosition _op, count _names, _names joinString ", "]] call CQ_fnc_log;
+};
+
 // ---- get away first: straight away from the enemy until > 80 % of the sensor range
 {
     private _m = _x;
@@ -193,6 +222,7 @@ call {
         _y params ["_mp", "_mt"];
         if ((_live findIf { _x distance2D _mp < CQ_magWjZone }) > -1) then { _y set [1, time] };
     } forEach CQ_tntMem;
+    if (time < (missionNamespace getVariable ["CQ_tntTestUntil", -1]) && { "TEST outpost" in CQ_tntMem }) then { (CQ_tntMem get "TEST outpost") set [1, time] };   // debug: pinned
     { if (time - ((CQ_tntMem get _x) select 1) > CQ_magMemory) then { CQ_tntMem deleteAt _x } } forEach (keys CQ_tntMem);
     // memory points: the wake points still kept + the ground contacts of the last report check
     // (CQ_tntUnits, CQ_fnc_magTick), each at its live position while seen, else where last seen
@@ -359,6 +389,18 @@ call {
         _wp setWaypointCompletionRadius 80;
         _g setCurrentWaypoint _wp;
     } forEach _woke;
+    // debug "Full tentacle": straight onto the slots (the tip on its slot opens the ring next tick)
+    if (time < (missionNamespace getVariable ["CQ_tntTeleportUntil", -1])) then {
+        {
+            private _i = _x getOrDefault ["tntI", -1];
+            if (_i < 0) then { continue };
+            private _pt = _slots select _i;
+            private _v = _x get "veh";
+            _v setPosATL [_pt select 0, _pt select 1, CQ_magDormantAlt];
+            _v setVelocityModelSpace [0, 15, 0];
+        } forEach _woke;
+        CQ_magDormantNext = time + 1;                // check the tip's arrival right away
+    };
     CQ_tntPub = [[_root] + _chain, _ring select [0, [0, count _ring] select (_ringNow && { _spare >= 2 })], [_cc, _rad]];
     publicVariable "CQ_tntPub";
     ["MAGPIE: tentacle to the zone at %1 (%2 zone(s)): %3/%4 chain Darters, %5 %6, %7 re-tasked", [mapGridPosition _cc, count _zones, _nChain, _need, _spare, ["in reserve", "on the ring"] select (_ringNow && { _spare >= 2 }), _moved]] call CQ_fnc_log;

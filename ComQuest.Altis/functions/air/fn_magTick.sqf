@@ -660,7 +660,8 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
     // tentacle memory (CQ_fnc_magDormant), at every check, report sent or not: once a grid Darter
     // has shared a wake point, the memory holds the ground contacts seen in the last CQ_magMemory s
     // (aircraft out), and a wake point with such a contact within CQ_magWjZone is dropped
-    if (count (missionNamespace getVariable ["CQ_tntMem", createHashMap]) > 0 || { (missionNamespace getVariable ["CQ_tntUnits", []]) isNotEqualTo [] }) then {
+    // (skipped while the debug "Full tentacle" test pins its outpost memory, CQ_tntTestUntil)
+    if (time >= (missionNamespace getVariable ["CQ_tntTestUntil", -1]) && { count (missionNamespace getVariable ["CQ_tntMem", createHashMap]) > 0 || { (missionNamespace getVariable ["CQ_tntUnits", []]) isNotEqualTo [] } }) then {
         CQ_tntUnits = ((values CQ_magSeen) select { alive (_x select 0) && { (_x select 4) != "air" } && { time - (_x select 2) < CQ_magMemory } }) apply { _x select 0 };
         private _up = CQ_tntUnits apply { getPosATL _x };
         private _gone = 0;

@@ -92,7 +92,7 @@ private _cats = [
         ["SABOTAGE", [["Launch now", "sabGo"], ["Teleport near", "tpSab"], ["Wipe team", "sabKill"]]]
     ]],
     ["FRIENDLY", [
-        ["MAGPIE", [["Report now", "magReport"], ["Launch missing", "magLaunch"], ["Shoot down", "magKill"]]],
+        ["MAGPIE", [["Report now", "magReport"], ["Launch missing", "magLaunch"], ["Shoot down", "magKill"], ["Full tentacle", "magTentacle"]]],
         ["Player", [["Heal me", "heal"], ["God mode", "!god"], ["Arsenal", "!arsenal"], ["+500 points", "points"], ["Fix vehicle", "vehFix"]]],
         ["Base", [["Depot reset", "vehReset"], ["Rebuild def.", "defRebuild"]]]
     ]],
@@ -177,6 +177,7 @@ private _toggles = [];
                         CQ_myLogs = _f;                // label right away; the server answers with the same value
                         ["logs", ([0, 1] select (_f select 0)) + ([0, 2] select (_f select 1))] remoteExec ["CQ_fnc_debugCmd", 2];
                     };
+                    case "magTentacle": { CQ_dbgShowTnt = true; [_cmd, -1] remoteExec ["CQ_fnc_debugCmd", 2] };   // tentacle shown on the map
                     case "!god": { CQ_dbgGod = !CQ_dbgGod; player allowDamage !CQ_dbgGod; if (vehicle player != player) then { (vehicle player) allowDamage !CQ_dbgGod } };
                     case "!playerView": {
                         private _on = !(missionNamespace getVariable ["CQ_playerView", false]);

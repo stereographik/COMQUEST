@@ -6,7 +6,7 @@
     Enemy HQ (selected):  next, ammo, fuel, killCmd, capture, tower, depot, destroy, wave
     Carrier and forces:   root, flight, carrierMinus, carrierFull, killAll
     Story:                actNext, sitrep, storyReset
-    MAGPIE:               magReport, magLaunch, magKill
+    MAGPIE:               magReport, magLaunch, magKill, magTentacle
     Events:               crash, tpCrash, decrypt, crashOut, hst, tpHst, hstClear, hstFw, hstBoard, hstHome, hstEnd, opBuild, opKill, opJam, tpOp
     Player (the caller):  heal, tpBase, tpHq, points, vehFix
     Players (admin tools, _id = [uid, text]): pWarn, pMute, pBase, pKick (CQ_fnc_conduct)
@@ -326,6 +326,13 @@ if (_needHq && { count _hq == 0 }) then {
             private _n = 0;
             { if (alive (_x get "veh")) then { (_x get "veh") setDamage 1; _n = _n + 1 } } forEach CQ_mag;
             _msg = format ["%1 drone(s) shot down", _n];
+        };
+        case "magTentacle": {
+            // test: CQ_tntTestN sleeping Darters woken near the outpost, the tentacle laid out at once toward it (CQ_fnc_magDormant)
+            if (isNil "CQ_outpostState" || { CQ_outpostState get "fallen" }) then { _msg = "no outpost" } else {
+                CQ_tntTestReq = true; CQ_magDormantNext = 0;
+                _msg = format ["full tentacle toward the outpost at %1: %2 Darters on the next tick", mapGridPosition (CQ_outpostState get "pos"), CQ_tntTestN];
+            };
         };
         case "heal": { if (!isNull _p) then { _p setDamage 0; _msg = "healed" } };
         // admin tools on a player (CQ_fnc_conduct): _id = [uid, text]
