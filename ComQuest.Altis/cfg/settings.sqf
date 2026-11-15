@@ -13,6 +13,9 @@ CQ_logFriendlyRx = "(MAGPIE|Sentinel|Squads?|Base|Depot|Vehicle|Respawn|Shop|Sco
 // --- Director -------------------------------------------------------------
 CQ_logVerbose = false;                   // true: also log every drone route / ring / Tigris lock (chatty .rpt)
 CQ_tickSeconds = 5;                      // one server tick every 5 s
+CQ_hqQuietR = 3000;                      // m: an HQ with no player this close...
+CQ_hqQuietContact = 120;                 // s: ...and no contact for this long is "quiet"...
+CQ_hqQuietEvery = 3;                     // ...and is handled every Nth server tick only (HQ loop load)
 CQ_directorAtomic = ["magpie", "magDormant", "link", "linkRepair"];   // director tasks run in one go (unscheduled), not time-sliced with every other script
 CQ_scriptDumpMin = 40;                   // slow tick with more spawned scripts than this: list them in the log (once a minute)
 
@@ -141,7 +144,7 @@ CQ_wxTransition = [60, 120];             // every transition takes 1-2 min (neve
 CQ_wxRainMax = 240;                      // a rain never lasts more than 4 min (fade in + hold + fade out)
 CQ_wxRainLevel = 0.6;
 CQ_wxFogMorning = [0.2, 0.012, 0];       // light morning fog [density, decay, base]
-CQ_wxFogGoneHour = 11;                   // in-game hour when the fog has slowly faded out
+CQ_wxFogFade = [1200, 2400];             // the morning fog fades out over 20-40 min real time (30 min on average)
 
 // --- Enemy origin: a carrier off the coast of Altis ----------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)
@@ -177,6 +180,7 @@ CQ_rootInland = [1500, 4000];            // root insertions land this far inland
 CQ_firstRootInland = [0, 400];           // the very first one: within 400 m of the site's paired first HQ position
 CQ_rootRetryDelay = 180;                 // s: a root insertion that put nobody on the ground is flown again at the same site
 CQ_rootCoastSpread = 4000;               // later ones: a coast point up to this far either side of the carrier's line to the island
+CQ_corridorAvoid = 3000;                 // m: once the corridor outpost has fallen, root waves land on a coast point at least about this far from it
 CQ_childSpread = 40;                     // child HQs head toward the player base, +/- this many degrees
 CQ_waveSpread = 60;                      // waves arrive from the carrier side of the HQ, +/- degrees
 CQ_assaultRange = 3500;                  // an HQ this close to the player base assaults it instead of colonising
@@ -240,6 +244,9 @@ CQ_crashWrecks = ["Land_Wreck_Plane_Transport_01_F", "Land_Wreck_Heli_Attack_02_
 CQ_crashCrate = "Box_East_Support_F";
 CQ_crashSurvivors = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_LAT_F", "O_Soldier_F"];
 CQ_crashSkill = 0.75;                    // survivors: sharp
+CQ_eventCleanup = 180;                   // s after a side event is over (crash secured, hostage ended, outpost fallen): its props and enemies left are removed
+CQ_eventCleanupR = 300;                  // m: ...and only once no player is this close to what is left
+CQ_crashLeash = 70;                       // m: a crash survivor further than this from the crate walks back to it (they defend, never chase)
 CQ_crashTimer = 600;                     // s after their first contact before the carrier drops help
 CQ_crashWarn = 120;                      // s before the drop: CROSSROAD warns
 CQ_crashDropClasses = ["I_LT_01_cannon_F", "O_APC_Tracked_02_cannon_F", "O_APC_Wheeled_02_rcws_v2_F", "I_APC_Wheeled_03_cannon_F"];   // Nyx, Kamysh, Marid, Gorgon (DLC ones skipped)
@@ -411,7 +418,7 @@ CQ_vehKillLines = [   // command's remark under the kill line (one at random)
     "Cooked.",
     "Another one bites the dust. Ha!"
 ];
-CQ_killMissionSquads = ["Hostage guards", "Corridor outpost", "Tower guard"];   // kill feed: enemy groups named this way (start of the name) are a MISSION SQUAD
+CQ_killMissionSquads = ["Hostage guards", "Corridor outpost", "Tower guard", "Crash survivors"];   // kill feed: enemy groups named this way (start of the name) are a MISSION SQUAD
 CQ_objMarkSize = 0.35;                   // objective markers ([Depot], [AA pit]...) size (was 0.7)
 CQ_objLookTime = 60;                     // s a Watcher Darter looks around a newly spotted objective (plus its flight there)
 CQ_objLookAaR = 1200;                    // m it keeps from a spotted AA pit while looking
@@ -442,10 +449,17 @@ CQ_fullPowerPlayers = 24;
 CQ_scaleMin = 0.35;                      // fewest players: 35 % of the infantry cap, waves up to twice as slow
 CQ_testFullPower = true;                 // TEST: play as if CQ_fullPowerPlayers were connected (debug panel toggle)
 CQ_dbgTpDist = 100;                      // m: debug teleporters put you this far from their target
+CQ_magOrbitR = [1500, 2500];             // m: before the first contact the Sentinels orbit WASP: Argos (inner, clockwise), Hermes (outer, counter-clockwise)
+CQ_magOrbitMove = 400;                   // m: their orbit follows WASP when it has moved this far
 CQ_testMagDirect = false;                // TEST ONLY, set false before merging to main: the two Sentinels fly straight to the first enemy HQ site instead of their search circuits
 
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 6;                         // root insertions in a campaign (victory after the last one)
+CQ_rootCapBonus = 40;                    // root insertions may go this far above CQ_maxInfantry (reinforcements alone can fill the cap)
+CQ_helpWaves = true;                     // a root wave first guards the least built unfinished HQ, then founds its own HQ near it
+CQ_helpMaxTime = 900;                    // s: a help wave leaves after this even if the HQ is still not built
+CQ_helpSiteDist = [2000, 4000];          // m: its own HQ this far from the HQ it helped, on the side away from our base
+CQ_helpLzOffset = 300;                   // m: its drop zone, from the helped HQ toward its own site
 CQ_rootInterval = 3600;                  // seconds between root insertions
 CQ_firstRootDelay = 300;                 // seconds after mission start (debug panel: "Launch game" skips the wait)
 CQ_insertionSpawnDistance = 8000;        // helis appear this far from the site
@@ -504,7 +518,7 @@ CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted
 
 // --- HQ lifecycle (realistic timings) ---------------------------------------
 // Securing -> Installing -> Hold -> WaitingReinf -> split (child HQ) -> Holding -> WaitingReinf ...
-CQ_activeStates = ["Inbound", "Securing", "Installing", "Hold", "Holding", "WaitingReinf"];
+CQ_activeStates = ["Inbound", "Helping", "Securing", "Installing", "Hold", "Holding", "WaitingReinf"];
 CQ_maxHqs = 6;                           // HQs alive at once
 CQ_maxAI = 220;                          // hidden safety limit: every enemy AI alive at once (crews included)
 CQ_maxInfantry = 160;                    // enemy foot soldiers alive at once (vehicle / heli / static crews not counted)
@@ -726,8 +740,16 @@ CQ_introPlace = "ALTIS  ·  AEGEAN SEA  ·  AAC AIRFIELD";   // typed on black b
 CQ_introTypeDelay = 0.06;               // s per typed letter
 CQ_menuSize = 0.85;                      // U menu: transceiver picture height (share of the screen height)
 CQ_menuOverhang = 0.18;                  // share of the picture pushed past the right screen edge (the side connectors go off screen)
+CQ_aimSway = 0.15;                       // weapon sway multiplier for players (1 = vanilla, 0 = none); stamina stays vanilla
+CQ_recoil = 0.7;                         // recoil multiplier for players (1 = vanilla)
+CQ_uDoubleTap = 0.4;                     // s: U twice within this opens the MAGPIE report
 CQ_sqSize = 0.85;                        // squads / class / stats window: field tablet picture height (share of the screen height), centred
 CQ_sqScreen = [0.2773, 0.2672, 0.7920, 0.7719];   // its green screen zone in the picture (fractions), under the status bar, right of the icon column
+CQ_netSpan = 1800;                       // s: the NETWORK tab timeline shows (and the server keeps) this much history
+CQ_netPubEvery = 5;
+CQ_netMerge = 20;                        // s: messages of one category this close merge into one pin with a count                      // s between two NETWORK tab updates without news
+CQ_mrLed = [0.2626, 0.0557, 0.012];      // MAGPIE report window: the LED on the tablet's top-left knob [x, y, size] (fractions of the picture)
+CQ_mrTint = 0.92;                        // MAGPIE report window: opacity of its dark background (dense table)
 CQ_sqTint = 0.72;                        // opacity of the dark tint over the green screen (readability)
 CQ_sqFont = 0.75;                        // squads / class / stats window: labels, buttons and lists at this x the default text size (descriptions unchanged)
 CQ_menuScreen = [0.4102, 0.4062, 0.7070, 0.5410];   // its green screen zone in the picture (fractions), under the status bar, right of the icon column
@@ -776,15 +798,15 @@ private _mx = ["muzzle_snds_H", "acc_pointer_IR"];
 CQ_classGear = createHashMapFromArray [
     ["Rifleman",        ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Squad Leader",    ["arifle_MX_GL_F", _mx + ["optic_Arco"],                   "",                       "U_B_CombatUniform_mcam", "V_PlateCarrierGL_rgr",   "H_HelmetSpecB"]],
-    ["Medic",           ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Medic",           ["arifle_MXC_F",   _mx + ["optic_Holosight", "bipod_01_F_snd"],"",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Grenadier",       ["arifle_MX_GL_F", _mx + ["optic_Arco"],                   "",                       "U_B_CombatUniform_mcam", "V_PlateCarrierGL_rgr",   "H_HelmetSpecB"]],
     ["Autorifleman",    ["LMG_Mk200_F",    ["muzzle_snds_H_MG", "acc_pointer_IR", "optic_Hamr", "bipod_01_F_snd"], "", "U_B_CombatUniform_mcam", "V_PlateCarrierSpec_rgr", "H_HelmetSpecB"]],
     ["Light Anti-Tank", ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_NLAW_F",          "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Heavy Anti-Tank", ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_B_Titan_short_F", "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Anti-Air",        ["arifle_MX_F",    _mx + ["optic_Hamr", "bipod_01_F_snd"], "launch_B_Titan_F",       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
-    ["Engineer",        ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
+    ["Engineer",        ["arifle_MXC_F",   _mx + ["optic_Holosight", "bipod_01_F_snd"],"",                       "U_B_CombatUniform_mcam", "V_PlateCarrier2_rgr",    "H_HelmetSpecB"]],
     ["Sniper",          ["srifle_GM6_F",   [["optic_LRPS", "optic_SOS"], "bipod_01_F_snd"], "",            "U_B_GhillieSuit",        "V_Chestrig_rgr",         "-"]],
-    ["Pilot",           ["arifle_MXC_F",   _mx + ["optic_Holosight"],              "",                       "",                       "",                       ""]]
+    ["Pilot",           ["arifle_MXC_F",   _mx + ["optic_Holosight", "bipod_01_F_snd"],"",                       "",                       "",                       ""]]
 ];
 CQ_classNvg = "NVGoggles";
 // Arsenal (open to everyone, CQ_fnc_arsenalOpen): role gear is only offered to its classes
@@ -1019,9 +1041,16 @@ CQ_magDormantAlt = 250;                  // m flight altitude (sensor ~600 m)
 CQ_magDormantFlee = 0.9;                 // flee until this fraction of the sensor range from the enemy (> 80 %)
 CQ_magDormantReplace = 60;               // s before a destroyed woken Darter is replaced
 CQ_magDormantRelay = true;               // woken Darters extend the data link like a relay
-CQ_magWjEvery = 15;                      // s between two layouts of the woken Darters (stretched tree from the data link toward their zone)
+CQ_magWjEvery = 15;                      // (unused since the tentacle) s between two layouts of the woken Darters (stretched tree from the data link toward their zone)
 CQ_magWjZone = 1500;                     // m: woken Darters this close to each other (where they woke) work one zone together
-CQ_magWjRing = 0.8;                      // ring around the zone's enemies the tree branches along, in sensor ranges
+CQ_tntStandoff = 1;                      // tentacle tip and ring: this x a Darter's sensor range (~600 m) outside the zone's memories and contacts
+CQ_tntTestN = 10;                        // debug "Full tentacle": sleeping Darters woken (nearest the outpost, outside the anti-air range)
+CQ_tntTestPin = 600;                     // debug "Full tentacle": s the outpost memory is kept (no contact needed)
+CQ_tntMove = 600;                        // m: the tentacle is recomputed only when the zone's centroid or its root moves more than this
+CQ_tntRootBetter = 500;                  // m: the tentacle changes its root only for a node this much closer to the zone
+CQ_tntArrive = 200;                      // m: a Darter this close to its slot has arrived (loiters; the tip's arrival opens the ring)
+CQ_gridDarterSpeed = 150;                // km/h: grid (woken) Darters cruise this fast toward their slot (vanilla ~80; 0 = vanilla)
+CQ_tntAaR = 1200;                        // m: chain and ring slots kept this far from known anti-air
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
 CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2, max 2400 m (Darter ~600, Sentinel_Argos ~1380, Sentinel_Hermes ~2100)

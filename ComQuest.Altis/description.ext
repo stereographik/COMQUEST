@@ -3,7 +3,7 @@
 
 author = "Django";
 onLoadName = "ComQuest";
-onLoadMission = "Destroy the CSAT HQ network on Altis.   v0.13.0  -  main  -  2026-11-15 12:12";   // version line: updated with every deploy
+onLoadMission = "Destroy the CSAT HQ network on Altis.   v0.13.0  -  new-ui-uav-objectives  -  2026-11-15 19:20";   // version line: updated with every deploy
 loadScreen = "media\loading.jpg";          // the mission visual, 2048 x 1024 (2:1)
 overviewPicture = "media\loading.jpg";     // same picture in the mission list / lobby
 overviewText = "Co-op, up to 26 players. A CSAT carrier plants a network of HQs on Altis: find it and cut it apart.";
@@ -217,6 +217,7 @@ class CfgFunctions
             file = "functions\events";
             class crashTick {};
             class crashStart {};
+            class eventCleanup {};
             class crashSecure {};
             class crashRoam {};
             class crashDrop {};
@@ -240,6 +241,9 @@ class CfgFunctions
             class magPhoto {};
             class magMarks {};
             class magMapClient {};
+            class magReportPub {};
+            class netEvent {};
+            class netPub {};
             class rangeMapClient {};
             class heatTick {};
             class heatMapClient {};
@@ -315,6 +319,7 @@ class CfgFunctions
             class boat {};
             class helpCall {};
             class killTag {};
+            class magReportUi {};
             class heavyLift {};
             class vehFillSpot {};
             class adrenalineSurge {};

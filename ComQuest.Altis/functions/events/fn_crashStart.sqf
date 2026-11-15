@@ -79,9 +79,9 @@ private _g = createGroup [east, true];
 [units _g] call CQ_fnc_unitPrep;
 _g setGroupIdGlobal ["Crash survivors"];
 _g setBehaviour "AWARE";
-_g setCombatMode "RED";
+_g setCombatMode "YELLOW";             // fire at will but hold formation: they defend, they do not chase
 _g enableDynamicSimulation false;
-[_g, _cp, 40] call BIS_fnc_taskDefend;
+[_g, _cp, 40] call BIS_fnc_taskDefend;   // + leash in CQ_fnc_crashTick: anyone past CQ_crashLeash m walks back
 
 // marker: the crash area
 private _m = createMarker ["cq_crash", _site];
@@ -91,7 +91,7 @@ _m setMarkerBrush "FDiagonal";
 _m setMarkerColor "ColorOPFOR";
 
 CQ_crashState = createHashMapFromArray [
-    ["pos", _site], ["objs", _objs], ["crate", _crate], ["group", _g], ["contactT", -1],
+    ["pos", _site], ["objs", _objs], ["crate", _crate], ["cratePos", _cp], ["group", _g], ["contactT", -1],
     ["warned", false], ["dropped", false], ["secured", false], ["t0", time]
 ];
 CQ_crashLastT = time;

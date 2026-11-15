@@ -223,7 +223,7 @@ CQ_story = createHashMapFromArray [
     // ================================================================ combat (no humour)
     // [] - an HQ spotted the players
     ["contact@1", [
-        [["COMHAT", "...contact! Enemy patrol, all units respond!"], ["CROSSROAD", "You've been spotted. They'll be calling friends. Be ready."]],
+        [["COMHAT", "...contact! Enemy patrol, all units respond!"], ["CROSSROAD", "They've seen you. Expect company."]],
         [["COMHAT", "Contact! Enemy infantry, requesting support!"], ["CROSSROAD", "You've been made. Expect company, likely airborne."]],
         [["COMHAT", "...contact, contact! All patrols converge!"], ["CROSSROAD", "They've seen you. Reinforcements inbound. Stay sharp."]]
     ]],

@@ -4,6 +4,10 @@
 */
 if (!hasInterface) exitWith {};
 
+// Handling: much less weapon sway (stamina kept), a bit less recoil
+player setCustomAimCoef CQ_aimSway;
+player setUnitRecoilCoefficient CQ_recoil;
+
 // Role traits (setUnitTrait is local, so it runs here)
 if (typeOf player in CQ_engineerClasses) then {
     player setUnitTrait ["engineer", true];
@@ -184,7 +188,10 @@ if (isNil "CQ_squadKeyBound") then {
         waitUntil { sleep 0.5; !isNull (findDisplay 46) };
         (findDisplay 46) displayAddEventHandler ["KeyDown", {
             params ["", "_key", "_shift", "_ctrl", "_alt"];
-            if (_key == 22 && { !_shift && !_ctrl && !_alt }) then { [] spawn CQ_fnc_menuUi; true } else { false };   // 22 = U: the hub menu
+            if (_key == 22 && { !_shift && !_ctrl && !_alt }) then {   // 22 = U: the hub menu; U twice quickly: the MAGPIE report
+                if (diag_tickTime - (missionNamespace getVariable ["CQ_uLastT", -1]) < CQ_uDoubleTap) then { CQ_uLastT = -1; [] spawn CQ_fnc_magReportUi } else { CQ_uLastT = diag_tickTime; [] spawn CQ_fnc_menuUi };
+                true
+            } else { false };
         }];
     };
 };

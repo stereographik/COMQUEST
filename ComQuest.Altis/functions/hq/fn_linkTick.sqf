@@ -92,6 +92,7 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
         if (isNil "CQ_linkDeathPts") then { CQ_linkDeathPts = [] };
         CQ_linkDeathPts pushBack getPosATL (_this select 0);
         ["Relay vehicle lost", format ["The base's relay vehicle is destroyed at grid %1: another one leaves in %2 min", mapGridPosition (_this select 0), round (CQ_linkRelayRespawn / 60)]] call CQ_fnc_announce;
+        ["loss", format ["Relay vehicle destroyed at %1", mapGridPosition (_this select 0)]] call CQ_fnc_netEvent;
     }];
     CQ_linkRelayVeh = _rv;
     ["Relay vehicle", format ["The base sends a relay vehicle toward grid %1 (%2 m out), to stretch MAGPIE's data link", mapGridPosition _dest, round (_dest distance2D CQ_basePos)]] call CQ_fnc_announce;
@@ -105,6 +106,7 @@ if (alive _rv && { !alive driver _rv || { !canMove _rv } }) then {
     CQ_linkDeathPts pushBack getPosATL _rv;
     ["Relay vehicle lost", format ["The base's relay vehicle is out of action at grid %1 (%2): another one leaves in %3 min",
         mapGridPosition _rv, ["crew down", "immobilised"] select (alive driver _rv), round (CQ_linkRelayRespawn / 60)]] call CQ_fnc_announce;
+    ["loss", format ["Relay vehicle out of action at %1", mapGridPosition _rv]] call CQ_fnc_netEvent;
     _rv = objNull;
 };
 if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {

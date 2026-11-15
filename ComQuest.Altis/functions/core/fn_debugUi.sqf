@@ -71,7 +71,7 @@ private _cats = [
         ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Relay vehicle", "tpRelayVeh"], ["Log my position", "logPos"], ["Crash site", "tpCrash"], ["Hostage", "tpHst"], ["Outpost", "tpOp"], ["Base", "tpBase"]]]
     ]],
     ["MAP VISIBILITY", [
-        ["Show", [["Enemies", "!mapEnemy"], ["Enemy states", "!mapStates"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"]]]
+        ["Show", [["Enemies", "!mapEnemy"], ["Enemy states", "!mapStates"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"], ["Tentacle", "!mapTnt"]]]
     ]],
     ["ENEMY HQ  (selected in the list)", [
         ["Phase", [["FULL HQ NOW", "fullHq"], ["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"], ["Reinf. wave", "wave"]]],
@@ -92,7 +92,7 @@ private _cats = [
         ["SABOTAGE", [["Launch now", "sabGo"], ["Teleport near", "tpSab"], ["Wipe team", "sabKill"]]]
     ]],
     ["FRIENDLY", [
-        ["MAGPIE", [["Report now", "magReport"], ["Launch missing", "magLaunch"], ["Shoot down", "magKill"]]],
+        ["MAGPIE", [["Report now", "magReport"], ["Launch missing", "magLaunch"], ["Shoot down", "magKill"], ["Full tentacle", "magTentacle"]]],
         ["Player", [["Heal me", "heal"], ["God mode", "!god"], ["Arsenal", "!arsenal"], ["+500 points", "points"], ["Fix vehicle", "vehFix"]]],
         ["Base", [["Depot reset", "vehReset"], ["Rebuild def.", "defRebuild"]]]
     ]],
@@ -158,6 +158,7 @@ private _toggles = [];
                     case "!mapEnemy": { CQ_dbgShowEnemy = !CQ_dbgShowEnemy };
                     case "!mapFriend": { CQ_dbgShowFriend = !CQ_dbgShowFriend };
                     case "!mapHq": { CQ_dbgShowHq = !CQ_dbgShowHq };
+                    case "!mapTnt": { CQ_dbgShowTnt = !(missionNamespace getVariable ["CQ_dbgShowTnt", false]) };
                     case "!mapStates": {
                         CQ_dbgShowStates = !(missionNamespace getVariable ["CQ_dbgShowStates", false]);
                         if (CQ_dbgShowStates) then { CQ_dbgShowEnemy = true };
@@ -176,6 +177,7 @@ private _toggles = [];
                         CQ_myLogs = _f;                // label right away; the server answers with the same value
                         ["logs", ([0, 1] select (_f select 0)) + ([0, 2] select (_f select 1))] remoteExec ["CQ_fnc_debugCmd", 2];
                     };
+                    case "magTentacle": { CQ_dbgShowTnt = true; [_cmd, -1] remoteExec ["CQ_fnc_debugCmd", 2] };   // tentacle shown on the map
                     case "!god": { CQ_dbgGod = !CQ_dbgGod; player allowDamage !CQ_dbgGod; if (vehicle player != player) then { (vehicle player) allowDamage !CQ_dbgGod } };
                     case "!playerView": {
                         private _on = !(missionNamespace getVariable ["CQ_playerView", false]);
@@ -210,6 +212,7 @@ uiNamespace setVariable ["CQ_dbgToggleLabels", {
             case "!mapEnemy": { CQ_dbgShowEnemy };
             case "!mapFriend": { CQ_dbgShowFriend };
             case "!mapHq": { CQ_dbgShowHq };
+            case "!mapTnt": { missionNamespace getVariable ["CQ_dbgShowTnt", false] };
             case "!mapStates": { missionNamespace getVariable ["CQ_dbgShowStates", false] };
             case "!fullPower": { missionNamespace getVariable ["CQ_testFullPower", false] };
             case "!logEnemy": { (missionNamespace getVariable ["CQ_myLogs", [false, false]]) select 0 };

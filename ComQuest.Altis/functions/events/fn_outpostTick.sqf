@@ -26,6 +26,8 @@ if !(_op get "fallen") then {
     private _left = (_op get "men") select { alive _x && { _x distance2D _pos < 300 } };
     if (_left isEqualTo []) then {
         _op set ["fallen", true];
+        // the post's props, statics, gunboats and the men left go CQ_eventCleanup s later
+        ["Outpost", (_op get "objs") + (_op get "men") + (_op get "boats") + ([_op get "tower", _op get "jammer", _op get "aa", _op get "mortar"] select { _x isEqualType objNull })] call CQ_fnc_eventCleanup;
         CQ_corridorLost = _op get "hqId";
         ["Outpost: corridor outpost at %1 has fallen, flights to HQ #%2 rerouted, resupply +%3 s", [mapGridPosition _pos, CQ_corridorLost, CQ_opSupplyDelay]] call CQ_fnc_log;
         ["opFallen", [round (CQ_opSupplyDelay / 60)]] call CQ_fnc_say;

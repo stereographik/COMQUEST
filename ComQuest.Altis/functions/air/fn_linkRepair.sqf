@@ -30,7 +30,7 @@ private _release = {
     { _x set ["repair", false]; _x set ["planT", -1e6]; _x set ["target", []] } forEach (call _repairs);
     if (CQ_lr get "pull") then { CQ_lrWaspPull = nil };
     private _t = CQ_lr get "target";
-    if (!isNull _t || { CQ_lr get "pull" }) then { ["LINK REPAIR: ended (%1)", [_why]] call CQ_fnc_log };
+    if (!isNull _t || { CQ_lr get "pull" }) then { ["LINK REPAIR: ended (%1)", [_why]] call CQ_fnc_log; ["link", format ["Link repair ended (%1)", _why]] call CQ_fnc_netEvent };
     CQ_lr set ["target", objNull]; CQ_lr set ["pull", false]; CQ_lr set ["okT", -1];
 };
 
@@ -41,7 +41,7 @@ if (!isNull _t || { CQ_lr get "pull" }) then {
     if (_t getVariable ["CQ_linked", false]) then {
         if ((CQ_lr get "okT") < 0) then {
             CQ_lr set ["okT", time];
-            ["LINK REPAIR: %1 back in the network, the Darters hold %2 s more", [["the relay vehicle", "WASP"] select (_t isKindOf "Air"), CQ_lrRelease]] call CQ_fnc_log;
+            ["LINK REPAIR: %1 back in the network, the Darters hold %2 s more", [["the relay vehicle", "WASP"] select (_t isKindOf "Air"), CQ_lrRelease]] call CQ_fnc_log; ["link", format ["%1 back in the network", ["The relay vehicle", "WASP"] select (_t isKindOf "Air")]] call CQ_fnc_netEvent;
             ["lrDone", [["the relay vehicle", "WASP"] select (_t isKindOf "Air")]] call CQ_fnc_say;
         };
         if (time - (CQ_lr get "okT") > CQ_lrRelease) then { ["link holds"] call _release };
@@ -128,6 +128,6 @@ while { count _team < _n && { _pool isNotEqualTo [] } } do {
     _m set ["target", _sl];
 } forEach _team;
 if (_new > 0) then {
-    ["LINK REPAIR: %1 cut off for %2 s, %3 Darter(s) bridge %4 m from grid %5 (%6 new)", [["relay vehicle", "WASP"] select (_t isKindOf "Air"), round (time - (_since getOrDefault [hashValue _t, time])), _n, round _d, mapGridPosition _ap, _new]] call CQ_fnc_log;
+    ["LINK REPAIR: %1 cut off for %2 s, %3 Darter(s) bridge %4 m from grid %5 (%6 new)", [["relay vehicle", "WASP"] select (_t isKindOf "Air"), round (time - (_since getOrDefault [hashValue _t, time])), _n, round _d, mapGridPosition _ap, _new]] call CQ_fnc_log; ["link", format ["%1 cut off, Darters bridge the gap", ["Relay vehicle", "WASP"] select (_t isKindOf "Air")]] call CQ_fnc_netEvent;
     if (_new == count _team) then { ["lrStart", [["the relay vehicle", "WASP"] select (_t isKindOf "Air"), _n]] call CQ_fnc_say };
 };

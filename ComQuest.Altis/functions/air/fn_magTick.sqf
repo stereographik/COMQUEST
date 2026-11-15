@@ -12,13 +12,14 @@
                                 last CQ_magMemory s (principal axes), wider for the higher
                                 drones (CQ_magDrones scale); Sentinel_Hermes alternates ellipse and
                                 exploration, Sentinel_Argos explores when the last report was empty
-      before MAGPIE's first contact the two Sentinels fly their search circuits instead
+      before MAGPIE's first contact the two Sentinels orbit WASP instead (CQ_magOrbitR)
                                 (CQ_magPatrol: shared trunk from the base, then a loop flown over and over)
     Report (every CQ_magReportEvery s, if anything is new): a MAGPIE card with the count of new
     identifications by kind and the HQ news, and dots on every player's map for 10 s. Every
     new vehicle identified is photographed by the drone (CQ_fnc_magPhoto) and the report shows
     the photos in a grid under the summary.
 */
+if (isNil "CQ_netNewIds") then { CQ_netNewIds = [] };
 if (time < CQ_magNext) exitWith {};
 CQ_magNext = time + 5;
 // keep the runway clear of anything placed after the start
@@ -55,6 +56,7 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
         publicVariable "CQ_magVehs";
         ["MAGPIE: %1 lost at %2, a dormant point nearby replaces it in %3 s", [_m get "name", mapGridPosition _v, CQ_magDormantReplace]] call CQ_fnc_log;
+        ["loss", format ["%1 lost at %2", _m get "name", mapGridPosition _v]] call CQ_fnc_netEvent;
     };
     if ((_m getOrDefault ["role", ""]) == "dormant") then { if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 }; continue };
     if (!isNull _v && { !alive _v } && { !(_m get "lost") }) then {
@@ -64,6 +66,7 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
         publicVariable "CQ_magVehs";
         ["MAGPIE: %1 lost at %2, replacement in %3 s", [_m get "name", mapGridPosition _v, CQ_magRespawn]] call CQ_fnc_log;
+        ["loss", format ["%1 lost at %2", _m get "name", mapGridPosition _v]] call CQ_fnc_netEvent;
         if ((_m get "name") find "Sentinel" == 0) then { ["magDown", [(_m get "name") splitString "_" joinString " ", round (CQ_magRespawn / 60)]] call CQ_fnc_say };
     };
     if ((isNull _v || { !alive _v }) && { time >= (_m get "due") }) then {
@@ -203,6 +206,8 @@ if (time >= CQ_magDetectT) then {
                 private _c = [_o] call _cat;
                 if (random 1 > ([CQ_magSpotChance getOrDefault [_c, 0.3], CQ_huntSpotChance] select (_o getVariable ["CQ_hunter", false]))) then { continue };   // not identified this pass
                 CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false, [round getDir _o, round speed _o]]];   // + heading and speed when identified
+                CQ_magPubDirty = true;                      // the tablet refreshes on every new identification
+                CQ_netNewIds pushBack [_c, getText (configOf _o >> "displayName"), getPosATL _o];   // NETWORK tab: one CONTACT pin per pass
                 // a new vehicle: the drone takes its photo (rendered on every client) for the next report
                 if (CQ_magPhotos && { count CQ_magPhotoPend < CQ_magPhotoMax }) then {
                     CQ_magPhotoN = CQ_magPhotoN + 1;
@@ -240,6 +245,15 @@ if (time >= CQ_magDetectT) then {
             };
         } forEach CQ_hqs;
     } forEach _flying;
+    // the contacts identified this pass: one CONTACT message on the NETWORK tab
+    if ((missionNamespace getVariable ["CQ_netNewIds", []]) isNotEqualTo []) then {
+        private _ids = CQ_netNewIds;
+        CQ_netNewIds = [];
+        private _ty = (_ids apply { _x select 1 }) select [0, 3];
+        ["contact", format ["%1 identified near %2 (%3%4)", count _ids, mapGridPosition ((_ids select 0) select 2), _ty joinString ", ", ["", ", ..."] select (count _ids > 3)], count _ids] call CQ_fnc_netEvent;
+    };
+    // a new identification this pass: the tablet copy is rebuilt at once (between two reports)
+    if (missionNamespace getVariable ["CQ_magPubDirty", false]) then { CQ_magPubDirty = false; [] call CQ_fnc_magReportPub };
     // forget the dead and the stale
     {
         private _r = CQ_magSeen get _x;
@@ -453,6 +467,25 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
     (if (alive _rv) then { [getPosATL _rv, CQ_linkRelayVehR] } else { [CQ_basePos, CQ_netCoverBase] }) params ["_a", "_ar"];
     private _cp = missionNamespace getVariable ["CQ_carrierPos", _a];
+    // BRIDGE: once a grid Darter has connected and shared its memory (CQ_tntMem), WASP faces the
+    // fight instead of the carrier (the tentacle then starts from it); back to the carrier when
+    // no memory is left
+    private _mem = ((values (missionNamespace getVariable ["CQ_tntMem", createHashMap])) apply { _x select 0 })
+        + (((missionNamespace getVariable ["CQ_tntUnits", []]) select { alive _x }) apply { getPosATL _x });
+    private _bridge = _mem isNotEqualTo [];
+    if (_bridge) then {
+        private _zc = missionNamespace getVariable ["CQ_tntZoneC", []];
+        if (_zc isEqualTo []) then {
+            private _sx = 0; private _sy = 0;
+            { _sx = _sx + (_x select 0); _sy = _sy + (_x select 1) } forEach _mem;
+            _zc = [_sx / count _mem, _sy / count _mem, 0];
+        };
+        _cp = _zc;
+    };
+    if (_bridge isNotEqualTo (missionNamespace getVariable ["CQ_waspBridge", false])) then {
+        CQ_waspBridge = _bridge;
+        ["MAGPIE: WASP %1", [["back toward the carrier", format ["bridges toward the Darters' zone at %1", mapGridPosition _cp]] select _bridge]] call CQ_fnc_log;
+    };
     private _s = _a getPos [_ar * CQ_linkReach, _a getDir _cp];   // inside the anchor's range (a link needs the drone within the bigger circle), with room for a good overlap
     if (surfaceIsWater _s) then {
         // over the sea it can still relay: keep it, but never past the coast by more than 1 km
@@ -475,7 +508,7 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     _wp setWaypointLoiterRadius 150;
     _g setCurrentWaypoint _wp;
     _m set ["target", _s];
-    ["MAGPIE: WASP heads to grid %1 (%2 m from the %3, toward the carrier)", [mapGridPosition _s, round (_s distance2D _a), ["base", "relay vehicle"] select (alive _rv)]] call CQ_fnc_log;
+    ["MAGPIE: WASP heads to grid %1 (%2 m from the %3, toward the " + (["carrier", "Darters' zone"] select _bridge) + ")", [mapGridPosition _s, round (_s distance2D _a), ["base", "relay vehicle"] select (alive _rv)]] call CQ_fnc_log;
 } forEach (_flying select { (_x getOrDefault ["role", ""]) == "wasp" });
 
 {
@@ -513,21 +546,36 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
         ["MAGPIE TEST: %1 flies straight to %2 at %3", [_m get "name", [_h get "id"] call CQ_fnc_objName, mapGridPosition (_h get "pos")]] call CQ_fnc_log;
     };
     if (CQ_testMagDirect && { _route isEqualTo [] } && { isNil "CQ_magContactMade" } && { (_m getOrDefault ["directHq", -1]) > -1 }) then { continue };
+    // before the first contact the two Sentinels orbit WASP (CQ_magOrbitR: Argos inner circle
+    // clockwise, Hermes outer counter-clockwise), staying linked to it; no WASP in the air: the
+    // relay vehicle, else the base. The orbit follows its centre when it moves CQ_magOrbitMove m.
+    // (Their old search circuits, CQ_magPatrol, are no longer flown.)
     if (_route isNotEqualTo [] && { isNil "CQ_magContactMade" }) then {
-        private _on = (_m getOrDefault ["patrolVeh", objNull]) == _v;
-        if (_on && { currentWaypoint _gr < count waypoints _gr }) then { continue };
-        _route params ["_trunk", "_loop"];
-        private _pts = if (_on) then { _loop } else { _trunk + _loop };
+        private _wm = CQ_mag select { (_x getOrDefault ["role", ""]) == "wasp" && { alive (_x get "veh") } && { ((getPosATL (_x get "veh")) select 2) > 20 } };
+        private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
+        private _oc = switch (true) do {
+            case (_wm isNotEqualTo []): { getPosATL ((_wm select 0) get "veh") };
+            case (alive _rv): { getPosATL _rv };
+            default { CQ_basePos };
+        };
+        _oc = [_oc select 0, _oc select 1, 0];
+        private _inner = "Argos" in (_m get "name");
+        private _r = CQ_magOrbitR select ([1, 0] select _inner);
+        private _old = _m getOrDefault ["orbitC", []];
+        if ((_m getOrDefault ["patrolVeh", objNull]) == _v && { _old isNotEqualTo [] } && { _old distance2D _oc < CQ_magOrbitMove } && { currentWaypoint _gr < count waypoints _gr }) then { continue };
+        _m set ["orbitC", _oc];
         _m set ["patrolVeh", _v];
         _m set ["planT", time];
         _m set ["explore", false];
         _m set ["target", []];
         [_gr] call CQ_fnc_clearWaypoints;
         _v flyInHeight (_m get "alt");
-        private _first = -1;
-        { private _wp = _gr addWaypoint [[_x select 0, _x select 1, 0], 0]; _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 400; if (_first < 0) then { _first = _wp select 1 } } forEach _pts;
-        if (_first >= 0) then { _gr setCurrentWaypoint [_gr, _first] };
-        ["MAGPIE: %1 %2 its search circuit (%3 points)", [_m get "name", ["starts", "loops"] select _on, count _pts]] call CQ_fnc_log;
+        private _wp = _gr addWaypoint [_oc, 0];
+        _wp setWaypointType "LOITER";
+        _wp setWaypointLoiterType (["CIRCLE_L", "CIRCLE"] select _inner);
+        _wp setWaypointLoiterRadius _r;
+        _gr setCurrentWaypoint _wp;
+        ["MAGPIE: %1 orbits %2 at %3 (radius %4 m, %5)", [_m get "name", ["the base", "the relay vehicle", "WASP"] select ([0, 1, 2] select ((if (_wm isNotEqualTo []) then { 2 } else { [0, 1] select (alive _rv) }))), mapGridPosition _oc, _r, ["counter-clockwise", "clockwise"] select _inner]] call CQ_fnc_log;
         continue;
     };
     if (time - (_m get "planT") < CQ_magPlanEvery && { !_arrived }) then { continue };
@@ -607,14 +655,30 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
 // MAGPIE card. HQ news (new position, construction stage) leads the card.
 if (time - CQ_magReportT >= CQ_magReportEvery) then {
     CQ_magReportT = time;
+    CQ_magReportNextT = serverTime + CQ_magReportEvery;      // tablet countdown (CQ_fnc_magReportUi)
+    publicVariable "CQ_magReportNextT";
+    // tentacle memory (CQ_fnc_magDormant), at every check, report sent or not: once a grid Darter
+    // has shared a wake point, the memory holds the ground contacts seen in the last CQ_magMemory s
+    // (aircraft out), and a wake point with such a contact within CQ_magWjZone is dropped
+    // (skipped while the debug "Full tentacle" test pins its outpost memory, CQ_tntTestUntil)
+    if (time >= (missionNamespace getVariable ["CQ_tntTestUntil", -1]) && { count (missionNamespace getVariable ["CQ_tntMem", createHashMap]) > 0 || { (missionNamespace getVariable ["CQ_tntUnits", []]) isNotEqualTo [] } }) then {
+        CQ_tntUnits = ((values CQ_magSeen) select { alive (_x select 0) && { (_x select 4) != "air" } && { time - (_x select 2) < CQ_magMemory } }) apply { _x select 0 };
+        private _up = CQ_tntUnits apply { getPosATL _x };
+        private _gone = 0;
+        { private _k = _x; private _wp = (CQ_tntMem get _k) select 0; if ((_up findIf { _x distance2D _wp < CQ_magWjZone }) > -1) then { CQ_tntMem deleteAt _k; _gone = _gone + 1 } } forEach (keys CQ_tntMem);
+        ["MAGPIE: tentacle memory updated, %1 ground contacts, %2 wake point(s) kept (%3 replaced)", [count CQ_tntUnits, count CQ_tntMem, _gone]] call CQ_fnc_log;
+        ["memory", format ["Memory updated: %1 ground contacts, %2 wake points", count CQ_tntUnits, count CQ_tntMem]] call CQ_fnc_netEvent;
+    };
     private _aos = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { (_x get "id") in CQ_magHqSeen || { _x getOrDefault ["revealed", false] } } };
     private _tab = createHashMap;            // AO name -> [inf, veh, air]
     private _order = [];
     private _new = 0;
+    private _newObjs = [];                 // identified since the last report (tablet: LAST SEEN)
     {
         if !(_y select 5) then {
             _y set [5, true];
             _new = _new + 1;
+            _newObjs pushBack (_y select 0);
             private _p = _y select 3;
             private _ao = "Outside known AOs";
             private _best = CQ_magAoRange;
@@ -687,7 +751,16 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
             _rich = _rich + "<ph>" + ((CQ_magPhotoPend apply { format ["%1:%2", _x select 0, _x select 1] }) joinString ",") + "</ph>";
             CQ_magPhotoPend = [];
         };
+        // the tablet copy of this report (CQ_fnc_magReportPub, read by CQ_fnc_magReportUi)
+        CQ_magLastNewObjs = _newObjs;
+        CQ_magLastNews = _news;
+        CQ_magLastReportST = serverTime;
+        [] call CQ_fnc_magReportPub;
+        ["report", format ["Report sent: %1 new, %2 HQ news", CQ_magNewSince - count _news, count _news]] call CQ_fnc_netEvent;
         ["magReport", [_rich]] call CQ_fnc_say;
         ["MAGPIE report: %1 new identifications, %2 HQ news, areas %3", [_new, count _news, _order]] call CQ_fnc_log;
     };
 };
+
+// NETWORK tab data (health, state, stats, timeline)
+call CQ_fnc_netPub;
