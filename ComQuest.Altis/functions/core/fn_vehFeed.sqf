@@ -1,12 +1,13 @@
 /*
     CQ_fnc_vehFeed
+    The on-screen feed list. Also carries the player feed (CQ_fnc_feed: joins, down, killed, revived).
     Enemy vehicles destroyed by players, with a mocking remark from command (CQ_vehKillLines):
         BTR-K Kamysh destroyed by Django · Titan MPRL
         Ha! Toasted.
     Shown in a small list of its own (left of the screen, above the chat): the CQ_vehFeedMax last
     kills only, a new one pushes the oldest out; each fades out after CQ_vehFeedLife s.
       ["kill", [vehicle, killer]]   server, from the EntityKilled handler of initServer
-      ["show", [line, remark]]      every client
+      ["show", [line, remark]]      every client (remark "" = one line)
 */
 params [["_mode", ""], ["_a", []]];
 switch (_mode) do {
@@ -49,7 +50,7 @@ switch (_mode) do {
                         private _n = round (255 * (_al max 0));
                         private _hx = "0123456789ABCDEF";
                         private _h = (_hx select [floor (_n / 16), 1]) + (_hx select [_n mod 16, 1]);
-                        format ["<t size='0.85' shadow='2' color='#%3E8E6D9'>%1</t><br/><t size='0.85' shadow='2' color='#%3E8B84A'>%2</t>", _l, _r, _h]
+                        format ["<t size='0.85' shadow='2' color='#%2E8E6D9'>%1</t>", _l, _h] + (["", format ["<br/><t size='0.85' shadow='2' color='#%2E8B84A'>%1</t>", _r, _h]] select (_r != ""))
                     }) joinString "<br/>";
                     if (!isNull _c) then { _c ctrlSetStructuredText parseText _txt };
                     sleep 0.5;
