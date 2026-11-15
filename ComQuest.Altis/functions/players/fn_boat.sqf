@@ -1,7 +1,7 @@
 /*
     CQ_fnc_boat  (server)
-    Engineers' inflatable boats. An Engineer with a ToolKit inflates a boat while wading (water at
-    his feet less than CQ_boatMaxDepth m deep), CQ_boatMax out at a time; packing one of his boats
+    Engineers' inflatable boats. An Engineer with a ToolKit inflates a boat in the water (at least
+    CQ_boatMinDepth m deep at his feet: half legs in, or swimming), CQ_boatMax out at a time; packing one of his boats
     (empty, within CQ_boatPackRange m) gives it back; at the base he recalls them all (like the
     sandbag walls). A boat belongs to the player's UID (CQ_boats) and to his squad: only its
     members get in (CQ_squadGroup). Count published as CQ_bt_<uid>.
@@ -32,7 +32,7 @@ switch (_mode) do {
             case (!("ToolKit" in items _unit)): { "You need a toolkit to inflate a boat." };
             case (count _mine >= CQ_boatMax): { format ["You already have %1 boats out. Pack one, or recall them from the base.", CQ_boatMax] };
             case (vehicle _unit != _unit): { "Get out first." };
-            case (!surfaceIsWater _p || { _depth <= 0 } || { _depth > CQ_boatMaxDepth }): { "Wade in first: water at your feet, less than 50 cm deep." };
+            case (!surfaceIsWater _p || { _depth < CQ_boatMinDepth }): { "Wade in deeper first: water at least half way up your legs, or swim." };
             default { "" };
         };
         if (_why != "") exitWith { [_why] remoteExec ["hint", _unit] };

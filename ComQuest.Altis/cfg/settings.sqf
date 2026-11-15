@@ -106,7 +106,7 @@ CQ_sbMax = 2;                            // walls standing per engineer (per pla
 // Engineers' inflatable boats (CQ_fnc_boat)
 CQ_boatClass = "B_Boat_Transport_01_F";  // Assault Boat (rubber, driver + 4)
 CQ_boatMax = 2;                          // boats out at a time per engineer (packing one gives it back, recall at the base)
-CQ_boatMaxDepth = 0.5;                   // m: inflate only while wading, water at his feet less deep than this
+CQ_boatMinDepth = 0.5;                   // m: inflate only in water at least this deep at his feet (half legs in, or swimming)
 CQ_boatInflateTime = 4;                  // s hold to inflate or pack
 CQ_boatPackRange = 6;                    // m from his boat to pack it
 CQ_sbBuildTime = 6;                      // s to build one (stay still, on foot)

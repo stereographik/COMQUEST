@@ -86,10 +86,10 @@ player addAction ["<t color='#918C3B'>Recall my sandbag walls</t>", { ["recall",
     { ["remove", [player, CQ_sbTarget]] remoteExec ["CQ_fnc_sandbag", 2] }, {},
     [], CQ_sbDismantleTime, 1.15, false, false] call BIS_fnc_holdActionAdd;
 
-// Engineers' inflatable boats (CQ_fnc_boat): inflate while wading (toolkit), pack your own, recall at the base
+// Engineers' inflatable boats (CQ_fnc_boat): inflate in the water, half legs in or swimming (toolkit), pack your own, recall at the base
 [player, "Inflate a boat",
     "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_takeOff2_ca.paa", "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_takeOff2_ca.paa",
-    "_this getUnitTrait 'engineer' && { vehicle _this == _this } && { 'ToolKit' in items _this } && { surfaceIsWater getPosASL _this } && { private _d = -(getTerrainHeightASL getPosASL _this); _d > 0 && { _d < CQ_boatMaxDepth } } && { (missionNamespace getVariable ['CQ_bt_' + getPlayerUID _this, 0]) < CQ_boatMax }",
+    "_this getUnitTrait 'engineer' && { vehicle _this == _this } && { 'ToolKit' in items _this } && { surfaceIsWater getPosASL _this } && { -(getTerrainHeightASL getPosASL _this) >= CQ_boatMinDepth } && { (missionNamespace getVariable ['CQ_bt_' + getPlayerUID _this, 0]) < CQ_boatMax }",
     "vehicle _caller == _caller",
     {}, {},
     { ["inflate", [player]] remoteExec ["CQ_fnc_boat", 2] }, {},
