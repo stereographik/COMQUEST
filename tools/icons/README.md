@@ -1,6 +1,6 @@
 # Tablet tab icons (sources)
 
-Outline style, 24-unit grid, stroke 2, round caps; white on transparent so the game can tint them.
+HUD-thin style (A), 24-unit grid, stroke 1.25, square caps, mitred corners; white on transparent so the game can tint them.
 Export: 128 x 128 PNG with alpha, then `tools/img2paa.py` -> `media/icons/<name>_ca.paa`.
 
 | File | Window | Tab |
