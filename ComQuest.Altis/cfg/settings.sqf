@@ -13,6 +13,9 @@ CQ_logFriendlyRx = "(MAGPIE|Sentinel|Squads?|Base|Depot|Vehicle|Respawn|Shop|Sco
 // --- Director -------------------------------------------------------------
 CQ_logVerbose = false;                   // true: also log every drone route / ring / Tigris lock (chatty .rpt)
 CQ_tickSeconds = 5;                      // one server tick every 5 s
+CQ_hqQuietR = 3000;                      // m: an HQ with no player this close...
+CQ_hqQuietContact = 120;                 // s: ...and no contact for this long is "quiet"...
+CQ_hqQuietEvery = 3;                     // ...and is handled every Nth server tick only (HQ loop load)
 CQ_directorAtomic = ["magpie", "magDormant", "link", "linkRepair"];   // director tasks run in one go (unscheduled), not time-sliced with every other script
 CQ_scriptDumpMin = 40;                   // slow tick with more spawned scripts than this: list them in the log (once a minute)
 

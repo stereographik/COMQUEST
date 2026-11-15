@@ -7,12 +7,15 @@
       Hold          holds CQ_holdTime                              -> requests a wave
       WaitingReinf  convoy on its way (CQ_fnc_waveSend)            -> arrived: CQ_fnc_hqSplit
       Holding       defends until the next wave (CQ_waveInterval)  -> requests a wave
+    Quiet HQs (no player near, no recent contact) run every CQ_hqQuietEvery-th tick only.
     In every state: contact -> CQ_fnc_callReinf (heli + QRF), QRF groups return after
     CQ_qrfTime. Helicopters: CQ_fnc_airTick. Ammo: CQ_fnc_logiTick.
     Destroyed: commander dead or captured AND every installation destroyed (depot, radio
     tower, fuel tanker, AA guns, HMG tower). Failed: wiped out before being built.
 */
 private _now = time;
+CQ_hqTickN = (missionNamespace getVariable ["CQ_hqTickN", 0]) + 1;
+private _players = allPlayers select { alive _x };
 
 {
     private _hq = _y;
@@ -20,6 +23,12 @@ private _now = time;
     if !(_state in CQ_activeStates) then { continue };
     if (_state == "Inbound") then { continue };   // insertion / colonist scripts own it
     private _id = _hq get "id";
+    // quiet HQ (no player within CQ_hqQuietR, no contact for CQ_hqQuietContact s): handled
+    // every CQ_hqQuietEvery-th tick only, staggered by id so they don't all run on the same one
+    private _hp0 = _hq get "pos";
+    if ((_players findIf { _x distance2D _hp0 < CQ_hqQuietR }) == -1
+        && { _now - (_hq get "lastContactT") > CQ_hqQuietContact }
+        && { (CQ_hqTickN + _id) mod CQ_hqQuietEvery != 0 }) then { continue };
 
     // ---- losses
     if !(_hq get "buildDone") then {
