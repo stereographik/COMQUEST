@@ -95,9 +95,10 @@ _bgT ctrlSetBackgroundColor [0.06, 0.1, 0.07, 1];
 _netCtrls pushBack _bgT;
 private _tracks = [["REPORT", "report", [0.22, 0.54, 0.87, 1]], ["CONTACT", "contact", [0.94, 0.62, 0.15, 1]], ["MEMORY", "memory", [0.5, 0.47, 0.87, 1]], ["LINK", "link", [0.89, 0.29, 0.29, 1]], ["LOSS", "loss", [0.71, 0.7, 0.66, 1]]];
 private _th = _tlH / count _tracks;
+private _leftX = _X;   // _X is _x inside forEach (names ignore case): keep it under another name
 {
     _x params ["_lbl", "", "_col"];
-    private _t = ["RscText", [_X + 0.012, _tlY + _forEachIndex * _th, _lw - 0.004, _th], _lbl] call _mk;
+    private _t = ["RscText", [_leftX + 0.012, _tlY + _forEachIndex * _th, _lw - 0.004, _th], _lbl] call _mk;
     _t ctrlSetTextColor _col;
     _netCtrls pushBack _t;
     if (_forEachIndex > 0) then {
