@@ -744,6 +744,19 @@ CQ_aimSway = 0.15;                       // weapon sway multiplier for players (
 CQ_recoil = 0.7;                         // recoil multiplier for players (1 = vanilla)
 CQ_uDoubleTap = 0.4;                     // s: U twice within this opens the MAGPIE report
 CQ_tabletCol = [0.2271, 0.2676, 0.2759, 0.7725];   // the tablet's icon column in the picture (fractions [x0, y0, x1, y1], media\comtablet_l/r_ca.paa)
+// --- Graphics settings (per player, CQ_fnc_gfx / CQ_fnc_gfxUi): saved on the player's PC (profileNamespace)
+// presets: [name, view distance m, object distance m, shadow distance m, terrain grid (grass), ambient animals]
+CQ_gfxPresets = [
+    ["Potato",   1000,  600,  50, 50,    false],
+    ["Low",      1600,  900,  60, 25,    false],
+    ["Balanced", 2500, 1300, 100, 12.5,  true],
+    ["High",     3500, 1800, 150, 6.25,  true],
+    ["Ultra",    5000, 2500, 200, 3.125, true],
+    ["Pilot",    8000, 3000,  50, 25,    false]
+];
+CQ_gfxDefault = "Balanced";              // preset for a player with nothing saved yet
+CQ_gfxGrass = [["Off", 50], ["Low", 25], ["Normal", 12.5], ["High", 6.25], ["Max", 3.125]];   // setTerrainGrid steps (50 = no grass)
+CQ_gfxRanges = [[500, 12000, 100], [200, 5000, 50], [0, 200, 10]];   // sliders [min, max, step]: view, objects, shadows
 CQ_tabletCloseMap = false;               // true: opening a tablet window (U menu, squads, MAGPIE report) closes the map first (fallback if it does not draw over the map)
 CQ_tabletColSlots = 7;                   // slots in that column (each window fills them from the top)
 CQ_tabletIconSize = 0.64;                // icon width: share of the column width
