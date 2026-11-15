@@ -19,6 +19,7 @@
     new vehicle identified is photographed by the drone (CQ_fnc_magPhoto) and the report shows
     the photos in a grid under the summary.
 */
+if (isNil "CQ_netNewIds") then { CQ_netNewIds = [] };
 if (time < CQ_magNext) exitWith {};
 CQ_magNext = time + 5;
 // keep the runway clear of anything placed after the start
@@ -55,6 +56,7 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
         publicVariable "CQ_magVehs";
         ["MAGPIE: %1 lost at %2, a dormant point nearby replaces it in %3 s", [_m get "name", mapGridPosition _v, CQ_magDormantReplace]] call CQ_fnc_log;
+        ["loss", format ["%1 lost at %2", _m get "name", mapGridPosition _v]] call CQ_fnc_netEvent;
     };
     if ((_m getOrDefault ["role", ""]) == "dormant") then { if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 }; continue };
     if (!isNull _v && { !alive _v } && { !(_m get "lost") }) then {
@@ -64,6 +66,7 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
         publicVariable "CQ_magVehs";
         ["MAGPIE: %1 lost at %2, replacement in %3 s", [_m get "name", mapGridPosition _v, CQ_magRespawn]] call CQ_fnc_log;
+        ["loss", format ["%1 lost at %2", _m get "name", mapGridPosition _v]] call CQ_fnc_netEvent;
         if ((_m get "name") find "Sentinel" == 0) then { ["magDown", [(_m get "name") splitString "_" joinString " ", round (CQ_magRespawn / 60)]] call CQ_fnc_say };
     };
     if ((isNull _v || { !alive _v }) && { time >= (_m get "due") }) then {
@@ -204,6 +207,7 @@ if (time >= CQ_magDetectT) then {
                 if (random 1 > ([CQ_magSpotChance getOrDefault [_c, 0.3], CQ_huntSpotChance] select (_o getVariable ["CQ_hunter", false]))) then { continue };   // not identified this pass
                 CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false, [round getDir _o, round speed _o]]];   // + heading and speed when identified
                 CQ_magPubDirty = true;                      // the tablet refreshes on every new identification
+                CQ_netNewIds pushBack [_c, getText (configOf _o >> "displayName"), getPosATL _o];   // NETWORK tab: one CONTACT pin per pass
                 // a new vehicle: the drone takes its photo (rendered on every client) for the next report
                 if (CQ_magPhotos && { count CQ_magPhotoPend < CQ_magPhotoMax }) then {
                     CQ_magPhotoN = CQ_magPhotoN + 1;
@@ -241,6 +245,13 @@ if (time >= CQ_magDetectT) then {
             };
         } forEach CQ_hqs;
     } forEach _flying;
+    // the contacts identified this pass: one CONTACT message on the NETWORK tab
+    if ((missionNamespace getVariable ["CQ_netNewIds", []]) isNotEqualTo []) then {
+        private _ids = CQ_netNewIds;
+        CQ_netNewIds = [];
+        private _ty = (_ids apply { _x select 1 }) select [0, 3];
+        ["contact", format ["%1 identified near %2 (%3%4)", count _ids, mapGridPosition ((_ids select 0) select 2), _ty joinString ", ", ["", ", ..."] select (count _ids > 3)], count _ids] call CQ_fnc_netEvent;
+    };
     // a new identification this pass: the tablet copy is rebuilt at once (between two reports)
     if (missionNamespace getVariable ["CQ_magPubDirty", false]) then { CQ_magPubDirty = false; [] call CQ_fnc_magReportPub };
     // forget the dead and the stale
@@ -655,6 +666,7 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
         private _gone = 0;
         { private _k = _x; private _wp = (CQ_tntMem get _k) select 0; if ((_up findIf { _x distance2D _wp < CQ_magWjZone }) > -1) then { CQ_tntMem deleteAt _k; _gone = _gone + 1 } } forEach (keys CQ_tntMem);
         ["MAGPIE: tentacle memory updated, %1 ground contacts, %2 wake point(s) kept (%3 replaced)", [count CQ_tntUnits, count CQ_tntMem, _gone]] call CQ_fnc_log;
+        ["memory", format ["Memory updated: %1 ground contacts, %2 wake points", count CQ_tntUnits, count CQ_tntMem]] call CQ_fnc_netEvent;
     };
     private _aos = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { (_x get "id") in CQ_magHqSeen || { _x getOrDefault ["revealed", false] } } };
     private _tab = createHashMap;            // AO name -> [inf, veh, air]
@@ -743,7 +755,11 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
         CQ_magLastNews = _news;
         CQ_magLastReportST = serverTime;
         [] call CQ_fnc_magReportPub;
+        ["report", format ["Report sent: %1 new, %2 HQ news", CQ_magNewSince - count _news, count _news]] call CQ_fnc_netEvent;
         ["magReport", [_rich]] call CQ_fnc_say;
         ["MAGPIE report: %1 new identifications, %2 HQ news, areas %3", [_new, count _news, _order]] call CQ_fnc_log;
     };
 };
+
+// NETWORK tab data (health, state, stats, timeline)
+call CQ_fnc_netPub;

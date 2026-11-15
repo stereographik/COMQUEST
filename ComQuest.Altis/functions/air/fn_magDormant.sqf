@@ -185,6 +185,7 @@ call {
         private _wp = _m getOrDefault ["wakePos", getPosATL (_m get "veh")];
         CQ_tntMem set [_nm, [_wp, time]];
         ["MAGPIE: %1 connected, sends its memory (woke at %2)", [_nm, mapGridPosition _wp]] call CQ_fnc_log;
+        ["memory", format ["%1 sends its memory (woke at %2)", _nm, mapGridPosition _wp]] call CQ_fnc_netEvent;
     } forEach _woke;
     // keep alive the memories MAGPIE still sees enemies around, forget the others
     private _live = ((values CQ_magSeen) select { alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } }) apply { _x select 3 };

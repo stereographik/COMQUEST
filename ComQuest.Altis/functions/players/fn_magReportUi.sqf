@@ -1,8 +1,10 @@
 /*
     CQ_fnc_magReportUi  (client)   U twice quickly, or MAGPIE REPORT in the U menu
-    The last MAGPIE report on the field tablet (same picture as squads / class / stats), two tabs:
+    The last MAGPIE report on the field tablet (same picture as squads / class / stats), three tabs:
       LAST SEEN         what that report identified (new since the one before) + its HQ news
       GLOBAL SITUATION  every enemy MAGPIE knows and still alive, at the time of that report
+      NETWORK           health of the data link, current state, statistics, and a timeline with
+                        one track per message category (CQ_netPub, CQ_fnc_netPub)
     Contacts by category (INFANTRY one row per squad, STATIC, LIGHT VEHICLES, ARMOUR, AIR):
       type | heading | speed | HQ owner | in sight (when the report was made)
     Header: age of the report and the countdown to the next one (CQ_magReportNextT); the LED on the
@@ -55,6 +57,9 @@ _d displayAddEventHandler ["Unload", { "CQ_mrBg" cutText ["", "PLAIN"] }];
 (["RscText", [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
 private _tabL = ["RscButton", [_X + 0.01, _Y + 0.004, _W * 0.22, _L], "LAST SEEN"] call _mk;
 private _tabG = ["RscButton", [_X + 0.02 + _W * 0.22, _Y + 0.004, _W * 0.3, _L], "GLOBAL SITUATION"] call _mk;
+private _tabN = ["RscButton", [_X + 0.03 + _W * 0.52, _Y + 0.004, _W * 0.2, _L], "NETWORK"] call _mk;
+_tabN ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_mrTab", "network"]; uiNamespace setVariable ["CQ_mrDirty", true] }];
+uiNamespace setVariable ["CQ_mrTabN", _tabN];
 uiNamespace setVariable ["CQ_mrTab", uiNamespace getVariable ["CQ_mrTab", "last"]];
 _tabL ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_mrTab", "last"]; uiNamespace setVariable ["CQ_mrDirty", true] }];
 _tabG ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_mrTab", "global"]; uiNamespace setVariable ["CQ_mrDirty", true] }];
@@ -74,6 +79,92 @@ private _top = _Y + _L * 1.5;
 private _info = ["RscStructuredText", [_X + 0.01, _top, _W - 0.02, _L * 2.6]] call _mk;
 private _ly = _top + _L * 2.8;
 private _list = ["RscListNBox", [_X + 0.01, _ly, _W - 0.02, _H - (_ly - _Y) - 0.01]] call _mk;
+// ---- NETWORK tab: health chips, state, stats (one text), then the timeline: one track per
+// message category, the track heights shared so all of them always fit, a pin per message
+// (same category within CQ_netMerge s: one pin with a count), the playhead at "now", and the
+// latest message under it
+private _netTxt = ["RscStructuredText", [_X + 0.01, _top, _W - 0.02, _L * 4.4]] call _mk;
+private _tlY = _top + _L * 4.6;
+private _tlH = _H - (_tlY - _Y) - _L * 2.2;
+private _lw = _W * 0.13;
+private _laneX = _X + 0.01 + _lw;
+private _laneW = _W - 0.02 - _lw;
+private _netCtrls = [_netTxt];
+private _bgT = ["RscText", [_X + 0.01, _tlY, _W - 0.02, _tlH]] call _mk;
+_bgT ctrlSetBackgroundColor [0.06, 0.1, 0.07, 1];
+_netCtrls pushBack _bgT;
+private _tracks = [["REPORT", "report", [0.22, 0.54, 0.87, 1]], ["CONTACT", "contact", [0.94, 0.62, 0.15, 1]], ["MEMORY", "memory", [0.5, 0.47, 0.87, 1]], ["LINK", "link", [0.89, 0.29, 0.29, 1]], ["LOSS", "loss", [0.71, 0.7, 0.66, 1]]];
+private _th = _tlH / count _tracks;
+{
+    _x params ["_lbl", "", "_col"];
+    private _t = ["RscText", [_X + 0.012, _tlY + _forEachIndex * _th, _lw - 0.004, _th], _lbl] call _mk;
+    _t ctrlSetTextColor _col;
+    _netCtrls pushBack _t;
+    if (_forEachIndex > 0) then {
+        private _sep = ["RscText", [_laneX, _tlY + _forEachIndex * _th, _laneW, pixelH]] call _mk;
+        _sep ctrlSetBackgroundColor [0.23, 0.29, 0.24, 1];
+        _netCtrls pushBack _sep;
+    };
+} forEach _tracks;
+private _lane0 = ["RscText", [_laneX, _tlY, pixelW, _tlH]] call _mk;
+_lane0 ctrlSetBackgroundColor [0.23, 0.29, 0.24, 1];
+private _play = ["RscText", [_laneX + _laneW - 2 * pixelW, _tlY, pixelW * 2, _tlH]] call _mk;
+_play ctrlSetBackgroundColor [0.95, 0.95, 0.87, 1];
+_netCtrls append [_lane0, _play];
+private _axis = ["RscStructuredText", [_laneX - 0.02, _tlY + _tlH, _laneW + 0.03, _L]] call _mk;
+_axis ctrlSetStructuredText parseText format ["<t size='0.75' color='#888780'>-%1 min<t align='center'>-%2 min</t><t align='right'>now</t></t>", round (CQ_netSpan / 60), round (CQ_netSpan / 120)];
+private _lastMsg = ["RscStructuredText", [_X + 0.01, _tlY + _tlH + _L, _W - 0.02, _L * 1.1]] call _mk;
+_netCtrls append [_axis, _lastMsg];
+uiNamespace setVariable ["CQ_mrNet", [_netCtrls, _netTxt, _lastMsg, [_laneX, _laneW, _tlY, _th], _tracks]];
+// draws the NETWORK tab from CQ_netPub (pins rebuilt each time)
+CQ_mrDrawNet = {
+    params ["_d"];
+    disableSerialization;
+    (uiNamespace getVariable ["CQ_mrNet", []]) params ["", "_netTxt", "_lastMsg", "_geo", "_tracks"];
+    _geo params ["_laneX", "_laneW", "_tlY", "_th"];
+    (missionNamespace getVariable ["CQ_netPub", []]) params [["_ev", []], ["_hl", ["OK", 0, 0, [], "-"]], ["_st", ["", ""]], ["_ss", [0, 0, 0, 0]]];
+    _hl params ["_link", "_nl", "_nn", "_drones", "_rvTxt"];
+    private _lc = ["#C0DD97", "#FAC775", "#F09595"] select (["OK", "DEGRADED", "CUT"] find _link max 0);
+    private _dr = (_drones apply { format ["%1 %2", _x select 0, ["<t color='#F09595'>" + (_x select 1) + "</t>", "&#10003;"] select ((_x select 1) == "up")] }) joinString "  ·  ";
+    private _txt = format ["<t size='0.9'><t color='%1'>LINK %2</t>   <t color='#E8E6D9'>NODES %3/%4</t>   <t color='#E8E6D9'>%5</t>   <t color='#FAC775'>RELAY VEHICLE %6</t></t>", _lc, _link, _nl, _nn, _dr, _rvTxt];
+    _txt = _txt + format ["<br/><t size='0.95' color='#F2F1DF'>%1</t><br/><t size='0.85' color='#B4B2A9'>%2</t>", _st select 0, _st select 1];
+    _txt = _txt + format ["<br/><t size='0.85' color='#B4B2A9'>contacts </t><t size='0.95' color='#F2F1DF'>%1</t><t size='0.85' color='#B4B2A9'>     reports </t><t size='0.95' color='#F2F1DF'>%2</t><t size='0.85' color='#B4B2A9'>     drones lost </t><t size='0.95' color='#F2F1DF'>%3</t><t size='0.85' color='#B4B2A9'>     link uptime </t><t size='0.95' color='#F2F1DF'>%4%%</t>", _ss select 0, _ss select 1, _ss select 2, _ss select 3];
+    _netTxt ctrlSetStructuredText parseText _txt;
+    // pins
+    { ctrlDelete _x } forEach (uiNamespace getVariable ["CQ_mrPins", []]);
+    private _pins = [];
+    private _now = serverTime;
+    {
+        _x params ["", "_cat", "_col"];
+        private _ti = _forEachIndex;
+        private _evs = _ev select { (_x select 1) == _cat && { _now - (_x select 0) < CQ_netSpan } };
+        // merge the ones within CQ_netMerge s of each other
+        private _grp = [];
+        { private _e = _x; private _gi = _grp findIf { abs ((_x select 0) - (_e select 0)) < CQ_netMerge }; if (_gi < 0) then { _grp pushBack [_e select 0, _e param [3, 1]] } else { (_grp select _gi) set [1, ((_grp select _gi) select 1) + (_e param [3, 1])] } } forEach _evs;
+        {
+            _x params ["_t", "_n"];
+            private _px = [9, 16] select (_n > 1);
+            private _pinW = _px * pixelW; private _pinH = _px * pixelH;
+            private _cx = _laneX + _laneW * (1 - (_now - _t) / CQ_netSpan);
+            private _cy = _tlY + _th * (_ti + 0.5);
+            private _p = _d ctrlCreate ["RscStructuredText", -1];
+            _p ctrlSetPosition [_cx - _pinW / 2, _cy - _pinH / 2, _pinW, _pinH];
+            _p ctrlSetBackgroundColor _col;
+            if (_n > 1) then { _p ctrlSetStructuredText parseText format ["<t align='center' size='0.7' color='#101A12'>%1</t>", _n] };
+            _p ctrlCommit 0;
+            _pins pushBack _p;
+        } forEach _grp;
+    } forEach _tracks;
+    uiNamespace setVariable ["CQ_mrPins", _pins];
+    // latest message
+    if (_ev isNotEqualTo []) then {
+        private _e = _ev select (count _ev - 1);
+        private _ci = _tracks findIf { (_x select 1) == (_e select 1) };
+        private _hex = ["#378ADD", "#EF9F27", "#7F77DD", "#E24B4A", "#B4B2A9"] select (_ci max 0);
+        private _ago = round ((_now - (_e select 0)) / 60);
+        _lastMsg ctrlSetStructuredText parseText format ["<t size='0.85'><t color='%1'>&#9679; </t><t color='#F2F1DF'>%2 min ago  %3 · %4</t></t>", _hex, _ago, toUpper (_e select 1), _e select 2];
+    } else { _lastMsg ctrlSetStructuredText parseText "<t size='0.85' color='#B4B2A9'>No message on the network yet.</t>" };
+};
 _list lnbSetColumnsPos [0, 0.42, 0.54, 0.66, 0.88];
 
 // header text: which tab, age of the report, contacts, countdown to the next one, HQ news (LAST SEEN)
@@ -99,10 +190,18 @@ CQ_mrSetInfo = {
 private _fill = {
     params ["_info", "_list", "_tabL", "_tabG"];
     (missionNamespace getVariable ["CQ_magReportPub", []]) params [["_t", -1], ["_news", []], ["_rows", []]];
-    private _last = (uiNamespace getVariable ["CQ_mrTab", "last"]) == "last";
+    private _tab = uiNamespace getVariable ["CQ_mrTab", "last"];
+    private _last = _tab == "last";
     // active tab highlighted
-    _tabL ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select _last));
-    _tabG ctrlSetBackgroundColor (CQ_ui get (["buttonOn", "button"] select _last));
+    _tabL ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select (_tab == "last")));
+    _tabG ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select (_tab == "global")));
+    (uiNamespace getVariable ["CQ_mrTabN", controlNull]) ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select (_tab == "network")));
+    // NETWORK tab: its own controls instead of the list
+    private _net = _tab == "network";
+    { _x ctrlShow _net } forEach ((uiNamespace getVariable ["CQ_mrNet", [[]]]) select 0);
+    _info ctrlShow !_net; _list ctrlShow !_net;
+    if (_net) exitWith { [ctrlParent _info] call CQ_mrDrawNet };
+    { ctrlDelete _x } forEach (uiNamespace getVariable ["CQ_mrPins", []]); uiNamespace setVariable ["CQ_mrPins", []];
     lnbClear _list;
     [_info] call CQ_mrSetInfo;
     if (_t < 0) exitWith {};
@@ -133,6 +232,7 @@ private _fill = {
     disableSerialization;
     private _last = (missionNamespace getVariable ["CQ_magReportPub", []]) param [3, -1];
     private _sec = 0;
+    private _netSec = 0;
     uiNamespace setVariable ["CQ_mrDirty", false];
     while { !isNull _d } do {
         sleep 0.2;
@@ -155,6 +255,12 @@ private _fill = {
         };
         // countdown, every second
         _sec = _sec + 0.2;
-        if (_sec >= 1) then { _sec = 0; [_info] call CQ_mrSetInfo };
+        if (_sec >= 1) then {
+            _sec = 0;
+            if ((uiNamespace getVariable ["CQ_mrTab", "last"]) == "network") then {
+                _netSec = _netSec + 1;
+                if (_netSec >= 2) then { _netSec = 0; [_d] call CQ_mrDrawNet };
+            } else { [_info] call CQ_mrSetInfo };
+        };
     };
 };
