@@ -8,7 +8,8 @@
       relays we hold          CQ_netCoverRelay      hacked towers, engineer relays; the base and the
                                                     relays also link to each other within CQ_linkBackbone
       friendly vehicle        CQ_linkVehR           any of ours, crewed or empty, until it despawns or blows up
-      MAGPIE drone in the air CQ_linkDroneR         Sentinels and woken Darters
+      MAGPIE drone in the air CQ_linkDroneR         woken Darters (and players' drones)
+      Sentinel in the air     CQ_linkSentinelR      the two large MAGPIE drones
     A drone that is not linked flies on but reports nothing (CQ_fnc_magTick: "CQ_linked").
     Published for the map (CQ_fnc_magMapClient): CQ_linkPub = [[[pos, range, linked], ...], [[posA, posB], ...]]
     Also runs the relay vehicle: sent once the first enemy HQ is known, parked at
@@ -150,7 +151,7 @@ if (alive _rv) then { _nodes pushBack [getPosATL _rv, CQ_linkRelayVehR, _rv, "v"
 private _drones = [];
 {
     private _v = _x get "veh";
-    if (alive _v && { (_x getOrDefault ["phase", ""]) == "air" }) then { _drones pushBack _v; _nodes pushBack [getPosATL _v, CQ_linkDroneR, _v, "d"] };
+    if (alive _v && { (_x getOrDefault ["phase", ""]) == "air" }) then { _drones pushBack _v; _nodes pushBack [getPosATL _v, [CQ_linkSentinelR, CQ_linkDroneR] select (_v isKindOf "UAV_01_base_F"), _v, "d"] };   // Sentinels: CQ_linkSentinelR
 } forEach (missionNamespace getVariable ["CQ_mag", []]);
 // players' own drones relay and report too
 {
