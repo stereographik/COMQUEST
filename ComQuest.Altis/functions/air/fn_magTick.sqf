@@ -701,12 +701,12 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
         private _ownerOf = {
             params ["_o", "_p"];
             private _n = _own getOrDefault [group _o, ""];
-            if (_n == "") then { private _hid = _o getVariable ["CQ_hqId", -1]; if (_hid > -1) then { _n = [_hid] call CQ_fnc_objName } };
+            if (_n == "") then { private _hid = _o getVariable ["CQ_hqId", -1]; if (_hid > -1) then { _n = [_hid] call CQ_fnc_objName; if (isNil "_n") then { _n = "" } } };
             if (_n == "") then {
                 private _best = CQ_magAoRange;
-                { private _d = (_x get "pos") distance2D _p; if (_d < _best) then { _best = _d; _n = [_x get "id"] call CQ_fnc_objName } } forEach _aos;
+                { private _d = (_x get "pos") distance2D _p; if (_d < _best) then { _best = _d; _n = [_x get "id"] call CQ_fnc_objName; if (isNil "_n") then { _n = "" } } } forEach _aos;
             };
-            ["-", _n] select (_n != "")
+            if (isNil "_n" || { !(_n isEqualType "") } || { _n == "" }) then { "-" } else { _n }
         };
         private _rows = [];
         private _squads = createHashMap;               // infantry: group -> [records]

@@ -729,6 +729,7 @@ CQ_menuOverhang = 0.18;                  // share of the picture pushed past the
 CQ_uDoubleTap = 0.4;                     // s: U twice within this opens the MAGPIE report
 CQ_sqSize = 0.85;                        // squads / class / stats window: field tablet picture height (share of the screen height), centred
 CQ_sqScreen = [0.2773, 0.2672, 0.7920, 0.7719];   // its green screen zone in the picture (fractions), under the status bar, right of the icon column
+CQ_mrTint = 0.92;                        // MAGPIE report window: opacity of its dark background (dense table)
 CQ_sqTint = 0.72;                        // opacity of the dark tint over the green screen (readability)
 CQ_sqFont = 0.75;                        // squads / class / stats window: labels, buttons and lists at this x the default text size (descriptions unchanged)
 CQ_menuScreen = [0.4102, 0.4062, 0.7070, 0.5410];   // its green screen zone in the picture (fractions), under the status bar, right of the icon column

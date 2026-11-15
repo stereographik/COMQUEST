@@ -48,7 +48,7 @@ _pic ctrlCommit 0;
 _pic ctrlSetText (getMissionPath "media\comtablet_ca.paa");
 _d displayAddEventHandler ["Unload", { "CQ_mrBg" cutText ["", "PLAIN"] }];
 
-(["RscText", [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0, 0.04, 0, CQ_sqTint];
+(["RscText", [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0.02, 0.03, 0.02, CQ_mrTint];   // darker than the other windows: dense table
 (["RscText", [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
 private _tabL = ["RscButton", [_X + 0.01, _Y + 0.004, _W * 0.22, _L], "LAST SEEN"] call _mk;
 private _tabG = ["RscButton", [_X + 0.02 + _W * 0.22, _Y + 0.004, _W * 0.3, _L], "GLOBAL SITUATION"] call _mk;
@@ -72,17 +72,17 @@ private _fill = {
     _tabL ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select _last));
     _tabG ctrlSetBackgroundColor (CQ_ui get (["buttonOn", "button"] select _last));
     lnbClear _list;
-    if (_t < 0) exitWith { _info ctrlSetStructuredText parseText "<t size='0.9' color='#A6A381'>No MAGPIE report yet.</t>" };
+    if (_t < 0) exitWith { _info ctrlSetStructuredText parseText "<t size='0.9' color='#F2F1DF'>No MAGPIE report yet.</t>" };
     if (_last) then { _rows = _rows select { _x param [6, false] } };
     private _age = round ((serverTime - _t) / 60);
-    private _txt = format ["<t size='0.9' color='#A6A381'>%1  ·  report of %2 min ago  ·  %3 contacts</t>",
+    private _txt = format ["<t size='0.9' color='#F2F1DF'>%1  ·  report of %2 min ago  ·  %3 contacts</t>",
         ["Every enemy MAGPIE knows", "New in the last report"] select _last, _age, count _rows];
     if (_last) then {
         { _txt = _txt + format ["<br/><t size='0.85' color='#F2F1DF'>%1</t>", _x] } forEach (_news select [0, 2]);
-        if (count _news > 2) then { _txt = _txt + format ["<br/><t size='0.8' color='#A6A381'>+%1 more HQ news</t>", count _news - 2] };
+        if (count _news > 2) then { _txt = _txt + format ["<br/><t size='0.8' color='#F2F1DF'>+%1 more HQ news</t>", count _news - 2] };
     };
     _info ctrlSetStructuredText parseText _txt;
-    private _muted = CQ_ui get "muted";
+    private _muted = [0.85, 0.84, 0.7, 1];   // column titles
     private _r = _list lnbAddRow ["CONTACT", "HDG", "SPD", "HQ", "IN SIGHT"];
     for "_c" from 0 to 4 do { _list lnbSetColor [[_r, _c], _muted] };
     {
@@ -90,13 +90,15 @@ private _fill = {
         private _sel = _rows select { (_x select 0) == _cat };
         if (_sel isEqualTo []) then { continue };
         _r = _list lnbAddRow [format ["%1 (%2)", _name, count _sel], "", "", "", ""];
-        _list lnbSetColor [[_r, 0], CQ_ui get "accent"];
+        _list lnbSetColor [[_r, 0], [1, 0.78, 0.3, 1]];   // category: bright amber
         {
-            _x params ["", "_type", "_hdg", "_spd", "_own", "_vis", ["_isNew", false]];
+            _x params ["", ["_type", "?"], ["_hdg", 0], ["_spd", 0], ["_own", "-"], ["_vis", false], ["_isNew", false]];
+            if (isNil "_own" || { !(_own isEqualType "") }) then { _own = "-" };
             private _hx = str (round _hdg);
             while { count _hx < 3 } do { _hx = "0" + _hx };
             _r = _list lnbAddRow ["   " + _type, _hx, format ["%1 km/h", round _spd], _own, ["no", "YES"] select _vis];
-            if (_vis) then { _list lnbSetColor [[_r, 4], CQ_ui get "alert"] } else { _list lnbSetColor [[_r, 4], CQ_ui get "dim"] };
+            for "_c" from 0 to 3 do { _list lnbSetColor [[_r, _c], [0.95, 0.95, 0.9, 1]] };
+            _list lnbSetColor [[_r, 4], [[0.75, 0.75, 0.7, 1], [1, 0.35, 0.3, 1]] select _vis];
         } forEach _sel;
     } forEach [["inf", "INFANTRY"], ["static", "STATIC"], ["light", "LIGHT VEHICLES"], ["armour", "ARMOUR"], ["air", "AIR"]];
 };
