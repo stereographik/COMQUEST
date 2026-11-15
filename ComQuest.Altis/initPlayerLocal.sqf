@@ -51,6 +51,9 @@ player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [
 [] spawn CQ_fnc_heavyLift;   // heavy lifters (Mohawk) hook vehicles up to 12 t
 [] spawn CQ_fnc_statsClient; // shots, heals, distances, time played
 call CQ_fnc_heatMapClient;   // MAGPIE heatmap under everything else
+// vanilla "Map content: Enemy" (difficulty): what friendly infantry spots would drop on the map;
+// off so only MAGPIE reveals enemies (friendlies, mines and pings stay as the difficulty sets them)
+if (!CQ_vanillaEnemyMap) then { disableMapIndicators [false, true, false, false] };
 call CQ_fnc_rangeMapClient;   // range map: ground the seen enemies can fire on (drawn by magMapClient)
 call CQ_fnc_magMapClient;    // MAGPIE drones + enemies in their sight, live on the map
 // version, branch and build stamp, tiny at the bottom right of the screen

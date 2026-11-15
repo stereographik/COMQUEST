@@ -945,6 +945,7 @@ CQ_rangeAlpha = [0.10, 0.05, 0.12];      // opacity: 1 enemy, + per extra enemy 
 CQ_enemyIconPx = 26;                     // icon size (x CQ_mapIconScale), same as our drones
 CQ_echoColor = [0.729, 0.224, 0.173];    // chart red #BA392C (enemy icons, range map, enemy network)
 CQ_gpsOverlay = true;                    // also draw the enemy icons and the range map on the GPS panel
+CQ_vanillaEnemyMap = false;              // false: no vanilla enemy icons from what friendlies spot (difficulty map content)
 // MAGPIE heatmap (map overlay, every player; OFF by default since the radar echoes): contacts only, blue -> red
 // contour bands shaped by the terrain, fading (half-life) as the information gets old
 CQ_heatCell = 300;                       // m per cell
