@@ -941,10 +941,10 @@ CQ_rangeCone = 45;                       // deg either side of where the enemy f
 CQ_rangeMove = 40;                       // m an enemy must move before his range is recomputed
 CQ_rangeBudget = 120;                    // line-of-sight checks between two short pauses
 CQ_rangeAlpha = [0.10, 0.05, 0.12];      // opacity: 1 enemy, + per extra enemy (max 4), + inside a fire cone
-// MAGPIE radar echoes on the map (fn_magMapClient): live filled circle + fading empty traces
-CQ_echoPx = 5;                           // circle size in screen pixels (same at every zoom)
-CQ_echoLife = 5;                         // s a trace circle stays (fading out)
-CQ_echoColor = [0.729, 0.224, 0.173];    // chart red #BA392C
+// Enemies MAGPIE sees, on the map (fn_magMapClient): their own map icon, live, no text
+CQ_enemyIconPx = 26;                     // icon size (x CQ_mapIconScale), same as our drones
+CQ_echoColor = [0.729, 0.224, 0.173];    // chart red #BA392C (enemy icons, range map, enemy network)
+CQ_gpsOverlay = true;                    // also draw the enemy icons and the range map on the GPS panel
 // MAGPIE heatmap (map overlay, every player; OFF by default since the radar echoes): contacts only, blue -> red
 // contour bands shaped by the terrain, fading (half-life) as the information gets old
 CQ_heatCell = 300;                       // m per cell
