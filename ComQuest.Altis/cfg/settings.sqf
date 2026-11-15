@@ -144,7 +144,7 @@ CQ_wxTransition = [60, 120];             // every transition takes 1-2 min (neve
 CQ_wxRainMax = 240;                      // a rain never lasts more than 4 min (fade in + hold + fade out)
 CQ_wxRainLevel = 0.6;
 CQ_wxFogMorning = [0.2, 0.012, 0];       // light morning fog [density, decay, base]
-CQ_wxFogGoneHour = 11;                   // in-game hour when the fog has slowly faded out
+CQ_wxFogFade = [1200, 2400];             // the morning fog fades out over 20-40 min real time (30 min on average)
 
 // --- Enemy origin: a carrier off the coast of Altis ----------------------------
 CQ_carrierClass = "Land_Carrier_01_base_F";   // USS Freedom (free Jets platform update)

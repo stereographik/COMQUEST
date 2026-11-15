@@ -2,7 +2,7 @@
     CQ_fnc_weatherTick  (server, director task)
     Weather over the whole mission (every delay is in real seconds):
       start      clear sky or partly cloudy (random), light morning fog
-      fog        fades out slowly, gone at CQ_wxFogGoneHour (in-game clock, e.g. 11:00)
+      fog        fades out slowly over CQ_wxFogFade (20-40 min real time, 30 on average)
       changes    every CQ_wxChangeEvery (15-30 min, random): clear <-> partly cloudy, or with
                  CQ_wxBadChance (10 %) cloudy or cloudy + rain (half and half)
       rain       never longer than CQ_wxRainMax (4 min) from first drop to last: fade in,
@@ -27,9 +27,9 @@ if (isNil "CQ_wxState") then {
     0 setRain 0;
     0 setFog CQ_wxFogMorning;
     forceWeatherChange;
-    // fog gone at CQ_wxFogGoneHour in-game: the transition time is that many real seconds
-    private _left = ((CQ_wxFogGoneHour - daytime) max 0) * 3600 / (timeMultiplier max 0.1);
-    if (_left > 60) then { _left setFog [0, 0, 0] } else { 60 setFog [0, 0, 0] };
+    // fog gone after CQ_wxFogFade real seconds, whatever the start time or the time speed
+    private _left = ([CQ_wxFogFade] call _rnd) max 60;
+    _left setFog [0, 0, 0];
     CQ_wxChangeT = time + ([CQ_wxChangeEvery] call _rnd);
     CQ_wxRainEndT = -1;
     ["Weather: %1 at start, morning fog %2, gone in %3 min", [CQ_wxState, CQ_wxFogMorning select 0, round (_left / 60)]] call CQ_fnc_log;
