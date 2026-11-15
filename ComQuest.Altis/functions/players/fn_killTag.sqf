@@ -1,8 +1,8 @@
 /*
     CQ_fnc_killTag  (client, from the player's HandleDamage in CQ_fnc_playerSetup)
-    [_victim, _shooter, _source] call CQ_fnc_killTag  ->  "SNIPER · Ivan Petrov · GM6 Lynx (12.7x108 mm)"
+    [_victim, _shooter, _source] call CQ_fnc_killTag  ->  "SNIPER · Ivan Petrov · GM6 Lynx"
     What hit a player, for the feed ("Django was killed by ..." / "Django is down · ..."):
-    a category, then the shooter's name, his weapon and its caliber. First match wins:
+    a category, then the shooter's name and his weapon. First match wins:
       FRIENDLY FIRE         a player of ours
       SPECIAL FORCES (team) HUNTERS / SABOTAGE teams (CQ_hunter)
       MORTAR                a mortar or any artillery piece
@@ -21,9 +21,9 @@ private _v = vehicle _w;
 private _g = group _w;
 private _gid = groupId _g;
 private _tl = toLower typeOf _w;
-// weapon in use (the turret's when he mans a vehicle) and its magazine
+// weapon in use (the turret's when he mans a vehicle)
 private _ws = if (_v != _w) then { weaponState [_v, _v unitTurret _w] } else { weaponState _w };
-_ws params [["_wpn", ""], "", "", ["_mag", ""]];
+_ws params [["_wpn", ""]];
 private _cat = switch (true) do {
     case (isPlayer _w && { side _g == west }): { "FRIENDLY FIRE" };
     case (_w getVariable ["CQ_hunter", false]): { format ["SPECIAL FORCES (%1)", _gid] };
@@ -35,20 +35,8 @@ private _cat = switch (true) do {
     case (side _g == resistance): { "GUERILLA" };
     default { "INFANTRY" };
 };
-// weapon name and caliber: "Caliber: 6.5x39 mm ..." in the magazine description, else "NN mm" in its name
+// weapon name
 private _wn = getText (configFile >> "CfgWeapons" >> _wpn >> "displayName");
-private _cal = "";
-if (_mag != "") then {
-    private _d = getText (configFile >> "CfgMagazines" >> _mag >> "descriptionShort");
-    private _i = _d find "Caliber:";
-    if (_i > -1) then {
-        _cal = (_d select [_i + 8]) splitString "<" param [0, ""];
-        _cal = _cal trim [" ", 0];
-    } else {
-        private _m = (getText (configFile >> "CfgMagazines" >> _mag >> "displayName")) regexFind ["[0-9]+([.,][0-9]+)?( ?x ?[0-9]+)? ?mm/i"];
-        if (_m isNotEqualTo []) then { _cal = (_m select 0 select 0) select 0 };
-    };
-};
 private _out = [_cat, name _w];
-if (_wn != "") then { _out pushBack ([_wn, format ["%1 (%2)", _wn, _cal]] select (_cal != "")) };
+if (_wn != "") then { _out pushBack _wn };
 _out joinString " · "
