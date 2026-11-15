@@ -4,6 +4,10 @@
 */
 if (!hasInterface) exitWith {};
 
+// Handling: much less weapon sway (stamina kept), a bit less recoil
+player setCustomAimCoef CQ_aimSway;
+player setUnitRecoilCoefficient CQ_recoil;
+
 // Role traits (setUnitTrait is local, so it runs here)
 if (typeOf player in CQ_engineerClasses) then {
     player setUnitTrait ["engineer", true];
