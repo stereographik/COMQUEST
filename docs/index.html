@@ -99,7 +99,7 @@ section{padding:72px 0}
 .tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl th{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
 .tbl td{padding:10px 12px;border-bottom:1px solid #1E4A4C}
-.tbl td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.tbl td.n{white-space:nowrap;font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
 .tbl th.n{text-align:right}
 .tblbox{overflow-x:auto;border:1px solid var(--line);background:var(--sheet)}
 
@@ -252,11 +252,11 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
       <div class="cell cool"><span class="mono">First contact</span><h3>Encirclement</h3><p>The first enemy spotted becomes the centre of every flight path. The drones spread around it and tighten the ring, taking risks to see more.</p></div>
       <div class="cell cool"><span class="mono">Identification</span><h3>Not every pass counts</h3><p>Each pass has a chance to identify: 60% for infantry up to 90% for aircraft. Hidden units stay hidden.</p></div>
       <div class="cell hot"><span class="mono">Threat</span><h3>Tigris</h3><p>Every insertion drops a Tigris, and the corridor outpost has Titans. The radar only wakes once it notices a drone, and missiles reach 3.5 km. A lost Sentinel is replaced after 8 minutes; MAGPIE learns to fly around known AA.</p></div>
-      <div class="cell cool"><span class="mono">Network</span><h3>Data link</h3><p>A drone reports only while it is chained to the base through overlapping ranges: base 5 km, hacked-tower relays 4 km, the relay vehicle 2.5 km, any friendly vehicle (even empty) 1 km, drones 1 km. Base and relays also link directly up to 10 km. Links are drawn on the map, and a Darter shows only while linked.</p></div>
-      <div class="cell"><span class="mono">Relay vehicle</span><h3>Hunter on the road</h3><p>As soon as the first HQ exists, a crewed Hunter HMG drives a third of the way towards it and parks as a relay. It drives careless, radios when it comes under fire, opens fire once parked, and is replaced 5 minutes after it is lost.</p></div>
-      <div class="cell cool"><span class="mono">Edge of the link</span><h3>WASP</h3><p>MAGPIE's own Darter pushes toward the carrier as far as the data link holds: about 3.3 km past the relay vehicle, or almost 6 km past the base when there is none. It stays out of the encirclement and follows its anchor out.</p></div>
+      <div class="cell cool"><span class="mono">Network</span><h3>Data link</h3><p>A drone reports only while it is chained to the base through overlapping ranges: base 5 km, hacked-tower relays 4 km, the relay vehicle 2.5 km, any friendly vehicle (even empty) 1 km, Sentinels 3 km, Darters 1 km. Base and relays also link directly up to 10 km. Links are drawn on the map, and a Darter shows only while linked.</p></div>
+      <div class="cell"><span class="mono">Relay vehicle</span><h3>Marshall on the road</h3><p>As soon as the first HQ exists, a crewed AMV-7 Marshall drives out toward the carrier and parks as a 2.5 km relay, on land or afloat (it is amphibious). It radios when it comes under fire, fires back with its 40 mm, and is replaced 5 minutes after it is lost.</p></div>
+      <div class="cell cool"><span class="mono">Edge of the link</span><h3>WASP</h3><p>MAGPIE's own Darter pushes toward the carrier as far as the data link holds: about 2.25 km past the relay vehicle, or 4.5 km past the base when there is none. It stays out of the encirclement and follows its anchor out.</p></div>
       <div class="cell"><span class="mono">Intel</span><h3>Objectives spotted</h3><p>An HQ's AA pits, tower, depot or tanker only go on the map once a drone has seen them and the intel reached the base. A new one sends the nearest Watcher Darter to circle it for a minute, clear of known anti-air.</p></div>
-      <div class="cell hot"><span class="mono">Map</span><h3>Live and heat</h3><p>While a drone sees an enemy, everyone sees it live on the map. A heatmap marks scanned ground in teal and contacts in rose, fading within a minute. <span class="pill t">heatmap in test</span></p></div>
+      <div class="cell hot"><span class="mono">Map</span><h3>Live icons and fire zones</h3><p>While a drone sees an enemy, everyone sees his icon live on the map and the GPS, with the ground he can fire on shaded red underneath. Friendlies only show through the data link, and infantry spotting adds nothing: only MAGPIE reveals the enemy.</p></div>
     </div>
     <div class="stack">
       <div class="radio">
@@ -267,6 +267,28 @@ ComQuest Altis<i>↗</i>CROSSROAD<i>↗</i>MAGPIE<i>↗</i>COMHAT<i>↗</i>Data 
       </div>
       <p class="mono" style="text-transform:none;letter-spacing:.02em">Reports every 2 minutes, only when something new was identified, as a compact list per area of operation. Each card stays on screen for 6 seconds.</p>
     </div>
+  </div>
+  <div class="tblbox" style="margin-top:28px">
+    <table class="tbl">
+      <thead><tr><th>The fleet</th><th>Airframe</th><th class="n">Altitude</th><th class="n">Sensor</th><th class="n">Data link</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>Sentinel Argos</td><td>Greyhawk, unarmed</td><td class="n">900 m</td><td class="n">~1.4 km</td><td class="n">3 km</td><td>Low wide-area watcher. Flies a northern search loop (Almyra, Sofia, NE coast) until the first contact, then loiters around it.</td></tr>
+        <tr><td>Sentinel Hermes</td><td>Greyhawk, unarmed</td><td class="n">1,500 m</td><td class="n">~2.1 km</td><td class="n">3 km</td><td>High watcher with the widest eye. Flies a southern loop (down the spine to Selakano, round the south tip, up the east coast), then loiters around contacts.</td></tr>
+        <tr><td>WASP</td><td>Darter</td><td class="n">250 m</td><td class="n">~600 m</td><td class="n">1 km</td><td>MAGPIE's own scout. Holds the edge of the data link on the line toward the carrier.</td></tr>
+        <tr><td>Watchers (woken Darters)</td><td>Darter</td><td class="n">250 m</td><td class="n">~600 m</td><td class="n">1 km</td><td>Sleep on a 500 m grid across Altis (none within 2.5 km of the base). Up to 6 awake at once; they watch the zone that woke them and relay the link.</td></tr>
+        <tr><td>Link-repair chain</td><td>Darters</td><td class="n">120 m</td><td class="n">~450 m</td><td class="n">1 km</td><td>Up to 4 free Darters, 900 m apart, bridging a cut-off WASP or relay vehicle back to the network.</td></tr>
+        <tr><td>Relay vehicle</td><td>AMV-7 Marshall</td><td class="n">ground</td><td class="n">&mdash;</td><td class="n">2.5 km</td><td>Not a drone: the base's mobile relay, parked toward the carrier.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="mono" style="text-transform:none;letter-spacing:.02em;margin-top:10px">Sensor radius = 300 m + altitude &times; 1.2, capped at 2.4 km, and blocked by terrain and buildings. Data link: two nodes connect when the weaker one is inside the stronger one's range. Base 5 km, held relays 4 km, any friendly vehicle 1 km.</p>
+  <div class="grid g2" style="margin-top:28px">
+    <div class="cell cool"><span class="mono">Sentinels</span><h3>Circuit, then ring</h3><p>Until the first contact, each Sentinel flies its search loop. After it, every drone takes a sector of a ring around the contact: 3 km wide at first, turning half a degree a second and tightening by 120 m a minute down to 700 m. The Sentinels swing their loiter by &plusmn;30% every 4 minutes. With no new contact for 5 minutes, the focus moves to the next group or radio tower. Lost: replaced after 8 minutes, from the runway.</p></div>
+    <div class="cell cool"><span class="mono">WASP</span><h3>Always at the edge</h3><p>Sits at 90% of its anchor's range (the relay vehicle while it lives, else the base), straight toward the carrier, never more than 1 km past the coast. It stays out of the ring. Cut off for 2 minutes: Darters come to bridge it, or it pulls back inside the network. Sabotage seen near its post: it backs off halfway.</p></div>
+    <div class="cell cool"><span class="mono">Watchers</span><h3>Wake, back off, stretch</h3><p>A ground enemy within 500 m of a sleeping point wakes a Darter there. It first backs away to 90% of its sensor range, then, with the others of its zone (within 1.5 km), stretches into a tree from the data link out to a ring around the enemies, each branch at 90% of link range. Nothing seen for 3 minutes: it sneaks back low (150 m) over its wake point. A new objective sends the nearest Watcher to circle it for a minute, keeping 1.2 km from AA pits. Destroyed: replaced from the nearest point after a minute.</p></div>
+    <div class="cell cool"><span class="mono">Link repair</span><h3>Darters as a bridge</h3><p>When WASP or the relay vehicle has been out of the network for 2 minutes, MAGPIE lines up to 4 free Darters, 900 m apart at 120 m, between it and the nearest linked node. Once the link is back, the chain holds one more minute, then the Darters return to their jobs.</p></div>
+    <div class="cell"><span class="mono">Seeing</span><h3>Detect, identify, report</h3><p>Every 4 seconds each linked drone checks what is in its line of sight. A new contact is identified with a chance per pass: infantry 60%, statics 70%, light vehicles 80%, armour 85%, aircraft 90%. Only linked drones report, every 2 minutes, and only when something new came up.</p></div>
+    <div class="cell hot"><span class="mono">Danger</span><h3>Anti-air</h3><p>The Tigris radar can notice a drone in line of sight up to 6 km (the small Darter is half as easy to notice), tracks it for 40 s and launches a Titan inside 3.5 km every 25 s. Once a Tigris is identified, every drone keeps 2.5 km from where it was last seen.</p></div>
   </div>
 </section>
 
