@@ -7,8 +7,8 @@
                 off right there (the point is used up) and joins MAGPIE's fleet (role "dormant"),
                 at most CQ_magDormantMax woken Darters alive at once
       get away  it first flies straight away from that enemy until it is more than 80 % of its
-                sensor range from it (CQ_magDormantFlee), then connects to the data link and
-                spreads around the zone (see "connect, then spread" below)
+                sensor range from it (CQ_magDormantFlee), then hangs from the data link in a
+                stretched tree toward its zone (see "stretched tree" below)
       replace   a woken Darter destroyed is replaced after CQ_magDormantReplace s by the nearest
                 point left to where it went down (same get-away rule, from that spot)
     While in the air a woken Darter relays MAGPIE's data link (CQ_fnc_magTick, CQ_netCoverRelay).
@@ -129,25 +129,25 @@ private _wake = {
     ["MAGPIE: %1 saw nothing for %2 min, sneaks back to its wake point at %3", [_m get "name", round (_idle / 60), mapGridPosition _p]] call CQ_fnc_log;
 } forEach CQ_mag;
 
-// ---- connect, then spread (every CQ_magWjEvery s): a woken Darter's first job is to be in the
-// data link. The woken Darters are grouped by the zone where they woke (CQ_magWjZone); for each
-// zone the nearest linked point of the network (base, relay, vehicle, other drone) is the anchor:
-//   chain   slots every CQ_lrHop m from the edge of the anchor's range toward the zone, the last
-//           one on the zone's ring; the Darters nearest to them fill them first (from the anchor
-//           out: with too few, the chain stays connected and falls short of the zone)
-//   spread  the Darters left over take points on a ring of CQ_magWjRing x sensor range around the
-//           zone (around the enemies MAGPIE saw there), next to where the chain arrives and then
-//           alternately on both sides, never further than CQ_lrHop from the previous one
-// LINK REPAIR takes its Darters first (spread ones before chain ones); the fleet's own flight
-// plans leave the Darters with a job ("wjob") alone.
+// ---- stretched tree (every CQ_magWjEvery s): the woken Darters hang from the data link like a
+// tree stretched to its limit. Anchors = every linked point of the network that is not one of
+// them (base, relays, the relay vehicle, WASP, Sentinels, other drones). One Darter at a time
+// takes a spot exactly CQ_linkReach x (the parent's range, a drone's at least) from a parent
+// (an anchor or a Darter already placed), in one of 24 directions, never closer than CQ_lrHop
+// to any other point, and never under known anti-air. Of those spots it takes the one nearest
+// to its zone's enemies (the enemies MAGPIE saw where it woke) until a Darter reaches the ring
+// of CQ_magWjRing x sensor range around them; then the next ones branch around that ring.
+// A Darter keeps its spot while the new layout puts one within 150 m of it (no wobble).
 if (time >= (missionNamespace getVariable ["CQ_magWjNext", 0])) then {
     CQ_magWjNext = time + CQ_magWjEvery;
     { if (_x getOrDefault ["repair", false]) then { _x set ["wjob", ""] } } forEach CQ_mag;
     private _woke = CQ_mag select { (_x getOrDefault ["role", ""]) == "dormant" && { alive (_x get "veh") } && { !(_x getOrDefault ["flee", false]) } && { !(_x getOrDefault ["repair", false]) } };
     if (_woke isEqualTo []) exitWith {};
     private _wv = _woke apply { _x get "veh" };
-    private _anch = ((missionNamespace getVariable ["CQ_linkPub", []]) param [0, []]) select { (_x select 2) && { private _p = _x select 0; (_wv findIf { _x distance2D _p < 40 }) == -1 } };
-    if (_anch isEqualTo []) then { _anch = [[CQ_basePos, CQ_netCoverBase, true]] };
+    // anchors: [pos, range]
+    private _anch = (((missionNamespace getVariable ["CQ_linkPub", []]) param [0, []]) select { (_x select 2) && { private _p = _x select 0; (_wv findIf { _x distance2D _p < 60 }) == -1 } }) apply { [[(_x select 0) select 0, (_x select 0) select 1, 0], _x select 1] };
+    if (_anch isEqualTo []) then { _anch = [[[CQ_basePos select 0, CQ_basePos select 1, 0], CQ_netCoverBase]] };
+    private _placed = [];                                 // [pos, range] of the spots given so far
     private _zones = [];
     {
         private _m = _x;
@@ -155,6 +155,9 @@ if (time >= (missionNamespace getVariable ["CQ_magWjNext", 0])) then {
         private _zi = _zones findIf { (_x select 0) distance2D _wp < CQ_magWjZone };
         if (_zi < 0) then { _zones pushBack [_wp, [_m]] } else { ((_zones select _zi) select 1) pushBack _m };
     } forEach _woke;
+    private _hop = CQ_lrHop;
+    private _rr = CQ_magWjRing * _range;
+    private _jobs = [];
     {
         _x params ["_zc0", "_mem"];
         private _near = (values CQ_magSeen) select { time - (_x select 1) < CQ_magMemory && { (_x select 3) distance2D _zc0 < CQ_magWjZone } };
@@ -164,109 +167,68 @@ if (time >= (missionNamespace getVariable ["CQ_magWjNext", 0])) then {
             { _sx = _sx + ((_x select 3) select 0); _sy = _sy + ((_x select 3) select 1) } forEach _near;
             _zc = [_sx / count _near, _sy / count _near, 0];
         };
-        private _rr = CQ_magWjRing * _range;
-        private _an = ([_anch, [], { ((_x select 0) distance2D _zc) - (_x select 1) }, "ASCEND"] call BIS_fnc_sortBy) select 0;
-        private _ap = [(_an select 0) select 0, (_an select 0) select 1, 0];
-        private _d0 = (_an select 1) * CQ_linkReach;
-        private _dz = _ap distance2D _zc;
-        private _dir = _ap getDir _zc;
-        // chain slots (none when the anchor's range already reaches the ring)
-        private _slots = [];
-        if (_dz - _rr > _d0) then {
-            private _dEnd = _dz - _rr;
-            private _k = ceil ((_dEnd - _d0) / CQ_lrHop) + 1;
-            for "_i" from 0 to _k - 1 do { _slots pushBack (_ap getPos [(_d0 + _i * CQ_lrHop) min _dEnd, _dir]) };
+        private _spots = [];
+        for "_k" from 1 to count _mem do {
+            private _all = _anch + _placed;
+            private _best = []; private _bs = 1e12;
+            {
+                _x params ["_pp", "_pr"];
+                private _len = (_pr max CQ_linkDroneR) * CQ_linkReach;
+                for "_a" from 0 to 345 step 15 do {
+                    private _c = _pp getPos [_len, _a];
+                    _c = [_c select 0, _c select 1, 0];
+                    if ((_c select 0) < 100 || { (_c select 1) < 100 } || { (_c select 0) > worldSize - 100 } || { (_c select 1) > worldSize - 100 }) then { continue };
+                    private _sep = 1e9;
+                    { _sep = _sep min ((_x select 0) distance2D _c) } forEach _all;
+                    if (_sep < 0.95 * _hop) then { continue };
+                    if !([_c] call _aaSafe) then { continue };
+                    private _dz = _c distance2D _zc;
+                    private _sc = if (_dz > _rr) then { _dz - _rr } else { 2 * (_rr - _dz) };
+                    _sc = _sc - 0.02 * (_sep min 3000);           // ties: the more open spot
+                    if (_sc < _bs) then { _bs = _sc; _best = _c };
+                };
+            } forEach _all;
+            if (_best isEqualTo []) exitWith {};                 // no room left (AA everywhere, ...)
+            _placed pushBack [_best, CQ_linkDroneR];
+            _spots pushBack _best;
         };
-        private _n = count _mem;
-        private _chainN = (count _slots) min _n;
-        _slots resize _chainN;
-        // ring points, from where the chain arrives, alternately on both sides
-        private _step = (360 / ((_n - _chainN + 1) max 2)) min (2 * asin ((CQ_lrHop / (2 * (_rr max 1))) min 1));
-        private _a0 = _zc getDir _ap;
-        private _ringPts = [];
-        private _j = 1;
-        while { count _ringPts < (_n - _chainN) && { _j <= 12 } } do {
-            private _side = [1, -1] select ((_j mod 2) == 0);
-            private _p = _zc getPos [_rr, _a0 + _side * ceil (_j / 2) * _step];
-            if ([_p] call _aaSafe) then { _ringPts pushBack [_p select 0, _p select 1, 0] };
-            _j = _j + 1;
-        };
-        if (_chainN == 0 && { _ringPts isNotEqualTo [] }) then { _ringPts set [0, _zc getPos [_rr, _a0]] };   // first one faces the anchor
-        // fill: chain slots first (from the anchor out), then the ring; the nearest free Darter each time
+        // who goes where: a Darter already within 150 m of a spot keeps it, the others the nearest
         private _free = +_mem;
-        private _jobs = [];
-        { if (_free isEqualTo []) exitWith {}; private _sl = _x; private _m = ([_free, [], { (_x get "veh") distance2D _sl }, "ASCEND"] call BIS_fnc_sortBy) select 0; _free = _free - [_m]; _jobs pushBack [_m, "chain", _sl, CQ_lrAlt] } forEach _slots;
-        { if (_free isEqualTo []) exitWith {}; private _sl = _x; private _m = ([_free, [], { (_x get "veh") distance2D _sl }, "ASCEND"] call BIS_fnc_sortBy) select 0; _free = _free - [_m]; _jobs pushBack [_m, "spread", _sl, CQ_magDormantAlt] } forEach _ringPts;
-        { _jobs pushBack [_x, "spread", _zc getPos [_rr, random 360], CQ_magDormantAlt] } forEach _free;   // anything left (AA everywhere): somewhere on the ring
-        private _changed = false;
+        private _left = +_spots;
         {
-            _x params ["_m", "_job", "_pt", "_alt"];
-            _m set ["wjZc", _zc]; _m set ["wjAn", _ap];
-            private _old = _m getOrDefault ["wjPos", [0, 0, 0]];
-            // a spread Darter keeps its own place (it relaxes, below); a chain one follows its slot
-            if ((_m getOrDefault ["wjob", ""]) == _job && { _job == "spread" || { _old distance2D _pt < 120 } }) then { continue };
-            _changed = true;
-            _m set ["wjob", _job]; _m set ["wjPos", _pt]; _m set ["sneak", false]; _m set ["target", _pt];
-            private _v = _m get "veh";
-            private _g = group effectiveCommander _v;
-            [_g] call CQ_fnc_clearWaypoints;
-            _v flyInHeight _alt;
-            private _wp = _g addWaypoint [[_pt select 0, _pt select 1, 0], 0];
-            _wp setWaypointType "LOITER";
-            _wp setWaypointLoiterRadius 60;
-            _g setCurrentWaypoint _wp;
-        } forEach _jobs;
-        if (_changed) then {
-            ["MAGPIE: woken Darters near %1: %2 chain, %3 spread (anchor %4 m away, %5 hops needed)", [mapGridPosition _zc,
-                { (_x select 1) == "chain" } count _jobs, { (_x select 1) == "spread" } count _jobs, round _dz, count _slots]] call CQ_fnc_log;
-        };
+            private _m = _x;
+            private _cur = _m getOrDefault ["wjPos", []];
+            if (_cur isEqualTo [] || { (_m getOrDefault ["wjob", ""]) != "tree" }) then { continue };
+            private _i = _left findIf { _x distance2D _cur < 150 };
+            if (_i > -1) then { _jobs pushBack [_m, _left select _i, false]; _left deleteAt _i; _free = _free - [_m] };
+        } forEach _mem;
+        {
+            if (_free isEqualTo []) exitWith {};
+            private _sl = _x;
+            private _m = ([_free, [], { (_x get "veh") distance2D _sl }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+            _free = _free - [_m];
+            _jobs pushBack [_m, _sl, true];
+        } forEach _left;
+        { _jobs pushBack [_x, _zc getPos [_rr, random 360], true] } forEach _free;   // no spot found: on the ring
     } forEach _zones;
-};
-
-
-// ---- relax (every CQ_magRelaxEvery s): the spread Darters push away from every node of the
-// network closer than D (CQ_lrHop), are held back by a leash to their parent (the nearest linked
-// node nearer to the zone's anchor than they are) as soon as it is further than D, and lean a
-// little toward the zone's enemies (never more than CQ_magWjZone away). They settle about D from
-// their neighbours: the widest net that still links. Chain Darters keep their slots.
-if (time >= (missionNamespace getVariable ["CQ_magRelaxNext", 0])) then {
-    CQ_magRelaxNext = time + CQ_magRelaxEvery;
-    private _hop = CQ_lrHop;
-    private _nodes = (((missionNamespace getVariable ["CQ_linkPub", []]) param [0, []]) select { _x select 2 }) apply { [(_x select 0) select 0, (_x select 0) select 1, 0] };
-    { private _v = _x get "veh"; if (alive _v && { (_x getOrDefault ["phase", ""]) == "air" }) then { _nodes pushBack [(getPosATL _v) select 0, (getPosATL _v) select 1, 0] } } forEach CQ_mag;
+    private _moved = 0;
     {
-        private _m = _x;
-        if ((_m getOrDefault ["wjob", ""]) != "spread" || { _m getOrDefault ["repair", false] } || { _m getOrDefault ["flee", false] }) then { continue };
+        _x params ["_m", "_pt", "_new"];
+        if (!_new) then { continue };
+        _moved = _moved + 1;
+        _m set ["wjob", "tree"]; _m set ["wjPos", _pt]; _m set ["sneak", false]; _m set ["target", _pt];
         private _v = _m get "veh";
-        if (!alive _v) then { continue };
-        private _p = [(getPosATL _v) select 0, (getPosATL _v) select 1, 0];
-        private _an = _m getOrDefault ["wjAn", CQ_basePos];
-        private _zc = _m getOrDefault ["wjZc", _p];
-        private _myA = _p distance2D _an;
-        private _f = [0, 0, 0];
-        private _par = []; private _pd = 1e9;
-        {
-            private _d = _x distance2D _p;
-            if (_d < 30) then { continue };                                   // itself
-            if (_d < _hop) then { _f = _f vectorAdd ((vectorNormalized (_p vectorDiff _x)) vectorMultiply ((_hop - _d) / _hop)) };
-            if (_d < _pd && { (_x distance2D _an) < _myA }) then { _pd = _d; _par = _x };
-        } forEach _nodes;
-        if (_par isNotEqualTo [] && { _pd > _hop }) then { _f = _f vectorAdd ((vectorNormalized (_par vectorDiff _p)) vectorMultiply (3 * (_pd - _hop) / _hop)) };
-        private _dz = _p distance2D _zc;
-        if (_dz > 300) then { _f = _f vectorAdd ((vectorNormalized (_zc vectorDiff _p)) vectorMultiply ([0.15, 1] select (_dz > CQ_magWjZone))) };
-        private _mag = vectorMagnitude _f;
-        if (_mag < 0.12) then { continue };                                   // settled
-        private _t = _p vectorAdd ((vectorNormalized _f) vectorMultiply ((_mag * 250) min 250));
-        if !([_t] call _aaSafe) then { continue };
-        _m set ["wjPos", _t]; _m set ["target", _t];
         private _g = group effectiveCommander _v;
         [_g] call CQ_fnc_clearWaypoints;
         _v flyInHeight CQ_magDormantAlt;
-        private _wp = _g addWaypoint [[_t select 0, _t select 1, 0], 0];
+        private _wp = _g addWaypoint [[_pt select 0, _pt select 1, 0], 0];
         _wp setWaypointType "LOITER";
         _wp setWaypointLoiterRadius 60;
         _g setCurrentWaypoint _wp;
-    } forEach CQ_mag;
+    } forEach _jobs;
+    if (_moved > 0) then {
+        ["MAGPIE: woken Darters stretched: %1 placed, %2 re-tasked, %3 zone(s)", [count _jobs, _moved, count _zones]] call CQ_fnc_log;
+    };
 };
 
 // ---- replacements: the nearest point left to where a woken Darter went down
