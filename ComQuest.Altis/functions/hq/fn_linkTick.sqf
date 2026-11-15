@@ -25,7 +25,8 @@ private _leg = {
     private _d = _rv distance2D _dest;
     private _p = if (_d <= CQ_linkLegLen * 1.3) then { _dest } else {
         private _q = _rv getPos [CQ_linkLegLen, _rv getDir _dest];
-        private _rd = (_q nearRoads 150) select { (getPosATL _x) distance2D _dest < _d };
+        // amphibious relay: over water the leg is a straight line (no road to follow)
+        private _rd = if (surfaceIsWater _q || { surfaceIsWater getPosATL _rv }) then { [] } else { (_q nearRoads 150) select { (getPosATL _x) distance2D _dest < _d && { !surfaceIsWater getPosATL _x } } };
         if (_rd isEqualTo []) then { _q } else { getPosATL (([_rd, [], { _x distance2D _q }, "ASCEND"] call BIS_fnc_sortBy) select 0) }
     };
     _rv setVariable ["CQ_linkLeg", _p];
@@ -50,10 +51,14 @@ if (!alive _rv && { time >= (missionNamespace getVariable ["CQ_linkRelayT", 0]) 
         if (_along > 0 && { _side < CQ_linkDeathLane } && { _along - CQ_linkDeathBack < _reach }) then { _reach = (_along - CQ_linkDeathBack) max 800 };
     } forEach (missionNamespace getVariable ["CQ_linkDeathPts", []]);
     private _dest = CQ_basePos getPos [_reach, _dir];
-    private _k = 0;
-    while { surfaceIsWater _dest && { _k < 45 } } do { _dest = _dest getPos [-100, _dir]; _k = _k + 1 };
-    private _rd = (_dest nearRoads 400) select { (getPosATL _x) distance2D CQ_basePos <= _reach && { !surfaceIsWater getPosATL _x } };
-    if (_rd isNotEqualTo []) then { _dest = getPosATL (([_rd, [], { _x distance2D _dest }, "ASCEND"] call BIS_fnc_sortBy) select 0) };
+    // an amphibious relay (CQ_linkRelayAmphib) parks at sea if that is where the spot falls;
+    // otherwise pulled back to land, then onto a road within reach
+    if (!CQ_linkRelayAmphib || { !surfaceIsWater _dest }) then {
+        private _k = 0;
+        while { surfaceIsWater _dest && { _k < 45 } } do { _dest = _dest getPos [-100, _dir]; _k = _k + 1 };
+        private _rd = (_dest nearRoads 400) select { (getPosATL _x) distance2D CQ_basePos <= _reach && { !surfaceIsWater getPosATL _x } };
+        if (_rd isNotEqualTo []) then { _dest = getPosATL (([_rd, [], { _x distance2D _dest }, "ASCEND"] call BIS_fnc_sortBy) select 0) };
+    };
     private _sp = CQ_linkRelaySpawn findEmptyPosition [0, 40, CQ_linkRelayClass];
     if (_sp isEqualTo []) then { _sp = CQ_linkRelaySpawn };
     _rv = createVehicle [CQ_linkRelayClass, _sp, [], 0, "NONE"];
@@ -112,8 +117,13 @@ if (alive _rv && { !(_rv getVariable ["CQ_linkParked", false]) }) then {
             ["Relay vehicle stuck: driver %1 (leader %2), command %3, ready %4, behaviour %5, fuel %6, canMove %7",
                 [alive _dr, _dr == leader group _dr, currentCommand _dr, unitReady _dr, behaviour _dr, round (fuel _rv * 100), canMove _rv]] call CQ_fnc_log;
             if (_moved < 2 && { (_rv getVariable ["CQ_linkStuck", 0]) >= 1 }) then {
-                private _p = (_rv getPos [25, _rv getDir _dest]) findEmptyPosition [0, 40, typeOf _rv];
-                if (_p isNotEqualTo []) then { _rv setVelocity [0, 0, 0]; _rv setPosATL [_p select 0, _p select 1, 0.3] };
+                private _q = _rv getPos [25, _rv getDir _dest];
+                if (surfaceIsWater _q) then {
+                    _rv setVelocity [0, 0, 0]; _rv setPosASL [_q select 0, _q select 1, 0.5];   // afloat (a shore it would not leave)
+                } else {
+                    private _p = _q findEmptyPosition [0, 40, typeOf _rv];
+                    if (_p isNotEqualTo []) then { _rv setVelocity [0, 0, 0]; _rv setPosATL [_p select 0, _p select 1, 0.3] };
+                };
             };
             _rv setVariable ["CQ_linkStuck", (_rv getVariable ["CQ_linkStuck", 0]) + 1];
             [_rv, _dest] call _leg;
