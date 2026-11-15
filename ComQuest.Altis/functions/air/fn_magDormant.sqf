@@ -63,6 +63,10 @@ private _wake = {
         ["role", "dormant"], ["flee", true], ["fleeFrom", _from], ["fleePos", _fromPos], ["fleeT", time], ["wpT", -1e6],
         ["wakePos", _p], ["seenT", time], ["sneak", false]
     ];
+    // its wake point goes into MAGPIE's shared memory at once (she knows where her sleepers are):
+    // the tentacle reaches out from the network toward it, so the Darter can link on the way
+    if (isNil "CQ_tntMem") then { CQ_tntMem = createHashMap };
+    CQ_tntMem set [_name, [_p, time]];
     CQ_magVehs = (CQ_mag apply { _x get "veh" }) select { alive _x };
     publicVariable "CQ_magVehs";
     ["MAGPIE: %1 wakes at %2 (%3), %4 points left, %5 awake", [_name, mapGridPosition _p, _why, count CQ_magDormantPts, call _awake]] call CQ_fnc_log;
@@ -131,14 +135,14 @@ private _wake = {
 
 // ---- TENTACLE (every 3 s, recomputed only when something changed): the woken Darters reach out
 // from the data link toward the fight, then encircle it.
-//   memory     a woken Darter, once linked, shares where it woke (CQ_tntMem: [pos, lastT]); a
+//   memory     a woken Darter's wake point goes into MAGPIE's memory at once (CQ_tntMem: [pos, lastT]); a
 //              memory stays while MAGPIE still sees enemies around it, else it goes after CQ_magMemory s
 //   zones      memories within CQ_magWjZone of each other; the tentacle serves the zone nearest
 //              to the network, the next nearest once that one is gone
 //   perimeter  smallest circle around the zone's memories and live contacts + CQ_tntStandoff x
 //              sensor range (centre = their centroid)
-//   chain      root = the linked node nearest to the zone (base, relays, relay vehicle, WASP,
-//              Sentinels...), first hop CQ_linkReach x its range, then CQ_lrHop each: straight
+//   chain      root = the linked node nearest to the zone (base, relays, relay vehicle, Sentinels...;
+//              never WASP, which moves with the edge of the link), first hop CQ_linkReach x its range, then CQ_lrHop each: straight
 //              toward the zone's centroid, the tip stopping on the perimeter; a link slot within
 //              CQ_tntAaR of known anti-air is pushed sideways. Too few Darters: the chain stops short.
 //   ring       once the tip Darter is on its slot and 2+ Darters are spare: they fan out left and
@@ -149,16 +153,7 @@ private _wake = {
 // Published for the debug map (CQ_tntPub = [[root, chain slots...], [ring slots], [centre, radius]]).
 call {
     private _woke = CQ_mag select { (_x getOrDefault ["role", ""]) == "dormant" && { alive (_x get "veh") } && { !(_x getOrDefault ["flee", false]) } && { !(_x getOrDefault ["repair", false]) } };
-    if (isNil "CQ_tntMem") then { CQ_tntMem = createHashMap };       // Darter name -> [wake pos, lastT]
-    {
-        private _m = _x;
-        if (!((_m get "veh") getVariable ["CQ_linked", false])) then { continue };
-        private _nm = _m get "name";
-        if !(_nm in CQ_tntMem) then {
-            CQ_tntMem set [_nm, [_m getOrDefault ["wakePos", getPosATL (_m get "veh")], time]];
-            ["MAGPIE: %1 linked, shares its wake point %2", [_nm, mapGridPosition (_m getOrDefault ["wakePos", getPosATL (_m get "veh")])]] call CQ_fnc_log;
-        };
-    } forEach _woke;
+    if (isNil "CQ_tntMem") then { CQ_tntMem = createHashMap };       // Darter name -> [wake pos, lastT] (written at wake)
     // keep alive the memories MAGPIE still sees enemies around, forget the others
     private _live = ((values CQ_magSeen) select { alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } }) apply { _x select 3 };
     {
@@ -179,7 +174,8 @@ call {
         if (_zi < 0) then { _zones pushBack [[], [_p]] } else { ((_zones select _zi) select 1) pushBack _p };
     } forEach CQ_tntMem;
     // anchors: every linked node that is not a woken Darter
-    private _wv = _woke apply { _x get "veh" };
+    // ...and not WASP either: it keeps moving with the edge of the link, the tentacle hangs from fixed nodes
+    private _wv = (_woke apply { _x get "veh" }) + ((CQ_mag select { (_x getOrDefault ["role", ""]) == "wasp" }) apply { _x get "veh" });
     private _anch = (((missionNamespace getVariable ["CQ_linkPub", []]) param [0, []]) select { (_x select 2) && { private _p = _x select 0; (_wv findIf { _x distance2D _p < 60 }) == -1 } }) apply { [[(_x select 0) select 0, (_x select 0) select 1, 0], _x select 1] };
     if (_anch isEqualTo []) then { _anch = [[[CQ_basePos select 0, CQ_basePos select 1, 0], CQ_netCoverBase]] };
     // each zone: centroid of its memories, perimeter around memories + live contacts, distance to the network
