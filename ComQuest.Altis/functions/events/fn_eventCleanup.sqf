@@ -10,6 +10,9 @@
 */
 params ["_label", ["_things", []]];
 if (!isServer) exitWith {};
+// a group's men are listed by name now (a dead man leaves his group soon, an empty group is deleted)
+{ if (_x isEqualType grpNull && { !isNull _x }) then { _things append (units _x) } } forEach +_things;
+_things = _things arrayIntersect _things;
 ["%1: over, props and enemies left removed in %2 s", [_label, CQ_eventCleanup]] call CQ_fnc_log;
 [_label, _things] spawn {
     params ["_label", "_things"];
@@ -25,6 +28,8 @@ if (!isServer) exitWith {};
     };
     if (time - _waitT > 15) then { ["%1: players gone, cleanup now (waited %2 s more)", [_label, round (time - _waitT)]] call CQ_fnc_log };
     private _n = 0;
+    private _dead = 0;
+    private _live = 0;
     private _grps = [];
     {
         private _t = _x;
@@ -35,6 +40,7 @@ if (!isServer) exitWith {};
             if (_o isKindOf "CAManBase") then {
                 if (vehicle _o != _o && { (crew vehicle _o) findIf { isPlayer _x } > -1 }) then { continue };   // riding with a player
                 _grps pushBackUnique group _o;
+                if (alive _o) then { _live = _live + 1 } else { _dead = _dead + 1 };
                 deleteVehicle _o; _n = _n + 1;
             } else {
                 if ((crew _o) findIf { isPlayer _x } > -1) then { continue };              // a player uses it
@@ -45,5 +51,5 @@ if (!isServer) exitWith {};
         } forEach _t;
     } forEach _things;
     { if (!isNull _x && { (units _x) isEqualTo [] }) then { deleteGroup _x } } forEach _grps;
-    ["%1: cleaned up (%2 objects and units removed)", [_label, _n]] call CQ_fnc_log;
+    ["%1: cleaned up (%2 removed: %3 alive men, %4 bodies, %5 objects)", [_label, _n, _live, _dead, _n - _live - _dead]] call CQ_fnc_log;
 };

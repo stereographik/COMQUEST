@@ -91,7 +91,7 @@ _m setMarkerBrush "FDiagonal";
 _m setMarkerColor "ColorOPFOR";
 
 CQ_crashState = createHashMapFromArray [
-    ["pos", _site], ["objs", _objs], ["crate", _crate], ["cratePos", _cp], ["group", _g], ["contactT", -1],
+    ["pos", _site], ["objs", _objs], ["crate", _crate], ["cratePos", _cp], ["group", _g], ["men", units _g], ["contactT", -1],
     ["warned", false], ["dropped", false], ["secured", false], ["t0", time]
 ];
 CQ_crashLastT = time;
