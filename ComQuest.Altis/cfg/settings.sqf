@@ -449,6 +449,10 @@ CQ_testMagDirect = false;                // TEST ONLY, set false before merging 
 
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 6;                         // root insertions in a campaign (victory after the last one)
+CQ_helpWaves = true;                     // a root wave first guards the least built unfinished HQ, then founds its own HQ near it
+CQ_helpMaxTime = 900;                    // s: a help wave leaves after this even if the HQ is still not built
+CQ_helpSiteDist = [2000, 4000];          // m: its own HQ this far from the HQ it helped, on the side away from our base
+CQ_helpLzOffset = 300;                   // m: its drop zone, from the helped HQ toward its own site
 CQ_rootInterval = 3600;                  // seconds between root insertions
 CQ_firstRootDelay = 300;                 // seconds after mission start (debug panel: "Launch game" skips the wait)
 CQ_insertionSpawnDistance = 8000;        // helis appear this far from the site
@@ -507,7 +511,7 @@ CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted
 
 // --- HQ lifecycle (realistic timings) ---------------------------------------
 // Securing -> Installing -> Hold -> WaitingReinf -> split (child HQ) -> Holding -> WaitingReinf ...
-CQ_activeStates = ["Inbound", "Securing", "Installing", "Hold", "Holding", "WaitingReinf"];
+CQ_activeStates = ["Inbound", "Helping", "Securing", "Installing", "Hold", "Holding", "WaitingReinf"];
 CQ_maxHqs = 6;                           // HQs alive at once
 CQ_maxAI = 220;                          // hidden safety limit: every enemy AI alive at once (crews included)
 CQ_maxInfantry = 160;                    // enemy foot soldiers alive at once (vehicle / heli / static crews not counted)

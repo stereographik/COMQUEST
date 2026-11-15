@@ -34,6 +34,7 @@ private _roleWord = createHashMapFromArray [
                 case (count _h == 0): { "no HQ" };
                 case (_h getOrDefault ["buildDone", false]): { "done: HQ built" };
                 case ("colWait" in _h): { _h get "colWait" };
+                case ((_h get "state") == "Helping"): { format ["help HQ #%1", _h getOrDefault ["helpId", -1]] };
                 case ((_h get "state") == "Securing"): { "wait: perimeter" };
                 case ("btPhase" in _h): { _h get "btPhase" };
                 default { format ["wait: HQ %1", toLower (_h get "state")] };

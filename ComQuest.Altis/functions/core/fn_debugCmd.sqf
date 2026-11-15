@@ -34,6 +34,7 @@ if (_needHq && { count _hq == 0 }) then {
                     if ((_hq get "parent") > -1) then { _hq set ["moveSkip", true]; "colonists moved to the site" }
                     else { "root insertion still flying: wait for the landing" };
                 };
+                case "Helping": { _hq set ["stateT", time - CQ_helpMaxTime - 1]; "help over now" };
                 case "Securing": {
                     if (_hq get "secureStarted") then { _hq set ["stateT", time - CQ_secureTimeout - 1]; "perimeter forced: installing next tick" }
                     else { "securing starts next tick, press again" };

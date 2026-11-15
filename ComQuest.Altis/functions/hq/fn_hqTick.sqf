@@ -1,6 +1,7 @@
 /*
     CQ_fnc_hqTick  (server, director task, every CQ_tickSeconds)
     Drives every HQ through its lifecycle:
+      Helping       help wave: guards an unfinished HQ               -> that one built (or CQ_helpMaxTime)
       Securing      squads post out to the 1 km perimeter          -> all posted (or timeout)
       Installing    4 build stages (CQ_fnc_hqBuild, spawned)       -> buildDone
       Hold          holds CQ_holdTime                              -> requests a wave
@@ -68,6 +69,29 @@ private _now = time;
 
     // ---- lifecycle
     switch (_state) do {
+        // HELP WAVE: its squads patrol around the unfinished HQ it came for; once that one is built
+        // (or gone, or after CQ_helpMaxTime) they leave to found their own HQ (Securing)
+        case "Helping": {
+            private _hh = CQ_hqs getOrDefault [_hq get "helpId", createHashMap];
+            private _hp = if (count _hh > 0) then { _hh get "pos" } else { _c };
+            if !(_hq getOrDefault ["helpPosted", false]) then {
+                _hq set ["helpPosted", true];
+                { [_x] call CQ_fnc_clearWaypoints; _x setVariable ["CQ_role", "help"]; [_x, _hp, CQ_patrolRadius select 1] call CQ_fnc_infPatrol } forEach ((_hq get "infantry") select { !isNull _x });
+                private _cg = _hq get "cmdGroup";
+                if (!isNull _cg) then { [_cg] call CQ_fnc_clearWaypoints; [_cg, _hp, 120] call CQ_fnc_infPatrol };
+                ["HQ #%1: helping HQ #%2 (build %3/6), %4 squads on guard", [_id, _hq get "helpId", _hh getOrDefault ["buildStage", 0], count (_hq get "infantry")]] call CQ_fnc_log;
+            };
+            private _done = count _hh == 0 || { _hh get "buildDone" } || { !((_hh get "state") in CQ_activeStates) };
+            private _late = _now - (_hq get "stateT") > CQ_helpMaxTime;
+            if (_done || _late) then {
+                { [_x] call CQ_fnc_clearWaypoints; _x setVariable ["CQ_role", ""] } forEach ((_hq get "infantry") select { !isNull _x });
+                if (!isNull (_hq get "cmdGroup")) then { [_hq get "cmdGroup"] call CQ_fnc_clearWaypoints; (_hq get "cmdGroup") move _c };
+                _hq set ["state", "Securing"];
+                _hq set ["stateT", _now];
+                ["Enemy column moving", format ["HQ #%1: help done for HQ #%2 (%3), heading to found its own HQ at grid %4", _id, _hq get "helpId",
+                    ["time up", "built"] select _done, mapGridPosition _c]] call CQ_fnc_announce;
+            };
+        };
         case "Securing": {
             if !(_hq get "secureStarted") then {
                 [_hq] call CQ_fnc_hqSecure;

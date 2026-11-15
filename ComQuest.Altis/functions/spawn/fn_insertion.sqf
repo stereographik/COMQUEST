@@ -13,13 +13,16 @@
                       (secure, install, hold, reinforce, split); vehicles join the HQ when they
                       are down, even if securing has already started
 */
-params ["_site", ["_siteLevel", 0]];
+params ["_site", ["_siteLevel", 0], ["_helpId", -1]];
 
 private _hq = [_site, -1] call CQ_fnc_hqNew;
 _hq set ["siteLevel", _siteLevel];
 _hq set ["stockInit", CQ_rootStartStock];
 _hq set ["fuelInit", CQ_rootStartFuel];
 private _id = _hq get "id";
+// HELP WAVE (CQ_fnc_rootTick): the drop is around the unfinished HQ it helps, not at its own site
+private _helpHq = CQ_hqs getOrDefault [_helpId, createHashMap];
+private _lzC = if (count _helpHq > 0) then { _hq set ["helpId", _helpId]; (_helpHq get "pos") getPos [CQ_helpLzOffset, (_helpHq get "pos") getDir _site] } else { _site };
 
 // a long-range anti-air Tigris comes with every carrier insertion: paradropped near the site,
 // it joins the HQ's vehicles and roams the network (CQ_fnc_vehRoamTick); it hunts MAGPIE's drones
@@ -59,7 +62,7 @@ private _slot = {
 // Clear LZ near a wanted point (falls back to the point itself)
 private _lzAt = {
     params ["_dist", "_ang"];
-    private _want = _site getPos [_dist, _hqDir + _ang];
+    private _want = _lzC getPos [_dist, _hqDir + _ang];
     private _lz = [_want, CQ_lzClearance, 45] call CQ_fnc_clearPos;
     if (_lz isEqualTo []) then {
         ["HQ #%1: no clear LZ near %2, using it anyway", [_id, mapGridPosition _want]] call CQ_fnc_log;
@@ -215,8 +218,9 @@ private _handoff = {
     };
     _hq set ["infantry", _infantry];
     _hq set ["cmdGroup", _cmdGroup];
-    _hq set ["state", "Securing"];          // CQ_fnc_hqTick takes over: secure -> install -> hold -> reinforce -> split
+    _hq set ["state", ["Securing", "Helping"] select (_helpId > -1)];   // CQ_fnc_hqTick takes over: (help ->) secure -> install -> hold -> reinforce -> split
     _hq set ["stateT", time];
+    if (_helpId > -1) then { ["Enemy reinforcements", format ["HQ #%1: fresh troops landed to guard the construction of HQ #%2", _id, _helpId]] call CQ_fnc_announce };
 };
 private _t0 = time;
 
