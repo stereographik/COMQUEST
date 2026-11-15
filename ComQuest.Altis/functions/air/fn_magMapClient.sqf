@@ -7,7 +7,8 @@
         CQ_magDetectEvery s): his own map icon (man, car, tank...) in chart red (CQ_echoColor),
         no text, at his live position and heading. Out of sight = the icon goes.
       - under them, the range map (CQ_fnc_rangeMapClient): the ground those enemies can fire on.
-      on the GPS panel (CQ_gpsOverlay): the same enemy icons and range map.
+      - friendlies through the data link (CQ_fnc_bftClient, CQ_bft)
+      on the GPS panel (CQ_gpsOverlay): the same enemy icons, range map and friendlies.
 */
 if (!hasInterface) exitWith {};
 CQ_magIconOf = {
@@ -48,6 +49,7 @@ CQ_magDrawEnemies = {
     ((findDisplay 12) displayCtrl 51) ctrlAddEventHandler ["Draw", {
         params ["_map"];
         _map call CQ_magDrawEnemies;
+        if (CQ_bft) then { _map call CQ_bftDraw };
         // nGD: the enemy radio network (CQ_fnc_netTick) and our MAGPIE coverage
         (missionNamespace getVariable ["CQ_netPub", []]) params [["_nNodes", []], ["_nLinks", []], ["_nTrunk", []], ["_nRelays", []], ["_nBase", 0]];
         // our data link (CQ_fnc_linkTick): every node's range (blue linked, grey cut off) and the links
@@ -89,7 +91,7 @@ if (CQ_gpsOverlay) then {
             private _gps = (uiNamespace getVariable ["RscCustomInfoMiniMap", displayNull]) displayCtrl 101;
             if (!isNull _gps && { !(_gps getVariable ["CQ_hooked", false]) }) then {
                 _gps setVariable ["CQ_hooked", true];
-                _gps ctrlAddEventHandler ["Draw", { (_this select 0) call CQ_magDrawEnemies }];
+                _gps ctrlAddEventHandler ["Draw", { (_this select 0) call CQ_magDrawEnemies; if (CQ_bft) then { (_this select 0) call CQ_bftDraw } }];
             };
             sleep 1;
         };

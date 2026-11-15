@@ -946,6 +946,11 @@ CQ_enemyIconPx = 26;                     // icon size (x CQ_mapIconScale), same 
 CQ_echoColor = [0.729, 0.224, 0.173];    // chart red #BA392C (enemy icons, range map, enemy network)
 CQ_gpsOverlay = true;                    // also draw the enemy icons and the range map on the GPS panel
 CQ_vanillaEnemyMap = false;              // false: no vanilla enemy icons from what friendlies spot (difficulty map content)
+// Blue force tracking (fn_bftClient): friendlies on the map only through the data link (vanilla friendlies off)
+CQ_bft = true;                           // false: vanilla friendly map content as the difficulty sets it
+CQ_bftEvery = 2;                         // s between two refreshes of who is in coverage
+CQ_bftIconPx = 22;                       // icon size (x CQ_mapIconScale)
+CQ_bftColor = [0, 0.3, 0.6, 1];          // BLUFOR blue
 // MAGPIE heatmap (map overlay, every player; OFF by default since the radar echoes): contacts only, blue -> red
 // contour bands shaped by the terrain, fading (half-life) as the information gets old
 CQ_heatCell = 300;                       // m per cell
