@@ -456,6 +456,24 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
     (if (alive _rv) then { [getPosATL _rv, CQ_linkRelayVehR] } else { [CQ_basePos, CQ_netCoverBase] }) params ["_a", "_ar"];
     private _cp = missionNamespace getVariable ["CQ_carrierPos", _a];
+    // BRIDGE: once a grid Darter has connected and shared its memory (CQ_tntMem), WASP faces the
+    // fight instead of the carrier (the tentacle then starts from it); back to the carrier when
+    // no memory is left
+    private _mem = values (missionNamespace getVariable ["CQ_tntMem", createHashMap]);
+    private _bridge = _mem isNotEqualTo [];
+    if (_bridge) then {
+        private _zc = missionNamespace getVariable ["CQ_tntZoneC", []];
+        if (_zc isEqualTo []) then {
+            private _sx = 0; private _sy = 0;
+            { _sx = _sx + ((_x select 0) select 0); _sy = _sy + ((_x select 0) select 1) } forEach _mem;
+            _zc = [_sx / count _mem, _sy / count _mem, 0];
+        };
+        _cp = _zc;
+    };
+    if (_bridge isNotEqualTo (missionNamespace getVariable ["CQ_waspBridge", false])) then {
+        CQ_waspBridge = _bridge;
+        ["MAGPIE: WASP %1", [["back toward the carrier", format ["bridges toward the Darters' zone at %1", mapGridPosition _cp]] select _bridge]] call CQ_fnc_log;
+    };
     private _s = _a getPos [_ar * CQ_linkReach, _a getDir _cp];   // inside the anchor's range (a link needs the drone within the bigger circle), with room for a good overlap
     if (surfaceIsWater _s) then {
         // over the sea it can still relay: keep it, but never past the coast by more than 1 km
@@ -478,7 +496,7 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     _wp setWaypointLoiterRadius 150;
     _g setCurrentWaypoint _wp;
     _m set ["target", _s];
-    ["MAGPIE: WASP heads to grid %1 (%2 m from the %3, toward the carrier)", [mapGridPosition _s, round (_s distance2D _a), ["base", "relay vehicle"] select (alive _rv)]] call CQ_fnc_log;
+    ["MAGPIE: WASP heads to grid %1 (%2 m from the %3, toward the " + (["carrier", "Darters' zone"] select _bridge) + ")", [mapGridPosition _s, round (_s distance2D _a), ["base", "relay vehicle"] select (alive _rv)]] call CQ_fnc_log;
 } forEach (_flying select { (_x getOrDefault ["role", ""]) == "wasp" });
 
 {

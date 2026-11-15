@@ -445,6 +445,7 @@ CQ_fullPowerPlayers = 24;
 CQ_scaleMin = 0.35;                      // fewest players: 35 % of the infantry cap, waves up to twice as slow
 CQ_testFullPower = true;                 // TEST: play as if CQ_fullPowerPlayers were connected (debug panel toggle)
 CQ_dbgTpDist = 100;                      // m: debug teleporters put you this far from their target
+CQ_testDarterSpeed = 5;                  // TEST ONLY, set 1 before merging to main: every MAGPIE Darter flies this x faster toward its waypoint
 CQ_testMagDirect = false;                // TEST ONLY, set false before merging to main: the two Sentinels fly straight to the first enemy HQ site instead of their search circuits
 
 // --- Enemy root insertions --------------------------------------------------
