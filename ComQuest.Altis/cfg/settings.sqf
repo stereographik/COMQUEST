@@ -951,6 +951,8 @@ CQ_bft = true;                           // false: vanilla friendly map content 
 CQ_bftEvery = 2;                         // s between two refreshes of who is in coverage
 CQ_bftIconPx = 22;                       // icon size (x CQ_mapIconScale)
 CQ_bftColor = [0, 0.3, 0.6, 1];          // BLUFOR blue
+CQ_bftSelfRing = [0.85, 0.1, 0.1, 1];    // yourself: thin empty red circle around your icon
+CQ_bftSelfRingPad = 4;                   // px between your icon and the ring
 // Call for help (fn_helpCall): squad leader action, blue-tinted flare up + COMHAT message + medic marker
 CQ_helpLife = 300;                       // s the medic marker stays (or until the leader cancels it)
 CQ_helpIconPx = 26;                      // marker size (x CQ_mapIconScale)
