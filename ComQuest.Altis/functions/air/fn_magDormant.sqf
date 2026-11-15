@@ -249,7 +249,8 @@ call {
     private _pr = missionNamespace getVariable ["CQ_tntRoot", []];
     if (_pr isNotEqualTo []) then {
         private _ai = _anch findIf { (_x select 0) distance2D (_pr select 0) < 300 };
-        if (_ai > -1 && { ((((_anch select _ai) select 0) distance2D _cc) - _bd) < CQ_tntRootBetter }   // brackets: "-" binds tighter than distance2D) then {
+        // brackets: "-" binds tighter than distance2D
+        if (_ai > -1 && { ((((_anch select _ai) select 0) distance2D _cc) - _bd) < CQ_tntRootBetter }) then {
             _root = (_anch select _ai) select 0; _rr0 = (_anch select _ai) select 1;
         };
     };
