@@ -32,7 +32,7 @@ CQ_magDrawEnemies = {
             _y params ["_x0", "_y0", "_cnt", "_cone"];
             if (_x0 + _h < (_tl select 0) || { _x0 - _h > (_br select 0) } || { _y0 - _h > (_tl select 1) } || { _y0 + _h < (_br select 1) }) then { continue };
             private _a = (CQ_rangeAlpha select 0) + (CQ_rangeAlpha select 1) * ((_cnt min 4) - 1) + ([0, CQ_rangeAlpha select 2] select (_cone > 0));
-            _map drawRectangle [[_x0, _y0], _h, _h, 0, [_cr, _cg, _cb, _a min 0.6], "#(rgb,8,8,3)color(1,1,1,1)"];
+            _map drawRectangle [[_x0, _y0], _h, _h, 0, [_cr, _cg, _cb, _a min 0.6], "#(argb,8,8,3)color(1,1,1,1)"];
         } forEach (missionNamespace getVariable ["CQ_rangeAgg", createHashMap]);
     };
     // enemies in sight: one icon per vehicle (crew share it), regular size, no text

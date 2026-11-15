@@ -90,7 +90,7 @@ if (!hasInterface || { !CQ_heatEnabled }) exitWith {};
         private _x0 = (_w0 select 0) - _m; private _x1 = (_w1 select 0) + _m;
         private _y0 = (_w0 select 1) - _m; private _y1 = (_w1 select 1) + _m;
         private _hs = CQ_heatFine / 2;
-        private _tex = "#(rgb,8,8,3)color(1,1,1,1)";
+        private _tex = "#(argb,8,8,3)color(1,1,1,1)";
         private _left = CQ_heatMaxTiles;
         {
             _x params ["", "_p", "_c"];
