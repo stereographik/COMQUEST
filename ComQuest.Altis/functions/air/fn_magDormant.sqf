@@ -201,8 +201,10 @@ if (time >= (missionNamespace getVariable ["CQ_magWjNext", 0])) then {
         private _changed = false;
         {
             _x params ["_m", "_job", "_pt", "_alt"];
+            _m set ["wjZc", _zc]; _m set ["wjAn", _ap];
             private _old = _m getOrDefault ["wjPos", [0, 0, 0]];
-            if ((_m getOrDefault ["wjob", ""]) == _job && { _old distance2D _pt < 120 }) then { continue };
+            // a spread Darter keeps its own place (it relaxes, below); a chain one follows its slot
+            if ((_m getOrDefault ["wjob", ""]) == _job && { _job == "spread" || { _old distance2D _pt < 120 } }) then { continue };
             _changed = true;
             _m set ["wjob", _job]; _m set ["wjPos", _pt]; _m set ["sneak", false]; _m set ["target", _pt];
             private _v = _m get "veh";
@@ -219,6 +221,52 @@ if (time >= (missionNamespace getVariable ["CQ_magWjNext", 0])) then {
                 { (_x select 1) == "chain" } count _jobs, { (_x select 1) == "spread" } count _jobs, round _dz, count _slots]] call CQ_fnc_log;
         };
     } forEach _zones;
+};
+
+
+// ---- relax (every CQ_magRelaxEvery s): the spread Darters push away from every node of the
+// network closer than D (CQ_lrHop), are held back by a leash to their parent (the nearest linked
+// node nearer to the zone's anchor than they are) as soon as it is further than D, and lean a
+// little toward the zone's enemies (never more than CQ_magWjZone away). They settle about D from
+// their neighbours: the widest net that still links. Chain Darters keep their slots.
+if (time >= (missionNamespace getVariable ["CQ_magRelaxNext", 0])) then {
+    CQ_magRelaxNext = time + CQ_magRelaxEvery;
+    private _hop = CQ_lrHop;
+    private _nodes = (((missionNamespace getVariable ["CQ_linkPub", []]) param [0, []]) select { _x select 2 }) apply { [(_x select 0) select 0, (_x select 0) select 1, 0] };
+    { private _v = _x get "veh"; if (alive _v && { (_x getOrDefault ["phase", ""]) == "air" }) then { _nodes pushBack [(getPosATL _v) select 0, (getPosATL _v) select 1, 0] } } forEach CQ_mag;
+    {
+        private _m = _x;
+        if ((_m getOrDefault ["wjob", ""]) != "spread" || { _m getOrDefault ["repair", false] } || { _m getOrDefault ["flee", false] }) then { continue };
+        private _v = _m get "veh";
+        if (!alive _v) then { continue };
+        private _p = [(getPosATL _v) select 0, (getPosATL _v) select 1, 0];
+        private _an = _m getOrDefault ["wjAn", CQ_basePos];
+        private _zc = _m getOrDefault ["wjZc", _p];
+        private _myA = _p distance2D _an;
+        private _f = [0, 0, 0];
+        private _par = []; private _pd = 1e9;
+        {
+            private _d = _x distance2D _p;
+            if (_d < 30) then { continue };                                   // itself
+            if (_d < _hop) then { _f = _f vectorAdd ((vectorNormalized (_p vectorDiff _x)) vectorMultiply ((_hop - _d) / _hop)) };
+            if (_d < _pd && { (_x distance2D _an) < _myA }) then { _pd = _d; _par = _x };
+        } forEach _nodes;
+        if (_par isNotEqualTo [] && { _pd > _hop }) then { _f = _f vectorAdd ((vectorNormalized (_par vectorDiff _p)) vectorMultiply (3 * (_pd - _hop) / _hop)) };
+        private _dz = _p distance2D _zc;
+        if (_dz > 300) then { _f = _f vectorAdd ((vectorNormalized (_zc vectorDiff _p)) vectorMultiply ([0.15, 1] select (_dz > CQ_magWjZone))) };
+        private _mag = vectorMagnitude _f;
+        if (_mag < 0.12) then { continue };                                   // settled
+        private _t = _p vectorAdd ((vectorNormalized _f) vectorMultiply ((_mag * 250) min 250));
+        if !([_t] call _aaSafe) then { continue };
+        _m set ["wjPos", _t]; _m set ["target", _t];
+        private _g = group effectiveCommander _v;
+        [_g] call CQ_fnc_clearWaypoints;
+        _v flyInHeight CQ_magDormantAlt;
+        private _wp = _g addWaypoint [[_t select 0, _t select 1, 0], 0];
+        _wp setWaypointType "LOITER";
+        _wp setWaypointLoiterRadius 60;
+        _g setCurrentWaypoint _wp;
+    } forEach CQ_mag;
 };
 
 // ---- replacements: the nearest point left to where a woken Darter went down
