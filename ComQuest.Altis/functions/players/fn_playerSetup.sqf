@@ -86,6 +86,24 @@ player addAction ["<t color='#918C3B'>Recall my sandbag walls</t>", { ["recall",
     { ["remove", [player, CQ_sbTarget]] remoteExec ["CQ_fnc_sandbag", 2] }, {},
     [], CQ_sbDismantleTime, 1.15, false, false] call BIS_fnc_holdActionAdd;
 
+// Engineers' inflatable boats (CQ_fnc_boat): inflate while wading (toolkit), pack your own, recall at the base
+[player, "Inflate a boat",
+    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_takeOff2_ca.paa", "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_takeOff2_ca.paa",
+    "_this getUnitTrait 'engineer' && { vehicle _this == _this } && { 'ToolKit' in items _this } && { surfaceIsWater getPosASL _this } && { private _d = -(getTerrainHeightASL getPosASL _this); _d > 0 && { _d < CQ_boatMaxDepth } } && { (missionNamespace getVariable ['CQ_bt_' + getPlayerUID _this, 0]) < CQ_boatMax }",
+    "vehicle _caller == _caller",
+    {}, {},
+    { ["inflate", [player]] remoteExec ["CQ_fnc_boat", 2] }, {},
+    [], CQ_boatInflateTime, 1.25, false, false] call BIS_fnc_holdActionAdd;
+[player, "Pack my boat",
+    "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_takeOff1_ca.paa", "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_takeOff1_ca.paa",
+    "vehicle _this == _this && { (cursorObject getVariable ['CQ_boatOwner', '']) == getPlayerUID _this } && { _this distance cursorObject < CQ_boatPackRange } && { (crew cursorObject) isEqualTo [] }",
+    "_caller distance cursorObject < CQ_boatPackRange + 2",
+    { CQ_btTarget = cursorObject }, {},
+    { ["pack", [player, CQ_btTarget]] remoteExec ["CQ_fnc_boat", 2] }, {},
+    [], CQ_boatInflateTime, 1.24, false, false] call BIS_fnc_holdActionAdd;
+player addAction ["<t color='#918C3B'>Recall my boats</t>", { ["recall", [player]] remoteExec ["CQ_fnc_boat", 2] }, nil, 1.05, false, true, "",
+    "_this distance2D CQ_basePos < CQ_baseRadius && { (missionNamespace getVariable ['CQ_bt_' + getPlayerUID _this, 0]) > 0 }"];
+
 // Heavy lift (CQ_fnc_heavyLift): the Mohawk pilot hooks / releases any vehicle up to CQ_hlMax
 player addAction ["<t color='#918C3B'>Hook vehicle</t>", {
     ["hook", [vehicle player, CQ_hlCand, player]] remoteExec ["CQ_fnc_heavyLift", 2];

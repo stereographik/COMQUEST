@@ -103,6 +103,12 @@ CQ_earplugLevel = 0.08;                  // earplugs (End key / scroll menu): ga
 // Engineers' sandbag walls (CQ_fnc_sandbag): indestructible, recalled from the base
 CQ_sbClass = "Land_BagFence_Short_F";
 CQ_sbMax = 2;                            // walls standing per engineer (per player, through respawns)
+// Engineers' inflatable boats (CQ_fnc_boat)
+CQ_boatClass = "B_Boat_Transport_01_F";  // Assault Boat (rubber, driver + 4)
+CQ_boatMax = 2;                          // boats out at a time per engineer (packing one gives it back, recall at the base)
+CQ_boatMaxDepth = 0.5;                   // m: inflate only while wading, water at his feet less deep than this
+CQ_boatInflateTime = 4;                  // s hold to inflate or pack
+CQ_boatPackRange = 6;                    // m from his boat to pack it
 CQ_sbBuildTime = 6;                      // s to build one (stay still, on foot)
 CQ_sbDismantleTime = 2;
 CQ_sbDefaultRot = 90;                    // deg added to the ghost wall's default angle (Q / E turn it from there)
