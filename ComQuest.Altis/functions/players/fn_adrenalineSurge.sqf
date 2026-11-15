@@ -59,6 +59,7 @@ while { alive _u && { _u == player } } do {
         sleep CQ_surgeEvery;
         if (!alive _u || { lifeState _u != "INCAPACITATED" }) exitWith {};
         if (_u getUnitTrait "Medic" && { random 1 < _p }) exitWith {
+            _u setVariable ["CQ_surged", true];
             ["#rev", 1, _u] call BIS_fnc_reviveOnState;
             _u setVariable ["#rev", 1, true];
             _u setUnconscious false;
@@ -68,4 +69,16 @@ while { alive _u && { _u == player } } do {
         };
     };
     waitUntil { sleep 1; !alive _u || { lifeState _u != "INCAPACITATED" } };
+    // back up: told to everyone, with the medic who did it (the nearest other medic player, vanilla
+    // revive does not say who), or his own adrenalineSurge
+    if (alive _u && { _u == player }) then {
+        private _by = if (_u getVariable ["CQ_surged", false]) then { "his own adrenaline" } else {
+            private _ms = (allPlayers - [_u]) select { alive _x && { _x getUnitTrait "Medic" } && { _x distance _u < 6 } && { lifeState _x != "INCAPACITATED" } };
+            _ms = [_ms, [], { _x distance _u }] call BIS_fnc_sortBy;
+            ["", format ["Medic %1", name (_ms select 0)]] select (_ms isNotEqualTo [])
+        };
+        _u setVariable ["CQ_surged", false];
+        _u setVariable ["CQ_downFed", false, true];   // up again: a later death is announced again
+        [[format ["%1 is back on the field", name _u], format ["%1 is back on the field revived by %2", name _u, _by]] select (_by != "")] remoteExec ["CQ_fnc_feed", 0];
+    };
 };
