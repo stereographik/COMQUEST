@@ -204,6 +204,7 @@ call {
     if (_woke isEqualTo [] || { _memPts isEqualTo [] }) exitWith {
         if (!isNil "CQ_tntPub" && { CQ_tntPub isNotEqualTo [] }) then { CQ_tntPub = []; publicVariable "CQ_tntPub" };
         CQ_tntZoneC = [];
+        CQ_tntRoot = [];
         { _x set ["wjob", ""]; _x set ["tntI", -1] } forEach _woke;
         CQ_tntKey = [];
     };
@@ -243,6 +244,16 @@ call {
     // root: the linked node nearest to the zone
     private _root = []; private _rr0 = 0; private _bd = 1e12;
     { private _d = (_x select 0) distance2D _cc; if (_d < _bd) then { _bd = _d; _root = _x select 0; _rr0 = _x select 1 } } forEach _anch;
+    // ...but the previous root is kept while it is still a linked node, unless the new one is
+    // CQ_tntRootBetter m closer to the zone (moving drones made the root flip every few seconds)
+    private _pr = missionNamespace getVariable ["CQ_tntRoot", []];
+    if (_pr isNotEqualTo []) then {
+        private _ai = _anch findIf { (_x select 0) distance2D (_pr select 0) < 300 };
+        if (_ai > -1 && { ((_anch select _ai) select 0) distance2D _cc - _bd < CQ_tntRootBetter }) then {
+            _root = (_anch select _ai) select 0; _rr0 = (_anch select _ai) select 1;
+        };
+    };
+    CQ_tntRoot = [_root, _rr0];
     // arrived on its slot: loiter quietly (the tip's arrival opens the ring)
     {
         private _m = _x;

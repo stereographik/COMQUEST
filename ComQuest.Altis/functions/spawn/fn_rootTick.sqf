@@ -9,9 +9,10 @@
 if (CQ_rootsLaunched >= CQ_maxRoots) exitWith {};
 if ((missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0) exitWith {};          // carrier empty
 if (serverTime < CQ_nextRootTime) exitWith {};
-if ((call CQ_fnc_enemyInfantry) > CQ_maxInfantry - 30) exitWith {
+// root insertions have their own allowance above the cap (HQ reinforcements alone can fill it)
+if ((call CQ_fnc_enemyInfantry) > CQ_maxInfantry + CQ_rootCapBonus - 30) exitWith {
     CQ_nextRootTime = serverTime + 60;
-    ["Root insertion postponed: infantry cap (%1/%2)", [call CQ_fnc_enemyInfantry, CQ_maxInfantry]] call CQ_fnc_log;
+    ["Root insertion postponed: infantry cap (%1/%2)", [call CQ_fnc_enemyInfantry, CQ_maxInfantry + CQ_rootCapBonus]] call CQ_fnc_log;
 };
 
 // HELP WAVE: an HQ still unfinished (active, build not done) gets this wave first: it lands next

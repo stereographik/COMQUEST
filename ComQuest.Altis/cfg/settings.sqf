@@ -452,6 +452,7 @@ CQ_testMagDirect = false;                // TEST ONLY, set false before merging 
 
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 6;                         // root insertions in a campaign (victory after the last one)
+CQ_rootCapBonus = 40;                    // root insertions may go this far above CQ_maxInfantry (reinforcements alone can fill the cap)
 CQ_helpWaves = true;                     // a root wave first guards the least built unfinished HQ, then founds its own HQ near it
 CQ_helpMaxTime = 900;                    // s: a help wave leaves after this even if the HQ is still not built
 CQ_helpSiteDist = [2000, 4000];          // m: its own HQ this far from the HQ it helped, on the side away from our base
@@ -1040,7 +1041,8 @@ CQ_magDormantRelay = true;               // woken Darters extend the data link l
 CQ_magWjEvery = 15;                      // (unused since the tentacle) s between two layouts of the woken Darters (stretched tree from the data link toward their zone)
 CQ_magWjZone = 1500;                     // m: woken Darters this close to each other (where they woke) work one zone together
 CQ_tntStandoff = 1;                      // tentacle tip and ring: this x a Darter's sensor range (~600 m) outside the zone's memories and contacts
-CQ_tntMove = 300;                        // m: the tentacle is recomputed only when the zone's centroid or its root moves more than this
+CQ_tntMove = 600;                        // m: the tentacle is recomputed only when the zone's centroid or its root moves more than this
+CQ_tntRootBetter = 500;                  // m: the tentacle changes its root only for a node this much closer to the zone
 CQ_tntArrive = 200;                      // m: a Darter this close to its slot has arrived (loiters; the tip's arrival opens the ring)
 CQ_gridDarterSpeed = 150;                // km/h: grid (woken) Darters cruise this fast toward their slot (vanilla ~80; 0 = vanilla)
 CQ_tntAaR = 1200;                        // m: chain and ring slots kept this far from known anti-air
