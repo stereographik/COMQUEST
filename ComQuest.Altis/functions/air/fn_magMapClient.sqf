@@ -52,7 +52,7 @@ CQ_helpDraw = {
     {
         _x params ["", "_p", "", "_cs"];
         _map drawIcon [_tex, [1, 1, 1, 1], _p, _sz + 4, _sz + 4, 0, "", 0];          // white border
-        _map drawIcon [_tex, [0.85, 0.1, 0.1, 1], _p, _sz, _sz, 0, _cs, 1, 0.03, "PuristaMedium", "right"];
+        _map drawIcon [_tex, [0.85, 0.1, 0.1, 1], _p, _sz, _sz, 0, " " + _cs, 1, 0.03, "PuristaMedium", "right"];
     } forEach (missionNamespace getVariable ["CQ_helpCalls", []]);
 };
 [] spawn {
@@ -74,11 +74,11 @@ CQ_helpDraw = {
         { _map drawLine [_x select 0, _x select 1, [0.25, 0.55, 1, 0.6]] } forEach _lEdges;
         {
             _x params ["_rp", "_rr"];
-            _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], _rp, 22 * CQ_mapIconScale, 22 * CQ_mapIconScale, 0, "RELAY", 1, 0.035, "PuristaMedium", "right"];
+            _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], _rp, 22 * CQ_mapIconScale, 22 * CQ_mapIconScale, 0, " RELAY", 1, 0.035, "PuristaMedium", "right"];
         } forEach _nRelays;
         private _rvh = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
         if (alive _rvh) then {
-            _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], getPosASLVisual _rvh, 22 * CQ_mapIconScale, 22 * CQ_mapIconScale, 0, "RELAY VEHICLE", 1, 0.035, "PuristaMedium", "right"];
+            _map drawIcon ["\a3\ui_f\data\igui\cfg\simpletasks\types\radio_ca.paa", [0.25, 0.55, 1, 1], getPosASLVisual _rvh, 22 * CQ_mapIconScale, 22 * CQ_mapIconScale, 0, " RELAY VEHICLE", 1, 0.035, "PuristaMedium", "right"];
         };
         {
             _x params ["_a", "_b", "_ok"];
@@ -90,7 +90,7 @@ CQ_helpDraw = {
             if (alive _x && { !(_x isKindOf "UAV_01_base_F") || { _x getVariable ["CQ_linked", false] } }) then {   // a Darter shows only while linked to the base
                 private _sz = ([26, 13] select (_x isKindOf "UAV_01_base_F")) * CQ_mapIconScale;   // Darters: half the others
                 _map drawIcon [_x call CQ_magIconOf, [0.25, 0.55, 1, 1], getPosASLVisual _x, _sz, _sz, getDirVisual _x,
-                    _x getVariable ["CQ_magName", ""], 1, 0.035, "PuristaMedium", "right"];
+                     " " + (_x getVariable ["CQ_magName", ""]), 1, 0.035, "PuristaMedium", "right"];
             };
         } forEach (missionNamespace getVariable ["CQ_magVehs", []]);
     }];
