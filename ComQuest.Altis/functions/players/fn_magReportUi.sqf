@@ -19,7 +19,7 @@ private _open = uiNamespace getVariable ["CQ_mrDisplay", displayNull];
 if (!isNull _open) exitWith { _open closeDisplay 1 };
 { if (!isNull (uiNamespace getVariable [_x, displayNull])) then { (uiNamespace getVariable _x) closeDisplay 1 } } forEach ["CQ_menuDisplay", "CQ_sqDisplay", "CQ_shopDisplay", "CQ_depotDisplay"];
 
-private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
+private _d = (call CQ_fnc_uiParent) createDisplay "RscDisplayEmpty";   // on the map while it is open
 uiNamespace setVariable ["CQ_mrDisplay", _d];
 _d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];
 
@@ -70,6 +70,10 @@ uiNamespace setVariable ["CQ_mrTabN", _tabN];
 uiNamespace setVariable ["CQ_mrTab", uiNamespace getVariable ["CQ_mrTab", "last"]];
 _tabL ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_mrTab", "last"]; uiNamespace setVariable ["CQ_mrDirty", true] }];
 _tabG ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_mrTab", "global"]; uiNamespace setVariable ["CQ_mrDirty", true] }];
+// the icon column on the tablet's left side: the same tabs
+["create", [_d, [_picX, _picY, _pw, _ph], [
+    ["tab_lastseen", "Last seen", "last"], ["tab_global", "Global situation", "global"], ["tab_network", "Network", "network"]
+], "CQ_mrTab", "CQ_mrDirty"]] call CQ_fnc_tabletCol;
 private _close = ["RscButton", [_X + _W - 0.05, _Y + 0.004, 0.04, _L], "X"] call _mk;
 _close ctrlAddEventHandler ["ButtonClick", { (uiNamespace getVariable ["CQ_mrDisplay", displayNull]) closeDisplay 1 }];
 
@@ -204,6 +208,7 @@ private _fill = {
     _tabL ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select (_tab == "last")));
     _tabG ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select (_tab == "global")));
     (uiNamespace getVariable ["CQ_mrTabN", controlNull]) ctrlSetBackgroundColor (CQ_ui get (["button", "buttonOn"] select (_tab == "network")));
+    ["sel", ["CQ_mrTab", _tab]] call CQ_fnc_tabletCol;
     // NETWORK tab: its own controls instead of the list
     private _net = _tab == "network";
     { _x ctrlShow _net } forEach ((uiNamespace getVariable ["CQ_mrNet", [[]]]) select 0);

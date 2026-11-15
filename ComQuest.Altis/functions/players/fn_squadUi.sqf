@@ -19,7 +19,7 @@ disableSerialization;
 private _open = uiNamespace getVariable ["CQ_sqDisplay", displayNull];
 if (!isNull _open) exitWith { uiNamespace setVariable ["CQ_sqView", _view] };
 
-private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
+private _d = (call CQ_fnc_uiParent) createDisplay "RscDisplayEmpty";   // on the map while it is open
 uiNamespace setVariable ["CQ_sqDisplay", _d];
 uiNamespace setVariable ["CQ_sqView", _view];
 _d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then { _d closeDisplay 1; true } else { false } }];
@@ -80,6 +80,11 @@ private _tabR = ["RscButton", 7095, [_X + 0.05 + _W * 0.70, _Y + 0.004, _W * 0.1
 _tabG ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "guide"] }];
 _tabR ctrlAddEventHandler ["ButtonClick", { uiNamespace setVariable ["CQ_sqView", "rules"] }];
 _close ctrlAddEventHandler ["ButtonClick", { (uiNamespace getVariable ["CQ_sqDisplay", displayNull]) closeDisplay 1 }];
+// the icon column on the tablet's left side: the same tabs
+["create", [_d, [_picX, _picY, _pw, _ph], [
+    ["tab_squads", "Squads", "squads"], ["tab_class", "Class", "class"], ["tab_stats", "Stats", "board"],
+    ["tab_guide", "Guide", "guide"], ["tab_rules", "Rules", "rules"]
+], "CQ_sqView", ""]] call CQ_fnc_tabletCol;
 
 // --- squads view: three columns  SQUADS | MEMBERS | UNASSIGNED PLAYERS (always visible)
 private _top = _Y + _L * 1.5;
@@ -280,6 +285,7 @@ while { !isNull _d } do {
         [_tabC, _view == "class"] call CQ_fnc_uiSel;
         [_tabS, _view == "squads"] call CQ_fnc_uiSel;
         [_tabB, _view == "board"] call CQ_fnc_uiSel;
+        ["sel", ["CQ_sqView", _view]] call CQ_fnc_tabletCol;
         _lastView = _view;
     };
     private _players = allPlayers select { side group _x == west };

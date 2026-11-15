@@ -13,7 +13,7 @@ disableSerialization;
 if (!isNull (uiNamespace getVariable ["CQ_menuDisplay", displayNull])) exitWith { (uiNamespace getVariable "CQ_menuDisplay") closeDisplay 1 };
 { if (!isNull (uiNamespace getVariable [_x, displayNull])) exitWith { (uiNamespace getVariable _x) closeDisplay 1 } } forEach ["CQ_sqDisplay", "CQ_shopDisplay", "CQ_depotDisplay", "CQ_dbgDisplay"];
 
-private _d = (findDisplay 46) createDisplay "RscDisplayEmpty";
+private _d = (call CQ_fnc_uiParent) createDisplay "RscDisplayEmpty";   // on the map while it is open
 uiNamespace setVariable ["CQ_menuDisplay", _d];
 _d displayAddEventHandler ["KeyDown", { params ["_d", "_k"]; if (_k == 22) then {
     _d closeDisplay 1;
