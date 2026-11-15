@@ -240,6 +240,7 @@ CQ_crashWrecks = ["Land_Wreck_Plane_Transport_01_F", "Land_Wreck_Heli_Attack_02_
 CQ_crashCrate = "Box_East_Support_F";
 CQ_crashSurvivors = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_LAT_F", "O_Soldier_F"];
 CQ_crashSkill = 0.75;                    // survivors: sharp
+CQ_crashLeash = 70;                       // m: a crash survivor further than this from the crate walks back to it (they defend, never chase)
 CQ_crashTimer = 600;                     // s after their first contact before the carrier drops help
 CQ_crashWarn = 120;                      // s before the drop: CROSSROAD warns
 CQ_crashDropClasses = ["I_LT_01_cannon_F", "O_APC_Tracked_02_cannon_F", "O_APC_Wheeled_02_rcws_v2_F", "I_APC_Wheeled_03_cannon_F"];   // Nyx, Kamysh, Marid, Gorgon (DLC ones skipped)
@@ -411,7 +412,7 @@ CQ_vehKillLines = [   // command's remark under the kill line (one at random)
     "Cooked.",
     "Another one bites the dust. Ha!"
 ];
-CQ_killMissionSquads = ["Hostage guards", "Corridor outpost", "Tower guard"];   // kill feed: enemy groups named this way (start of the name) are a MISSION SQUAD
+CQ_killMissionSquads = ["Hostage guards", "Corridor outpost", "Tower guard", "Crash survivors"];   // kill feed: enemy groups named this way (start of the name) are a MISSION SQUAD
 CQ_objMarkSize = 0.35;                   // objective markers ([Depot], [AA pit]...) size (was 0.7)
 CQ_objLookTime = 60;                     // s a Watcher Darter looks around a newly spotted objective (plus its flight there)
 CQ_objLookAaR = 1200;                    // m it keeps from a spotted AA pit while looking

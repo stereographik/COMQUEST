@@ -4,6 +4,7 @@
       when      the front has not moved for CQ_crashStagnant s (no HQ built, fallen or launched,
                 no relay change), at most every CQ_crashCooldown s; plus a CQ_crashEarlyChance
                 chance of one in the first CQ_crashEarlyWindow s
+      defend    the survivors hold the crate: past CQ_crashLeash m they walk back (no chasing)
       contact   the survivors' first contact with us starts the hidden CQ_crashTimer countdown
                 (CQ_crashAlarm: "enemy securing device" under the signal panel)
       drop      not secured in time: the carrier paradrops one of CQ_crashDropClasses with a
@@ -42,6 +43,15 @@ if (!_busy && { !_hstOn } && { time - (missionNamespace getVariable ["CQ_hstLast
 if (!isNil "CQ_crashState" && { !(CQ_crashState get "secured") }) then {
     private _s = CQ_crashState;
     private _g = _s get "group";
+    // leash: the survivors defend the crate, they never chase; anyone past CQ_crashLeash m from
+    // it walks back to a spot near it (in combat too)
+    private _cp = _s getOrDefault ["cratePos", _s get "pos"];
+    {
+        if (alive _x && { _x distance2D _cp > CQ_crashLeash } && { vehicle _x == _x }) then {
+            _x doMove (_cp getPos [8 + random 20, random 360]);
+            if (time - (_s getOrDefault ["leashLogT", -1e6]) > 60) then { _s set ["leashLogT", time]; ["Crash event: %1 strayed %2 m from the crate, back to it", [name _x, round (_x distance2D _cp)]] call CQ_fnc_log };
+        };
+    } forEach units _g;
     if ((_s get "contactT") < 0) then {
         private _men = units _g;
         private _contact = (_men findIf { !alive _x || { damage _x > 0.05 } }) > -1

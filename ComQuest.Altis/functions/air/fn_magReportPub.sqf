@@ -12,14 +12,14 @@ if (!isServer) exitWith {};
 private _newObjs = missionNamespace getVariable ["CQ_magLastNewObjs", []];
 private _news = missionNamespace getVariable ["CQ_magLastNews", []];
 private _aos = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { (_x get "id") in CQ_magHqSeen || { _x getOrDefault ["revealed", false] } } };
-private _own = createHashMap;                  // group -> HQ name
+private _own = createHashMap;                  // str group -> HQ name (a group cannot be a hashmap key)
 {
     private _nm = [_x get "id"] call CQ_fnc_objName;
-    { if (!isNull _x) then { _own set [_x, _nm] } } forEach ((_x getOrDefault ["infantry", []]) + [_x getOrDefault ["cmdGroup", grpNull], _x getOrDefault ["escort", grpNull]]);
+    { if (!isNull _x) then { _own set [str _x, _nm] } } forEach ((_x getOrDefault ["infantry", []]) + [_x getOrDefault ["cmdGroup", grpNull], _x getOrDefault ["escort", grpNull]]);
 } forEach (values CQ_hqs);
 private _ownerOf = {
     params ["_o", "_p"];
-    private _n = _own getOrDefault [group _o, ""];
+    private _n = _own getOrDefault [str group _o, ""];
     if (_n == "") then { private _hid = _o getVariable ["CQ_hqId", -1]; if (_hid > -1) then { _n = [_hid] call CQ_fnc_objName; if (isNil "_n") then { _n = "" } } };
     if (_n == "") then {
         private _best = CQ_magAoRange;
@@ -28,14 +28,14 @@ private _ownerOf = {
     if (isNil "_n" || { !(_n isEqualType "") } || { _n == "" }) then { "-" } else { _n }
 };
 private _rows = [];
-private _squads = createHashMap;               // infantry: group -> [records]
+private _squads = createHashMap;               // infantry: str group -> [records] (a group cannot be a hashmap key)
 {
     _x params ["_o", "", "_tl", "_p", "_c", ["_rep", true], ["_hs", [0, 0]]];
     if (!alive _o) then { continue };
     private _vis = time - _tl <= CQ_magDetectEvery + 2;
     if (_c == "inf") then {
         private _g = group _o;
-        private _k = [_g, _o] select (isNull _g);
+        private _k = str ([_g, _o] select (isNull _g));
         _squads set [_k, (_squads getOrDefault [_k, []]) + [_x]];
     } else {
         private _hd = [_hs select 0, round getDir _o] select _vis;
