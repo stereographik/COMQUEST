@@ -6,7 +6,8 @@
     Contacts by category (INFANTRY one row per squad, STATIC, LIGHT VEHICLES, ARMOUR, AIR):
       type | heading | speed | HQ owner | in sight (when the report was made)
     Header: age of the report and the countdown to the next one (CQ_magReportNextT); the LED on the
-    tablet's top-left knob blinks blue for 3 s when a new report comes in while it is open.
+    tablet's top-left knob blinks blue for 3 s when a report or a new identification comes in while
+    it is open (LAST SEEN = the last report's new contacts + those identified since).
     Data: CQ_magReportPub = [serverTime, [news...], [[cat, type, hdg, spd, owner, inSight, new], ...]]
     (CQ_fnc_magTick, with every report). Refreshes every 2 s while open. U or Esc closes it.
 */
@@ -88,7 +89,7 @@ CQ_mrSetInfo = {
     };
     private _n = if (_last) then { { _x param [6, false] } count _rows } else { count _rows };
     private _txt = format ["<t size='0.9' color='#F2F1DF'>%1  ·  report of %2 min ago  ·  %3 contacts</t><t size='0.9' color='#7FB2FF'>  ·  next report in %4 (if anything new)</t>",
-        ["Every enemy MAGPIE knows", "New in the last report"] select _last, round ((serverTime - _t) / 60), _n, _cd];
+        ["Every enemy MAGPIE knows", "New since the report before"] select _last, round ((serverTime - _t) / 60), _n, _cd];
     if (_last) then {
         { _txt = _txt + format ["<br/><t size='0.85' color='#F2F1DF'>%1</t>", _x] } forEach (_news select [0, 2]);
         if (count _news > 2) then { _txt = _txt + format ["<br/><t size='0.8' color='#F2F1DF'>+%1 more HQ news</t>", count _news - 2] };
@@ -130,14 +131,14 @@ private _fill = {
 [_d, _info, _list, _tabL, _tabG, _fill, _led] spawn {
     params ["_d", "_info", "_list", "_tabL", "_tabG", "_fill", "_led"];
     disableSerialization;
-    private _last = (missionNamespace getVariable ["CQ_magReportPub", []]) param [0, -1];
+    private _last = (missionNamespace getVariable ["CQ_magReportPub", []]) param [3, -1];
     private _sec = 0;
     uiNamespace setVariable ["CQ_mrDirty", false];
     while { !isNull _d } do {
         sleep 0.2;
         if (isNull _d) exitWith {};
-        private _t = (missionNamespace getVariable ["CQ_magReportPub", []]) param [0, -1];
-        // a new report: redraw and blink the LED blue for 3 s
+        private _t = (missionNamespace getVariable ["CQ_magReportPub", []]) param [3, -1];
+        // a new report or a new identification: redraw and blink the LED blue for 3 s
         if (_t != _last) then {
             _last = _t;
             [_info, _list, _tabL, _tabG] call _fill;
