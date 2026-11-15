@@ -2,7 +2,7 @@
     CQ_fnc_bftClient  (client, once, from initPlayerLocal; drawn by CQ_fnc_magMapClient)
     BLUE FORCE TRACKING through the data link. The vanilla friendly map content is switched off
     (initPlayerLocal), so friendlies only show through the network:
-      - you always see yourself
+      - you always see yourself (friendly blue inside a thin red ring)
       - while YOU carry a radio and stand inside the data link's coverage (a linked node of
         CQ_linkPub within its range), you see every friendly unit that is inside the coverage too:
         one icon per vehicle (crew share it), the group's callsign next to its leader
@@ -22,10 +22,14 @@ CQ_bftDraw = {
             _map drawIcon [_o call CQ_magIconOf, _c, getPosASLVisual _o, _sz, _sz, getDirVisual _o, _t, 1, 0.03, "PuristaMedium", "right"];
         };
     } forEach CQ_bftList;
-    // yourself, always (yellow-white so you find yourself among the others)
+    // yourself, always: friendly blue, ringed by a thin red circle (same size on screen at every zoom)
     private _me = vehicle player;
     if (alive player) then {
-        _map drawIcon [_me call CQ_magIconOf, [1, 1, 0.6, 1], getPosASLVisual _me, _sz, _sz, getDirVisual _me, "", 1];
+        private _mp = getPosASLVisual _me;
+        _map drawIcon [_me call CQ_magIconOf, _c, _mp, _sz, _sz, getDirVisual _me, "", 1];
+        private _mpp = (_map ctrlMapScreenToWorld [0.5, 0.5]) distance2D (_map ctrlMapScreenToWorld [0.5 + pixelW, 0.5]);   // m per screen pixel
+        private _rr = (_sz / 2 + CQ_bftSelfRingPad) * _mpp;
+        _map drawEllipse [_mp, _rr, _rr, 0, CQ_bftSelfRing, ""];
     };
 };
 [] spawn {
