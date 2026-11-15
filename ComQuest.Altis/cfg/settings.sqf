@@ -1022,9 +1022,12 @@ CQ_magDormantAlt = 250;                  // m flight altitude (sensor ~600 m)
 CQ_magDormantFlee = 0.9;                 // flee until this fraction of the sensor range from the enemy (> 80 %)
 CQ_magDormantReplace = 60;               // s before a destroyed woken Darter is replaced
 CQ_magDormantRelay = true;               // woken Darters extend the data link like a relay
-CQ_magWjEvery = 15;                      // s between two layouts of the woken Darters (stretched tree from the data link toward their zone)
+CQ_magWjEvery = 15;                      // (unused since the tentacle) s between two layouts of the woken Darters (stretched tree from the data link toward their zone)
 CQ_magWjZone = 1500;                     // m: woken Darters this close to each other (where they woke) work one zone together
-CQ_magWjRing = 0.8;                      // ring around the zone's enemies the tree branches along, in sensor ranges
+CQ_tntStandoff = 1;                      // tentacle tip and ring: this x a Darter's sensor range (~600 m) outside the zone's memories and contacts
+CQ_tntMove = 300;                        // m: the tentacle is recomputed only when the zone's centroid or its root moves more than this
+CQ_tntArrive = 200;                      // m: a Darter this close to its slot has arrived (loiters; the tip's arrival opens the ring)
+CQ_tntAaR = 1200;                        // m: chain and ring slots kept this far from known anti-air
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
 CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2, max 2400 m (Darter ~600, Sentinel_Argos ~1380, Sentinel_Hermes ~2100)

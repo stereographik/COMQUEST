@@ -3,6 +3,7 @@
     Map overlay, switched from the debug panel (all off by default outside CQ_debug):
       CQ_dbgShowEnemy   every enemy unit and crewed vehicle (CSAT red, guerillas green)
       CQ_dbgShowFriend  every friendly unit and crewed vehicle (blue), civilians purple
+      CQ_dbgShowTnt     the woken Darters' tentacle: chain, ring slots, zone perimeter (purple)
       CQ_dbgShowHq      every enemy HQ site with its number and state (list sent by the server
                         with each panel refresh, CQ_dbgHqList)
     Group leaders show their callsign; CSAT groups and vehicles also show role and ammo %.
@@ -19,6 +20,14 @@ CQ_dbgMapHooked = true;
     waitUntil { sleep 0.5; !isNull ((findDisplay 12) displayCtrl 51) };
     ((findDisplay 12) displayCtrl 51) ctrlAddEventHandler ["Draw", {
         params ["_map"];
+        // the woken Darters' tentacle (CQ_fnc_magDormant): chain from its root, ring slots, zone perimeter
+        if (missionNamespace getVariable ["CQ_dbgShowTnt", false]) then {
+            (missionNamespace getVariable ["CQ_tntPub", []]) params [["_ch", []], ["_rg", []], ["_pe", []]];
+            if (_pe isNotEqualTo []) then { _map drawEllipse [_pe select 0, _pe select 1, _pe select 1, 0, [0.7, 0.3, 1, 0.9], ""] };
+            for "_i" from 1 to (count _ch - 1) do { _map drawLine [_ch select (_i - 1), _ch select _i, [0.7, 0.3, 1, 1]] };
+            { _map drawIcon ["\A3\ui_f\data\map\markers\military\dot_CA.paa", [0.7, 0.3, 1, 1], _x, 14, 14, 0, [" C" + str _forEachIndex, " ROOT"] select (_forEachIndex == 0), 1, 0.03, "PuristaMedium", "right"] } forEach _ch;
+            { _map drawIcon ["\A3\ui_f\data\map\markers\military\circle_CA.paa", [0.7, 0.3, 1, 1], _x, 14, 14, 0, " R" + str (_forEachIndex + 1), 1, 0.03, "PuristaMedium", "right"] } forEach _rg;
+        };
         if (!CQ_dbgShowEnemy && { !CQ_dbgShowFriend } && { !CQ_dbgShowHq }) exitWith {};
         private _col = {
             switch (_this) do {

@@ -71,7 +71,7 @@ private _cats = [
         ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Relay vehicle", "tpRelayVeh"], ["Log my position", "logPos"], ["Crash site", "tpCrash"], ["Hostage", "tpHst"], ["Outpost", "tpOp"], ["Base", "tpBase"]]]
     ]],
     ["MAP VISIBILITY", [
-        ["Show", [["Enemies", "!mapEnemy"], ["Enemy states", "!mapStates"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"]]]
+        ["Show", [["Enemies", "!mapEnemy"], ["Enemy states", "!mapStates"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"], ["Tentacle", "!mapTnt"]]]
     ]],
     ["ENEMY HQ  (selected in the list)", [
         ["Phase", [["FULL HQ NOW", "fullHq"], ["Next phase", "next"], ["+200 ammo", "ammo"], ["+200 fuel", "fuel"], ["Reinf. wave", "wave"]]],
@@ -158,6 +158,7 @@ private _toggles = [];
                     case "!mapEnemy": { CQ_dbgShowEnemy = !CQ_dbgShowEnemy };
                     case "!mapFriend": { CQ_dbgShowFriend = !CQ_dbgShowFriend };
                     case "!mapHq": { CQ_dbgShowHq = !CQ_dbgShowHq };
+                    case "!mapTnt": { CQ_dbgShowTnt = !(missionNamespace getVariable ["CQ_dbgShowTnt", false]) };
                     case "!mapStates": {
                         CQ_dbgShowStates = !(missionNamespace getVariable ["CQ_dbgShowStates", false]);
                         if (CQ_dbgShowStates) then { CQ_dbgShowEnemy = true };
@@ -210,6 +211,7 @@ uiNamespace setVariable ["CQ_dbgToggleLabels", {
             case "!mapEnemy": { CQ_dbgShowEnemy };
             case "!mapFriend": { CQ_dbgShowFriend };
             case "!mapHq": { CQ_dbgShowHq };
+            case "!mapTnt": { missionNamespace getVariable ["CQ_dbgShowTnt", false] };
             case "!mapStates": { missionNamespace getVariable ["CQ_dbgShowStates", false] };
             case "!fullPower": { missionNamespace getVariable ["CQ_testFullPower", false] };
             case "!logEnemy": { (missionNamespace getVariable ["CQ_myLogs", [false, false]]) select 0 };
