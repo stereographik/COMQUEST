@@ -64,7 +64,7 @@ private _rp = (call _repairs) apply { getPosATL (_x get "veh") };
 private _anchors = (((missionNamespace getVariable ["CQ_linkPub", []]) param [0, []]) select { (_x select 2) && { private _p = _x select 0; (_rp findIf { _x distance2D _p < 30 }) == -1 } && { (_x select 0) distance2D _t > 30 } });
 if (_anchors isEqualTo []) exitWith {};
 private _tp = getPosATL _t;
-private _tr = [CQ_linkRelayVehR, CQ_linkDroneR] select (_t isKindOf "Air");
+private _tr = [CQ_linkRelayVehR, [CQ_linkSentinelR, CQ_linkDroneR] select (_t isKindOf "UAV_01_base_F")] select (_t isKindOf "Air");   // a stranded Sentinel reaches farther
 _anchors = [_anchors, [], { (_x select 0) distance2D _tp }, "ASCEND"] call BIS_fnc_sortBy;
 (_anchors select 0) params ["_ap", "_ar"];
 private _d = _ap distance2D _tp;
