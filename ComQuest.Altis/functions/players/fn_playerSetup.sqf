@@ -13,13 +13,13 @@ if (typeOf player in CQ_engineerClasses) then {
 // Every preset carries binoculars and a GPS (class loadouts get them in CQ_fnc_setClass)
 if (isNil "CQ_savedLoadout") then { ["Rifleman"] call CQ_fnc_classKit };
 
-// Player feed: what last hit him (CQ_fnc_killTag: category · shooter · weapon (caliber)), told to everyone when he
+// Player feed: what last hit him (CQ_fnc_killTag: category · shooter · weapon), told to everyone when he
 // goes down (CQ_fnc_adrenalineSurge) or dies outright (initServer.sqf)
 player addEventHandler ["HandleDamage", {
     params ["_u", "", "_dmg", "_src", "", "", "_inst"];
     private _w = [_inst, _src] select (isNull _inst);
     if (!isNull _w && { _w != _u } && { _dmg > 0.05 }) then {
-        // feed tag (CQ_fnc_killTag): category · shooter · weapon (caliber); only re-read for a new shooter or weapon
+        // feed tag (CQ_fnc_killTag): category · shooter · weapon; only re-read for a new shooter or weapon
         private _key = [_w, currentWeapon _w, currentWeapon vehicle _w];
         if !(_key isEqualTo (_u getVariable ["CQ_lastHitKey", []])) then {
             _u setVariable ["CQ_lastHitKey", _key];
