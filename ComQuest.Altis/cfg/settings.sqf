@@ -356,6 +356,61 @@ CQ_headshotLines = [   // kill feed: the commander's remark before "X was killed
     "Somebody stay with him a moment. Just a moment.",
     "We carry him home. That's a promise."
 ];
+// Enemy vehicle kills (fn_vehFeed): own list on the left of the screen, last CQ_vehFeedMax kills
+CQ_vehFeedMax = 5;                       // kills shown at once (a new one pushes the oldest out)
+CQ_vehFeedLife = 60;                     // s a kill stays on screen (fades over its last 5 s)
+CQ_vehKillLines = [   // command's remark under the kill line (one at random)
+    "HA! Scrap metal.",
+    "Expensive campfire.",
+    "Boom, baby!",
+    "Warranty void, comrade.",
+    "Scratch one tin can.",
+    "Next!",
+    "Ha! Toasted.",
+    "Crispy. Lovely.",
+    "Burn, you ugly bucket.",
+    "Return to sender.",
+    "Ha! Write-off.",
+    "Junkyard delivery!",
+    "Hahaha, look at it smoke!",
+    "That's gonna sting.",
+    "Bad parking, genius.",
+    "Not today, CSAT.",
+    "Beautiful. Bloody beautiful.",
+    "Ha! Coffin on wheels.",
+    "Marshmallows, anyone?",
+    "Fireworks! Again!",
+    "That's no armour, that's a casserole.",
+    "Their mechanic's crying.",
+    "Rubles up in smoke.",
+    "Walk home, comrades.",
+    "Did you see the turret fly?!",
+    "Frame that one.",
+    "Ha! Somebody's fired.",
+    "Wheels still spinning! Hahaha!",
+    "Buff that out. Ha!",
+    "One less taxi.",
+    "Lightly roasted.",
+    "Burn, baby, burn.",
+    "Ha! Bad day, comrades.",
+    "Smoking hole. Lovely.",
+    "Gunner gets a beer.",
+    "Older than my boots anyway.",
+    "Keep 'em coming!",
+    "Scrap it, stack it.",
+    "Ha! Tin opener worked.",
+    "Command approves.",
+    "Somebody screenshot that!",
+    "Their logistics officer weeps.",
+    "Hahaha! Kaboom!",
+    "Nice try. Ha!",
+    "Free light show!",
+    "Melted. Wonderful.",
+    "Bye-bye, bucket.",
+    "Ha! Insurance won't cover that.",
+    "Cooked.",
+    "Another one bites the dust. Ha!"
+];
 CQ_killMissionSquads = ["Hostage guards", "Corridor outpost", "Tower guard"];   // kill feed: enemy groups named this way (start of the name) are a MISSION SQUAD
 CQ_objMarkSize = 0.35;                   // objective markers ([Depot], [AA pit]...) size (was 0.7)
 CQ_objLookTime = 60;                     // s a Watcher Darter looks around a newly spotted objective (plus its flight there)
