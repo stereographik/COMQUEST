@@ -51,13 +51,26 @@ private _site = if (_helpId > -1) then { _helpSite } else { if (CQ_rootsLaunched
         _s
     } else {
         private _dir = CQ_carrierPos getDir CQ_coastPoint;
-        private _start = CQ_carrierPos getPos [random (2 * CQ_rootCoastSpread) - CQ_rootCoastSpread, _dir + 90];
+        // the corridor outpost has fallen (CQ_corridorLost): players hold that corridor, so the
+        // wave picks, among a few coast points, the one farthest from it (at least CQ_corridorAvoid m)
+        private _lost = (missionNamespace getVariable ["CQ_corridorLost", -1]) > -1 && { !isNil "CQ_outpostState" };
+        private _opPos = if (_lost) then { CQ_outpostState get "pos" } else { [0, 0, 0] };
         private _coast = [];
-        for "_d" from 0 to 12000 step 100 do {
-            private _p = _start getPos [_d, _dir];
-            if (getTerrainHeightASL _p > 0) exitWith { _coast = [_p select 0, _p select 1, 0] };
+        private _best = -1;
+        for "_try" from 1 to ([1, 8] select _lost) do {
+            private _start = CQ_carrierPos getPos [random (2 * CQ_rootCoastSpread) - CQ_rootCoastSpread, _dir + 90];
+            private _c = [];
+            for "_d" from 0 to 12000 step 100 do {
+                private _p = _start getPos [_d, _dir];
+                if (getTerrainHeightASL _p > 0) exitWith { _c = [_p select 0, _p select 1, 0] };
+            };
+            if (_c isEqualTo []) then { continue };
+            private _sc = if (_lost) then { _c distance2D _opPos } else { 1 };
+            if (_sc > _best) then { _best = _sc; _coast = _c };
+            if (_lost && { _sc > CQ_corridorAvoid * 1.5 }) exitWith {};
         };
         if (_coast isEqualTo []) then { _coast = CQ_coastPoint };
+        if (_lost) then { ["Root insertion: the corridor is lost, landing at coast %1, %2 m from the fallen outpost", [mapGridPosition _coast, round (_coast distance2D _opPos)]] call CQ_fnc_log };
         [_coast, CQ_rootInland select 0, CQ_rootInland select 1, true, 40, _coast getDir CQ_basePos, 60] call CQ_fnc_findSite
     }
 } } };

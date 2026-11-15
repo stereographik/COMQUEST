@@ -177,6 +177,7 @@ CQ_rootInland = [1500, 4000];            // root insertions land this far inland
 CQ_firstRootInland = [0, 400];           // the very first one: within 400 m of the site's paired first HQ position
 CQ_rootRetryDelay = 180;                 // s: a root insertion that put nobody on the ground is flown again at the same site
 CQ_rootCoastSpread = 4000;               // later ones: a coast point up to this far either side of the carrier's line to the island
+CQ_corridorAvoid = 3000;                 // m: once the corridor outpost has fallen, root waves land on a coast point at least about this far from it
 CQ_childSpread = 40;                     // child HQs head toward the player base, +/- this many degrees
 CQ_waveSpread = 60;                      // waves arrive from the carrier side of the HQ, +/- degrees
 CQ_assaultRange = 3500;                  // an HQ this close to the player base assaults it instead of colonising
