@@ -50,13 +50,14 @@ private _mk = {
     _c ctrlCommit 0;
     _c
 };
-// the tablet picture is the window's first control (under everything else, and above the map when
-// the map is open: a title layer is drawn under the map); the same picture on its own title layer
-// stays as a fallback under it, removed when the window closes
-private _picW = _d ctrlCreate ["RscPicture", -1];
-_picW ctrlSetPosition [_picX, _picY, _pw, _ph];
-_picW ctrlCommit 0;
-_picW ctrlSetText (getMissionPath "media\comtablet_ca.paa");
+// the tablet picture, the dark tint over the green screen (the glow shows through, text stays
+// readable) and the header bar: one controls group created first (CQ_fnc_tabletBg: drawn at the
+// back, also over the open map); the picture on its own title layer stays as a fallback under it,
+// removed when the window closes
+private _bgGrp = [_d, [_picX, _picY, _pw, _ph], [
+    [[_X, _Y, _W, _H], [0, 0.04, 0, CQ_sqTint]],
+    [[_X, _Y, _W, _L * 1.1], CQ_ui get "header"]
+]] call CQ_fnc_tabletBg;
 "CQ_sqBg" cutRsc ["RscTitleDisplayEmpty", "PLAIN", 0, false];
 private _bg = uiNamespace getVariable ["RscTitleDisplayEmpty", displayNull];
 private _pic = _bg ctrlCreate ["RscPicture", -1];
@@ -64,10 +65,7 @@ _pic ctrlSetPosition [_picX, _picY, _pw, _ph];
 _pic ctrlCommit 0;
 _pic ctrlSetText (getMissionPath "media\comtablet_ca.paa");
 _d displayAddEventHandler ["Unload", { "CQ_sqBg" cutText ["", "PLAIN"] }];
-["Squad window: tablet on window %1 (%2), layer %3, pos %4", [!isNull _picW, ctrlText _picW, !isNull _bg, ctrlPosition _picW]] call CQ_fnc_log;
-// dark tint over the green screen: the screen glow shows through, text stays readable
-(["RscText", -1, [_X, _Y, _W, _H]] call _mk) ctrlSetBackgroundColor [0, 0.04, 0, CQ_sqTint];
-(["RscText", -1, [_X, _Y, _W, _L * 1.1]] call _mk) ctrlSetBackgroundColor (CQ_ui get "header");
+["Squad window: tablet group %1, map open %2, parent %3", [!isNull _bgGrp, visibleMap, displayParent _d]] call CQ_fnc_log;
 private _tabS = ["RscButton", 7090, [_X + 0.01, _Y + 0.004, _W * 0.18, _L], "SQUADS"] call _mk;
 private _tabC = ["RscButton", 7093, [_X + 0.02 + _W * 0.18, _Y + 0.004, _W * 0.16, _L], "CLASS"] call _mk;
 private _tabB = ["RscButton", 7091, [_X + 0.03 + _W * 0.34, _Y + 0.004, _W * 0.22, _L], "STATS"] call _mk;

@@ -6,5 +6,7 @@
     were lost there).
 */
 private _map = findDisplay 12;
+// fallback (CQ_tabletCloseMap): close the map first, the window then opens on the game screen
+if (visibleMap && { CQ_tabletCloseMap }) then { openMap false };
 if (visibleMap && { !isNull _map }) exitWith { _map };
 findDisplay 46

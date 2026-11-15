@@ -744,6 +744,7 @@ CQ_aimSway = 0.15;                       // weapon sway multiplier for players (
 CQ_recoil = 0.7;                         // recoil multiplier for players (1 = vanilla)
 CQ_uDoubleTap = 0.4;                     // s: U twice within this opens the MAGPIE report
 CQ_tabletCol = [0.2271, 0.2676, 0.2759, 0.7725];   // the tablet's icon column in the picture (fractions [x0, y0, x1, y1], media\comtablet_ca.paa)
+CQ_tabletCloseMap = false;               // true: opening a tablet window (U menu, squads, MAGPIE report) closes the map first (fallback if it does not draw over the map)
 CQ_tabletColSlots = 7;                   // slots in that column (each window fills them from the top)
 CQ_tabletIconSize = 0.64;                // icon width: share of the column width
 CQ_tabletColors = createHashMapFromArray [
