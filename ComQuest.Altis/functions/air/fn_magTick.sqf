@@ -479,7 +479,7 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
         ["MAGPIE: WASP %1", [["back toward the carrier", format ["bridges toward the Darters' zone at %1", mapGridPosition _cp]] select _bridge]] call CQ_fnc_log;
     };
     private _s = _a getPos [_ar * CQ_linkReach, _a getDir _cp];   // inside the anchor's range (a link needs the drone within the bigger circle), with room for a good overlap
-    if (surfaceIsWater _s) then {
+    if (surfaceIsWater _s && { !_bridge }) then {     // bridging: it flies over the sea like anywhere else
         // over the sea it can still relay: keep it, but never past the coast by more than 1 km
         private _k = 0;
         while { surfaceIsWater _s && { _k < 20 } } do { _s = _s getPos [-100, _a getDir _cp]; _k = _k + 1 };

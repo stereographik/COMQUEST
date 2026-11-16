@@ -51,7 +51,11 @@ CQ_mag = CQ_mag select { !((_x getOrDefault ["role", ""]) == "dormant" && { _x g
 // within CQ_magAaAvoid of it stays asleep, it would only wake to be shot down
 private _aaKnown = ((values CQ_magSeen) select { alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } && { (typeOf (_x select 0)) in CQ_magAaClasses } }) apply { _x select 3 };
 if (!isNil "CQ_outpostState" && { CQ_outpostState get "spotted" } && { !(CQ_outpostState get "fallen") }) then { _aaKnown pushBack (missionNamespace getVariable ["CQ_opMarkPos", CQ_outpostState get "pos"]) };
+// + the AA pits of the HQs that are on the players' map (spotted objectives)
+{ { if (alive _x && { _x getVariable ["CQ_spotted", false] } && { (_x getVariable ["CQ_objType", ""]) == "AA" }) then { _aaKnown pushBack (getPosATL _x) } } forEach (_x getOrDefault ["installations", []]) } forEach (values CQ_hqs);
 private _aaSafe = { params ["_p"]; (_aaKnown findIf { _x distance2D _p < CQ_magAaAvoid }) == -1 };
+// other known enemies on the ground (seen in the last CQ_magMemory s): chain slots keep CQ_tntEnemyR from them
+private _enKnown = ((values CQ_magSeen) select { alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } && { (_x select 4) != "air" } }) apply { _x select 3 };
 
 private _awake = { count (CQ_mag select { (_x getOrDefault ["role", ""]) == "dormant" && { alive (_x get "veh") } }) };
 
@@ -331,7 +335,7 @@ call {
     private _need = if (_len <= _first) then { 1 } else { 1 + ceil ((_len - _first) / CQ_lrHop) };
     private _n = count _woke;
     private _nChain = _need min _n;
-    private _aaClear = { params ["_p", "_r"]; (_aaKnown findIf { _x distance2D _p < _r }) == -1 };
+    private _aaClear = { params ["_p", "_r"]; (_aaKnown findIf { _x distance2D _p < _r }) == -1 && { (_enKnown findIf { _x distance2D _p < CQ_tntEnemyR }) == -1 } };   // AA keep-out + any known enemy
     private _aaFix = {
         params ["_p", "_dirC"];
         if ([_p, CQ_tntAaR] call _aaClear) exitWith { _p };

@@ -1125,6 +1125,7 @@ CQ_tntRootBetter = 500;                  // m: the tentacle changes its root onl
 CQ_tntArrive = 200;                      // m: a Darter this close to its slot has arrived (loiters; the tip's arrival opens the ring)
 CQ_gridDarterSpeed = 150;                // km/h: grid (woken) Darters cruise this fast toward their slot (vanilla ~80; 0 = vanilla)
 CQ_tntAaR = 1200;                        // m: chain and ring slots kept this far from known anti-air
+CQ_tntEnemyR = 500;                      // m: chain and ring slots kept this far from any known enemy on the ground (pushed sideways)
 CQ_magCell = 1000;                       // search grid cell (m)
 CQ_magMemory = 600;                      // s an identified position is kept for the flight plans
 CQ_magSensor = [300, 1.2, 2400];         // sensor radius = 300 + altitude x 1.2, max 2400 m (Darter ~600, Sentinel_Argos ~1380, Sentinel_Hermes ~2100)
