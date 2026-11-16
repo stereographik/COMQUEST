@@ -99,6 +99,7 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         _nv setVariable ["CQ_magName", _m get "name", true];
         _m set ["veh", _nv];
         _m set ["lost", false];
+        _m set ["target", []];                 // a fresh drone has no route yet (WASP kept its lost predecessor's post and never got orders)
         _m set ["planT", time];
         if (_quad) then {
             (_g addWaypoint [_sp getPos [1500, CQ_baseDir], 0]) setWaypointType "MOVE";
