@@ -186,8 +186,7 @@ if (!isNil "CQ_tntTestReq") then {
 //              network log), but memories no longer steer the tentacle
 //   target     every active CSAT HQ and every spotted HQ objective (CQ_spotted) still standing: the
 //              one nearest our linked network. None: fully extended toward the carrier (no ring)
-//   perimeter  ring radius = the known enemies' spread around the target (90th percentile distance,
-//              infantry + wheeled, within CQ_tntRingArea m) + CQ_tntRingMargin, within CQ_tntRingR
+//   perimeter  CQ_tntStandoff x sensor range around the target
 //   chain      root = the linked node nearest to the zone (base, relays, relay vehicle, Sentinels, and
 //              WASP once it bridges toward the zone: CQ_fnc_magTick turns it there after a first memory), first hop CQ_linkReach x its range, then CQ_lrHop each: straight
 //              toward the zone's centroid, the tip stopping on the perimeter; a link slot within
@@ -244,20 +243,7 @@ call {
     private _cc = ([_tgts, [], { [_x] call _netD }] call BIS_fnc_sortBy) select 0;
     _cc = [_cc select 0, _cc select 1, 0];
     private _cm = _cc;
-    // ring size: the spread of the known enemies around the target (infantry and wheeled vehicles
-    // MAGPIE saw in the last CQ_magMemory s within CQ_tntRingArea m; the farthest 10 % ignored)
-    // + CQ_tntRingMargin, kept within CQ_tntRingR [min, max] (under ~1.3 km the AA pits' keep-out
-    // CQ_tntAaR would erase most ring slots around an HQ)
-    private _rad = 0;
-    if (!_carrier) then {
-        private _ds = ((values CQ_magSeen) select {
-            alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } && { ((_x select 3) distance2D _cc) < CQ_tntRingArea }
-            && { (_x select 4) in ["inf", "light"] || { (_x select 4) == "armour" && { (_x select 0) isKindOf "Wheeled_APC_F" } } }
-        }) apply { (_x select 3) distance2D _cc };
-        private _spread = 0;
-        if (_ds isNotEqualTo []) then { _ds sort true; _spread = _ds select (floor (0.9 * (count _ds - 1))) };
-        _rad = ((_spread + CQ_tntRingMargin) max (CQ_tntRingR select 0)) min (CQ_tntRingR select 1);
-    };
+    private _rad = [CQ_tntStandoff * _range, 0] select _carrier;
     private _wave = _carrier;                             // carrier mode: no ring
     if ((missionNamespace getVariable ["CQ_tntTgtLog", []]) isEqualTo [] || { (CQ_tntTgtLog distance2D _cc) > 300 }) then {
         CQ_tntTgtLog = _cc;
@@ -314,12 +300,12 @@ call {
     // recompute only when something changed
     private _ids = (_woke apply { _x get "name" }); _ids sort true;
     private _old = missionNamespace getVariable ["CQ_tntKey", []];
-    _old params [["_oCm", [0, 0, 0]], ["_oIds", []], ["_oRoot", [0, 0, 0]], ["_oRing", false], ["_oRad", 0]];
+    _old params [["_oCm", [0, 0, 0]], ["_oIds", []], ["_oRoot", [0, 0, 0]], ["_oRing", false]];
     private _tipM = _woke select { (_x getOrDefault ["tntI", -1]) == (missionNamespace getVariable ["CQ_tntTipI", -99]) };
     if (_cm distance2D _oCm > CQ_magWjZone) then { _oRing = false };   // another zone: the chain reaches out again before any ring
     private _ringNow = !_wave && { _oRing || { _tipM isNotEqualTo [] && { ((_tipM select 0) get "veh") distance2D ((_tipM select 0) getOrDefault ["wjPos", [0, 0, 0]]) < CQ_tntArrive } } };
-    if (_cm distance2D _oCm < CQ_tntMove && { _ids isEqualTo _oIds } && { _root distance2D _oRoot < CQ_tntMove } && { _ringNow isEqualTo _oRing } && { abs (_rad - _oRad) < 300 }) exitWith {};   // the ring resized by 300 m+: recomputed
-    CQ_tntKey = [_cm, _ids, _root, _ringNow, _rad];
+    if (_cm distance2D _oCm < CQ_tntMove && { _ids isEqualTo _oIds } && { _root distance2D _oRoot < CQ_tntMove } && { _ringNow isEqualTo _oRing }) exitWith {};
+    CQ_tntKey = [_cm, _ids, _root, _ringNow];
     // the chain: straight from the root toward the centroid, the tip on the perimeter
     private _dir = _root getDir _cc;
     private _tip = if (_root distance2D _cc > _rad) then { _cc getPos [_rad, _cc getDir _root] } else { _root };
@@ -413,7 +399,7 @@ call {
     };
     CQ_tntPub = [[_root] + _chain, _ring select [0, [0, count _ring] select (_ringNow && { _spare >= 2 })], [_cc, _rad]];
     publicVariable "CQ_tntPub";
-    if (true) then { ["MAGPIE: tentacle to %1 (%2 target(s), ring %8 m): %3/%4 chain Darters, %5 %6, %7 re-tasked", [mapGridPosition _cc, count _tgts, _nChain, _need, _spare, ["in reserve", "on the ring"] select (_ringNow && { _spare >= 2 }), _moved, round _rad]] call CQ_fnc_log; };
+    if (true) then { ["MAGPIE: tentacle to %1 (%2 target(s)): %3/%4 chain Darters, %5 %6, %7 re-tasked", [mapGridPosition _cc, count _tgts, _nChain, _need, _spare, ["in reserve", "on the ring"] select (_ringNow && { _spare >= 2 }), _moved]] call CQ_fnc_log; };
 };
 
 // ---- replacements: the nearest point left to where a woken Darter went down
