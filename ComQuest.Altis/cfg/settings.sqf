@@ -294,6 +294,7 @@ CQ_empLoadR = 10;                        // m: the Stomper loads the device this
 CQ_empStrikeR = 50;                      // m: ...and goes off this close to its target
 CQ_empStuck = 60;                        // s without moving: nudged CQ_empNudge m along its route
 CQ_empNudge = 6;
+CQ_empWaveTime = [5, 2];                 // s for the shockwave to reach its radius: [EMP on us (CQ_empBlastR), our captured EMP (CQ_empHitR)]
 CQ_empHitR = 400;                        // m: captured EMP at its target
 CQ_empSilence = 900;                     // s: the enemy HQs hit stay off the radio net (no waves, no help, nobody hears them)
 

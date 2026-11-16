@@ -20,25 +20,50 @@ private _kill = {
     [_v, false] remoteExec ["engineOn", _v];
     [_v, false] remoteExec ["setPilotLight", _v];
 };
+// the shockwave: every client shows it (CQ_fnc_empClient "fx": ring, shake, a lightning bolt to
+// each hit); each object is hit here when the wave reaches it (radius / _time m/s)
+private _wave = {
+    params ["_p", "_r", "_time", "_hits", "_kill"];
+    ["fx", [_p, _r, _time, _hits apply { _x select 0 }]] remoteExec ["CQ_fnc_empClient", 0];
+    [_p, _r / (_time max 0.5), _hits, _kill] spawn {
+        params ["_p", "_spd", "_hits", "_kill"];
+        private _t0 = time;
+        _hits = [_hits, [], { (_x select 0) distance2D _p }, "ASCEND"] call BIS_fnc_sortBy;
+        {
+            _x params ["_o", "_k"];
+            waitUntil { time - _t0 >= (_o distance2D _p) / _spd || { isNull _o } };
+            if (!isNull _o && { alive _o }) then {
+                switch (_k) do {
+                    case "drone": { _o setDamage 1 };
+                    case "veh": { [_o] call _kill };
+                    case "enemy": { [_o, true] call _kill };
+                    case "static": { _o setDamage 1 };
+                };
+            };
+        } forEach _hits;
+    };
+};
 
 switch (_mode) do {
     case "loss": {
         private _p = _s get "pos";
         CQ_empPhase = "blown"; publicVariable "CQ_empPhase";
-        private _nd = 0;
+        // hit list: [object, "drone" | "veh"]; each is hit when the shockwave reaches it
+        private _hits = [];
         {
             private _v = _x get "veh";
-            if (alive _v && { _v distance2D _p < CQ_empBlastR }) then { _v setDamage 1; _nd = _nd + 1 };
+            if (alive _v && { _v distance2D _p < CQ_empBlastR }) then { _hits pushBackUnique [_v, "drone"] };
         } forEach (missionNamespace getVariable ["CQ_mag", []]);
-        { if (alive _x && { side _x == west } && { _x distance2D _p < CQ_empBlastR }) then { _x setDamage 1; _nd = _nd + 1 } } forEach allUnitsUAV;
-        private _nv = 0;
+        { if (alive _x && { side _x == west } && { _x distance2D _p < CQ_empBlastR }) then { _hits pushBackUnique [_x, "drone"] } } forEach allUnitsUAV;
         {
             if (alive _x && { _x distance2D _p < CQ_empBlastR } && { !(_x isKindOf "StaticWeapon") } && { !(_x isKindOf "ParachuteBase") } && { !(_x isKindOf "UAV") }
                 && { getNumber (configOf _x >> "side") == 1 || { (crew _x) isNotEqualTo [] && { side group effectiveCommander _x == west } } }) then {
-                [_x] call _kill; _nv = _nv + 1;
+                _hits pushBack [_x, "veh"];
             };
         } forEach vehicles;
-        ["fx", [_p, CQ_empBlastR]] remoteExec ["CQ_fnc_empClient", 0];
+        private _nd = { (_x select 1) == "drone" } count _hits;
+        private _nv = { (_x select 1) == "veh" } count _hits;
+        [_p, CQ_empBlastR, CQ_empWaveTime select 0, _hits, _kill] call _wave;
         ["EMP event: the device went off at %1: %2 drones down, %3 vehicles dead within %4 m", [mapGridPosition _p, _nd, _nv, CQ_empBlastR]] call CQ_fnc_log;
         ["EMP blast", format ["The EMP went off at grid %1: %2 drones lost, %3 vehicles dead within %4 km. Engineers can repair the engines.", mapGridPosition _p, _nd, _nv, round (CQ_empBlastR / 1000)]] call CQ_fnc_announce;
         ["empBlown", []] call CQ_fnc_say;
@@ -50,16 +75,18 @@ switch (_mode) do {
     };
     case "strike": {
         _args params ["_p", ["_who", objNull]];
-        private _nv = 0; private _ns = 0;
+        private _hits = [];
         {
             if (alive _x && { _x distance2D _p < CQ_empHitR } && { !(_x isKindOf "ParachuteBase") }) then {
                 if (_x isKindOf "StaticWeapon") then {
-                    if (getNumber (configOf _x >> "side") == 0 || { side group effectiveCommander _x == east }) then { _x setDamage 1; _ns = _ns + 1 };
+                    if (getNumber (configOf _x >> "side") == 0 || { side group effectiveCommander _x == east }) then { _hits pushBack [_x, "static"] };
                 } else {
-                    if (getNumber (configOf _x >> "side") == 0 || { (crew _x) isNotEqualTo [] && { side group effectiveCommander _x == east } }) then { [_x, true] call _kill; _nv = _nv + 1 };
+                    if (getNumber (configOf _x >> "side") == 0 || { (crew _x) isNotEqualTo [] && { side group effectiveCommander _x == east } }) then { _hits pushBack [_x, "enemy"] };
                 };
             };
         } forEach vehicles;
+        private _nv = { (_x select 1) == "enemy" } count _hits;
+        private _ns = { (_x select 1) == "static" } count _hits;
         private _hit = [];
         {
             private _r = _x getOrDefault ["radio", objNull];
@@ -68,7 +95,7 @@ switch (_mode) do {
                 _hit pushBack (_x get "id");
             };
         } forEach (values CQ_hqs);
-        ["fx", [_p, CQ_empHitR]] remoteExec ["CQ_fnc_empClient", 0];
+        [_p, CQ_empHitR, CQ_empWaveTime select 1, _hits, _kill] call _wave;
         if (!isNull _who) then { [_who, CQ_empPtsStrike, "EMP strike"] call CQ_fnc_scoreAdd };
         ["EMP event: captured EMP went off at %1: %2 enemy vehicles and %3 statics dead, HQs off the radio for %4 s: %5", [mapGridPosition _p, _nv, _ns, CQ_empSilence, _hit]] call CQ_fnc_log;
         ["EMP strike", format ["Our EMP went off at grid %1: %2 enemy vehicles and %3 guns dead%4.", mapGridPosition _p, _nv, _ns,
