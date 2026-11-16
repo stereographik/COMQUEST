@@ -290,10 +290,10 @@ call {
     private _wm = (missionNamespace getVariable ["CQ_mag", []]) select { (_x getOrDefault ["role", ""]) == "wasp" && { alive (_x get "veh") } };
     private _wPost = if (_wm isEqualTo []) then { [] } else { (_wm select 0) getOrDefault ["target", []] };
     if (_wPost isNotEqualTo [] && { missionNamespace getVariable ["CQ_tntOnWasp", false] }) then {
-        _root = [_wPost select 0, _wPost select 1, 0]; _rr0 = _pr param [1, _rr0];
+        _root = [_wPost select 0, _wPost select 1, 0]; _rr0 = CQ_linkDroneR;
     };
     CQ_tntOnWasp = _wPost isNotEqualTo [] && { _root distance2D _wPost < 400 || { _root distance2D ((_wm select 0) get "veh") < 400 } };
-    if (CQ_tntOnWasp) then { _root = [_wPost select 0, _wPost select 1, 0] };
+    if (CQ_tntOnWasp) then { _root = [_wPost select 0, _wPost select 1, 0]; _rr0 = CQ_linkDroneR };   // WASP's own link range (it kept the base's or the relay's: first hop 4 km+, chain cut)
     CQ_tntRoot = [_root, _rr0];
     // chain first: the ring never reaches back past one hop from the root, so the tentacle always
     // grows out toward the target before any Darter takes a ring slot
