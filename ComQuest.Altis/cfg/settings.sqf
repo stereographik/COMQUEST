@@ -697,7 +697,6 @@ CQ_sabTeams = 3;                         // teams in all; the first waits at hom
 CQ_sabDelay = 20;                        // s after MAGPIE's first contact reaches our base
 CQ_sabCooldown = 1800;                   // s between two hunts, from the start of the last one
 CQ_sabDismount = 700;                    // m short of the target: on foot from there
-CQ_sabRoadSnap = 400;                    // m: the drop-off and home points snap to the nearest road within this (the vehicle drives fast on roads)
 CQ_sabFuzz = 300;                        // m of error on the target position (exact once they know it)
 CQ_sabUpdate = [75, 150];                // s between two position updates: target transmitting / silent
 CQ_sabHuntTime = 1800;                   // s of hunt, then back home
