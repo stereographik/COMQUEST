@@ -5,22 +5,24 @@
     SABOTAGE: CSAT's elite network hunters (CQ_sabClasses: leader, Titan AA, satchel expert,
     Titan AT, marksman, autorifleman/medic), motorised (CQ_sabVehicles). They belong to the
     corridor outpost (home: the outpost, the root HQ once it has fallen or if there is none).
-      trigger   CQ_sabDelay s after MAGPIE's first contact reaches our base; afterwards a new
-                hunt at most every CQ_sabCooldown s (counted from the start of the last hunt)
-      target    the exposed node of our data link closest to their home: WASP (flying) or the
-                base's relay vehicle
-      drive     cross-country and cautious (STEALTH: off the roads, lights off at night, normal
-                speed) to a dismount point off the road, CQ_sabDismount m short of the target's fuzzy
-                position (+/- CQ_sabFuzz m, exact once they know it); the driver stays with the
-                vehicle. The drive home is the same
-      foot      every CQ_sabUpdate s a new fuzzy position; close in: the AA / AT specialists
-                engage, the satchel expert blows a relay vehicle he reaches (CQ_sabSatchelR m)
-      back      target destroyed, or CQ_sabHuntTime s: back to the vehicle, then home
+      trigger   the first team is ready CQ_sabDelay s after MAGPIE's first contact reaches our base
+      wait      where they are, by their vehicle, shooting any drone they see (combat RED)
+      target    the WASP or Darter that reports the next spot (a new identification it sends to
+                the base: CQ_sabSpot, CQ_fnc_magTick). Sentinels, players' drones and the relay
+                vehicle are never hunted (only shot on sight)
+      drive     cross-country and cautious (STEALTH, normal speed, lights off) to a dismount point
+                off the road, CQ_sabDismount m short of the drone's fuzzy position (+/- CQ_sabFuzz m,
+                exact once they know it); the driver stays with the vehicle
+      foot      every CQ_sabUpdate s a new fuzzy position; within 900 m they know it and fire
+      give up   drone down, or CQ_sabHuntTime s on foot: back to waiting where they are
+      rearm     the Titan AA gunner's missiles spent: to the nearest standing supply depot (else
+                active HQ, else home) to get CQ_sabAaMissiles back, then wait there
       wiped     CQ_sabBounty points to the squad that killed the last one; the next team
-                (CQ_sabTeams in all) is paradropped near the root HQ and drives home to wait
+                (CQ_sabTeams in all, at most every CQ_sabCooldown s) is paradropped near the root
+                HQ and drives home to wait
     MAGPIE seeing them within CQ_sabWarnR m of the node: CROSSROAD warns; WASP pulls back.
-    State: CQ_sab hashmap: phase (none, toHome, home, drive, foot, back), grp, veh, home,
-    target, tPos, t0, nextT, left, huntT, warned
+    State: CQ_sab hashmap: phase (none, toHome, wait, drive, foot, rearm), grp, veh, target,
+    tPos, t0, nextT, left, huntT, spotT, warned, rearmPos, aaMag, force (debug: hunt the nearest now)
 */
 params ["_mode", ["_a", []]];
 if (!isServer) exitWith {};
@@ -89,7 +91,7 @@ switch (_mode) do {
             private _v = createVehicle [_vcls, _vp, [], 0, "NONE"];
             _s set ["veh", _v];
         };
-        _s set ["phase", ["home", "toHome"] select _byAir];
+        _s set ["phase", ["wait", "toHome"] select _byAir];
         _s set ["boardT", time + 120];                       // paradropped: time to land before the boarding failsafe
         _s set ["t0", time];
         ["SABOTAGE: team %1/%2 %3 at grid %4", [CQ_sabTeams - (_s get "left") + 1, CQ_sabTeams, ["ready at home", "paradropped"] select _byAir, mapGridPosition _pos]] call CQ_fnc_log;
@@ -124,16 +126,6 @@ switch (_mode) do {
             ["spawn", [_drop, !_first]] call CQ_fnc_sabotage;
         };
 
-        // choose the target: the exposed node closest to home
-        private _pickTarget = {
-            private _c = [];
-            private _wasp = ((missionNamespace getVariable ["CQ_mag", []]) select { (_x getOrDefault ["role", ""]) == "wasp" && { alive (_x get "veh") } && { (_x getOrDefault ["phase", ""]) == "air" } }) apply { _x get "veh" };
-            _c append _wasp;
-            private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
-            if (alive _rv) then { _c pushBack _rv };
-            if (_c isEqualTo []) exitWith { objNull };
-            ([_c, [], { _x distance2D _home }, "ASCEND"] call BIS_fnc_sortBy) select 0
-        };
         private _fuzzy = {
             params ["_t"];
             if ((units _g) findIf { alive _x && { (_x knowsAbout _t) > 1.5 } } > -1) exitWith { getPosATL _t };
@@ -171,31 +163,77 @@ switch (_mode) do {
             };
         };
 
+        // the AA gunner and the AA missiles he has left (loaded + carried)
+        private _aaMan = { private _m = (units _g) select { alive _x && { (typeOf _x) == (CQ_sabClasses select 1) } }; if (_m isEqualTo []) then { objNull } else { _m select 0 } };
+        private _aaLeft = {
+            private _m = call _aaMan;
+            if (isNull _m) exitWith { 0 };
+            private _mag = _s getOrDefault ["aaMag", ""];
+            if (_mag == "") then { _mag = (getArray (configFile >> "CfgWeapons" >> secondaryWeapon _m >> "magazines")) param [0, "Titan_AA"]; _s set ["aaMag", _mag] };
+            ({ _x == _mag } count magazines _m) + ({ _x == _mag } count (secondaryWeaponMagazine _m))
+        };
+        // where to rearm: the nearest standing supply depot, else the nearest active HQ, else home
+        private _rearmPos = {
+            private _lp = getPosATL (leader _g);
+            private _dep = flatten ((values CQ_hqs) apply { (_x get "installations") select { alive _x && { (_x getVariable ["CQ_objType", ""]) == "Depot" } } });
+            if (_dep isNotEqualTo []) exitWith { getPosATL (([_dep, [], { _x distance2D _lp }] call BIS_fnc_sortBy) select 0) };
+            private _hq = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
+            if (_hq isNotEqualTo []) exitWith { (([_hq, [], { (_x get "pos") distance2D _lp }] call BIS_fnc_sortBy) select 0) get "pos" };
+            _home
+        };
+        // back to waiting where they are (men on foot regroup at the vehicle)
+        private _toWait = {
+            _s set ["phase", "wait"]; _s set ["t0", 0];
+            [_g] call CQ_fnc_clearWaypoints;
+            if (alive _v) then { doStop (driver _v) };
+            _g setBehaviour "AWARE"; _g setCombatMode "RED";
+        };
+
         switch (_ph) do {
             case "toHome": {
                 if (!alive _v) exitWith {};                      // vehicle still coming down
-                if ((leader _g) distance2D _home < 150) exitWith { _s set ["phase", "home"]; [_g] call CQ_fnc_clearWaypoints; ["SABOTAGE: team at home (grid %1), waiting", [mapGridPosition _home]] call CQ_fnc_log };
+                if ((leader _g) distance2D _home < 150) exitWith { call _toWait; ["SABOTAGE: team at home (grid %1), waiting for a spot", [mapGridPosition _home]] call CQ_fnc_log };
                 if ((units _g) findIf { alive _x && { vehicle _x != _v } } > -1) exitWith { call _mount };
                 if (time - (_s get "t0") > 20) then { _s set ["t0", time]; call _offRoad; (driver _v) doMove ([_home] call _offRoadPt) };
             };
-            case "home": {
-                if (time - (_s get "huntT") < CQ_sabCooldown) exitWith {};
-                private _t = call _pickTarget;
-                if (isNull _t) exitWith {};
-                _s set ["target", _t]; _s set ["huntT", time]; _s set ["driveLog", false]; _s set ["boardLog", true]; _s set ["warned", false]; _s set ["t0", 0];
-                _s set ["tPos", [_t] call _fuzzy];
+            // WAIT: where they are, by their vehicle, shooting any drone they see. The next spot that
+            // WASP or a Darter reports (CQ_sabSpot, CQ_fnc_magTick) makes that drone the target.
+            // AA missiles spent: rearm first.
+            case "home";
+            case "wait": {
+                _g setBehaviour "AWARE"; _g setCombatMode "RED";
+                if ((call _aaLeft) == 0 && { (call _aaMan) isNotEqualTo objNull }) exitWith {
+                    private _rp = call _rearmPos;
+                    _s set ["phase", "rearm"]; _s set ["rearmPos", _rp]; _s set ["t0", 0]; _s set ["boardT", time];
+                    ["SABOTAGE: AA missiles spent, driving to rearm at grid %1", [mapGridPosition _rp]] call CQ_fnc_log;
+                };
+                // regroup at the vehicle
+                if (alive _v && { time - (_s get "t0") > 30 }) then {
+                    _s set ["t0", time];
+                    { if (alive _x && { vehicle _x == _x } && { _x distance _v > 40 }) then { _x doMove (getPosATL _v) } } forEach units _g;
+                };
+                private _sp = missionNamespace getVariable ["CQ_sabSpot", [objNull, -1]];
+                _sp params ["_d", "_st"];
+                private _force = _s getOrDefault ["force", false];
+                if (_force) then {
+                    _s set ["force", false];
+                    private _c = ((missionNamespace getVariable ["CQ_mag", []]) select { (_x getOrDefault ["role", ""]) in ["wasp", "dormant"] && { alive (_x get "veh") } }) apply { _x get "veh" };
+                    if (_c isNotEqualTo []) then { _d = ([_c, [], { _x distance2D (leader _g) }] call BIS_fnc_sortBy) select 0; _st = time };
+                };
+                if (!alive _d || { _st <= (_s getOrDefault ["spotT", -1]) }) exitWith {};
+                _s set ["spotT", _st];
+                _s set ["target", _d]; _s set ["huntT", time]; _s set ["driveLog", false]; _s set ["boardLog", true]; _s set ["warned", false]; _s set ["t0", 0];
+                _s set ["tPos", [_d] call _fuzzy];
                 _s set ["phase", "drive"];
                 _s set ["boardT", time];
                 call _mount;
-                ["SABOTAGE: hunt %1 started from grid %2, target %3 at grid %4", [CQ_sabTeams - (_s get "left"), mapGridPosition _home, ["relay vehicle", "WASP"] select (_t isKindOf "Air"), mapGridPosition _t]] call CQ_fnc_log;
+                ["SABOTAGE: hunting %1 (it reported a spot) from grid %2, %3 m away, %4 AA missile(s)", [_d getVariable ["CQ_magName", "a drone"], mapGridPosition (leader _g), round ((leader _g) distance2D _d), call _aaLeft]] call CQ_fnc_log;
             };
             case "drive": {
                 private _t = _s get "target";
-                // target lost before they got there (not their doing): home, and the cooldown is refunded
-                if (!alive _t) exitWith {
-                    _s set ["phase", "back"]; _s set ["t0", 0]; _s set ["huntT", -1e6];
-                    ["SABOTAGE: target lost before contact, back home, cooldown refunded"] call CQ_fnc_log;
-                };
+                // target lost before they got there (not their doing): they stop and wait for the next spot
+                if (!alive _t) exitWith { ["SABOTAGE: target lost before contact, waiting for the next spot"] call CQ_fnc_log; call _toWait };
+                if (time - (_s get "huntT") > CQ_sabDriveMax) exitWith { ["SABOTAGE: drove %1 s without reaching the drone, waiting for the next spot", [CQ_sabDriveMax]] call CQ_fnc_log; call _toWait };
                 if (!alive _v || { !canMove _v }) exitWith { _s set ["phase", "foot"]; { unassignVehicle _x; moveOut _x } forEach units _g; _s set ["t0", 0] };
                 if (time - (_s get "t0") > 20) then {
                     _s set ["t0", time];
@@ -217,7 +255,7 @@ switch (_mode) do {
                     // dismount: everyone but the driver goes on foot
                     { if (_x != driver _v) then { unassignVehicle _x; [_x] orderGetIn false; moveOut _x } } forEach units _g;
                     doStop (driver _v);
-                    _s set ["phase", "foot"]; _s set ["t0", 0];
+                    _s set ["phase", "foot"]; _s set ["t0", 0]; _s set ["huntT", time];   // the CQ_sabHuntTime s on foot start now
                     _g setBehaviour "STEALTH";
                     ["SABOTAGE: dismounted at grid %1, %2 m from the target", [mapGridPosition _v, round (_v distance2D _t)]] call CQ_fnc_log;
                 };
@@ -225,21 +263,13 @@ switch (_mode) do {
             case "foot": {
                 private _t = _s get "target";
                 if (!alive _t) exitWith {
-                    ["SABOTAGE: %1 destroyed, the team heads home", [["relay vehicle", "WASP"] select (_t isKindOf "Air")]] call CQ_fnc_log;
-                    ["sabSuccess", [["the relay vehicle", "WASP"] select (_t isKindOf "Air")]] call CQ_fnc_say;
-                    _s set ["phase", "back"]; _s set ["t0", 0];
+                    ["SABOTAGE: %1 shot down, waiting for the next spot", [_t getVariable ["CQ_magName", "the drone"]]] call CQ_fnc_log;
+                    ["sabSuccess", [_t getVariable ["CQ_magName", "WASP"]]] call CQ_fnc_say;
+                    call _toWait;
                 };
-                if (time - (_s get "huntT") > CQ_sabHuntTime) exitWith { ["SABOTAGE: hunt timed out, the team heads home"] call CQ_fnc_log; _s set ["phase", "back"]; _s set ["t0", 0] };
-                // the satchel expert blows a relay vehicle he reaches
-                if !(_t isKindOf "Air") then {
-                    private _ex = (units _g) select { alive _x && { (typeOf _x) == (CQ_sabClasses select 2) } && { _x distance _t < CQ_sabSatchelR } };
-                    if (_ex isNotEqualTo [] && { !(_t getVariable ["CQ_sabCharged", false]) }) then {
-                        _t setVariable ["CQ_sabCharged", true];
-                        ["SABOTAGE: satchel charge planted on the relay vehicle at grid %1", [mapGridPosition _t]] call CQ_fnc_log;
-                        [_t] spawn { params ["_t"]; sleep 20; if (alive _t) then { createVehicle ["SatchelCharge_Remote_Ammo_Scripted", getPosATL _t, [], 0, "CAN_COLLIDE"] setDamage 1; _t setDamage 1 } };
-                    };
-                };
-                private _upd = [CQ_sabUpdate select 1, CQ_sabUpdate select 0] select ((_t getVariable ["CQ_linked", false]) || { !(_t isKindOf "Air") });   // a transmitting node gives itself away faster
+                if (time - (_s get "huntT") > CQ_sabHuntTime) exitWith { ["SABOTAGE: hunt given up after %1 s, waiting for the next spot", [CQ_sabHuntTime]] call CQ_fnc_log; call _toWait };
+                if ((call _aaLeft) == 0 && { (call _aaMan) isNotEqualTo objNull }) exitWith { ["SABOTAGE: AA missiles spent during the hunt"] call CQ_fnc_log; call _toWait };
+                private _upd = [CQ_sabUpdate select 1, CQ_sabUpdate select 0] select (_t getVariable ["CQ_linked", false]);   // a transmitting drone gives itself away faster
                 if (time - (_s get "t0") > _upd) then {
                     _s set ["t0", time];
                     private _tp = [_t] call _fuzzy;
@@ -251,24 +281,23 @@ switch (_mode) do {
                     if ((leader _g) distance2D _t < 900) then { _g reveal [_t, 4]; _g setCombatMode "RED" };
                 };
             };
-            case "back": {
-                // everyone aboard: cross-country and cautious; men still walking to the vehicle: alert
-                if (alive _v && { (units _g) findIf { alive _x && { vehicle _x != _v } } == -1 }) then { call _offRoad } else { _g setCombatMode "YELLOW"; _g setBehaviour "AWARE" };
-                if ((leader _g) distance2D _home < 200) exitWith {
-                    _s set ["phase", "home"]; [_g] call CQ_fnc_clearWaypoints;
-                    ["SABOTAGE: back home (grid %1)", [mapGridPosition _home]] call CQ_fnc_log;
+            // REARM: cross-country to the nearest standing supply depot (else active HQ, else home):
+            // the AA gunner gets his CQ_sabAaMissiles back, then they wait there
+            case "rearm": {
+                private _rp = _s get "rearmPos";
+                private _man = call _aaMan;
+                if (isNull _man) exitWith { call _toWait };
+                if ((leader _g) distance2D _rp < 150) exitWith {
+                    private _mag = _s getOrDefault ["aaMag", "Titan_AA"];
+                    _man addMagazines [_mag, (CQ_sabAaMissiles - (call _aaLeft)) max 0];
+                    ["SABOTAGE: rearmed at grid %1, %2 AA missile(s)", [mapGridPosition _rp, call _aaLeft]] call CQ_fnc_log;
+                    call _toWait;
                 };
-                if (time - (_s get "t0") > 30) then {
-                    _s set ["t0", time];
-                    if (alive _v && { canMove _v }) then {
-                        if ((units _g) findIf { alive _x && { vehicle _x != _v } } > -1) then {
-                            { if (alive _x && { vehicle _x == _x }) then { _x doMove (getPosATL _v) } } forEach units _g;
-                            if ((units _g) findIf { alive _x && { vehicle _x == _x } && { _x distance _v < 30 } } > -1) then { call _mount };
-                        } else { (driver _v) doMove ([_home] call _offRoadPt) };
-                    } else {
-                        [_g] call CQ_fnc_clearWaypoints;
-                        _g move _home;
-                    };
+                if (alive _v && { canMove _v }) then {
+                    if ((units _g) findIf { alive _x && { vehicle _x != _v } } > -1) exitWith { call _mount };
+                    if (time - (_s get "t0") > 20) then { _s set ["t0", time]; call _offRoad; (driver _v) doMove ([_rp] call _offRoadPt) };
+                } else {
+                    if (time - (_s get "t0") > 30) then { _s set ["t0", time]; [_g] call CQ_fnc_clearWaypoints; _g move _rp; _g setBehaviour "AWARE" };
                 };
             };
         };

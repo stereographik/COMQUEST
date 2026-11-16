@@ -209,6 +209,7 @@ if (time >= CQ_magDetectT) then {
                 CQ_magSeen set [_k, [_o, time, time, getPosATL _o, _c, false, [round getDir _o, round speed _o]]];   // + heading and speed when identified
                 CQ_magPubDirty = true;                      // the tablet refreshes on every new identification
                 CQ_netNewIds pushBack [_c, getText (configOf _o >> "displayName"), getPosATL _o];   // NETWORK tab: one CONTACT pin per pass
+                if ((_md getOrDefault ["role", ""]) in ["wasp", "dormant"] && { !(_o getVariable ["CQ_sabotage", false]) }) then { CQ_sabSpot = [_v, time] };   // SABOTAGE hunts the reporting drone
                 // a new vehicle: the drone takes its photo (rendered on every client) for the next report
                 if (CQ_magPhotos && { count CQ_magPhotoPend < CQ_magPhotoMax }) then {
                     CQ_magPhotoN = CQ_magPhotoN + 1;

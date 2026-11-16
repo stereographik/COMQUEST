@@ -336,7 +336,7 @@ if (_needHq && { count _hq == 0 }) then {
         case "sabGo": {
             CQ_magContactMade = true; CQ_sabContactT = -1e6;
             if (isNil "CQ_sab") then { ["tick"] call CQ_fnc_sabotage };
-            CQ_sab set ["started", true]; CQ_sab set ["huntT", -1e6]; CQ_sab set ["nextT", 0];
+            CQ_sab set ["started", true]; CQ_sab set ["huntT", -1e6]; CQ_sab set ["nextT", 0]; CQ_sab set ["force", true];   // waiting team: hunts the nearest WASP/Darter now
             ["tick"] call CQ_fnc_sabotage;
             _msg = format ["SABOTAGE phase %1, %2 team(s) left", CQ_sab get "phase", CQ_sab get "left"];
         };
