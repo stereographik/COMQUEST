@@ -187,8 +187,9 @@ if (!isNil "CQ_tntTestReq") then {
 //              holds the ground contacts MAGPIE saw in the last CQ_magMemory s (CQ_tntUnits, aircraft
 //              excluded), at their live position while seen; a wake point is dropped once such a
 //              contact lies within CQ_magWjZone of it (else it goes after CQ_magMemory s with nothing around)
-//   zones      memories within CQ_magWjZone of each other; the tentacle serves the zone nearest
-//              to the network, the next nearest once that one is gone
+//   zones      memories within CQ_magWjZone of each other; the tentacle serves a zone with live
+//              enemies first (seen in the last CQ_magMemory s), the nearest to the network within each
+//              kind; an empty zone is forgotten CQ_tntEmptyDrop s after a Darter of ours reached it
 //   perimeter  smallest circle around the zone's memories and live contacts + CQ_tntStandoff x
 //              sensor range (centre = their centroid)
 //   chain      root = the linked node nearest to the zone (base, relays, relay vehicle, Sentinels, and
@@ -268,8 +269,35 @@ call {
         { _dn = _dn min (((_x select 0) distance2D _cc) - _rad) } forEach _anch;
         _x set [0, [_cm, _cc, _rad, _dn]];
     } forEach _zones;
-    _zones = [_zones, [], { (_x select 0) select 3 }] call BIS_fnc_sortBy;
-    ((_zones select 0) select 0) params ["_cm", "_cc", "_rad"];
+    // zone choice: a zone with live enemies (seen in the last CQ_magMemory s) beats an empty one,
+    // the nearest to the network first within each kind
+    {
+        private _zi = _x select 0;
+        private _zc = _zi select 1;
+        private _zr = _zi select 2;
+        _zi pushBack ({ _x distance2D _zc < _zr } count _live);
+    } forEach _zones;
+    _zones = [_zones, [], { ((_x select 0) select 3) + ([1e7, 0] select (((_x select 0) select 4) > 0)) }] call BIS_fnc_sortBy;
+    ((_zones select 0) select 0) params ["_cm", "_cc", "_rad", "_dn0", "_zn"];
+    // empty zone: once a Darter of ours is on its perimeter and no live enemy has been seen there for
+    // CQ_tntEmptyDrop s, the zone is forgotten (its wake points and the contacts no longer seen there)
+    private _onSite = (_woke findIf { ((_x get "veh") distance2D _cc) < _rad + 100 }) > -1;
+    private _et = missionNamespace getVariable ["CQ_tntEmpty", []];
+    if (_zn == 0 && { _onSite }) then {
+        if (_et isEqualTo [] || { ((_et select 0) distance2D _cc) > CQ_magWjZone }) then { CQ_tntEmpty = [_cc, time]; _et = CQ_tntEmpty };
+        if (time - (_et select 1) >= CQ_tntEmptyDrop) then {
+            CQ_tntEmpty = [];
+            private _zp = (_zones select 0) select 1;
+            private _nw = 0;
+            { if (((CQ_tntMem get _x) select 0) in _zp) then { CQ_tntMem deleteAt _x; _nw = _nw + 1 } } forEach (keys CQ_tntMem);
+            private _nu = count CQ_tntUnits;
+            CQ_tntUnits = CQ_tntUnits select {
+                private _rec = CQ_magSeen getOrDefault [hashValue _x, []];
+                ((if (_rec isEqualTo []) then { getPosATL _x } else { _rec select 3 }) distance2D _cc) >= _rad
+            };
+            ["MAGPIE: tentacle zone at %1 empty for %2 s, forgotten (%3 wake point(s), %4 contact(s))", [mapGridPosition _cc, CQ_tntEmptyDrop, _nw, _nu - count CQ_tntUnits]] call CQ_fnc_log;
+        };
+    } else { CQ_tntEmpty = [] };
     CQ_tntZoneC = _cc;                                    // WASP bridges toward it (CQ_fnc_magTick)
     // root: the linked node nearest to the zone
     private _root = []; private _rr0 = 0; private _bd = 1e12;

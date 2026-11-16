@@ -1108,6 +1108,7 @@ CQ_magDormantRelay = true;               // woken Darters extend the data link l
 CQ_magWjEvery = 15;                      // (unused since the tentacle) s between two layouts of the woken Darters (stretched tree from the data link toward their zone)
 CQ_magWjZone = 1500;                     // m: woken Darters this close to each other (where they woke) work one zone together
 CQ_tntStandoff = 1;                      // tentacle tip and ring: this x a Darter's sensor range (~600 m) outside the zone's memories and contacts
+CQ_tntEmptyDrop = 60;                    // s: the tentacle on a zone where no live enemy is seen: the zone is forgotten after this
 CQ_tntTestN = 10;                        // debug "Full tentacle": sleeping Darters woken (nearest the outpost, outside the anti-air range)
 CQ_tntTestPin = 600;                     // debug "Full tentacle": s the outpost memory is kept (no contact needed)
 CQ_tntMove = 600;                        // m: the tentacle is recomputed only when the zone's centroid or its root moves more than this
