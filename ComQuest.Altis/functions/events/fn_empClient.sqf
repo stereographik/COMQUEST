@@ -76,7 +76,7 @@ switch (_mode) do {
             };
             // one lightning bolt: jagged path EMP -> object, 3 flickers of glowing dots
             private _bolt = {
-                params ["_from", "_o"];
+                params ["_from", "_o", "_view"];
                 if (isNull _o) exitWith {};
                 private _to = (getPosASL _o) vectorAdd [0, 0, 1.2];
                 if ((player distance2D _o) > _view && { (player distance2D _from) > _view }) exitWith {};
@@ -149,7 +149,7 @@ switch (_mode) do {
                 };
                 // bolts as the wave reaches each hit object
                 {
-                    if ((_x select 1) <= _rad) then { [_from, _x select 0] spawn _bolt; _x set [1, 1e9] };
+                    if ((_x select 1) <= _rad) then { [_from, _x select 0, _view] spawn _bolt; _x set [1, 1e9] };
                 } forEach _queue;
                 sleep 0.05;
             };

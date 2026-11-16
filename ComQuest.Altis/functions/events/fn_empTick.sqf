@@ -82,7 +82,7 @@ private _ss = floor ((_left max 0) mod 60);
 {
     if (_left <= _x && { !(_x in (_s get "warned")) }) then {
         (_s get "warned") pushBack _x;
-        ["EMP device", format ["%1 min left before the EMP goes off (grid %2).", round (_x / 60), mapGridPosition (getMarkerPos "cq_emp")]] call CQ_fnc_announce;
+        if (_left > _x - 30) then { ["EMP device", format ["%1 min left before the EMP goes off (grid %2).", round (_x / 60), mapGridPosition (getMarkerPos "cq_emp")]] call CQ_fnc_announce };   // skipped warnings stay silent (timer cut)
     };
 } forEach [600, 300, 60];
 if (_left <= 0) then { ["loss", []] call CQ_fnc_empBlast };
