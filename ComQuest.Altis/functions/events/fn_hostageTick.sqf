@@ -27,6 +27,7 @@ if (_bu > 0 && { time >= _bu }) then {
 private _active = !isNil "CQ_hstState" && { (CQ_hstState get "phase") != "done" };
 if (!_active) exitWith {
     if !(missionNamespace getVariable ["CQ_missionStarted", false]) exitWith {};
+    if ((missionNamespace getVariable ["CQ_empPhase", ""]) == "armed") exitWith {};   // never during the EMP countdown
     if (time - CQ_hstLastT < CQ_crashCooldown) exitWith {};
     if (time - (missionNamespace getVariable ["CQ_crashLastT", -1e6]) < CQ_hstGap) exitWith {};
     if (!isNil "CQ_crashState" && { !(CQ_crashState get "secured") } && { time - (CQ_crashState get "t0") < CQ_crashCooldown }) exitWith {};

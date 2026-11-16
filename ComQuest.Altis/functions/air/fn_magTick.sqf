@@ -58,7 +58,7 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         ["MAGPIE: %1 lost at %2, a dormant point nearby replaces it in %3 s", [_m get "name", mapGridPosition _v, CQ_magDormantReplace]] call CQ_fnc_log;
         ["loss", format ["%1 lost at %2", _m get "name", mapGridPosition _v]] call CQ_fnc_netEvent;
     };
-    if ((_m getOrDefault ["role", ""]) == "dormant") then { if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 }; continue };
+    if ((_m getOrDefault ["role", ""]) == "dormant") then { if (alive _v && { fuel _v < 0.9 } && { !(_v getVariable ["CQ_empFried", false]) }) then { _v setFuel 1 }; continue };
     if (!isNull _v && { !alive _v } && { !(_m get "lost") }) then {
         _m set ["lost", true];
         _m set ["phase", "none"];
@@ -111,7 +111,7 @@ private _fixed = { !((_this get "cls") == "B_UAV_01_F" && { (_this getOrDefault 
         publicVariable "CQ_magVehs";
         ["MAGPIE: %1 (%2) %3", [_m get "name", _m get "cls", if (_quad) then { format ["on pad %1 of the UAV field", _m get "pad"] } else { "at the start of the runway" }]] call CQ_fnc_log;
     };
-    if (alive _v && { fuel _v < 0.9 }) then { _v setFuel 1 };
+    if (alive _v && { fuel _v < 0.9 } && { !(_v getVariable ["CQ_empFried", false]) }) then { _v setFuel 1 };
     // anti-stuck: on the ground and not moving for CQ_magStuckTime s -> a gentle push forward and a
     // fresh waypoint straight ahead (it may roll on the grass, that's fine)
     if (alive _v && { (_m getOrDefault ["phase", ""]) == "rolling" } && { !(_v isKindOf "Helicopter") } && { ((getPosATL _v) select 2) < 5 }) then {

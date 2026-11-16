@@ -89,6 +89,7 @@ player addAction ["<t color='#918C3B'>Unload supply crate</t>",
 
 // Engineers: short sandbag walls in the field (CQ_fnc_sandbag), recalled from the base
 // squad leader: call for help (blue flare up, COMHAT message, medic marker for CQ_helpLife s) / cancel it
+["setup"] call CQ_fnc_empClient;   // EMP: defuse restarts when hit, "Program EMP target"
 player addAction ["<t color='#3B6FD8'>Call for help</t>", { ["call", [player]] remoteExec ["CQ_fnc_helpCall", 2] }, nil, 0.9, false, true, "",
     "alive _this && { leader group _this == _this } && { _this distance2D CQ_basePos > CQ_baseRadius }"];
 player addAction ["<t color='#3B6FD8'>Cancel help call</t>", { ["cancel", [player]] remoteExec ["CQ_fnc_helpCall", 2] }, nil, 0.85, false, true, "",

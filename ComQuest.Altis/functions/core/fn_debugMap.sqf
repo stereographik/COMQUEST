@@ -4,6 +4,10 @@
       CQ_dbgShowEnemy   every enemy unit and crewed vehicle (CSAT red, guerillas green)
       CQ_dbgShowFriend  every friendly unit and crewed vehicle (blue), civilians purple
       CQ_dbgShowTnt     the woken Darters' tentacle: chain, ring slots, zone perimeter (purple)
+      CQ_dbgShowEmp     the EMP event (CQ_empDbg from CQ_fnc_empTick, orange): the real device spot
+                        and its 5 km blast radius, the search circle, guards left, timer; then the
+                        Stomper, its spawn site, a line to its current goal, the target and its
+                        400 m strike radius
       CQ_dbgShowHq      every enemy HQ site with its number and state (list sent by the server
                         with each panel refresh, CQ_dbgHqList)
     Group leaders show their callsign; CSAT groups and vehicles also show role and ammo %.
@@ -27,6 +31,30 @@ CQ_dbgMapHooked = true;
             for "_i" from 1 to (count _ch - 1) do { _map drawLine [_ch select (_i - 1), _ch select _i, [0.7, 0.3, 1, 1]] };
             { _map drawIcon ["\A3\ui_f\data\map\markers\military\dot_CA.paa", [0.7, 0.3, 1, 1], _x, 14, 14, 0, [" C" + str _forEachIndex, " ROOT"] select (_forEachIndex == 0), 1, 0.03, "PuristaMedium", "right"] } forEach _ch;
             { _map drawIcon ["\A3\ui_f\data\map\markers\military\circle_CA.paa", [0.7, 0.3, 1, 1], _x, 14, 14, 0, " R" + str (_forEachIndex + 1), 1, 0.03, "PuristaMedium", "right"] } forEach _rg;
+        };
+        // the EMP event (CQ_fnc_empTick publishes CQ_empDbg every 2 s while it runs)
+        if (missionNamespace getVariable ["CQ_dbgShowEmp", false]) then {
+            (missionNamespace getVariable ["CQ_empDbg", []]) params [["_ph", ""], ["_dp", []], ["_fd", false], ["_lt", 0], ["_sc", []], ["_up", []], ["_gl", []], ["_tg", []], ["_ld", false], ["_sp", []], ["_gd", 0], ["_nu", 0]];
+            if (_ph != "") then {
+                private _o = [1, 0.55, 0.1, 1];
+                if (_ph == "armed") then {
+                    _map drawEllipse [_dp, CQ_empBlastR, CQ_empBlastR, 0, [1, 0.55, 0.1, 0.35], ""];
+                    if (_sc isNotEqualTo [] && { !_fd }) then { _map drawEllipse [_sc, CQ_empSearchR, CQ_empSearchR, 0, _o, ""] };
+                };
+                if (_dp isNotEqualTo [] && { !_ld }) then {
+                    _map drawIcon ["\A3\ui_f\data\map\markers\military\destroy_CA.paa", _o, _dp, 22, 22, 0,
+                        format [" EMP %1 | %2 | found %3 | guards %4", toUpper _ph, if (_ph == "armed") then { format ["%1:%2", floor ((_lt max 0) / 60), floor ((_lt max 0) mod 60)] } else { "" }, _fd, _gd], 1, 0.035, "PuristaMedium", "right"];
+                };
+                if (_sp isNotEqualTo []) then { _map drawIcon ["\A3\ui_f\data\map\markers\military\start_CA.paa", _o, _sp, 18, 18, 0, " Stomper spawn", 1, 0.03, "PuristaMedium", "right"] };
+                if (_up isNotEqualTo []) then {
+                    _map drawIcon ["\A3\ui_f\data\map\markers\nato\b_uav.paa", _o, _up, 24, 24, 0, format [" STOMPER %1 | nudges %2", ["to the device", "loaded"] select _ld, _nu], 1, 0.035, "PuristaMedium", "right"];
+                    if (_gl isNotEqualTo []) then { _map drawLine [_up, _gl, _o] };
+                };
+                if (_tg isNotEqualTo []) then {
+                    _map drawEllipse [_tg, CQ_empHitR, CQ_empHitR, 0, _o, ""];
+                    _map drawIcon ["\A3\ui_f\data\map\markers\military\objective_CA.paa", _o, _tg, 22, 22, 0, " EMP TARGET", 1, 0.035, "PuristaMedium", "right"];
+                };
+            };
         };
         if (!CQ_dbgShowEnemy && { !CQ_dbgShowFriend } && { !CQ_dbgShowHq }) exitWith {};
         private _col = {

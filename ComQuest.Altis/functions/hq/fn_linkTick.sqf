@@ -162,7 +162,7 @@ private _drones = [];
 {
     // ours, crewed or not (a parked empty vehicle relays until it despawns or blows up): a BLUFOR
     // model, or anything with our people inside
-    if (alive _x && { _x != _rv } && { !(_x in _drones) } && { !(_x isKindOf "StaticWeapon") } && { !(_x isKindOf "ParachuteBase") }
+    if (alive _x && { _x != _rv } && { !(_x in _drones) } && { !(_x isKindOf "StaticWeapon") } && { !(_x isKindOf "ParachuteBase") } && { !(_x getVariable ["CQ_noRelay", false]) }
         && { getNumber (configOf _x >> "side") == 1 || { (crew _x) isNotEqualTo [] && { side group effectiveCommander _x == west } } }) then {
         _nodes pushBack [getPosATL _x, CQ_linkVehR, _x, "v"];
     };

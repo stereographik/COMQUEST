@@ -260,6 +260,46 @@ CQ_crashRoam = 600;                      // s the dropped vehicle roams around t
 CQ_crashRoamR = [150, 900];              // m: roaming radius, close -> large -> close
 CQ_crashDecrypt = 720;                   // s of decryption (12 min)
 
+// --- EMP event (CQ_fnc_empTick / empStart / empDefuse / empBlast / empStomper / empClient) -------
+// Once per game, CSAT's answer to its first loss (an HQ's radio tower destroyed or a commander
+// killed; a captured commander does not count): an EMP device next to a compound where the tentacle is
+// aiming (CQ_tntZoneC, CQ_empNear),
+// next to a table with a UAV terminal, defended (CQ_fnc_eventHold + armed pickup), timer
+// CQ_empTimer. Engineers defuse it (CQ_empDefuse s; anyone CQ_empDefuseAny s when no engineer is
+// alive). Lost: every drone of ours within CQ_empBlastR m falls dead (no explosion), our vehicles' engines dead.
+// Won: the terminal on the table becomes lootable (a targeting token, it connects to nothing); an
+// indestructible Stomper (never a data link relay) spawns at the nearest military site outside the
+// war zone, drives to the device, loads it on its roof (within CQ_empLoadR m), then drives to the
+// target the terminal's holder programmed (once, final) and goes off within CQ_empStrikeR m:
+// enemy vehicles (not static guns) within CQ_empHitR m dead, the HQs there off the radio net CQ_empSilence s.
+CQ_emp = true;
+CQ_empMinT = 1200;                       // s: never before 20 min
+CQ_empTimer = 1500;                      // s: 25 min to defuse
+CQ_empNear = [200, 1200];                // m from where the tentacle is aiming (CQ_tntZoneC, the Darters' target zone)
+CQ_empSiteDist = [2000, 4000];           // m from the base (when no Darter is awake)
+CQ_empDensR = 1500;                      // m: the device goes to the tightest group of awake Darters (most of them within this of each other)
+CQ_empDensNear = [0, 800];               // m from that group's centre for the building (twice as far when nothing fits)
+CQ_empHqGap = 800;                       // m kept from enemy HQs
+CQ_empSearchR = 400;                     // m: search circle radius (800 m wide), off-centre
+CQ_empDefuse = 30;                       // s: engineer hold
+CQ_empDefuseAny = 90;                    // s: anyone, only when no engineer is alive
+CQ_empPtsDefuse = 150;                   // points to the defuser
+CQ_empPtsSquad = 50;                     // ...and to each member of his squad
+CQ_empPtsStrike = 100;                   // to the soldier who programmed the strike
+CQ_empBlastR = 5000;                     // m: the device goes off: our drones and vehicles within
+CQ_empDevice = ["Land_Device_assembled_F", "Land_SatelliteAntenna_01_F", "Land_TTowerSmall_1_F"];   // first vanilla one
+CQ_empTable = "Land_CampingTable_small_F";
+CQ_empStomper = "B_UGV_01_F";
+CQ_empCampTypes = ["Land_Cargo_HQ_V1_F", "Land_Cargo_HQ_V2_F", "Land_Cargo_HQ_V3_F", "Land_Cargo_Tower_V1_F", "Land_Cargo_Tower_V2_F", "Land_Cargo_Tower_V3_F", "Land_Cargo_Patrol_V1_F", "Land_Cargo_Patrol_V2_F", "Land_Cargo_Patrol_V3_F", "Land_Bunker_F", "Land_BagBunker_Large_F"];
+CQ_empWarZone = 1500;                    // m: no Stomper spawn this close to an enemy HQ, the device or enemy troops
+CQ_empLoadR = 10;                        // m: the Stomper loads the device this close (it stops ~9 m short of its goal)
+CQ_empStrikeR = 50;                      // m: ...and goes off this close to its target
+CQ_empStuck = 60;                        // s without moving: nudged CQ_empNudge m along its route
+CQ_empNudge = 6;
+CQ_empWaveTime = [5, 2];                 // s for the shockwave to reach its radius: [EMP on us (CQ_empBlastR), our captured EMP (CQ_empHitR)]
+CQ_empHitR = 400;                        // m: captured EMP at its target
+CQ_empSilence = 900;                     // s: the enemy HQs hit stay off the radio net (no waves, no help, nobody hears them)
+
 // --- Corridor outpost (CQ_fnc_outpostBuild / CQ_fnc_outpostTick), first HQ only ----------------
 // With the first HQ's insertion the enemy holds the land corridor between the coast (CQ_coastPoint)
 // and that HQ: on its highest open spot that best sees the flight corridor (or an Altis military
@@ -1070,6 +1110,10 @@ CQ_magDormantRelay = true;               // woken Darters extend the data link l
 CQ_magWjEvery = 15;                      // (unused since the tentacle) s between two layouts of the woken Darters (stretched tree from the data link toward their zone)
 CQ_magWjZone = 1500;                     // m: woken Darters this close to each other (where they woke) work one zone together
 CQ_tntStandoff = 1;                      // tentacle tip and ring: this x a Darter's sensor range (~600 m) outside the zone's memories and contacts
+CQ_tntEmptyDrop = 60;                    // s: the tentacle on a zone where no live enemy is seen: the zone is forgotten after this
+CQ_tntWaveAng = 10;                      // deg: no memory near a known HQ, the tentacle sways this much left and right toward the farthest memory
+CQ_tntWaveT = 240;                       // s for one full sway (slow and gentle)
+CQ_tntWaveStep = 20;                     // s between two re-plans of the swaying chain
 CQ_tntTestN = 10;                        // debug "Full tentacle": sleeping Darters woken (nearest the outpost, outside the anti-air range)
 CQ_tntTestPin = 600;                     // debug "Full tentacle": s the outpost memory is kept (no contact needed)
 CQ_tntMove = 600;                        // m: the tentacle is recomputed only when the zone's centroid or its root moves more than this

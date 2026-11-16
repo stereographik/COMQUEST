@@ -36,7 +36,10 @@ if (_changed) then {
     _lvl = _want;
     _hq set ["nerv", _lvl];
     ["HQ #%1 nervousness: %2", [_id, CQ_nervNames select _lvl]] call CQ_fnc_log;
-    if (_lvl >= 3 && { !(_hq getOrDefault ["huntCalled", false]) }) then { _hq set ["huntCalled", true]; [_hq] spawn CQ_fnc_huntLaunch };
+    // hunters: called by radio; an HQ silenced by our EMP (CQ_fnc_empBlast) cannot call them
+    if (_lvl >= 3 && { !(_hq getOrDefault ["huntCalled", false]) }) then {
+        if ((_hq getOrDefault ["empUntil", -1]) > time) then { ["HQ #%1: no hunters, its radio is silenced by our EMP", [_id]] call CQ_fnc_log } else { _hq set ["huntCalled", true]; [_hq] spawn CQ_fnc_huntLaunch };
+    };
 };
 
 if !(_hq getOrDefault ["nervInit", false]) then { _hq set ["nervInit", true]; _changed = true };   // first pass: patrols take the CALM loops

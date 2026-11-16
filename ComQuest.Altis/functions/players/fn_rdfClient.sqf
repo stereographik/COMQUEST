@@ -69,6 +69,24 @@ _alTx ctrlSetText "ENEMY SECURING DEVICE";
 private _al = [_alBg, _alIc, _alTx];
 { _x ctrlShow false } forEach _al;
 private _alShown = false;
+// EMP event: countdown in the same row while the device is armed (CQ_empPhase, CQ_empHudEnd from CQ_fnc_empTick)
+private _emBg = ["RscText", 0, _H + 4, _W, 24] call _mk;
+_emBg ctrlSetBackgroundColor [0.098, 0.094, 0.07, 0.75];
+private _emIc = ["RscPicture", 8, _H + 6, 20, 20] call _mk;
+_emIc ctrlSetText "\A3\ui_f\data\igui\cfg\simpleTasks\types\danger_ca.paa";
+_emIc ctrlSetTextColor [0.729, 0.224, 0.173, 1];
+private _emTx = ["RscText", 32, _H + 6, 110, 20] call _mk;
+_emTx ctrlSetFont "PuristaMedium";
+_emTx ctrlSetFontHeight (14 * _ph);
+_emTx ctrlSetTextColor [0.729, 0.224, 0.173, 1];
+_emTx ctrlSetText "EMP DEVICE";
+private _emTm = ["RscText", _W - 80, _H + 5, 72, 22] call _mk;
+_emTm ctrlSetFont "PuristaMedium";
+_emTm ctrlSetFontHeight (17 * _ph);
+_emTm ctrlSetTextColor [0.949, 0.945, 0.875, 1];
+private _em = [_emBg, _emIc, _emTx, _emTm];
+{ _x ctrlShow false } forEach _em;
+private _emShown = false;
 
 private _shown = -1;
 private _disp = 0;
@@ -94,6 +112,15 @@ while { true } do {
     };
     private _alOn = _has && { !visibleMap } && { missionNamespace getVariable ["CQ_crashAlarm", false] };
     if (_alOn != _alShown) then { _alShown = _alOn; { _x ctrlShow _alOn } forEach _al };
+    private _emOn = _has && { !visibleMap } && { (missionNamespace getVariable ["CQ_empPhase", ""]) == "armed" } && { !isNil "CQ_empHudEnd" } && { isNull curatorCamera } && { isNull findDisplay 49 };
+    if (_emOn != _emShown) then { _emShown = _emOn; { _x ctrlShow _emOn } forEach _em };
+    if (_emOn) then {
+        private _eL = (CQ_empHudEnd - ([time, serverTime] select isMultiplayer)) max 0;
+        private _eS = floor (_eL mod 60);
+        _emTm ctrlSetText format ["%1:%2%3", floor (_eL / 60), ["", "0"] select (_eS < 10), _eS];
+        // last minute: the time turns red and blinks
+        _emTm ctrlSetTextColor ([[0.949, 0.945, 0.875, 1], [0.729, 0.224, 0.173, [1, 0.35] select ((floor (time * 2.5)) mod 2 == 0)]] select (_eL < 60));
+    };
     if (!_on) then { continue };
 
     // corridor outpost jammer: noise instead of a reading near it

@@ -320,9 +320,37 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "%1 has the crate. The techs are on it... we're in their network. MAGPIE sees everything for a while."]],
         [["CROSSROAD", "Crate secured by %1. Decrypting now: every HQ and tower they have is on your map."]]
     ]],
+    // EMP event: [search grid, minutes]
+    ["empStart", [
+        [["COMHAT", "...the device is armed. When it goes, their drones fall and their trucks die..."], ["CROSSROAD", "All stations: CSAT has planted an EMP device around grid %1. %2 minutes on the clock. Find it, and get an engineer on it."]],
+        [["CROSSROAD", "Priority: an EMP device somewhere around grid %1, %2 minutes before it blows. It will fry every drone and engine we have for five klicks. Engineers, you're up."]]
+    ]],
+    ["empFound", [
+        [["CROSSROAD", "Device located, grid %1. Exact position on your maps. It's guarded."]]
+    ]],
+    // [name]
+    ["empDefused", [
+        [["CROSSROAD", "%1 defused it. Nice hands. Their terminal is on the table: whoever takes it can program where that thing goes off next."]],
+        [["COMHAT", "...the device is lost..."], ["CROSSROAD", "Defused by %1. We're keeping it: grab their terminal, a Stomper is on its way to load the device."]]
+    ]],
+    ["empBlown", [
+        [["CROSSROAD", "The device went off. Every drone in five klicks is down, engines are dead. Engineers, get our wheels turning again."]]
+    ]],
+    // [grid]
+    ["empLoaded", [
+        [["CROSSROAD", "The Stomper has the device on its roof, grid %1."]]
+    ]],
+    // [name, grid]
+    ["empProgrammed", [
+        [["CROSSROAD", "%1 programmed the device: target grid %2. The Stomper will take it there on its own."]]
+    ]],
+    // [grid]
+    ["empStrike", [
+        [["COMHAT", "...all vehicles dead, the radio is gone, we..."], ["CROSSROAD", "EMP delivered at grid %1. Their vehicles and guns there are scrap, and that HQ is off their radio for fifteen minutes."]]
+    ]],
     // hostage event: [grid]
     ["hstStart", [
-        [["CROSSROAD", "All stations: CSAT is holding one of our radio technicians in a house at grid %1. Five guards. He has our firmware in his head. Bring him home."]],
+        [["CROSSROAD", "All stations: CSAT is holding one of our radio technicians in a house at grid %1. A squad of guards and an armed pickup. He has our firmware in his head. Bring him home."]],
         [["COMHAT", "...the civilian technician is secured in the house, awaiting transport..."], ["CROSSROAD", "That's our radio tech they're talking about. Grid %1, marked on your maps. Get him out."]]
     ]],
     // [name, lz grid]
@@ -498,7 +526,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "hstStart", "hstFirmware", "hstHeliLost", "hstAboard", "hstHome", "hstDead", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen", "towerHacked"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "empStart", "empFound", "empDefused", "empBlown", "empLoaded", "empProgrammed", "empStrike", "hstStart", "hstFirmware", "hstHeliLost", "hstAboard", "hstHome", "hstDead", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen", "towerHacked"];
 
 CQ_uiCardX = 19;                          // px from the screen's left edge to the card (its border then lines up with the vehicle panel, ~16 px)
 CQ_uiCardY = 300;                         // px from the top: first card (below the map screen's menu)
