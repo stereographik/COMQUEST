@@ -262,8 +262,8 @@ CQ_crashDecrypt = 720;                   // s of decryption (12 min)
 
 // --- EMP event (CQ_fnc_empTick / empStart / empDefuse / empBlast / empStomper / empClient) -------
 // Once per game, CSAT's answer to its first loss (an HQ's radio tower destroyed or a commander
-// killed; a captured commander does not count): an EMP device next to a compound near the tentacle's
-// head (relay vehicle and WASP, CQ_empNear),
+// killed; a captured commander does not count): an EMP device next to a compound where the tentacle is
+// aiming (CQ_tntZoneC, CQ_empNear),
 // next to a table with a UAV terminal, defended (CQ_fnc_eventHold + armed pickup), timer
 // CQ_empTimer. Engineers defuse it (CQ_empDefuse s; anyone CQ_empDefuseAny s when no engineer is
 // alive). Lost: every drone of ours within CQ_empBlastR m destroyed, our vehicles' engines dead.
@@ -275,8 +275,8 @@ CQ_crashDecrypt = 720;                   // s of decryption (12 min)
 CQ_emp = true;
 CQ_empMinT = 1200;                       // s: never before 20 min
 CQ_empTimer = 1500;                      // s: 25 min to defuse
-CQ_empNear = [500, 1500];                // m from the tentacle's head (middle of the relay vehicle and WASP): the device cuts it
-CQ_empSiteDist = [2000, 4000];           // m from the base (when neither the relay vehicle nor WASP is out)
+CQ_empNear = [200, 1200];                // m from where the tentacle is aiming (CQ_tntZoneC, the Darters' target zone)
+CQ_empSiteDist = [2000, 4000];           // m from the base (when there is no tentacle)
 CQ_empHqGap = 800;                       // m kept from enemy HQs
 CQ_empSearchR = 400;                     // m: search circle radius (800 m wide), off-centre
 CQ_empDefuse = 30;                       // s: engineer hold

@@ -1,8 +1,8 @@
 /*
     CQ_fnc_empStart  (server)
     private _ok = call CQ_fnc_empStart;
-    Plants the EMP device (see CQ_fnc_empTick): next to a large building CQ_empNear m from the
-    tentacle's head (the relay vehicle and WASP; CQ_empSiteDist m from the base without them,
+    Plants the EMP device (see CQ_fnc_empTick): next to a large building CQ_empNear m from where
+    the tentacle is aiming (CQ_tntZoneC; CQ_empSiteDist m from the base without a tentacle,
     CQ_empHqGap m clear of enemy HQs), on a spot a Stomper can reach, preferring the ones
     closest to our vehicles and drones (our network). A table beside it with a UAV terminal on it
     (a prop until the defuse), CQ_crashSurvivors holding a ring around it (CQ_fnc_eventHold), a
@@ -13,21 +13,15 @@
 */
 if (!isServer) exitWith { false };
 
-// ---- site: aimed at the tentacle's head (the relay vehicle and WASP: their middle), on a big
-// building CQ_empNear m from it (twice as far when nothing fits), away from the enemy HQs; with
-// neither of them out, CQ_empSiteDist m from the base. Closest to our network first.
+// ---- site: where the tentacle is aiming (CQ_tntZoneC, the zone the Darters' chain grows toward:
+// CQ_fnc_magDormant), on a big building CQ_empNear m from it (twice as far when nothing fits),
+// away from the enemy HQs; with no tentacle, CQ_empSiteDist m from the base. Closest to our
+// network first.
 private _hqPos = (values CQ_hqs) select { (_x get "state") in CQ_activeStates } apply { _x get "pos" };
-private _heads = [missionNamespace getVariable ["CQ_linkRelayVeh", objNull]]
-    + (((missionNamespace getVariable ["CQ_mag", []]) select { (_x getOrDefault ["role", ""]) == "wasp" }) apply { _x get "veh" });
-_heads = _heads select { alive _x };
+private _aim = missionNamespace getVariable ["CQ_tntZoneC", []];
 private _ctr = CQ_basePos;
 private _ring = CQ_empSiteDist;
-if (_heads isNotEqualTo []) then {
-    private _sx = 0; private _sy = 0;
-    { _sx = _sx + ((getPosATL _x) select 0); _sy = _sy + ((getPosATL _x) select 1) } forEach _heads;
-    _ctr = [_sx / count _heads, _sy / count _heads, 0];
-    _ring = CQ_empNear;
-};
+if (_aim isNotEqualTo []) then { _ctr = [_aim select 0, _aim select 1, 0]; _ring = CQ_empNear };
 private _find = {
     params ["_r0", "_r1"];
     (nearestObjects [_ctr, ["House", "Building"], _r1]) select {
@@ -35,11 +29,10 @@ private _find = {
         private _dd = _b distance2D _ctr;
         _dd >= _r0 && { count (_b buildingPos -1) >= 4 } && { !surfaceIsWater getPos _b }
         && { (_hqPos findIf { _x distance2D _b < CQ_empHqGap }) == -1 }
-        && { (_heads findIf { _x distance2D _b < (CQ_empNear select 0) }) == -1 }
     }
 };
 private _cands = _ring call _find;
-if (_cands isEqualTo [] && { _heads isNotEqualTo [] }) then { _cands = [_ring select 0, (_ring select 1) * 2] call _find };
+if (_cands isEqualTo [] && { _aim isNotEqualTo [] }) then { _cands = [_ring select 0, (_ring select 1) * 2] call _find };
 if (_cands isEqualTo []) exitWith { ["EMP event: no building found %1-%2 m from %3", [_ring select 0, _ring select 1, mapGridPosition _ctr]] call CQ_fnc_log; false };
 private _ours = (vehicles select { alive _x && { getNumber (configOf _x >> "side") == 1 } && { !(_x isKindOf "ParachuteBase") } }) + (((missionNamespace getVariable ["CQ_mag", []]) apply { _x get "veh" }) select { alive _x });
 if (_ours isEqualTo []) then { _ours = [CQ_basePos] };
@@ -123,7 +116,7 @@ CQ_empEndT = time + CQ_empTimer; publicVariable "CQ_empEndT";
 CQ_empKey = format ["emp%1", round time];
 ["EMP event: device %1 at %2 (next to %3, %4 m from the base, %5 guards, armed pickup %6), goes off in %7 s",
     [_dcls, mapGridPosition _p, typeOf _b, round (_p distance2D CQ_basePos), count units _g, ["none", typeOf _tech] select !isNull _tech, CQ_empTimer]] call CQ_fnc_log;
-["EMP event: aimed at the tentacle's head %1 (%2 of relay vehicle / WASP out), device %3 m from it", [mapGridPosition _ctr, count _heads, round (_p distance2D _ctr)]] call CQ_fnc_log;
+["EMP event: placed %1, device %2 m from %3", [["by the base (no tentacle)", "where the tentacle is aiming"] select (_aim isNotEqualTo []), round (_p distance2D _ctr), mapGridPosition _ctr]] call CQ_fnc_log;
 ["EMP device", format ["CSAT planted an EMP device around grid %1. %2 min to defuse it (engineers).", mapGridPosition _c, round (CQ_empTimer / 60)]] call CQ_fnc_announce;
 ["empStart", [mapGridPosition _c, round (CQ_empTimer / 60)]] call CQ_fnc_say;
 [CQ_empKey, 1, format ["EMP device around grid %1", mapGridPosition _c], "armed"] call CQ_fnc_opSide;
