@@ -266,7 +266,7 @@ CQ_crashDecrypt = 720;                   // s of decryption (12 min)
 // aiming (CQ_tntZoneC, CQ_empNear),
 // next to a table with a UAV terminal, defended (CQ_fnc_eventHold + armed pickup), timer
 // CQ_empTimer. Engineers defuse it (CQ_empDefuse s; anyone CQ_empDefuseAny s when no engineer is
-// alive). Lost: every drone of ours within CQ_empBlastR m destroyed, our vehicles' engines dead.
+// alive). Lost: every drone of ours within CQ_empBlastR m falls dead (no explosion), our vehicles' engines dead.
 // Won: the terminal on the table becomes lootable (a targeting token, it connects to nothing); an
 // indestructible Stomper (never a data link relay) spawns at the nearest military site outside the
 // war zone, drives to the device, loads it on its roof (within CQ_empLoadR m), then drives to the

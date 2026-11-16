@@ -2,11 +2,11 @@
     CQ_fnc_empBlast  (server)
     ["loss", []] call CQ_fnc_empBlast;          the planted device went off (timer)
     ["strike", [_pos, _who]] call CQ_fnc_empBlast;   our captured device went off on the Stomper
-    loss    every drone of ours within CQ_empBlastR m of the device destroyed (MAGPIE replaces
-            them as usual), our vehicles there: engine dead (an engineer's toolkit repairs it),
+    loss    every drone of ours within CQ_empBlastR m loses engine and fuel (fliers fall; once
+            down it is written off without an explosion, MAGPIE replaces it), our vehicles there: engine dead (an engineer's toolkit repairs it),
             lights off. Nobody hurt. The device and its guards go (CQ_fnc_eventCleanup).
     strike  within CQ_empHitR m: enemy vehicles (engine, turret, gun dead, no fuel) and statics
-            (destroyed) for good; the enemy HQs there off the radio net CQ_empSilence s (no waves,
+            (turret and gun jammed, no ammo, locked) for good; the enemy HQs there off the radio net CQ_empSilence s (no waves,
             nobody hears them: CQ_fnc_netTick). CQ_empPtsStrike points to _who.
 */
 params ["_mode", ["_args", []]];
@@ -15,7 +15,8 @@ private _s = CQ_empState;
 // engine (and gun) dead: commands with local arguments go to the vehicle's owner
 private _kill = {
     params ["_v", ["_guns", false]];
-    { [_v, [_x, 1]] remoteExec ["setHitPointDamage", _v] } forEach (["HitEngine"] + (if (_guns) then { ["HitTurret", "HitGun"] } else { [] }));
+    // 0.95: dead until repaired, but short of "destroyed" (a destroyed engine can set the vehicle on fire)
+    { [_v, [_x, 0.95]] remoteExec ["setHitPointDamage", _v] } forEach (["HitEngine"] + (if (_guns) then { ["HitTurret", "HitGun"] } else { [] }));
     if (_guns) then { [_v, 0] remoteExec ["setFuel", _v] };
     [_v, false] remoteExec ["engineOn", _v];
     [_v, false] remoteExec ["setPilotLight", _v];
@@ -34,10 +35,29 @@ private _wave = {
             waitUntil { time - _t0 >= (_o distance2D _p) / _spd || { isNull _o } };
             if (!isNull _o && { alive _o }) then {
                 switch (_k) do {
-                    case "drone": { _o setDamage 1 };
+                    case "drone": {
+                        // no explosion: engine and fuel gone, a flier falls and crashes; once it is
+                        // down (or after 90 s) it is written off quietly, so MAGPIE replaces it
+                        _o setVariable ["CQ_empFried", true, true];
+                        [_o, ["HitEngine", 1]] remoteExec ["setHitPointDamage", _o];
+                        [_o, 0] remoteExec ["setFuel", _o];
+                        [_o, false] remoteExec ["engineOn", _o];
+                        [_o] spawn {
+                            params ["_o"];
+                            private _t = time + 90;
+                            sleep 3;
+                            waitUntil { sleep 1; !alive _o || { time > _t } || { ((getPosATL _o) select 2) < 2 && { speed _o < 3 } } };
+                            if (alive _o) then { _o setDamage [1, false] };
+                        };
+                    };
                     case "veh": { [_o] call _kill };
                     case "enemy": { [_o, true] call _kill };
-                    case "static": { _o setDamage 1 };
+                    case "static": {
+                        // no explosion: turret and gun jammed, no ammo, nobody can use it again
+                        { [_o, [_x, 1]] remoteExec ["setHitPointDamage", _o] } forEach ["HitTurret", "HitGun"];
+                        [_o, 0] remoteExec ["setVehicleAmmo", _o];
+                        [_o, 2] remoteExec ["lock", _o];
+                    };
                 };
             };
         } forEach _hits;
