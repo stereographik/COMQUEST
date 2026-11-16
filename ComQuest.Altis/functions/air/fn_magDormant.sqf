@@ -182,16 +182,11 @@ if (!isNil "CQ_tntTestReq") then {
 
 // ---- TENTACLE (every 3 s, recomputed only when something changed): the woken Darters reach out
 // from the data link toward the fight, then encircle it.
-//   memory     starts with the wake points: a woken Darter connecting for the first time sends where it
-//              woke (CQ_tntMem: [pos, lastT]). Then at every report check (2 min, CQ_fnc_magTick) it
-//              holds the ground contacts MAGPIE saw in the last CQ_magMemory s (CQ_tntUnits, aircraft
-//              excluded), at their live position while seen; a wake point is dropped once such a
-//              contact lies within CQ_magWjZone of it (else it goes after CQ_magMemory s with nothing around)
-//   zones      memories within CQ_magWjZone of each other; the tentacle serves a zone with live
-//              enemies first (seen in the last CQ_magMemory s), the nearest to the network within each
-//              kind; an empty zone is forgotten CQ_tntEmptyDrop s after a Darter of ours reached it
-//   perimeter  smallest circle around the zone's memories and live contacts + CQ_tntStandoff x
-//              sensor range (centre = their centroid)
+//   memory     a woken Darter connecting for the first time still shares where it woke (CQ_tntMem,
+//              network log), but memories no longer steer the tentacle
+//   target     every active CSAT HQ and every spotted HQ objective (CQ_spotted) still standing: the
+//              one nearest our linked network. None: fully extended toward the carrier (no ring)
+//   perimeter  CQ_tntStandoff x sensor range around the target
 //   chain      root = the linked node nearest to the zone (base, relays, relay vehicle, Sentinels, and
 //              WASP once it bridges toward the zone: CQ_fnc_magTick turns it there after a first memory), first hop CQ_linkReach x its range, then CQ_lrHop each: straight
 //              toward the zone's centroid, the tip stopping on the perimeter; a link slot within
@@ -217,110 +212,43 @@ call {
         ["MAGPIE: %1 connected, sends its memory (woke at %2)", [_nm, mapGridPosition _wp]] call CQ_fnc_log;
         ["memory", format ["%1 sends its memory (woke at %2)", _nm, mapGridPosition _wp]] call CQ_fnc_netEvent;
     } forEach _woke;
-    // only HQ zones count: memories and contacts within CQ_magAoRange of an enemy HQ we know (MAGPIE
-    // saw it, or a captured commander revealed it); sabotage teams never count. So the side events
-    // and the sabotage routes do not pull the tentacle (the debug "Full tentacle" test is exempt)
+    // TARGETS: every active CSAT HQ (from the moment its site is set), and every HQ objective a drone
+    // has spotted (CQ_spotted: on the players' map) while it stands; the one nearest our linked
+    // network wins. None: the chain stretches fully toward the carrier, no ring. Memories, contacts
+    // and sabotage teams no longer steer it (the debug "Full tentacle" test targets its outpost).
     private _tst = time < (missionNamespace getVariable ["CQ_tntTestUntil", -1]);
-    private _hqK = ((values CQ_hqs) select { (_x get "state") in CQ_activeStates && { (_x get "id") in (missionNamespace getVariable ["CQ_magHqSeen", createHashMap]) || { _x getOrDefault ["revealed", false] } } }) apply { _x get "pos" };
-    private _inHq = { params ["_p"]; _tst || { (_hqK findIf { _x distance2D _p < CQ_magAoRange }) > -1 } };
-    // keep alive the memories MAGPIE still sees enemies around, forget the others
-    private _live = (((values CQ_magSeen) select { alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } && { !((_x select 0) getVariable ["CQ_sabotage", false]) } }) apply { _x select 3 }) select { [_x] call _inHq };
+    private _tgts = [];
     {
-        _y params ["_mp", "_mt"];
-        if ((_live findIf { _x distance2D _mp < CQ_magWjZone }) > -1) then { _y set [1, time] };
-    } forEach CQ_tntMem;
-    if (time < (missionNamespace getVariable ["CQ_tntTestUntil", -1]) && { "TEST outpost" in CQ_tntMem }) then { (CQ_tntMem get "TEST outpost") set [1, time] };   // debug: pinned
-    { if (time - ((CQ_tntMem get _x) select 1) > CQ_magMemory) then { CQ_tntMem deleteAt _x } } forEach (keys CQ_tntMem);
-    // memory points: the wake points still kept + the ground contacts of the last report check
-    // (CQ_tntUnits, CQ_fnc_magTick), each at its live position while seen, else where last seen
-    CQ_tntUnits = (missionNamespace getVariable ["CQ_tntUnits", []]) select { alive _x };
-    private _uAll = CQ_tntUnits apply {
-        private _rec = CQ_magSeen getOrDefault [hashValue _x, []];
-        [if (_rec isEqualTo []) then { getPosATL _x } else { _rec select 3 }, _x getVariable ["CQ_sabotage", false]]
-    };
-    private _wkPts = (values CQ_tntMem) apply { _x select 0 };
-    private _memPts = (_wkPts + ((_uAll select { !(_x select 1) }) apply { _x select 0 })) select { [_x] call _inHq };
-    // every active enemy HQ we know is a permanent memory point: the tentacle keeps growing toward
-    // it after the enemies seen there are forgotten (not during the debug "Full tentacle" test)
-    if (!_tst) then { _memPts append _hqK };
-    // WAVE: no memory near a known HQ, but memories elsewhere (events and sabotage included): the
-    // chain reaches toward the memory farthest from the base, its heading swaying gently
-    // +-CQ_tntWaveAng deg (a full sway every CQ_tntWaveT s, re-planned every CQ_tntWaveStep s); no ring
-    private _wave = false;
-    if (_memPts isEqualTo []) then {
-        private _allPts = _wkPts + (_uAll apply { _x select 0 });
-        if (_allPts isEqualTo []) exitWith {};
-        _allPts = [_allPts, [], { _x distance2D CQ_basePos }, "DESCEND"] call BIS_fnc_sortBy;
-        _memPts = [_allPts select 0];
-        _wave = true;
-    };
-    if (!_wave) then { CQ_tntWaveTgt = [] };
-    if (_woke isEqualTo [] || { _memPts isEqualTo [] }) exitWith {
+        _tgts pushBack (_x get "pos");
+        { if (alive _x && { _x getVariable ["CQ_spotted", false] }) then { _tgts pushBack (getPosATL _x) } } forEach (_x getOrDefault ["installations", []]);
+    } forEach ((values CQ_hqs) select { (_x get "state") in CQ_activeStates });
+    if (_tst && { "TEST outpost" in CQ_tntMem }) then { (CQ_tntMem get "TEST outpost") set [1, time]; _tgts = [(CQ_tntMem get "TEST outpost") select 0] };
+    private _carrier = _tgts isEqualTo [];
+    private _cpos = missionNamespace getVariable ["CQ_carrierPos", []];
+    if (_carrier && { _cpos isNotEqualTo [] }) then { _tgts = [_cpos] };
+    if (_woke isEqualTo [] || { _tgts isEqualTo [] }) exitWith {
         if (!isNil "CQ_tntPub" && { CQ_tntPub isNotEqualTo [] }) then { CQ_tntPub = []; publicVariable "CQ_tntPub" };
         CQ_tntZoneC = [];
         CQ_tntRoot = []; CQ_tntOnWasp = false;
         { _x set ["wjob", ""]; _x set ["tntI", -1] } forEach _woke;
         CQ_tntKey = [];
     };
-    // zones of memories
-    private _zones = [];                                     // [[centroid of memories, [points]], ...]
-    {
-        private _p = _x;
-        private _zi = _zones findIf { ((_x select 1) findIf { _x distance2D _p < CQ_magWjZone }) > -1 };
-        if (_zi < 0) then { _zones pushBack [[], [_p]] } else { ((_zones select _zi) select 1) pushBack _p };
-    } forEach _memPts;
-    // anchors: every linked node that is not a woken Darter
-    // ...and not WASP while it faces the carrier
-    // WASP only while it bridges toward the zone (CQ_waspBridge): then it is the natural root
+    // anchors: every linked node that is not a woken Darter, and WASP only while it bridges
+    // (CQ_waspBridge, CQ_fnc_magTick: as soon as the tentacle has a target): then it is the natural root
     private _wv = (_woke apply { _x get "veh" }) + ([(CQ_mag select { (_x getOrDefault ["role", ""]) == "wasp" }) apply { _x get "veh" }, []] select (missionNamespace getVariable ["CQ_waspBridge", false]));
     private _anch = (((missionNamespace getVariable ["CQ_linkPub", []]) param [0, []]) select { (_x select 2) && { private _p = _x select 0; (_wv findIf { _x distance2D _p < 60 }) == -1 } }) apply { [[(_x select 0) select 0, (_x select 0) select 1, 0], _x select 1] };
     if (_anch isEqualTo []) then { _anch = [[[CQ_basePos select 0, CQ_basePos select 1, 0], CQ_netCoverBase]] };
-    // each zone: centroid of its memories, perimeter around memories + live contacts, distance to the network
-    {
-        private _pts = _x select 1;
-        private _sx = 0; private _sy = 0;
-        { _sx = _sx + (_x select 0); _sy = _sy + (_x select 1) } forEach _pts;
-        private _cm = [_sx / count _pts, _sy / count _pts, 0];
-        private _all = _pts + (_live select { _x distance2D _cm < CQ_magWjZone * 1.5 });
-        _sx = 0; _sy = 0;
-        { _sx = _sx + (_x select 0); _sy = _sy + (_x select 1) } forEach _all;
-        private _cc = [_sx / count _all, _sy / count _all, 0];
-        private _rad = 0;
-        { _rad = _rad max (_x distance2D _cc) } forEach _all;
-        _rad = _rad + CQ_tntStandoff * _range;
-        private _dn = 1e9;
-        { _dn = _dn min (((_x select 0) distance2D _cc) - _rad) } forEach _anch;
-        _x set [0, [_cm, _cc, _rad, _dn]];
-    } forEach _zones;
-    // zone choice: a zone with live enemies (seen in the last CQ_magMemory s) beats an empty one,
-    // the nearest to the network first within each kind
-    {
-        private _zi = _x select 0;
-        private _zc = _zi select 1;
-        private _zr = _zi select 2;
-        _zi pushBack ({ _x distance2D _zc < _zr } count _live);
-    } forEach _zones;
-    _zones = [_zones, [], { ((_x select 0) select 3) + ([1e7, 0] select (((_x select 0) select 4) > 0)) }] call BIS_fnc_sortBy;
-    ((_zones select 0) select 0) params ["_cm", "_cc", "_rad", "_dn0", "_zn"];
-    // empty zone: once a Darter of ours is on its perimeter and no live enemy has been seen there for
-    // CQ_tntEmptyDrop s, the zone is forgotten (its wake points and the contacts no longer seen there)
-    private _onSite = (_woke findIf { ((_x get "veh") distance2D _cc) < _rad + 100 }) > -1;
-    private _et = missionNamespace getVariable ["CQ_tntEmpty", []];
-    if (!_wave && { _zn == 0 } && { _onSite } && { (((_zones select 0) select 1) findIf { _x in _hqK }) == -1 }) then {   // a zone holding a known HQ is never forgotten
-        if (_et isEqualTo [] || { ((_et select 0) distance2D _cc) > CQ_magWjZone }) then { CQ_tntEmpty = [_cc, time]; _et = CQ_tntEmpty };
-        if (time - (_et select 1) >= CQ_tntEmptyDrop) then {
-            CQ_tntEmpty = [];
-            private _zp = (_zones select 0) select 1;
-            private _nw = 0;
-            { if (((CQ_tntMem get _x) select 0) in _zp) then { CQ_tntMem deleteAt _x; _nw = _nw + 1 } } forEach (keys CQ_tntMem);
-            private _nu = count CQ_tntUnits;
-            CQ_tntUnits = CQ_tntUnits select {
-                private _rec = CQ_magSeen getOrDefault [hashValue _x, []];
-                ((if (_rec isEqualTo []) then { getPosATL _x } else { _rec select 3 }) distance2D _cc) >= _rad
-            };
-            ["MAGPIE: tentacle zone at %1 empty for %2 s, forgotten (%3 wake point(s), %4 contact(s))", [mapGridPosition _cc, CQ_tntEmptyDrop, _nw, _nu - count CQ_tntUnits]] call CQ_fnc_log;
-        };
-    } else { CQ_tntEmpty = [] };
+    // the target nearest to the network
+    private _netD = { params ["_t"]; private _d = 1e9; { _d = _d min ((_x select 0) distance2D _t) } forEach _anch; _d };
+    private _cc = ([_tgts, [], { [_x] call _netD }] call BIS_fnc_sortBy) select 0;
+    _cc = [_cc select 0, _cc select 1, 0];
+    private _cm = _cc;
+    private _rad = [CQ_tntStandoff * _range, 0] select _carrier;
+    private _wave = _carrier;                             // carrier mode: no ring
+    if ((missionNamespace getVariable ["CQ_tntTgtLog", []]) isEqualTo [] || { (CQ_tntTgtLog distance2D _cc) > 300 }) then {
+        CQ_tntTgtLog = _cc;
+        ["MAGPIE: tentacle target %1 at %2 (%3 target(s))", [["nearest HQ / spotted objective", "none: fully extended toward the carrier"] select _carrier, mapGridPosition _cc, [count _tgts, 0] select _carrier]] call CQ_fnc_log;
+    };
     CQ_tntZoneC = _cc;                                    // WASP bridges toward it (CQ_fnc_magTick)
     // root: the linked node nearest to the zone
     private _root = []; private _rr0 = 0; private _bd = 1e12;
@@ -376,21 +304,11 @@ call {
     private _tipM = _woke select { (_x getOrDefault ["tntI", -1]) == (missionNamespace getVariable ["CQ_tntTipI", -99]) };
     if (_cm distance2D _oCm > CQ_magWjZone) then { _oRing = false };   // another zone: the chain reaches out again before any ring
     private _ringNow = !_wave && { _oRing || { _tipM isNotEqualTo [] && { ((_tipM select 0) get "veh") distance2D ((_tipM select 0) getOrDefault ["wjPos", [0, 0, 0]]) < CQ_tntArrive } } };
-    private _waveDue = _wave && { time >= (missionNamespace getVariable ["CQ_tntWaveNext", 0]) };
-    if (_cm distance2D _oCm < CQ_tntMove && { _ids isEqualTo _oIds } && { _root distance2D _oRoot < CQ_tntMove } && { _ringNow isEqualTo _oRing } && { !_waveDue }) exitWith {};
+    if (_cm distance2D _oCm < CQ_tntMove && { _ids isEqualTo _oIds } && { _root distance2D _oRoot < CQ_tntMove } && { _ringNow isEqualTo _oRing }) exitWith {};
     CQ_tntKey = [_cm, _ids, _root, _ringNow];
     // the chain: straight from the root toward the centroid, the tip on the perimeter
     private _dir = _root getDir _cc;
     private _tip = if (_root distance2D _cc > _rad) then { _cc getPos [_rad, _cc getDir _root] } else { _root };
-    if (_wave) then {
-        CQ_tntWaveNext = time + CQ_tntWaveStep;
-        _dir = _dir + CQ_tntWaveAng * sin (360 * time / CQ_tntWaveT);
-        _tip = _root getPos [((_root distance2D _cc) - _rad) max 0, _dir];
-        if ((missionNamespace getVariable ["CQ_tntWaveTgt", []]) isEqualTo [] || { (CQ_tntWaveTgt distance2D _cc) > CQ_tntMove }) then {
-            CQ_tntWaveTgt = _cc;
-            ["MAGPIE: no memory near a known HQ, the tentacle waves toward the farthest memory at %1 (+-%2 deg)", [mapGridPosition _cc, CQ_tntWaveAng]] call CQ_fnc_log;
-        };
-    };
     private _len = _root distance2D _tip;
     private _first = CQ_linkReach * (_rr0 max CQ_linkDroneR);
     private _need = if (_len <= _first) then { 1 } else { 1 + ceil ((_len - _first) / CQ_lrHop) };
@@ -481,7 +399,7 @@ call {
     };
     CQ_tntPub = [[_root] + _chain, _ring select [0, [0, count _ring] select (_ringNow && { _spare >= 2 })], [_cc, _rad]];
     publicVariable "CQ_tntPub";
-    if (!_wave || { CQ_logVerbose }) then { ["MAGPIE: tentacle to the zone at %1 (%2 zone(s)): %3/%4 chain Darters, %5 %6, %7 re-tasked", [mapGridPosition _cc, count _zones, _nChain, _need, _spare, ["in reserve", "on the ring"] select (_ringNow && { _spare >= 2 }), _moved]] call CQ_fnc_log; };
+    if (true) then { ["MAGPIE: tentacle to %1 (%2 target(s)): %3/%4 chain Darters, %5 %6, %7 re-tasked", [mapGridPosition _cc, count _tgts, _nChain, _need, _spare, ["in reserve", "on the ring"] select (_ringNow && { _spare >= 2 }), _moved]] call CQ_fnc_log; };
 };
 
 // ---- replacements: the nearest point left to where a woken Darter went down

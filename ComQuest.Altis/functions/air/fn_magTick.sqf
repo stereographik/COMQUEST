@@ -467,21 +467,12 @@ if (_chain isNotEqualTo [] && { !_focusOn }) then {
     private _rv = missionNamespace getVariable ["CQ_linkRelayVeh", objNull];
     (if (alive _rv) then { [getPosATL _rv, CQ_linkRelayVehR] } else { [CQ_basePos, CQ_netCoverBase] }) params ["_a", "_ar"];
     private _cp = missionNamespace getVariable ["CQ_carrierPos", _a];
-    // BRIDGE: once a grid Darter has connected and shared its memory (CQ_tntMem), WASP faces the
-    // fight instead of the carrier (the tentacle then starts from it); back to the carrier when
-    // no memory is left
-    private _mem = ((values (missionNamespace getVariable ["CQ_tntMem", createHashMap])) apply { _x select 0 })
-        + (((missionNamespace getVariable ["CQ_tntUnits", []]) select { alive _x }) apply { getPosATL _x });
-    private _bridge = _mem isNotEqualTo [];
-    if (_bridge) then {
-        private _zc = missionNamespace getVariable ["CQ_tntZoneC", []];
-        if (_zc isEqualTo []) then {
-            private _sx = 0; private _sy = 0;
-            { _sx = _sx + (_x select 0); _sy = _sy + (_x select 1) } forEach _mem;
-            _zc = [_sx / count _mem, _sy / count _mem, 0];
-        };
-        _cp = _zc;
-    };
+    // BRIDGE: while the tentacle has a target (CQ_tntZoneC) WASP faces it instead of the carrier
+    // (the tentacle then starts from it)
+    // (the tentacle's target, CQ_fnc_magDormant: nearest HQ / spotted objective, else the carrier)
+    private _zc = missionNamespace getVariable ["CQ_tntZoneC", []];
+    private _bridge = _zc isNotEqualTo [];
+    if (_bridge) then { _cp = _zc };
     if (_bridge isNotEqualTo (missionNamespace getVariable ["CQ_waspBridge", false])) then {
         CQ_waspBridge = _bridge;
         ["MAGPIE: WASP %1", [["back toward the carrier", format ["bridges toward the Darters' zone at %1", mapGridPosition _cp]] select _bridge]] call CQ_fnc_log;
