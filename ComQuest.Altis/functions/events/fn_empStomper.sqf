@@ -40,6 +40,7 @@ private _g = createVehicleCrew _v;
 _g setBehaviour "CARELESS"; _g setCombatMode "BLUE"; _g setSpeedMode "FULL";
 _g enableDynamicSimulation false;
 _s set ["stomper", _v];
+_s set ["spawnPos", getPosATL _v];
 private _m = createMarker ["cq_emp_ugv", getPos _v];
 _m setMarkerType "b_uav";
 _m setMarkerColor "ColorWEST";
@@ -85,6 +86,7 @@ while { !isNull _v && { (missionNamespace getVariable ["CQ_empPhase", ""]) == "d
             _v setDir (_v getDir _goal);
             ["EMP event: Stomper stuck %1 s at %2, nudged %3 m toward its goal", [CQ_empStuck, mapGridPosition _v, round (CQ_empNudge min _dd)]] call CQ_fnc_log;
             _lastP = getPosATL _v; _lastMoveT = time; _orderT = -1e6;
+            _s set ["nudges", (_s getOrDefault ["nudges", 0]) + 1];
         };
     } else {
         _lastMoveT = time;     // waiting for a target: not stuck

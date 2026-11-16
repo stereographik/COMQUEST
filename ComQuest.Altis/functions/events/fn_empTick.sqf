@@ -16,6 +16,7 @@ CQ_empNext = time + 2;
 
 // engineer on the field? (the slow "anyone" defuse only shows when none is alive)
 private _eng = (allPlayers findIf { alive _x && { _x getUnitTrait "engineer" } }) > -1;
+if (missionNamespace getVariable ["CQ_empDbgNoEng", false]) then { _eng = false };   // debug: "No engineer" forces the slow defuse
 if (_eng != (missionNamespace getVariable ["CQ_empEngAlive", true])) then { CQ_empEngAlive = _eng; publicVariable "CQ_empEngAlive" };
 
 // ---- trigger: once per game
@@ -37,6 +38,25 @@ if (isNil "CQ_empState") exitWith {
 };
 
 private _s = CQ_empState;
+// debug: state for the debug map (CQ_fnc_debugMap, layer "EMP") and a status line every 60 s
+private _v = _s get "stomper";
+private _goal = if (!(_s get "loaded")) then { _s get "pos" } else { _s get "target" };
+CQ_empDbg = [CQ_empPhase, _s get "pos", _s get "found", (_s get "endT") - time, getMarkerPos "cq_emp",
+    [[], getPosATL _v] select (!isNull _v), _goal, _s get "target", _s get "loaded", _s getOrDefault ["spawnPos", []],
+    { alive _x && { _x isKindOf "CAManBase" } } count (_s get "men"), _s getOrDefault ["nudges", 0]];
+publicVariable "CQ_empDbg";
+if (time - (_s getOrDefault ["logT", -1e6]) > 60 && { CQ_empPhase in ["armed", "defused"] }) then {
+    _s set ["logT", time];
+    if (CQ_empPhase == "armed") then {
+        ["EMP status: armed, %1 s left, found %2, %3 guards alive, engineer alive %4", [round ((_s get "endT") - time), _s get "found", CQ_empDbg select 10, CQ_empEngAlive]] call CQ_fnc_log;
+    } else {
+        ["EMP status: defused, Stomper %1 at %2, loaded %3, target %4, %5 m to its goal, %6 nudges, terminal %7",
+            [["missing", "ok"] select !isNull _v, if (isNull _v) then { "-" } else { mapGridPosition _v }, _s get "loaded",
+             if ((_s get "target") isEqualTo []) then { "none" } else { mapGridPosition (_s get "target") },
+             if (isNull _v || { _goal isEqualTo [] }) then { -1 } else { round (_v distance2D _goal) }, _s getOrDefault ["nudges", 0],
+             if (!isNull (_s get "holder") && { "B_UavTerminal" in (itemCargo (_s get "holder")) }) then { "on the table" } else { "taken" }]] call CQ_fnc_log;
+    };
+};
 if (CQ_empPhase != "armed") exitWith {};
 private _p = _s get "pos";
 private _left = (_s get "endT") - time;

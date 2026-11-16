@@ -7,7 +7,7 @@
     Carrier and forces:   root, flight, carrierMinus, carrierFull, killAll
     Story:                actNext, sitrep, storyReset
     MAGPIE:               magReport, magLaunch, magKill, magTentacle
-    Events:               emp, tpEmp, empDefuse, empBoom, empTgt, empLoad, crash, tpCrash, decrypt, crashOut, hst, tpHst, hstClear, hstFw, hstBoard, hstHome, hstEnd, opBuild, opKill, opJam, tpOp
+    Events:               emp, empWhy, tpEmp, empMin, empGuards, empNoEng, empDefuse, empBoom, empTerm, empUgv, empLoad, empTgt, empStrike, empReset, crash, tpCrash, decrypt, crashOut, hst, tpHst, hstClear, hstFw, hstBoard, hstHome, hstEnd, opBuild, opKill, opJam, tpOp
     Player (the caller):  heal, tpBase, tpHq, points, vehFix
     Players (admin tools, _id = [uid, text]): pWarn, pMute, pBase, pKick (CQ_fnc_conduct)
     Base and world:       vehReset, defRebuild, time1, noon, night, clearWx
@@ -213,6 +213,83 @@ if (_needHq && { count _hq == 0 }) then {
                     _msg = format ["teleported %1 m from the EMP %2", CQ_dbgTpDist, ["device", "Stomper"] select (CQ_empPhase == "defused")];
                 };
             };
+        };
+        case "empWhy": {
+            // the trigger rule, condition by condition (CQ_fnc_empTick)
+            private _loss = (values CQ_hqs) select {
+                private _r = _x getOrDefault ["radio", objNull];
+                private _c = _x getOrDefault ["commander", objNull];
+                (!isNull _r && { !alive _r }) || { !isNull _c && { !alive _c } && { !(_x getOrDefault ["cmdCaptured", false]) } }
+            };
+            private _why = [
+                ["EMP on (CQ_emp)", CQ_emp],
+                ["not done yet this game", !(missionNamespace getVariable ["CQ_empDone", false])],
+                ["no EMP running", isNil "CQ_empState" || { !((missionNamespace getVariable ["CQ_empPhase", ""]) in ["armed", "defused"]) }],
+                ["mission started", missionNamespace getVariable ["CQ_missionStarted", false]],
+                [format ["%1 s played (min %2)", round time, CQ_empMinT], time >= CQ_empMinT],
+                [format ["CSAT loss (tower down / commander killed): %1", _loss apply { _x get "id" }], _loss isNotEqualTo []],
+                ["no crash running", isNil "CQ_crashState" || { CQ_crashState get "secured" }],
+                ["no hostage event running", isNil "CQ_hstState" || { (CQ_hstState get "phase") == "done" }],
+                [format ["tentacle aim %1", missionNamespace getVariable ["CQ_tntZoneC", []]], true]
+            ];
+            _msg = (_why apply { format ["%1 %2", ["NO ", "ok "] select (_x select 1), _x select 0] }) joinString " | ";
+        };
+        case "empMin": {
+            if ((missionNamespace getVariable ["CQ_empPhase", ""]) != "armed") then { _msg = "no armed EMP" } else { CQ_empState set ["endT", time + 60]; CQ_empState set ["warned", [600, 300]]; _msg = "EMP timer: 1 min left" };
+        };
+        case "empGuards": {
+            if (isNil "CQ_empState") then { _msg = "no EMP" } else {
+                private _n = 0;
+                { if (alive _x && { _x isKindOf "CAManBase" }) then { _x setDamage 1; _n = _n + 1 } } forEach (CQ_empState get "men");
+                private _t = CQ_empState get "tech";
+                if (alive _t) then { _t setDamage 1 };
+                _msg = format ["%1 EMP guards killed (and the armed pickup)", _n];
+            };
+        };
+        case "empNoEng": {
+            CQ_empDbgNoEng = !(missionNamespace getVariable ["CQ_empDbgNoEng", false]);
+            CQ_empNext = 0;
+            _msg = ["engineers counted again (normal defuse)", "no engineer forced: everyone gets the slow defuse"] select CQ_empDbgNoEng;
+        };
+        case "empTerm": {
+            if ((missionNamespace getVariable ["CQ_empPhase", ""]) != "defused") then { _msg = "the EMP must be defused first" } else {
+                if (!isNull _p) then { [_p, "B_UavTerminal"] remoteExec ["addItem", _p]; _msg = "UAV terminal added to your inventory: use 'Program EMP target'" };
+            };
+        };
+        case "empUgv": {
+            private _v = if (isNil "CQ_empState") then { objNull } else { CQ_empState get "stomper" };
+            if (isNull _v || { isNull _p }) then { _msg = "no Stomper yet" } else {
+                private _q = (getPosATL _p) findEmptyPosition [5, 40, CQ_empStomper];
+                if (_q isEqualTo []) then { _q = _p getPos [10, getDir _p] };
+                _v setPosATL [_q select 0, _q select 1, 0];
+                _msg = format ["Stomper moved next to you (loaded %1)", CQ_empState get "loaded"];
+            };
+        };
+        case "empStrike": {
+            private _v = if (isNil "CQ_empState") then { objNull } else { CQ_empState get "stomper" };
+            if (isNull _v) then { _msg = "no Stomper yet" } else {
+                if !(CQ_empState get "loaded") then { _msg = "the Stomper has not loaded the device (Load now first)" } else {
+                    ["strike", [getPosATL _v, CQ_empState get "programmer"]] call CQ_fnc_empBlast;
+                    _msg = format ["captured EMP set off where the Stomper is (%1)", mapGridPosition _v];
+                };
+            };
+        };
+        case "empReset": {
+            // everything of the EMP removed; the event may trigger again (once-per-game lock off)
+            if (!isNil "CQ_empState") then {
+                private _s = CQ_empState;
+                private _v = _s get "stomper";
+                if (!isNull _v) then { { deleteVehicle _x } forEach crew _v; deleteVehicle _v };
+                { if (!isNull _x) then { detach _x; deleteVehicle _x } } forEach [_s get "device", _s get "table", _s get "prop", _s get "holder"];
+                { if (!isNull _x) then { if (_x isKindOf "CAManBase") then { deleteVehicle _x } else { { deleteVehicle _x } forEach crew _x; deleteVehicle _x } } } forEach (_s get "men");
+            };
+            { deleteMarker _x } forEach ["cq_emp", "cq_emp_t", "cq_emp_ugv", "cq_emp_tgt", "cq_emp_tgtR"];
+            CQ_empState = nil; CQ_empDone = false; CQ_empDbgNoEng = false;
+            CQ_empPhase = ""; publicVariable "CQ_empPhase";
+            CQ_empCaptured = false; publicVariable "CQ_empCaptured";
+            CQ_empProgrammed = false; publicVariable "CQ_empProgrammed";
+            CQ_empDbg = []; publicVariable "CQ_empDbg";
+            _msg = "EMP reset: everything removed, it may trigger again";
         };
         case "empDefuse": {
             if ((missionNamespace getVariable ["CQ_empPhase", ""]) != "armed") then { _msg = "no armed EMP" } else { [_p] call CQ_fnc_empDefuse; _msg = "EMP defused, Stomper on its way" };
