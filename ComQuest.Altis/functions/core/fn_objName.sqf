@@ -1,6 +1,6 @@
 /*
     CQ_fnc_objName
-    [_hqId] call CQ_fnc_objName  ->  "ROLLING THUNDER (root)" / "OVERLORD (P1)" / "KILLER (P2)"
+    [_hqId] call CQ_fnc_objName  ->  "THUNDER (root)" / "OVERLORD (P1)" / "KILLER (P2)"
     How messages, markers and the Operation tab name an enemy HQ: its codename (picked at random
     from CQ_hqNames when the HQ is created, never twice in a game) and its rank in the network:
     "root" for an HQ landed from the carrier, "P1" for a child of a root, "P2" for a grandchild...

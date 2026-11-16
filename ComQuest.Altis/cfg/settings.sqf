@@ -644,8 +644,8 @@ CQ_objMaxSlope = 0.2;                    // ...and flat: max height difference r
 // game; messages and markers show "NAME (root)", "NAME (P1)"... (rank in the network, CQ_fnc_objName)
 CQ_aoRadius = 1000;                      // m: red circle hatched in black around every built enemy HQ (gone when it falls)
 CQ_hqMarkerType = "loc_radio";           // enemy HQ marker icon (CfgMarkers class)
-CQ_hqNames = ["ROLLING THUNDER", "URGENT FURY", "OVERLORD", "AVALANCHE", "RED DAWN", "KILLER",
-    "MASHER", "JUNIPER COBRA", "HERCULES", "CARTHAGE", "EAGLE CLAW", "BEASTMASTER"];
+CQ_hqNames = ["THUNDER", "FURY", "OVERLORD", "AVALANCHE", "DAWN", "KILLER",            // one word each
+    "MASHER", "COBRA", "HERCULES", "CARTHAGE", "EAGLE", "BEASTMASTER"];
 // Enemy squad callsigns (real aviator callsigns, aggressive ones), given in this order to every
 // enemy squad (CQ_fnc_callsignTick); a wiped-out squad frees its name for the next one; numbers
 // ("Viper 2") only when every name is in use at once
