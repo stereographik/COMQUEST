@@ -240,6 +240,9 @@ call {
     };
     private _wkPts = (values CQ_tntMem) apply { _x select 0 };
     private _memPts = (_wkPts + ((_uAll select { !(_x select 1) }) apply { _x select 0 })) select { [_x] call _inHq };
+    // every active enemy HQ we know is a permanent memory point: the tentacle keeps growing toward
+    // it after the enemies seen there are forgotten (not during the debug "Full tentacle" test)
+    if (!_tst) then { _memPts append _hqK };
     // WAVE: no memory near a known HQ, but memories elsewhere (events and sabotage included): the
     // chain reaches toward the memory farthest from the base, its heading swaying gently
     // +-CQ_tntWaveAng deg (a full sway every CQ_tntWaveT s, re-planned every CQ_tntWaveStep s); no ring
@@ -303,7 +306,7 @@ call {
     // CQ_tntEmptyDrop s, the zone is forgotten (its wake points and the contacts no longer seen there)
     private _onSite = (_woke findIf { ((_x get "veh") distance2D _cc) < _rad + 100 }) > -1;
     private _et = missionNamespace getVariable ["CQ_tntEmpty", []];
-    if (!_wave && { _zn == 0 } && { _onSite }) then {
+    if (!_wave && { _zn == 0 } && { _onSite } && { (((_zones select 0) select 1) findIf { _x in _hqK }) == -1 }) then {   // a zone holding a known HQ is never forgotten
         if (_et isEqualTo [] || { ((_et select 0) distance2D _cc) > CQ_magWjZone }) then { CQ_tntEmpty = [_cc, time]; _et = CQ_tntEmpty };
         if (time - (_et select 1) >= CQ_tntEmptyDrop) then {
             CQ_tntEmpty = [];
@@ -325,11 +328,18 @@ call {
     // ...but the previous root is kept while it is still a linked node, unless the new one is
     // CQ_tntRootBetter m closer to the zone (moving drones made the root flip every few seconds)
     private _pr = missionNamespace getVariable ["CQ_tntRoot", []];
+    // A root that drops out of the network (WASP's link flapping) is still used for CQ_tntRootGrace s:
+    // the chain flipped between two roots every few seconds and its Darters never settled
     if (_pr isNotEqualTo []) then {
         private _ai = _anch findIf { (_x select 0) distance2D (_pr select 0) < 300 };
-        // brackets: "-" binds tighter than distance2D
-        if (_ai > -1 && { ((((_anch select _ai) select 0) distance2D _cc) - _bd) < CQ_tntRootBetter }) then {
-            _root = (_anch select _ai) select 0; _rr0 = (_anch select _ai) select 1;
+        if (_ai > -1) then {
+            CQ_tntRootSeenT = time;
+            // brackets: "-" binds tighter than distance2D
+            if (((((_anch select _ai) select 0) distance2D _cc) - _bd) < CQ_tntRootBetter) then {
+                _root = (_anch select _ai) select 0; _rr0 = (_anch select _ai) select 1;
+            };
+        } else {
+            if (time - (missionNamespace getVariable ["CQ_tntRootSeenT", -1e6]) < CQ_tntRootGrace) then { _root = _pr select 0; _rr0 = _pr select 1 };
         };
     };
     CQ_tntRoot = [_root, _rr0];

@@ -1111,6 +1111,7 @@ CQ_magWjEvery = 15;                      // (unused since the tentacle) s betwee
 CQ_magWjZone = 1500;                     // m: woken Darters this close to each other (where they woke) work one zone together
 CQ_tntStandoff = 1;                      // tentacle tip and ring: this x a Darter's sensor range (~600 m) outside the zone's memories and contacts
 CQ_tntEmptyDrop = 60;                    // s: the tentacle on a zone where no live enemy is seen: the zone is forgotten after this
+CQ_tntRootGrace = 30;                    // s: a tentacle root that drops out of the network is still used this long (no flip-flop)
 CQ_tntWaveAng = 10;                      // deg: no memory near a known HQ, the tentacle sways this much left and right toward the farthest memory
 CQ_tntWaveT = 240;                       // s for one full sway (slow and gentle)
 CQ_tntWaveStep = 20;                     // s between two re-plans of the swaying chain
