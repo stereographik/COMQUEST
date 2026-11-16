@@ -271,7 +271,7 @@ CQ_crashDecrypt = 720;                   // s of decryption (12 min)
 // indestructible Stomper (never a data link relay) spawns at the nearest military site outside the
 // war zone, drives to the device, loads it on its roof (within CQ_empLoadR m), then drives to the
 // target the terminal's holder programmed (once, final) and goes off within CQ_empStrikeR m:
-// enemy vehicles and statics within CQ_empHitR m dead, the HQs there off the radio net CQ_empSilence s.
+// enemy vehicles (not static guns) within CQ_empHitR m dead, the HQs there off the radio net CQ_empSilence s.
 CQ_emp = true;
 CQ_empMinT = 1200;                       // s: never before 20 min
 CQ_empTimer = 1500;                      // s: 25 min to defuse

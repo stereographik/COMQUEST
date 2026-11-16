@@ -5,8 +5,8 @@
     loss    every drone of ours within CQ_empBlastR m loses engine and fuel (fliers fall; once
             down it is written off without an explosion, MAGPIE replaces it), our vehicles there: engine dead (an engineer's toolkit repairs it),
             lights off. Nobody hurt. The device and its guards go (CQ_fnc_eventCleanup).
-    strike  within CQ_empHitR m: enemy vehicles (engine, turret, gun dead, no fuel) and statics
-            (turret and gun jammed, no ammo, locked) for good; the enemy HQs there off the radio net CQ_empSilence s (no waves,
+    strike  within CQ_empHitR m: enemy vehicles (engine, turret, gun dead, no fuel) for good
+            (static guns are mechanical: untouched); the enemy HQs there off the radio net CQ_empSilence s (no waves,
             nobody hears them: CQ_fnc_netTick). CQ_empPtsStrike points to _who.
 */
 params ["_mode", ["_args", []]];
@@ -52,12 +52,6 @@ private _wave = {
                     };
                     case "veh": { [_o] call _kill };
                     case "enemy": { [_o, true] call _kill };
-                    case "static": {
-                        // no explosion: turret and gun jammed, no ammo, nobody can use it again
-                        { [_o, [_x, 1]] remoteExec ["setHitPointDamage", _o] } forEach ["HitTurret", "HitGun"];
-                        [_o, 0] remoteExec ["setVehicleAmmo", _o];
-                        [_o, 2] remoteExec ["lock", _o];
-                    };
                 };
             };
         } forEach _hits;
@@ -98,15 +92,12 @@ switch (_mode) do {
         private _hits = [];
         {
             if (alive _x && { _x distance2D _p < CQ_empHitR } && { !(_x isKindOf "ParachuteBase") }) then {
-                if (_x isKindOf "StaticWeapon") then {
-                    if (getNumber (configOf _x >> "side") == 0 || { side group effectiveCommander _x == east }) then { _hits pushBack [_x, "static"] };
-                } else {
+                if !(_x isKindOf "StaticWeapon") then {          // static guns are mechanical: the EMP leaves them alone
                     if (getNumber (configOf _x >> "side") == 0 || { (crew _x) isNotEqualTo [] && { side group effectiveCommander _x == east } }) then { _hits pushBack [_x, "enemy"] };
                 };
             };
         } forEach vehicles;
         private _nv = { (_x select 1) == "enemy" } count _hits;
-        private _ns = { (_x select 1) == "static" } count _hits;
         private _hit = [];
         {
             private _r = _x getOrDefault ["radio", objNull];
@@ -117,8 +108,8 @@ switch (_mode) do {
         } forEach (values CQ_hqs);
         [_p, CQ_empHitR, CQ_empWaveTime select 1, _hits, _kill] call _wave;
         if (!isNull _who) then { [_who, CQ_empPtsStrike, "EMP strike"] call CQ_fnc_scoreAdd };
-        ["EMP event: captured EMP went off at %1: %2 enemy vehicles and %3 statics dead, HQs off the radio for %4 s: %5", [mapGridPosition _p, _nv, _ns, CQ_empSilence, _hit]] call CQ_fnc_log;
-        ["EMP strike", format ["Our EMP went off at grid %1: %2 enemy vehicles and %3 guns dead%4.", mapGridPosition _p, _nv, _ns,
+        ["EMP event: captured EMP went off at %1: %2 enemy vehicles dead, HQs off the radio for %3 s: %4", [mapGridPosition _p, _nv, CQ_empSilence, _hit]] call CQ_fnc_log;
+        ["EMP strike", format ["Our EMP went off at grid %1: %2 enemy vehicles dead%3.", mapGridPosition _p, _nv,
             if (_hit isEqualTo []) then { "" } else { format [", %1 off their radio for %2 min", (_hit apply { [_x] call CQ_fnc_objName }) joinString ", ", round (CQ_empSilence / 60)] }]] call CQ_fnc_announce;
         ["empStrike", [mapGridPosition _p]] call CQ_fnc_say;
         { deleteMarker _x } forEach ["cq_emp_ugv", "cq_emp_tgt", "cq_emp_tgtR"];
