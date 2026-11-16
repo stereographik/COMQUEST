@@ -60,7 +60,7 @@ while { !isNull _v && { (missionNamespace getVariable ["CQ_empPhase", ""]) == "d
     if (_goal isNotEqualTo []) then {
         private _dd = _v distance2D _goal;
         // pickup
-        if (!_loaded && { _dd < CQ_empLoadR + 1 }) then {
+        if (!_loaded && { _dd <= CQ_empLoadR }) then {
             _dev enableSimulationGlobal true;
             _dev attachTo [_v, [0, -0.3, 0.55]];
             _s set ["loaded", true];
