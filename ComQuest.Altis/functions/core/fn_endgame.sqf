@@ -31,7 +31,7 @@ private _rows = [];
     // best weapon: the "w:<name>" key with the most kills
     private _bw = "-"; private _bk = 0;
     { if ((_x select [0, 2]) == "w:" && { (_s get _x) > _bk }) then { _bk = _s get _x; _bw = _x select [2] } } forEach (keys _s);
-    _rows pushBack [_uid, _s getOrDefault ["#name", "?"], [groupId group _p, "-"] select (isNull _p), _s getOrDefault ["#class", "Rifleman"],
+    _rows pushBack [_uid, _s getOrDefault ["#name", "?"], (if (isNull _p) then { "-" } else { [groupId group _p, "no squad"] select ((group _p) getVariable ["CQ_solo", true]) }), _s getOrDefault ["#class", "Rifleman"],
         round _pts, _s getOrDefault ["killsInf", 0], _s getOrDefault ["deaths", 0], _s getOrDefault ["objAll", 0], _s getOrDefault ["heals", 0],
         _bw, _bk, _s getOrDefault ["longest", 0], _s getOrDefault ["events", 0],
         round ((_s getOrDefault ["distVeh", 0]) / 100) / 10, round ((_s getOrDefault ["distFoot", 0]) / 100) / 10,
