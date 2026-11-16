@@ -1,8 +1,8 @@
 /*
     CQ_fnc_empStart  (server)
     private _ok = call CQ_fnc_empStart;
-    Plants the EMP device (see CQ_fnc_empTick): next to a large building CQ_empNear m from where
-    the tentacle is aiming (CQ_tntZoneC; CQ_empSiteDist m from the base without a tentacle,
+    Plants the EMP device (see CQ_fnc_empTick): next to a large building in the middle of the
+    densest awake Darters (CQ_empDensR; CQ_empSiteDist m from the base with none awake,
     CQ_empHqGap m clear of enemy HQs), on a spot a Stomper can reach, preferring the ones
     closest to our vehicles and drones (our network). A table beside it with a UAV terminal on it
     (a prop until the defuse), CQ_crashSurvivors holding a ring around it (CQ_fnc_eventHold), a
@@ -13,15 +13,27 @@
 */
 if (!isServer) exitWith { false };
 
-// ---- site: where the tentacle is aiming (CQ_tntZoneC, the zone the Darters' chain grows toward:
-// CQ_fnc_magDormant), on a big building CQ_empNear m from it (twice as far when nothing fits),
-// away from the enemy HQs; with no tentacle, CQ_empSiteDist m from the base. Closest to our
-// network first.
+// ---- site: the middle of the tightest group of awake Darters (CQ_empDensR), on a big building
+// CQ_empDensNear m from its centre (twice as far when nothing fits), nearest the centre first, away
+// from the enemy HQs; with no Darter awake, CQ_empSiteDist m from the base, closest to our network.
 private _hqPos = (values CQ_hqs) select { (_x get "state") in CQ_activeStates } apply { _x get "pos" };
-private _aim = missionNamespace getVariable ["CQ_tntZoneC", []];
+// the tightest group of awake Darters: the one with the most others within CQ_empDensR, its centre
+private _dz = ((missionNamespace getVariable ["CQ_mag", []]) select { (_x getOrDefault ["role", ""]) == "dormant" && { alive (_x get "veh") } }) apply { getPosATL (_x get "veh") };
+private _aim = [];
+private _bestN = 0;
+{
+    private _p = _x;
+    private _grp = _dz select { _x distance2D _p < CQ_empDensR };
+    if (count _grp > _bestN) then {
+        _bestN = count _grp;
+        private _sx = 0; private _sy = 0;
+        { _sx = _sx + (_x select 0); _sy = _sy + (_x select 1) } forEach _grp;
+        _aim = [_sx / _bestN, _sy / _bestN, 0];
+    };
+} forEach _dz;
 private _ctr = CQ_basePos;
 private _ring = CQ_empSiteDist;
-if (_aim isNotEqualTo []) then { _ctr = [_aim select 0, _aim select 1, 0]; _ring = CQ_empNear };
+if (_aim isNotEqualTo []) then { _ctr = _aim; _ring = CQ_empDensNear };
 private _find = {
     params ["_r0", "_r1"];
     (nearestObjects [_ctr, ["House", "Building"], _r1]) select {
@@ -37,7 +49,7 @@ if (_cands isEqualTo []) exitWith { ["EMP event: no building found %1-%2 m from 
 private _ours = (vehicles select { alive _x && { getNumber (configOf _x >> "side") == 1 } && { !(_x isKindOf "ParachuteBase") } }) + (((missionNamespace getVariable ["CQ_mag", []]) apply { _x get "veh" }) select { alive _x });
 if (_ours isEqualTo []) then { _ours = [CQ_basePos] };
 private _netD = { params ["_p"]; private _m = 1e6; { _m = _m min (_x distance2D _p) } forEach _ours; _m };
-_cands = [_cands, [], { [getPos _x] call _netD }, "ASCEND"] call BIS_fnc_sortBy;
+_cands = if (_aim isNotEqualTo []) then { [_cands, [], { _x distance2D _ctr }, "ASCEND"] call BIS_fnc_sortBy } else { [_cands, [], { [getPos _x] call _netD }, "ASCEND"] call BIS_fnc_sortBy };   // Darters: the middle of the group first
 private _b = selectRandom (_cands select [0, 8]);
 
 // ---- the device: outside the building, on open ground a Stomper fits on
@@ -116,7 +128,7 @@ CQ_empEndT = time + CQ_empTimer; publicVariable "CQ_empEndT";
 CQ_empKey = format ["emp%1", round time];
 ["EMP event: device %1 at %2 (next to %3, %4 m from the base, %5 guards, armed pickup %6), goes off in %7 s",
     [_dcls, mapGridPosition _p, typeOf _b, round (_p distance2D CQ_basePos), count units _g, ["none", typeOf _tech] select !isNull _tech, CQ_empTimer]] call CQ_fnc_log;
-["EMP event: placed %1, device %2 m from %3", [["by the base (no tentacle)", "where the tentacle is aiming"] select (_aim isNotEqualTo []), round (_p distance2D _ctr), mapGridPosition _ctr]] call CQ_fnc_log;
+["EMP event: placed %1, device %2 m from %3", [["by the base (no Darter awake)", format ["in the middle of the densest Darters (%1 within %2 m)", _bestN, CQ_empDensR]] select (_aim isNotEqualTo []), round (_p distance2D _ctr), mapGridPosition _ctr]] call CQ_fnc_log;
 ["EMP device", format ["CSAT planted an EMP device around grid %1. %2 min to defuse it (engineers).", mapGridPosition _c, round (CQ_empTimer / 60)]] call CQ_fnc_announce;
 ["empStart", [mapGridPosition _c, round (CQ_empTimer / 60)]] call CQ_fnc_say;
 [CQ_empKey, 1, format ["EMP device around grid %1", mapGridPosition _c], "armed"] call CQ_fnc_opSide;
