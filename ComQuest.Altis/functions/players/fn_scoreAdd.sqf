@@ -28,4 +28,5 @@ private _k = switch (_what) do {
 };
 private _pairs = [["objPoints", _pts]];
 if (_k != "") then { _pairs pushBack [_k, 1] };
+if (_what in ["EMP defused", "hostage rescue", "crash crate"]) then { _pairs pushBack ["events", 1] };   // endgame: Event hero
 [_u, _pairs] call CQ_fnc_statsAdd;

@@ -1019,6 +1019,7 @@ CQ_engineerClasses = ["B_engineer_F"];   // get engineer + explosiveSpecialist t
 
 // Player statistics (in memory only, wiped by a server restart)
 // stat keys, in the order CQ_statsPub carries them
+CQ_endWait = 300;                        // s: after victory / defeat, the DEBRIEF (CQ_fnc_endgameUi) stays up this long, then the next game starts
 CQ_statKeys = ["killsInf", "vehLight", "vehArmor", "vehAir", "vehStatic", "deaths", "teamkills", "longest",
     "objTower", "objDepot", "objCmdKilled", "objCmdCaptured", "objPoints", "heals", "shots", "distFoot", "distVeh", "timePlayed"];
 // score = sum of stat x weight (objPoints are already points)

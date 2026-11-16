@@ -355,7 +355,7 @@ CQ_friendlyCmd addEventHandler ["Killed", {
     CQ_defeat = true;
     ["DEFEAT", "The friendly commander has been killed"] call CQ_fnc_announce;
     ["defeat", []] call CQ_fnc_say;
-    [] spawn { sleep 12; "EveryoneLost" call BIS_fnc_endMissionServer };
+    ["lose", "the friendly commander has been killed"] call CQ_fnc_endgame;   // DEBRIEF, next game after CQ_endWait s
 }];
 
 // plaza: flag and lamps; the lane from the keep gate to the plaza stays clear (muster point on it)

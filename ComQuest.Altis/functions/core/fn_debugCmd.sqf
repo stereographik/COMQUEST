@@ -325,6 +325,8 @@ if (_needHq && { count _hq == 0 }) then {
                 };
             };
         };
+        case "endWin": { if (isNil "CQ_endPub") then { CQ_victory = true; ["win", "debug: victory"] call CQ_fnc_endgame; _msg = "Game over (victory): DEBRIEF for everyone, next game in " + str CQ_endWait + " s" } else { _msg = "Already over" } };
+        case "endLose": { if (isNil "CQ_endPub") then { CQ_defeat = true; ["lose", "debug: defeat"] call CQ_fnc_endgame; _msg = "Game over (defeat): DEBRIEF for everyone, next game in " + str CQ_endWait + " s" } else { _msg = "Already over" } };
         case "launchGame": {
             if (!(missionNamespace getVariable ["CQ_gameLaunched", false]) && { serverTime < (missionNamespace getVariable ["CQ_nextRootTime", 0]) }) then {
                 CQ_gameLaunched = true;

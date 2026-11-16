@@ -9,6 +9,9 @@
 */
 params ["_hq"];
 private _id = _hq get "id";
+_hq set ["fallT", time];                                  // endgame: HQ timeline, Final blow
+CQ_lastHqKiller = _hq getOrDefault ["lastKiller", objNull];
+if (!isNull CQ_lastHqKiller && { isPlayer CQ_lastHqKiller }) then { CQ_lastHqKillerRec = [getPlayerUID CQ_lastHqKiller, name CQ_lastHqKiller] };
 private _c = _hq get "pos";
 
 private _act = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { (_x get "id") != _id } };

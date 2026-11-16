@@ -17,8 +17,10 @@ addMissionEventHandler ["EntityKilled", {
     if (isNull _inst && { !isNull _killer }) then { _inst = _killer };
     private _supply = _unit getVariable ["CQ_supply", ""];   // OPERATION briefing: supply line
     if (_supply != "") then { _unit setVariable ["CQ_supply", ""]; [_supply, _inst] call CQ_fnc_opEvent };
+    if (_unit isKindOf "CAManBase" && { (side group _unit) in [east, resistance] }) then { CQ_enKilled = (missionNamespace getVariable ["CQ_enKilled", 0]) + 1 };   // endgame total
     private _hid = _unit getVariable ["CQ_hqId", -1];      // HQ objective: remember who did it (HUNTERS target)
     if (_hid > -1 && { !isNull _inst } && { isPlayer _inst }) then { (CQ_hqs getOrDefault [_hid, createHashMap]) set ["lastKiller", _inst] };
+    if (_hid > -1 && { !isNull _inst } && { isPlayer _inst } && { (_unit getVariable ["CQ_objType", ""]) != "" }) then { [_inst, [["objAll", 1]]] call CQ_fnc_statsAdd };   // endgame: HQ objectives destroyed
     private _side = side group _unit;
     if (!(_unit isKindOf "CAManBase") && { !(_side in [east, west, resistance]) }) then {
         _side = [east, west, resistance, civilian] param [getNumber (configOf _unit >> "side"), civilian];
@@ -41,7 +43,12 @@ addMissionEventHandler ["EntityKilled", {
             [_inst, [["teamkills", 1]]] call CQ_fnc_statsAdd;
         } else {
             if (_side in [east, resistance]) then {
-                [_inst, [["killsInf", 1], ["longest", round (_inst distance _unit)]]] call CQ_fnc_statsAdd;
+                // endgame awards: the weapon that did it, and the game's first blood
+                private _wn = getText (configFile >> "CfgWeapons" >> currentWeapon (vehicle _inst) >> "displayName");
+                if (vehicle _inst != _inst) then { _wn = getText (configOf (vehicle _inst) >> "displayName") };
+                if (_wn == "") then { _wn = "?" };
+                [_inst, [["killsInf", 1], ["longest", round (_inst distance _unit)], ["w:" + _wn, 1]]] call CQ_fnc_statsAdd;
+                if (isNil "CQ_firstBlood") then { CQ_firstBlood = [getPlayerUID _inst, name _inst, time] };
             };
         };
     } else {

@@ -52,6 +52,7 @@ player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [
 [] spawn CQ_fnc_rdfClient;   // radio direction finder panel
 [] spawn CQ_fnc_heavyLift;   // heavy lifters (Mohawk) hook vehicles up to 12 t
 [] spawn CQ_fnc_statsClient; // shots, heals, distances, time played
+[] spawn { waitUntil { sleep 1; !isNil "CQ_endPub" }; sleep 3; [] spawn CQ_fnc_endgameUi };   // game over: the DEBRIEF opens by itself
 call CQ_fnc_heatMapClient;   // MAGPIE heatmap under everything else
 // vanilla difficulty map content: enemies (what friendly infantry spots) off so only MAGPIE reveals
 // them; friendlies off when they go through the data link instead (CQ_bft); mines and pings stay
