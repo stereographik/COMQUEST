@@ -258,7 +258,7 @@ call {
     if (_woke isEqualTo [] || { _memPts isEqualTo [] }) exitWith {
         if (!isNil "CQ_tntPub" && { CQ_tntPub isNotEqualTo [] }) then { CQ_tntPub = []; publicVariable "CQ_tntPub" };
         CQ_tntZoneC = [];
-        CQ_tntRoot = [];
+        CQ_tntRoot = []; CQ_tntOnWasp = false;
         { _x set ["wjob", ""]; _x set ["tntI", -1] } forEach _woke;
         CQ_tntKey = [];
     };
@@ -342,6 +342,16 @@ call {
             if (time - (missionNamespace getVariable ["CQ_tntRootSeenT", -1e6]) < CQ_tntRootGrace) then { _root = _pr select 0; _rr0 = _pr select 1 };
         };
     };
+    // SPRING: a chain rooted on WASP stays tied to WASP's post. When the post moves (the sabotage
+    // pull-back, CQ_fnc_magTick, or forward again), the whole chain follows it at once instead of
+    // hanging unlinked; while WASP lives the chain keeps it as its root
+    private _wm = (missionNamespace getVariable ["CQ_mag", []]) select { (_x getOrDefault ["role", ""]) == "wasp" && { alive (_x get "veh") } };
+    private _wPost = if (_wm isEqualTo []) then { [] } else { (_wm select 0) getOrDefault ["target", []] };
+    if (_wPost isNotEqualTo [] && { missionNamespace getVariable ["CQ_tntOnWasp", false] }) then {
+        _root = [_wPost select 0, _wPost select 1, 0]; _rr0 = _pr param [1, _rr0];
+    };
+    CQ_tntOnWasp = _wPost isNotEqualTo [] && { _root distance2D _wPost < 400 || { _root distance2D ((_wm select 0) get "veh") < 400 } };
+    if (CQ_tntOnWasp) then { _root = [_wPost select 0, _wPost select 1, 0] };
     CQ_tntRoot = [_root, _rr0];
     // arrived on its slot: loiter quietly (the tip's arrival opens the ring)
     {
