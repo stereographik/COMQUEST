@@ -9,8 +9,10 @@
                 hunt at most every CQ_sabCooldown s (counted from the start of the last hunt)
       target    the exposed node of our data link closest to their home: WASP (flying) or the
                 base's relay vehicle
-      drive     to a dismount point CQ_sabDismount m short of the target's fuzzy position
-                (+/- CQ_sabFuzz m, exact once they know it); the driver stays with the vehicle
+      drive     cross-country and cautious (STEALTH: off the roads, lights off at night, normal
+                speed) to a dismount point off the road, CQ_sabDismount m short of the target's fuzzy
+                position (+/- CQ_sabFuzz m, exact once they know it); the driver stays with the
+                vehicle. The drive home is the same
       foot      every CQ_sabUpdate s a new fuzzy position; close in: the AA / AT specialists
                 engage, the satchel expert blows a relay vehicle he reaches (CQ_sabSatchelR m)
       back      target destroyed, or CQ_sabHuntTime s: back to the vehicle, then home
@@ -146,6 +148,17 @@ switch (_mode) do {
             { if (alive _x && { vehicle _x == _x }) then { _x assignAsCargo _v; [_x] orderGetIn true } } forEach units _g;
             if (isNull driver _v) then { private _d = (units _g) select { alive _x } select 0; _d assignAsDriver _v; [_d] orderGetIn true };
         };
+        // on wheels: cross-country and cautious (STEALTH keeps the AI off the roads, lights off at night),
+        // normal speed
+        private _offRoad = { _g setBehaviour "STEALTH"; _g setSpeedMode "NORMAL"; _g setCombatMode "YELLOW" };
+        // a point moved off any road (the closest spot within 150 m that is not road, nor water)
+        private _offRoadPt = {
+            params ["_p"];
+            if !(isOnRoad _p) exitWith { _p };
+            private _out = _p;
+            { private _c = _p getPos [_x select 0, _x select 1]; if (!isOnRoad _c && { !surfaceIsWater _c }) exitWith { _out = _c } } forEach [[40, 0], [40, 90], [40, 180], [40, 270], [80, 45], [80, 135], [80, 225], [80, 315], [150, 0], [150, 120], [150, 240]];
+            _out
+        };
         // seen by MAGPIE near a node: CROSSROAD warns once per hunt, WASP gets the position
         private _seen = if (isNil "CQ_magSeen") then { [] } else { (units _g) select { alive _x && { (CQ_magSeen getOrDefault [hashValue (vehicle _x), []]) isNotEqualTo [] } && { time - ((CQ_magSeen get hashValue (vehicle _x)) select 2) < 60 } } };
         if (_seen isNotEqualTo []) then {
@@ -163,7 +176,7 @@ switch (_mode) do {
                 if (!alive _v) exitWith {};                      // vehicle still coming down
                 if ((leader _g) distance2D _home < 150) exitWith { _s set ["phase", "home"]; [_g] call CQ_fnc_clearWaypoints; ["SABOTAGE: team at home (grid %1), waiting", [mapGridPosition _home]] call CQ_fnc_log };
                 if ((units _g) findIf { alive _x && { vehicle _x != _v } } > -1) exitWith { call _mount };
-                if (time - (_s get "t0") > 20) then { _s set ["t0", time]; (driver _v) doMove _home };
+                if (time - (_s get "t0") > 20) then { _s set ["t0", time]; call _offRoad; (driver _v) doMove ([_home] call _offRoadPt) };
             };
             case "home": {
                 if (time - (_s get "huntT") < CQ_sabCooldown) exitWith {};
@@ -196,7 +209,8 @@ switch (_mode) do {
                     };
                     if !(_s getOrDefault ["driveLog", false]) then { _s set ["driveLog", true]; ["SABOTAGE: driving, %1/%2 aboard, %3 m to the target", [{ alive _x && { vehicle _x == _v } } count units _g, call _alive, round (_v distance2D (_s get "tPos"))]] call CQ_fnc_log };
                     private _tp = _s get "tPos";
-                    private _dp = _tp getPos [CQ_sabDismount, _tp getDir _v];
+                    private _dp = [_tp getPos [CQ_sabDismount, _tp getDir _v]] call _offRoadPt;
+                    call _offRoad;
                     (driver _v) doMove _dp;
                 };
                 if (_v distance2D (_s get "tPos") < CQ_sabDismount + 80) then {
@@ -238,7 +252,8 @@ switch (_mode) do {
                 };
             };
             case "back": {
-                _g setCombatMode "YELLOW"; _g setBehaviour "AWARE";
+                // everyone aboard: cross-country and cautious; men still walking to the vehicle: alert
+                if (alive _v && { (units _g) findIf { alive _x && { vehicle _x != _v } } == -1 }) then { call _offRoad } else { _g setCombatMode "YELLOW"; _g setBehaviour "AWARE" };
                 if ((leader _g) distance2D _home < 200) exitWith {
                     _s set ["phase", "home"]; [_g] call CQ_fnc_clearWaypoints;
                     ["SABOTAGE: back home (grid %1)", [mapGridPosition _home]] call CQ_fnc_log;
@@ -249,7 +264,7 @@ switch (_mode) do {
                         if ((units _g) findIf { alive _x && { vehicle _x != _v } } > -1) then {
                             { if (alive _x && { vehicle _x == _x }) then { _x doMove (getPosATL _v) } } forEach units _g;
                             if ((units _g) findIf { alive _x && { vehicle _x == _x } && { _x distance _v < 30 } } > -1) then { call _mount };
-                        } else { (driver _v) doMove _home };
+                        } else { (driver _v) doMove ([_home] call _offRoadPt) };
                     } else {
                         [_g] call CQ_fnc_clearWaypoints;
                         _g move _home;
