@@ -217,8 +217,14 @@ call {
         ["MAGPIE: %1 connected, sends its memory (woke at %2)", [_nm, mapGridPosition _wp]] call CQ_fnc_log;
         ["memory", format ["%1 sends its memory (woke at %2)", _nm, mapGridPosition _wp]] call CQ_fnc_netEvent;
     } forEach _woke;
+    // only HQ zones count: memories and contacts within CQ_magAoRange of an enemy HQ we know (MAGPIE
+    // saw it, or a captured commander revealed it); sabotage teams never count. So the side events
+    // and the sabotage routes do not pull the tentacle (the debug "Full tentacle" test is exempt)
+    private _tst = time < (missionNamespace getVariable ["CQ_tntTestUntil", -1]);
+    private _hqK = ((values CQ_hqs) select { (_x get "state") in CQ_activeStates && { (_x get "id") in (missionNamespace getVariable ["CQ_magHqSeen", createHashMap]) || { _x getOrDefault ["revealed", false] } } }) apply { _x get "pos" };
+    private _inHq = { params ["_p"]; _tst || { (_hqK findIf { _x distance2D _p < CQ_magAoRange }) > -1 } };
     // keep alive the memories MAGPIE still sees enemies around, forget the others
-    private _live = ((values CQ_magSeen) select { alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } }) apply { _x select 3 };
+    private _live = (((values CQ_magSeen) select { alive (_x select 0) && { time - (_x select 2) < CQ_magMemory } && { !((_x select 0) getVariable ["CQ_sabotage", false]) } }) apply { _x select 3 }) select { [_x] call _inHq };
     {
         _y params ["_mp", "_mt"];
         if ((_live findIf { _x distance2D _mp < CQ_magWjZone }) > -1) then { _y set [1, time] };
@@ -227,11 +233,11 @@ call {
     { if (time - ((CQ_tntMem get _x) select 1) > CQ_magMemory) then { CQ_tntMem deleteAt _x } } forEach (keys CQ_tntMem);
     // memory points: the wake points still kept + the ground contacts of the last report check
     // (CQ_tntUnits, CQ_fnc_magTick), each at its live position while seen, else where last seen
-    CQ_tntUnits = (missionNamespace getVariable ["CQ_tntUnits", []]) select { alive _x };
-    private _memPts = ((values CQ_tntMem) apply { _x select 0 }) + (CQ_tntUnits apply {
+    CQ_tntUnits = (missionNamespace getVariable ["CQ_tntUnits", []]) select { alive _x && { !(_x getVariable ["CQ_sabotage", false]) } };
+    private _memPts = (((values CQ_tntMem) apply { _x select 0 }) + (CQ_tntUnits apply {
         private _rec = CQ_magSeen getOrDefault [hashValue _x, []];
         if (_rec isEqualTo []) then { getPosATL _x } else { _rec select 3 }
-    });
+    })) select { [_x] call _inHq };
     if (_woke isEqualTo [] || { _memPts isEqualTo [] }) exitWith {
         if (!isNil "CQ_tntPub" && { CQ_tntPub isNotEqualTo [] }) then { CQ_tntPub = []; publicVariable "CQ_tntPub" };
         CQ_tntZoneC = [];
