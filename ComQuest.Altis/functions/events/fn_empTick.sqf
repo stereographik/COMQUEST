@@ -60,6 +60,9 @@ if (time - (_s getOrDefault ["logT", -1e6]) > 60 && { CQ_empPhase in ["armed", "
 if (CQ_empPhase != "armed") exitWith {};
 private _p = _s get "pos";
 private _left = (_s get "endT") - time;
+// HUD countdown under the signal panel (CQ_fnc_rdfClient): end time on the shared clock, sent again only when it moves
+private _endS = ([time, serverTime] select isMultiplayer) + _left;
+if (abs (_endS - (missionNamespace getVariable ["CQ_empHudEnd", -1])) > 1) then { CQ_empHudEnd = _endS; publicVariable "CQ_empHudEnd" };
 
 // ---- found: a guard or the device seen by us (MAGPIE drones and players are on our side)
 if !(_s get "found") then {
