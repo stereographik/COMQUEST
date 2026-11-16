@@ -56,7 +56,8 @@ call CQ_fnc_heatMapClient;   // MAGPIE heatmap under everything else
 // vanilla difficulty map content: enemies (what friendly infantry spots) off so only MAGPIE reveals
 // them; friendlies off when they go through the data link instead (CQ_bft); mines and pings stay
 disableMapIndicators [CQ_bft, !CQ_vanillaEnemyMap, false, false];
-if (CQ_bft) then { call CQ_fnc_bftClient };   // friendlies on the map through the data link
+if (CQ_bft) then { call CQ_fnc_bftClient };
+["init"] call CQ_fnc_empClient;   // no UAV terminal connects to any drone (the EMP terminal is a targeting token)   // friendlies on the map through the data link
 call CQ_fnc_rangeMapClient;   // range map: ground the seen enemies can fire on (drawn by magMapClient)
 call CQ_fnc_magMapClient;    // MAGPIE drones + enemies in their sight, live on the map
 // version, branch and build stamp, tiny at the bottom right of the screen

@@ -7,7 +7,7 @@
     Carrier and forces:   root, flight, carrierMinus, carrierFull, killAll
     Story:                actNext, sitrep, storyReset
     MAGPIE:               magReport, magLaunch, magKill, magTentacle
-    Events:               crash, tpCrash, decrypt, crashOut, hst, tpHst, hstClear, hstFw, hstBoard, hstHome, hstEnd, opBuild, opKill, opJam, tpOp
+    Events:               emp, tpEmp, empDefuse, empBoom, empTgt, empLoad, crash, tpCrash, decrypt, crashOut, hst, tpHst, hstClear, hstFw, hstBoard, hstHome, hstEnd, opBuild, opKill, opJam, tpOp
     Player (the caller):  heal, tpBase, tpHq, points, vehFix
     Players (admin tools, _id = [uid, text]): pWarn, pMute, pBase, pKick (CQ_fnc_conduct)
     Base and world:       vehReset, defRebuild, time1, noon, night, clearWx
@@ -195,6 +195,49 @@ if (_needHq && { count _hq == 0 }) then {
         case "crash": {
             CQ_crashLastT = time;
             _msg = if (call CQ_fnc_crashStart) then { format ["crash site placed at %1", mapGridPosition CQ_crashPos] } else { "no crash site found, try again" };
+        };
+        // ---- EMP event (CQ_fnc_empTick): the debug start skips the trigger rule (and the once-per-game lock)
+        case "emp": {
+            if (!isNil "CQ_empState" && { (missionNamespace getVariable ["CQ_empPhase", ""]) in ["armed", "defused"] }) then { _msg = "an EMP event is already running" } else {
+                CQ_empState = nil;
+                _msg = if (call CQ_fnc_empStart) then { CQ_empDone = true; format ["EMP device planted at %1 (%2 s)", mapGridPosition (CQ_empState get "pos"), CQ_empTimer] } else { "no EMP site found, try again" };
+            };
+        };
+        case "tpEmp": {
+            if (isNil "CQ_empState") then { _msg = "no EMP yet" } else {
+                private _q0 = CQ_empState get "pos";
+                if (CQ_empPhase == "defused" && { !isNull (CQ_empState get "stomper") }) then { _q0 = getPosATL (CQ_empState get "stomper") };
+                if (!isNull _p) then {
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, _q0 getPos [CQ_dbgTpDist, _q0 getDir CQ_basePos]] spawn { params ["_p", "_q"]; sleep 0.5; _p setPosATL [_q select 0, _q select 1, 0] };
+                    _msg = format ["teleported %1 m from the EMP %2", CQ_dbgTpDist, ["device", "Stomper"] select (CQ_empPhase == "defused")];
+                };
+            };
+        };
+        case "empDefuse": {
+            if ((missionNamespace getVariable ["CQ_empPhase", ""]) != "armed") then { _msg = "no armed EMP" } else { [_p] call CQ_fnc_empDefuse; _msg = "EMP defused, Stomper on its way" };
+        };
+        case "empBoom": {
+            if ((missionNamespace getVariable ["CQ_empPhase", ""]) != "armed") then { _msg = "no armed EMP" } else { CQ_empState set ["endT", time]; CQ_empNext = 0; _msg = "EMP timer set to zero: it goes off on the next tick" };
+        };
+        case "empTgt": {
+            private _hqs = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
+            if ((missionNamespace getVariable ["CQ_empPhase", ""]) != "defused") then { _msg = "no defused EMP" } else {
+                if (_hqs isEqualTo []) then { _msg = "no enemy HQ" } else {
+                    private _sp = getPosATL (CQ_empState get "stomper");
+                    private _h = ([_hqs, [], { (_x get "pos") distance2D _sp }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+                    CQ_empState set ["target", []]; CQ_empProgrammed = false;
+                    [_p, _h get "pos"] call CQ_fnc_empProgram;
+                    _msg = format ["EMP target set on HQ #%1 at %2", _h get "id", mapGridPosition (_h get "pos")];
+                };
+            };
+        };
+        case "empLoad": {
+            if ((missionNamespace getVariable ["CQ_empPhase", ""]) != "defused" || { isNull (CQ_empState get "stomper") }) then { _msg = "no Stomper yet" } else {
+                private _v = CQ_empState get "stomper";
+                _v setPosATL ((getPosATL (CQ_empState get "device")) getPos [2, random 360]);
+                _msg = "Stomper put next to the device (it loads on its next check)";
+            };
         };
         case "tpCrash": {
             if (isNil "CQ_crashPos") then { _msg = "no crash yet" } else {

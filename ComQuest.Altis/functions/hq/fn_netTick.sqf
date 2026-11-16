@@ -23,7 +23,7 @@ if (isNil "CQ_relays") then { CQ_relays = [] };
 call CQ_fnc_netScale;
 
 private _built = (values CQ_hqs) select { (_x get "state") in CQ_activeStates && { _x get "buildDone" } };
-private _nodes = _built select { alive (_x get "radio") };
+private _nodes = _built select { alive (_x get "radio") && { (_x getOrDefault ["empUntil", -1]) < time } };   // an HQ hit by our EMP is off the net (CQ_fnc_empBlast)
 private _roots = _nodes select { (_x getOrDefault ["parent", -1]) == -1 };
 
 // breadth-first search from the trunk
@@ -44,7 +44,7 @@ while { _queue isNotEqualTo [] } do {
 {
     private _h = _x;
     private _id = _h get "id";
-    private _iso = !(_id in _seen);
+    private _iso = !(_id in _seen) || { (_h getOrDefault ["empUntil", -1]) > time };
     if (_iso != (_h getOrDefault ["isolated", false])) then {
         _h set ["isolated", _iso];
         if (_iso) then {

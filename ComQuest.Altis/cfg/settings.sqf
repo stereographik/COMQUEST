@@ -260,6 +260,41 @@ CQ_crashRoam = 600;                      // s the dropped vehicle roams around t
 CQ_crashRoamR = [150, 900];              // m: roaming radius, close -> large -> close
 CQ_crashDecrypt = 720;                   // s of decryption (12 min)
 
+// --- EMP event (CQ_fnc_empTick / empStart / empDefuse / empBlast / empStomper / empClient) -------
+// Once per game, CSAT's answer to its first loss (an HQ's radio tower destroyed or a commander
+// killed; a captured commander does not count): an EMP device in a compound 2-4 km from the base,
+// next to a table with a UAV terminal, defended (CQ_fnc_eventHold + armed pickup), timer
+// CQ_empTimer. Engineers defuse it (CQ_empDefuse s; anyone CQ_empDefuseAny s when no engineer is
+// alive). Lost: every drone of ours within CQ_empBlastR m destroyed, our vehicles' engines dead.
+// Won: the terminal on the table becomes lootable (a targeting token, it connects to nothing); an
+// indestructible Stomper (never a data link relay) spawns at the nearest military site outside the
+// war zone, drives to the device, loads it on its roof (within CQ_empLoadR m), then drives to the
+// target the terminal's holder programmed (once, final) and goes off within CQ_empStrikeR m:
+// enemy vehicles and statics within CQ_empHitR m dead, the HQs there off the radio net CQ_empSilence s.
+CQ_emp = true;
+CQ_empMinT = 1200;                       // s: never before 20 min
+CQ_empTimer = 1500;                      // s: 25 min to defuse
+CQ_empSiteDist = [2000, 4000];           // m from the base
+CQ_empHqGap = 800;                       // m kept from enemy HQs
+CQ_empSearchR = 400;                     // m: search circle radius (800 m wide), off-centre
+CQ_empDefuse = 30;                       // s: engineer hold
+CQ_empDefuseAny = 90;                    // s: anyone, only when no engineer is alive
+CQ_empPtsDefuse = 150;                   // points to the defuser
+CQ_empPtsSquad = 50;                     // ...and to each member of his squad
+CQ_empPtsStrike = 100;                   // to the soldier who programmed the strike
+CQ_empBlastR = 5000;                     // m: the device goes off: our drones and vehicles within
+CQ_empDevice = ["Land_Device_assembled_F", "Land_SatelliteAntenna_01_F", "Land_TTowerSmall_1_F"];   // first vanilla one
+CQ_empTable = "Land_CampingTable_small_F";
+CQ_empStomper = "B_UGV_01_F";
+CQ_empCampTypes = ["Land_Cargo_HQ_V1_F", "Land_Cargo_HQ_V2_F", "Land_Cargo_HQ_V3_F", "Land_Cargo_Tower_V1_F", "Land_Cargo_Tower_V2_F", "Land_Cargo_Tower_V3_F", "Land_Cargo_Patrol_V1_F", "Land_Cargo_Patrol_V2_F", "Land_Cargo_Patrol_V3_F", "Land_Bunker_F", "Land_BagBunker_Large_F"];
+CQ_empWarZone = 1500;                    // m: no Stomper spawn this close to an enemy HQ, the device or enemy troops
+CQ_empLoadR = 3;                         // m: the Stomper loads the device this close
+CQ_empStrikeR = 50;                      // m: ...and goes off this close to its target
+CQ_empStuck = 60;                        // s without moving: nudged CQ_empNudge m along its route
+CQ_empNudge = 6;
+CQ_empHitR = 400;                        // m: captured EMP at its target
+CQ_empSilence = 900;                     // s: the enemy HQs hit stay off the radio net (no waves, no help, nobody hears them)
+
 // --- Corridor outpost (CQ_fnc_outpostBuild / CQ_fnc_outpostTick), first HQ only ----------------
 // With the first HQ's insertion the enemy holds the land corridor between the coast (CQ_coastPoint)
 // and that HQ: on its highest open spot that best sees the flight corridor (or an Altis military

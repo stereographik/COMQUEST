@@ -88,6 +88,8 @@ private _cats = [
         ["Outpost", [["Build", "opBuild"], ["Jammer off", "opJam"], ["Destroy", "opKill"]]],
         ["Hostage", [["Start hostage", "hst"], ["Clear house", "hstClear"], ["Firmware now", "hstFw"],
                      ["Into the heli", "hstBoard"], ["Home now", "hstHome"], ["End event", "hstEnd"]]],
+        ["EMP", [["Start EMP", "emp"], ["Teleport near", "tpEmp"], ["Defuse now", "empDefuse"], ["Let it blow", "empBoom"],
+                 ["Target: nearest HQ", "empTgt"], ["Load now", "empLoad"]]],
         ["Game", [["Launch game", "launchGame"]]],
         ["SABOTAGE", [["Launch now", "sabGo"], ["Teleport near", "tpSab"], ["Wipe team", "sabKill"]]]
     ]],
