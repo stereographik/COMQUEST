@@ -67,6 +67,7 @@ private _diff = {
             switch (true) do {
                 case (_ost == 0): { _out pushBack format ["New %1 (%2)", _one, _lb] };
                 case (_st == 2 && { _ost != 2 }): { _out pushBack format ["%1 destroyed (%2)", _one, _lb] };
+                case ((_txt find "found at") > -1 && { (_otxt find "found at") == -1 }): { _out pushBack format ["%1 found (%2)", _one, _lb] };   // spotted by a drone
                 case ((_olb find "Not found") == 0 && { (_lb find "Not found") != 0 }): {
                     private _hq = (_lb splitString "#") select 0;
                     while { (_hq select [count _hq - 1]) == " " } do { _hq = _hq select [0, count _hq - 1] };

@@ -116,9 +116,12 @@ private _withObj = [_hqs select { (_x get "installations") isNotEqualTo [] }, []
         private _k = (_n getOrDefault [_type, 0]) + 1;
         _n set [_type, _k];
         private _total = { (_x getVariable ["CQ_objType", ""]) == _type } count (_h get "installations");
-        private _label = if (_total > 1 || { _type == "AA" }) then { format ["%1  #%2", _name, _k] } else { _name };
+        // spotted by a drone (CQ_spotted, on the players' map): named after its HQ, with its grid
+        private _spot = _o getVariable ["CQ_spotted", false];
+        private _nm = [_name, [_h get "id"] call CQ_fnc_objName] select _spot;
+        private _label = if (_total > 1 || { _type == "AA" }) then { format ["%1  #%2", _nm, _k] } else { _nm };
         private _rows = _objRows getOrDefault [_type, []];
-        _rows pushBack (if ((_c select 1) < 0) then { [1, format ["%1  ·  standing", _label]] }
+        _rows pushBack (if ((_c select 1) < 0) then { [1, if (_spot) then { format ["%1  ·  found at %2  ·  standing", _label, mapGridPosition _o] } else { format ["%1  ·  standing", _label] }] }
             else { [2, format ["%1  ·  %2 %3", _label, switch (true) do { case (_type == "Radio tower"): { "down" }; case (alive _o && { _o getVariable ["CQ_neutral", false] }): { "neutralised" }; default { "destroyed" } }, [_c select 1, _c select 2] call _when]] });
         _objRows set [_type, _rows];
     } forEach (_h get "installations");
