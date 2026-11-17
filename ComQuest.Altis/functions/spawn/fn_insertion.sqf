@@ -172,8 +172,8 @@ private _troops = [];
         ["heli", _heli], ["grp", _hg], ["lz", _lz], ["pad", _pad], ["state", "fly"], ["t", time]
     ];
 } forEach [
-    [CQ_formationGap,     85, 45, 2, false],
-    [2 * CQ_formationGap, 85, 315, 1, true]
+    [CQ_formationGap,     85, 45, CQ_insertionSquads select 0, false],
+    [2 * CQ_formationGap, 85, 315, CQ_insertionSquads select 1, true]
 ];
 
 // ---------------------------------------------------------------- escort: 2 Orcas + 1 Kajman
