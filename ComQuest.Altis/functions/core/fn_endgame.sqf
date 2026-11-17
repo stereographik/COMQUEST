@@ -94,5 +94,15 @@ publicVariable "CQ_endPub";
     private _t = time + CQ_endWait;
     waitUntil { sleep 1; time >= _t || { missionNamespace getVariable ["CQ_endNow", false] } };   // debug "Next game now"
     ["save"] call CQ_fnc_carry;           // friendlies keep kit, class, squad, points and bought vehicles
+    // the mission restarts itself (Arma's #restart: same mission, players keep their slots):
+    // dedicated server with CQ_restartPass (its serverCommandPassword); hosted: the host's
+    // machine sends it (CQ_fnc_restartHost). Not restarted after 10 s: the mission just ends.
+    ["ENDGAME: restarting the mission for the next game"] call CQ_fnc_log;
+    if (isDedicated) then {
+        if (CQ_restartPass != "") then { CQ_restartPass serverCommand "#restart" };
+    } else {
+        [] call CQ_fnc_restartHost;
+    };
+    sleep 10;
     [["EveryoneLost", "EveryoneWon"] select (_res == "win")] call BIS_fnc_endMissionServer;
 };
