@@ -23,7 +23,7 @@ private _notesAt = {
     {
         private _p = [(_c select 0) + 42, (_c select 1) + 30 - 9 * _forEachIndex, 0];
         private _t = create3DENEntity ["Marker", "mil_box", _p];
-        if (!isNull _t) then {
+        if !(_t isEqualTo "" || { _t isEqualTo objNull }) then {   // a marker comes back as its name (a string)
             _t set3DENAttribute ["text", _x];
             _t set3DENAttribute ["baseColor", "ColorOrange"];
             _t set3DENAttribute ["size2", [0.4, 0.4]];
@@ -51,7 +51,7 @@ collect3DENHistory {
             };
         } forEach _objs;
         private _m = create3DENEntity ["Marker", "mil_dot", [_c select 0, (_c select 1) - 50, 0]];
-        if (!isNull _m) then {
+        if !(_m isEqualTo "" || { _m isEqualTo objNull }) then {   // a marker comes back as its name (a string)
             _m set3DENAttribute ["text", _name];
             _m set3DENLayer _layer;
         };
