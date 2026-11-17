@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ComQuest Loadout Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans+Condensed:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Arma 3 inventory: dark olive glass panels, cream text, NATO amber for selection */
+  --bg: #0f110d;
+  --panel: #1a1d16;
+  --panel-2: #23271d;
+  --line: #3a4030;
+  --text: #e8e6d9;
+  --muted: #a6a381;
+  --accent: #d9a441;
+  --accent-ink: #1a1405;
+  --ok: #8fbf5a;
+  --bad: #c45a4a;
+  --display: "Rajdhani", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans Condensed", "Arial Narrow", Arial, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, monospace;
+  /* layout: class rail on top, paper-doll slots on the left, the item locker on the right, export at the bottom */
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); font-size: 15px; }
+a { color: var(--accent); }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
+header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 34px; letter-spacing: 1px; margin: 0; line-height: 1; text-transform: uppercase; }
+h1 small { display: block; font-size: 15px; color: var(--muted); letter-spacing: 3px; margin-top: 6px; font-weight: 600; }
+.intro { max-width: 62ch; color: var(--muted); margin: 0; line-height: 1.5; }
+.who { display: flex; gap: 8px; align-items: center; }
+.who label { color: var(--muted); font-size: 13px; }
+input[type=text], input[type=search], textarea { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); border-radius: 3px; padding: 7px 9px; font: inherit; }
+.rail { display: flex; flex-wrap: wrap; gap: 6px; }
+.rail button { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 7px 11px; font-family: var(--display); font-weight: 600; font-size: 15px; letter-spacing: .5px; display: flex; gap: 8px; align-items: center; }
+.rail button .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.rail button.done .dot { background: var(--ok); }
+.rail button[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.rail button[aria-pressed=true] .dot { background: var(--accent-ink); }
+.grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.panel h2 { font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: 1px; margin: 0; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.panel h2 span { font-size: 13px; color: var(--muted); letter-spacing: 0; font-family: var(--body); font-weight: 400; text-transform: none; }
+.role { color: var(--muted); margin: 0; line-height: 1.45; font-size: 14px; }
+.slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.slot { text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px; padding: 7px 9px; display: flex; flex-direction: column; gap: 2px; min-height: 52px; }
+.slot.wide { grid-column: 1 / -1; }
+.slot .k { font-family: var(--display); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.slot .v { font-size: 14px; overflow-wrap: anywhere; }
+.slot .v.none { color: #6d6b55; font-style: italic; }
+.slot[aria-pressed=true] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.slot .att { font-size: 12px; color: var(--muted); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn { background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px; padding: 7px 12px; font-size: 14px; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-family: var(--display); font-weight: 700; letter-spacing: 1px; font-size: 16px; text-transform: uppercase; padding: 9px 16px; }
+.list { display: flex; flex-direction: column; gap: 3px; max-height: 470px; overflow-y: auto; padding-right: 4px; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; text-align: left; background: var(--panel-2); border: 1px solid transparent; border-radius: 3px; padding: 6px 9px; }
+.item:hover:not([disabled]) { border-color: var(--line); }
+.item .n { font-size: 14px; }
+.item .c { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.item[aria-pressed=true] { border-color: var(--accent); background: #2d2a18; }
+.item[disabled] { opacity: .45; cursor: not-allowed; }
+.lock { font-size: 11px; color: var(--bad); font-family: var(--mono); }
+.qty { display: flex; gap: 4px; align-items: center; }
+.qty button { width: 26px; height: 26px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; line-height: 1; }
+.qty output { min-width: 24px; text-align: center; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+textarea { width: 100%; min-height: 70px; resize: vertical; line-height: 1.4; }
+.export textarea { font-family: var(--mono); font-size: 12px; min-height: 150px; color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.status { font-family: var(--mono); font-size: 13px; color: var(--ok); min-height: 1.2em; }
+.legend { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>ComQuest loadouts<small>Arma 3 · vanilla · no DLC</small></h1>
+    </div>
+    <p class="intro">Every class starts with its current ComQuest kit (co-op, Altis, NATO). Change it into the kit you think it should spawn with. Everything here is base-game gear. Some role gear is locked to its class, as in the mission's arsenal. When you're done, press <strong>Copy my loadouts</strong> and send the text to the mission author.</p>
+    <div class="who"><label for="nick">Your name</label><input type="text" id="nick" placeholder="Your in-game name" maxlength="40"></div>
+  </header>
+
+  <nav class="rail" id="rail" aria-label="Classes"></nav>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="dollTitle">
+      <h2 id="dollTitle"><b id="clsName">Rifleman</b><span id="clsCount"></span></h2>
+      <p class="role" id="clsRole"></p>
+      <div class="slots" id="slots"></div>
+      <div class="row">
+        <button class="btn" id="useDefault" type="button">Back to the mission's current kit</button>
+        <button class="btn" id="clearCls" type="button">Empty this class</button>
+      </div>
+      <label for="why" class="note">Why this kit? (optional)</label>
+      <textarea id="why" placeholder="Long-range overwatch needs the LRPS; a carryall for two spare Titans…" maxlength="400"></textarea>
+    </section>
+
+    <section class="panel" aria-labelledby="lockerTitle">
+      <h2 id="lockerTitle"><b id="slotName">Primary weapon</b><span id="slotHint"></span></h2>
+      <input type="search" id="search" placeholder="Filter: MX, 6.5, carryall…" aria-label="Filter the items">
+      <div class="list" id="list"></div>
+      <p class="legend">A green dot on a class means you changed its kit. Locked items are role gear for another class (the mission's arsenal rules). Pick a slot on the left to see what fits it.</p>
+    </section>
+  </div>
+
+  <section class="panel export" aria-labelledby="exportTitle">
+    <h2 id="exportTitle">Send your answer<span id="progress"></span></h2>
+    <p class="note">The text below holds every class you changed (a green dot on its tab), in a format the mission author can read straight into the game. Paste it in a message to him (Discord, forum, Steam).</p>
+    <div class="row">
+      <button class="btn primary" id="copy" type="button">Copy my loadouts</button>
+      <span class="status" id="status" role="status"></span>
+    </div>
+    <textarea id="out" readonly aria-label="Your loadouts as text"></textarea>
+  </section>
+</div>
+
+<script>
+// ---------------------------------------------------------------- data (base game only)
+const CLASSES = [
+  { id: "Rifleman", role: "The backbone. Holds ground, carries spare ammo for the squad." },
+  { id: "Squad Leader", role: "Leads, marks targets, calls fire. May use grenade-launcher rifles and the laser designator." },
+  { id: "Medic", role: "Heals fully with a medikit. Needs room for bandages." },
+  { id: "Grenadier", role: "Indirect fire with a grenade-launcher rifle." },
+  { id: "Autorifleman", role: "Suppression with a machine gun." },
+  { id: "Light Anti-Tank", role: "Unguided or light guided launcher against light vehicles." },
+  { id: "Heavy Anti-Tank", role: "Guided anti-tank launcher against armour." },
+  { id: "Anti-Air", role: "Guided anti-air launcher against helicopters and drones." },
+  { id: "Engineer", role: "Repairs vehicles, defuses and lays explosives. Gets toolkit and mine detector." },
+  { id: "Sniper", role: "Long range. The only class with sniper rifles and ghillie suits." },
+  { id: "Pilot", role: "Flies Falcon transports. The only class with pilot helmets and coveralls." }
+];
+// role gear: tag -> classes allowed (the mission's CQ_arsenalGates)
+const GATES = {
+  launcher: ["Light Anti-Tank", "Heavy Anti-Tank", "Anti-Air"],
+  mg: ["Autorifleman"],
+  sniper: ["Sniper"],
+  gl: ["Squad Leader", "Grenadier"],
+  medikit: ["Medic"],
+  toolkit: ["Engineer"],
+  detector: ["Engineer"],
+  designator: ["Squad Leader"],
+  rangefinder: ["Squad Leader", "Sniper", "Light Anti-Tank", "Heavy Anti-Tank", "Anti-Air"],
+  ghillie: ["Sniper"],
+  pilot: ["Pilot"]
+};
+const SLOTS = [
+  { k: "primary", name: "Primary weapon", wide: true },
+  { k: "optic", name: "Optic", att: true },
+  { k: "muzzle", name: "Muzzle", att: true },
+  { k: "pointer", name: "Rail", att: true },
+  { k: "bipod", name: "Bipod", att: true },
+  { k: "launcher", name: "Launcher", wide: true },
+  { k: "handgun", name: "Handgun" },
+  { k: "hgOptic", name: "Handgun optic", att: true },
+  { k: "uniform", name: "Uniform" },
+  { k: "vest", name: "Vest" },
+  { k: "backpack", name: "Backpack" },
+  { k: "headgear", name: "Headgear" },
+  { k: "facewear", name: "Facewear" },
+  { k: "nvg", name: "Night vision" },
+  { k: "binocular", name: "Binocular" },
+  { k: "items", name: "Grenades, medical, tools", wide: true }
+];
+// [class name, display name, slot, gate tag, extra]
+const W = (c, n, tag, x = {}) => ({ c, n, s: "primary", tag, ...x });
+const ITEMS = [
+  W("arifle_MX_F", "MX 6.5 mm", "", { sup: ["muzzle_snds_H"], bipod: 1 }),
+  W("arifle_MXC_F", "MXC 6.5 mm (carbine)", "", { sup: ["muzzle_snds_H"], bipod: 1 }),
+  W("arifle_MX_GL_F", "MX 3GL 6.5 mm", "gl", { sup: ["muzzle_snds_H"], bipod: 1 }),
+  W("arifle_MX_SW_F", "MX SW 6.5 mm", "mg", { sup: ["muzzle_snds_H"], bipod: 1 }),
+  W("arifle_MXM_F", "MXM 6.5 mm (marksman)", "", { sup: ["muzzle_snds_H"], bipod: 1 }),
+  W("arifle_Katiba_F", "Katiba 6.5 mm", "", { sup: ["muzzle_snds_H"] }),
+  W("arifle_Katiba_C_F", "Katiba Carbine 6.5 mm", "", { sup: ["muzzle_snds_H"] }),
+  W("arifle_Katiba_GL_F", "Katiba GL 6.5 mm", "gl", { sup: ["muzzle_snds_H"] }),
+  W("arifle_TRG21_F", "TRG-21 5.56 mm", "", { sup: ["muzzle_snds_M"] }),
+  W("arifle_TRG20_F", "TRG-20 5.56 mm", "", { sup: ["muzzle_snds_M"] }),
+  W("arifle_TRG21_GL_F", "TRG-21 EGLM 5.56 mm", "gl", { sup: ["muzzle_snds_M"] }),
+  W("arifle_Mk20_F", "Mk20 5.56 mm", "", { sup: ["muzzle_snds_M"] }),
+  W("arifle_Mk20C_F", "Mk20C 5.56 mm", "", { sup: ["muzzle_snds_M"] }),
+  W("arifle_Mk20_GL_F", "Mk20 EGLM 5.56 mm", "gl", { sup: ["muzzle_snds_M"] }),
+  W("arifle_SDAR_F", "SDAR 5.56 mm (underwater)", "", { sup: ["muzzle_snds_M"] }),
+  W("SMG_01_F", "Vermin SMG .45 ACP", "", { sup: ["muzzle_snds_acp"] }),
+  W("SMG_02_F", "Sting 9 mm", "", { sup: ["muzzle_snds_L"] }),
+  W("hgun_PDW2000_F", "PDW2000 9 mm", "", { sup: ["muzzle_snds_L"] }),
+  W("LMG_Mk200_F", "Mk200 6.5 mm", "mg", { sup: ["muzzle_snds_H_MG"], bipod: 1 }),
+  W("LMG_Zafir_F", "Zafir 7.62 mm", "mg", { sup: ["muzzle_snds_B"] }),
+  W("srifle_EBR_F", "Mk18 ABR 7.62 mm", "sniper", { sup: ["muzzle_snds_B"], bipod: 1 }),
+  W("srifle_DMR_01_F", "Rahim 7.62 mm", "sniper", { sup: ["muzzle_snds_B"], bipod: 1 }),
+  W("srifle_GM6_F", "GM6 Lynx 12.7 mm", "sniper", { bipod: 1 }),
+  W("srifle_LRR_F", "M320 LRR .408", "sniper", { bipod: 1 }),
+
+  { c: "optic_Aco", n: "ACO (red)", s: "optic" }, { c: "optic_ACO_grn", n: "ACO (green)", s: "optic" },
+  { c: "optic_Holosight", n: "Mk17 Holosight", s: "optic" }, { c: "optic_MRCO", n: "MRCO", s: "optic" },
+  { c: "optic_Arco", n: "ARCO", s: "optic" }, { c: "optic_Hamr", n: "RCO", s: "optic" },
+  { c: "optic_DMS", n: "DMS", s: "optic" }, { c: "optic_SOS", n: "MOS", s: "optic" },
+  { c: "optic_LRPS", n: "LRPS", s: "optic" }, { c: "optic_NVS", n: "NVS", s: "optic" },
+  { c: "optic_Nightstalker", n: "Nightstalker", s: "optic" }, { c: "optic_tws", n: "TWS", s: "optic" },
+  { c: "muzzle_snds_H", n: "Sound suppressor (6.5 mm)", s: "muzzle" }, { c: "muzzle_snds_M", n: "Sound suppressor (5.56 mm)", s: "muzzle" },
+  { c: "muzzle_snds_B", n: "Sound suppressor (7.62 mm)", s: "muzzle" }, { c: "muzzle_snds_H_MG", n: "Sound suppressor (6.5 mm LMG)", s: "muzzle" },
+  { c: "muzzle_snds_L", n: "Sound suppressor (9 mm)", s: "muzzle" }, { c: "muzzle_snds_acp", n: "Sound suppressor (.45 ACP)", s: "muzzle" },
+  { c: "acc_pointer_IR", n: "IR laser pointer", s: "pointer" }, { c: "acc_flashlight", n: "Flashlight", s: "pointer" },
+  { c: "bipod_01_F_snd", n: "Bipod (sand)", s: "bipod" }, { c: "bipod_01_F_blk", n: "Bipod (black)", s: "bipod" }, { c: "bipod_01_F_mtp", n: "Bipod (MTP)", s: "bipod" },
+
+  { c: "launch_NLAW_F", n: "PCML (NLAW)", s: "launcher", tag: "launcher" },
+  { c: "launch_RPG32_F", n: "RPG-42 Alamut", s: "launcher", tag: "launcher" },
+  { c: "launch_B_Titan_short_F", n: "Titan MPRL Compact (AT)", s: "launcher", tag: "launcher" },
+  { c: "launch_B_Titan_F", n: "Titan MPRL (AA)", s: "launcher", tag: "launcher" },
+
+  { c: "hgun_P07_F", n: "P07 9 mm", s: "handgun", sup: ["muzzle_snds_L"] },
+  { c: "hgun_Rook40_F", n: "Rook-40 9 mm", s: "handgun", sup: ["muzzle_snds_L"] },
+  { c: "hgun_ACPC2_F", n: "ACP-C2 .45", s: "handgun", sup: ["muzzle_snds_acp"] },
+  { c: "hgun_Pistol_heavy_01_F", n: "4-five .45", s: "handgun", sup: ["muzzle_snds_acp"] },
+  { c: "hgun_Pistol_heavy_02_F", n: "Zubr .45", s: "handgun" },
+  { c: "optic_MRD", n: "MRD", s: "hgOptic" }, { c: "optic_Yorris", n: "Yorris J2", s: "hgOptic" },
+
+  { c: "U_B_CombatUniform_mcam", n: "Combat Fatigues (MTP)", s: "uniform" },
+  { c: "U_B_CombatUniform_mcam_tshirt", n: "Combat Fatigues (MTP, tee)", s: "uniform" },
+  { c: "U_B_CombatUniform_mcam_vest", n: "Recon Fatigues (MTP)", s: "uniform" },
+  { c: "U_B_CTRG_1", n: "CTRG Combat Uniform", s: "uniform" },
+  { c: "U_B_CTRG_3", n: "CTRG Combat Uniform (rolled-up)", s: "uniform" },
+  { c: "U_B_Wetsuit", n: "Wetsuit", s: "uniform" },
+  { c: "U_B_GhillieSuit", n: "Ghillie Suit (NATO)", s: "uniform", tag: "ghillie" },
+  { c: "U_B_HeliPilotCoveralls", n: "Heli Pilot Coveralls", s: "uniform", tag: "pilot" },
+  { c: "U_B_PilotCoveralls", n: "Pilot Coveralls", s: "uniform", tag: "pilot" },
+
+  { c: "V_PlateCarrier1_rgr", n: "Carrier Lite (green)", s: "vest" },
+  { c: "V_PlateCarrier2_rgr", n: "Carrier Rig (green)", s: "vest" },
+  { c: "V_PlateCarrierGL_rgr", n: "Carrier GL Rig (green)", s: "vest" },
+  { c: "V_PlateCarrierSpec_rgr", n: "Carrier Special Rig (green)", s: "vest" },
+  { c: "V_Chestrig_rgr", n: "Chest Rig (green)", s: "vest" },
+  { c: "V_BandollierB_rgr", n: "Slash Bandolier (green)", s: "vest" },
+  { c: "V_TacVest_khk", n: "Tactical Vest (khaki)", s: "vest" },
+  { c: "V_Rangemaster_belt", n: "Rangemaster Belt", s: "vest" },
+  { c: "V_RebreatherB", n: "Rebreather", s: "vest" },
+
+  { c: "B_AssaultPack_mcamo", n: "Assault Pack (MTP)", s: "backpack" },
+  { c: "B_FieldPack_khk", n: "Field Pack (khaki)", s: "backpack" },
+  { c: "B_TacticalPack_mcamo", n: "Tactical Backpack (MTP)", s: "backpack" },
+  { c: "B_Kitbag_mcamo", n: "Kitbag (MTP)", s: "backpack" },
+  { c: "B_Carryall_mcamo", n: "Carryall Backpack (MTP)", s: "backpack" },
+
+  { c: "H_HelmetB", n: "ECH", s: "headgear" }, { c: "H_HelmetB_light", n: "Light Combat Helmet", s: "headgear" },
+  { c: "H_HelmetSpecB", n: "Enhanced Combat Helmet", s: "headgear" }, { c: "H_Booniehat_mcamo", n: "Booniehat (MTP)", s: "headgear" },
+  { c: "H_MilCap_mcamo", n: "Military Cap (MTP)", s: "headgear" }, { c: "H_Cap_tan", n: "Cap (tan)", s: "headgear" },
+  { c: "H_Watchcap_blk", n: "Beanie (black)", s: "headgear" }, { c: "H_Bandanna_mcamo", n: "Bandana (MTP)", s: "headgear" },
+  { c: "H_Shemag_olive", n: "Shemag (olive)", s: "headgear" },
+  { c: "H_PilotHelmetHeli_B", n: "Heli Pilot Helmet", s: "headgear", tag: "pilot" },
+  { c: "H_CrewHelmetHeli_B", n: "Heli Crew Helmet", s: "headgear" },
+
+  { c: "G_Combat", n: "Combat Goggles", s: "facewear" }, { c: "G_Tactical_Clear", n: "Tactical Glasses", s: "facewear" },
+  { c: "G_Shades_Black", n: "Shades (black)", s: "facewear" }, { c: "G_Lowprofile", n: "Low Profile Goggles", s: "facewear" },
+  { c: "G_Balaclava_blk", n: "Balaclava (black)", s: "facewear" }, { c: "G_Bandanna_blk", n: "Bandana mask (black)", s: "facewear" },
+  { c: "G_Diving", n: "Diving Goggles", s: "facewear" },
+
+  { c: "NVGoggles", n: "NV Goggles (brown)", s: "nvg" }, { c: "NVGoggles_OPFOR", n: "NV Goggles (black)", s: "nvg" }, { c: "NVGoggles_INDEP", n: "NV Goggles (green)", s: "nvg" },
+
+  { c: "Binocular", n: "Binoculars", s: "binocular" },
+  { c: "Rangefinder", n: "Rangefinder", s: "binocular", tag: "rangefinder" },
+  { c: "Laserdesignator", n: "Laser Designator", s: "binocular", tag: "designator" },
+
+  { c: "FirstAidKit", n: "First Aid Kit", s: "items" }, { c: "Medikit", n: "Medikit", s: "items", tag: "medikit" },
+  { c: "ToolKit", n: "Toolkit", s: "items", tag: "toolkit" }, { c: "MineDetector", n: "Mine Detector", s: "items", tag: "detector" },
+  { c: "HandGrenade", n: "RGO Frag Grenade", s: "items" }, { c: "MiniGrenade", n: "RGN Mini Grenade", s: "items" },
+  { c: "SmokeShell", n: "Smoke Grenade (white)", s: "items" }, { c: "SmokeShellGreen", n: "Smoke Grenade (green)", s: "items" },
+  { c: "SmokeShellRed", n: "Smoke Grenade (red)", s: "items" }, { c: "SmokeShellBlue", n: "Smoke Grenade (blue)", s: "items" },
+  { c: "Chemlight_green", n: "Chemlight (green)", s: "items" },
+  { c: "1Rnd_HE_Grenade_shell", n: "40 mm HE grenade (GL)", s: "items" }, { c: "1Rnd_Smoke_Grenade_shell", n: "40 mm smoke (GL)", s: "items" },
+  { c: "UGL_FlareWhite_F", n: "40 mm flare (GL)", s: "items" },
+  { c: "DemoCharge_Remote_Mag", n: "Explosive Charge", s: "items" }, { c: "SatchelCharge_Remote_Mag", n: "Explosive Satchel", s: "items" },
+  { c: "ClaymoreDirectionalMine_Remote_Mag", n: "Claymore Charge", s: "items" },
+  { c: "APERSMine_Range_Mag", n: "APERS Mine", s: "items" }, { c: "ATMine_Range_Mag", n: "AT Mine", s: "items" },
+  { c: "Laserbatteries", n: "Designator Batteries", s: "items" },
+  { c: "#mags", n: "Primary magazines (count)", s: "items" }, { c: "#rockets", n: "Launcher rounds in total (count)", s: "items" }
+];
+const BY = Object.fromEntries(ITEMS.map(i => [i.c, i]));
+// the mission's current kits (CQ_classGear + CQ_classKit), to start from
+const MX = { muzzle: "muzzle_snds_H", pointer: "acc_pointer_IR" };
+const base = (p, o, x = {}) => ({ primary: p, optic: o, ...MX, bipod: "bipod_01_F_snd", launcher: "", handgun: "hgun_P07_F", hgOptic: "", uniform: "U_B_CombatUniform_mcam", vest: "V_PlateCarrier2_rgr", backpack: "B_AssaultPack_mcamo", headgear: "H_HelmetSpecB", facewear: "", nvg: "NVGoggles", binocular: "", ...x });
+const it = (o) => o;
+const DEFAULTS = {
+  "Rifleman": base("arifle_MX_F", "optic_Hamr", { items: it({ "#mags": 10, HandGrenade: 2, SmokeShell: 2, FirstAidKit: 2 }) }),
+  "Squad Leader": base("arifle_MX_GL_F", "optic_Arco", { bipod: "", vest: "V_PlateCarrierGL_rgr", binocular: "Laserdesignator", items: it({ "#mags": 10, HandGrenade: 2, SmokeShell: 4, SmokeShellBlue: 2, SmokeShellGreen: 2, SmokeShellRed: 1, "1Rnd_HE_Grenade_shell": 6, FirstAidKit: 2, Laserbatteries: 2 }) }),
+  "Medic": base("arifle_MXC_F", "optic_Holosight", { backpack: "B_Kitbag_mcamo", items: it({ "#mags": 10, Medikit: 1, FirstAidKit: 18, SmokeShell: 6, HandGrenade: 2 }) }),
+  "Grenadier": base("arifle_MX_GL_F", "optic_Arco", { bipod: "", vest: "V_PlateCarrierGL_rgr", backpack: "B_Kitbag_mcamo", items: it({ "#mags": 10, "1Rnd_HE_Grenade_shell": 14, "1Rnd_Smoke_Grenade_shell": 4, HandGrenade: 2, SmokeShell: 2, FirstAidKit: 2 }) }),
+  "Autorifleman": base("LMG_Mk200_F", "optic_Hamr", { muzzle: "muzzle_snds_H_MG", vest: "V_PlateCarrierSpec_rgr", backpack: "B_Kitbag_mcamo", items: it({ "#mags": 6, HandGrenade: 2, SmokeShell: 2, FirstAidKit: 2 }) }),
+  "Light Anti-Tank": base("arifle_MX_F", "optic_Hamr", { launcher: "launch_NLAW_F", backpack: "B_Kitbag_mcamo", items: it({ "#mags": 8, "#rockets": 3, HandGrenade: 2, SmokeShell: 2, FirstAidKit: 2 }) }),
+  "Heavy Anti-Tank": base("arifle_MX_F", "optic_Hamr", { launcher: "launch_B_Titan_short_F", backpack: "B_Carryall_mcamo", items: it({ "#mags": 8, "#rockets": 3, HandGrenade: 2, SmokeShell: 2, FirstAidKit: 2 }) }),
+  "Anti-Air": base("arifle_MX_F", "optic_Hamr", { launcher: "launch_B_Titan_F", backpack: "B_Carryall_mcamo", items: it({ "#mags": 8, "#rockets": 3, HandGrenade: 2, SmokeShell: 2, FirstAidKit: 2 }) }),
+  "Engineer": base("arifle_MXC_F", "optic_Holosight", { backpack: "B_Kitbag_mcamo", items: it({ "#mags": 10, ToolKit: 1, MineDetector: 1, DemoCharge_Remote_Mag: 3, SatchelCharge_Remote_Mag: 1, HandGrenade: 2, SmokeShell: 2, FirstAidKit: 2 }) }),
+  "Sniper": base("srifle_GM6_F", "optic_LRPS", { muzzle: "", pointer: "", uniform: "U_B_GhillieSuit", vest: "V_Chestrig_rgr", headgear: "", binocular: "Rangefinder", items: it({ "#mags": 9, HandGrenade: 2, SmokeShell: 2, FirstAidKit: 2 }) }),
+  "Pilot": base("arifle_MXC_F", "optic_Holosight", { uniform: "U_B_HeliPilotCoveralls", vest: "V_TacVest_khk", headgear: "H_PilotHelmetHeli_B", backpack: "", items: it({ "#mags": 5, SmokeShellBlue: 2, FirstAidKit: 2 }) })
+};
+
+// ---------------------------------------------------------------- state
+let state = { nick: "", cls: {} };
+try { const s = JSON.parse(localStorage.getItem("cqLoadoutQuiz") || "null"); if (s && s.cls) state = s; } catch (e) {}
+let cur = "Rifleman", slot = "primary";
+const kit = (c) => (state.cls[c] ||= { items: {}, why: "" });
+const save = () => { try { localStorage.setItem("cqLoadoutQuiz", JSON.stringify(state)); } catch (e) {} };
+const allowed = (item, c) => !item.tag || (GATES[item.tag] || []).includes(c);
+// a class counts as answered once it differs from the mission's current kit
+const strip = (k) => { const o = JSON.parse(JSON.stringify(k || {})); delete o.why; return JSON.stringify(Object.keys(o).sort().map(x => [x, o[x]])); };
+const filled = (c) => { const k = state.cls[c]; return !!k && (strip(k) !== strip(DEFAULTS[c]) || !!k.why); };
+
+// ---------------------------------------------------------------- rendering
+const $ = (id) => document.getElementById(id);
+function rail() {
+  $("rail").innerHTML = "";
+  for (const c of CLASSES) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = filled(c.id) ? "done" : "";
+    b.setAttribute("aria-pressed", c.id === cur);
+    b.innerHTML = `<span class="dot" aria-hidden="true"></span>${c.id}`;
+    b.onclick = () => { cur = c.id; render(); };
+    $("rail").appendChild(b);
+  }
+  const n = CLASSES.filter(c => filled(c.id)).length;
+  $("progress").textContent = `${n} of ${CLASSES.length} classes changed`;
+}
+function label(c) { if (!c) return ""; const i = BY[c]; return i ? i.n : c; }
+function doll() {
+  const k = kit(cur);
+  $("clsName").textContent = cur;
+  $("clsRole").textContent = CLASSES.find(c => c.id === cur).role;
+  $("why").value = k.why || "";
+  $("slots").innerHTML = "";
+  for (const s of SLOTS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "slot" + (s.wide ? " wide" : "");
+    b.setAttribute("aria-pressed", s.k === slot);
+    let v;
+    if (s.k === "items") {
+      const e = Object.entries(k.items || {}).filter(([, n]) => n > 0);
+      v = e.length ? e.map(([c, n]) => `${n}× ${label(c)}`).join(" · ") : "";
+    } else v = label(k[s.k]);
+    b.innerHTML = `<span class="k">${s.name}</span><span class="v ${v ? "" : "none"}">${v || "empty"}</span>`;
+    b.onclick = () => { slot = s.k; render(); };
+    $("slots").appendChild(b);
+  }
+  const n = SLOTS.filter(s => s.k === "items" ? Object.values(k.items || {}).some(x => x > 0) : k[s.k]).length;
+  $("clsCount").textContent = `${n} slots used`;
+}
+function fits(i, k) {
+  const p = BY[k.primary], h = BY[k.handgun];
+  if (i.s === "muzzle") return p && (p.sup || []).includes(i.c);
+  if (i.s === "bipod") return p && p.bipod;
+  if (["optic", "pointer"].includes(i.s)) return !!p;
+  if (i.s === "hgOptic") return !!h;
+  return true;
+}
+function locker() {
+  const k = kit(cur);
+  const s = SLOTS.find(x => x.k === slot);
+  $("slotName").textContent = s.name;
+  const q = $("search").value.trim().toLowerCase();
+  const list = ITEMS.filter(i => i.s === slot && (!q || (i.n + " " + i.c).toLowerCase().includes(q)));
+  $("slotHint").textContent = slot === "items" ? "use + and − to set how many" : s.att ? "fits the weapon you chose" : "click to equip, again to remove";
+  $("list").innerHTML = "";
+  for (const i of list) {
+    const ok = allowed(i, cur);
+    const fit = fits(i, k);
+    if (slot !== "items") {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "item";
+      b.disabled = !ok || !fit;
+      b.setAttribute("aria-pressed", k[slot] === i.c);
+      const why = !ok ? `<span class="lock">locked: ${(GATES[i.tag] || []).join(", ")} only</span>` : !fit ? `<span class="lock">doesn't fit this weapon</span>` : "";
+      b.innerHTML = `<span><span class="n">${i.n}</span><br><span class="c">${i.c}</span> ${why}</span><span aria-hidden="true">${k[slot] === i.c ? "✓" : ""}</span>`;
+      b.onclick = () => {
+        k[slot] = k[slot] === i.c ? "" : i.c;
+        if (slot === "primary") { for (const a of ["muzzle", "bipod"]) if (k[a] && !fits(BY[k[a]], k)) k[a] = ""; }
+        save(); render();
+      };
+      $("list").appendChild(b);
+    } else {
+      const row = document.createElement("div");
+      row.className = "item"; if (!ok) row.setAttribute("disabled", "");
+      const n = (k.items || {})[i.c] || 0;
+      row.innerHTML = `<span><span class="n">${i.n}</span><br><span class="c">${i.c.startsWith("#") ? "" : i.c}</span> ${ok ? "" : `<span class="lock">locked: ${(GATES[i.tag] || []).join(", ")} only</span>`}</span>
+        <span class="qty"><button type="button" aria-label="One less ${i.n}">−</button><output>${n}</output><button type="button" aria-label="One more ${i.n}">+</button></span>`;
+      const [minus, plus] = row.querySelectorAll("button");
+      const set = (d) => { if (!ok) return; k.items ||= {}; k.items[i.c] = Math.max(0, Math.min(40, n + d)); if (!k.items[i.c]) delete k.items[i.c]; save(); render(); };
+      minus.onclick = () => set(-1); plus.onclick = () => set(1);
+      minus.disabled = !ok; plus.disabled = !ok;
+      $("list").appendChild(row);
+    }
+  }
+}
+function exportText() {
+  const out = { quiz: "ComQuest loadouts v1", by: state.nick || "anonymous", classes: {} };
+  for (const c of CLASSES) {
+    if (!filled(c.id)) continue;
+    const k = state.cls[c.id];
+    const items = Object.entries(k.items || {}).filter(([x, n]) => n > 0 && !x.startsWith("#"));
+    out.classes[c.id] = {
+      primary: k.primary || "", attachments: ["optic", "muzzle", "pointer", "bipod"].map(a => k[a]).filter(Boolean),
+      launcher: k.launcher || "", handgun: k.handgun || "", handgunOptic: k.hgOptic || "",
+      uniform: k.uniform || "", vest: k.vest || "", backpack: k.backpack || "", headgear: k.headgear || "",
+      facewear: k.facewear || "", nvg: k.nvg || "", binocular: k.binocular || "",
+      primaryMags: (k.items || {})["#mags"] || 0, launcherRounds: (k.items || {})["#rockets"] || 0,
+      items, why: k.why || ""
+    };
+  }
+  return "COMQUEST LOADOUT PROPOSAL (paste this to the mission author)\n" + JSON.stringify(out, null, 1);
+}
+function render() { rail(); doll(); locker(); $("out").value = exportText(); }
+
+// ---------------------------------------------------------------- controls
+$("nick").value = state.nick || "";
+$("nick").oninput = (e) => { state.nick = e.target.value; save(); $("out").value = exportText(); };
+$("why").oninput = (e) => { kit(cur).why = e.target.value; save(); $("out").value = exportText(); };
+$("search").oninput = locker;
+$("useDefault").onclick = () => { state.cls[cur] = JSON.parse(JSON.stringify({ ...DEFAULTS[cur], why: kit(cur).why || "" })); save(); render(); };
+$("clearCls").onclick = () => { state.cls[cur] = { items: {}, why: "" }; save(); render(); };
+$("copy").onclick = async () => {
+  const t = exportText();
+  try { await navigator.clipboard.writeText(t); $("status").textContent = "Copied. Paste it in a message to the mission author."; }
+  catch (e) { $("out").focus(); $("out").select(); $("status").textContent = "Your browser blocked copying: the text is selected, press Ctrl+C."; }
+};
+// every class starts from the mission's current kit
+for (const c of CLASSES) if (!state.cls[c.id]) state.cls[c.id] = JSON.parse(JSON.stringify({ ...DEFAULTS[c.id], why: "" }));
+render();
+</script>
+</body>
+</html>
