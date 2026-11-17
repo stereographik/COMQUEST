@@ -4,6 +4,7 @@
     Loaded on every machine (server and clients) before init, by CQ_fnc_settings.
 */
 
+// celling100: enemy infantry ceiling 80 (CQ_maxInfantry), everything that spends infantry scaled with it
 CQ_debug = false;                        // test settings (short stages, debug labels); the host starts with all logs in chat. Debug panel: host + logged-in admins only, always
 CQ_playerView = true;                    // final player view by default: no debug chat, cards or markers (toggle in the debug panel)
 CQ_debugCards = false;                   // debug phase messages as orange cards too (story lines use the cards)
@@ -502,7 +503,7 @@ CQ_testMagDirect = false;                // TEST ONLY, set false before merging 
 
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 2;                         // free root insertions in a campaign: the beachhead, then one more after CQ_rootInterval (at once if the island is empty)
-CQ_rootCapBonus = 40;                    // root insertions may go this far above CQ_maxInfantry (reinforcements alone can fill the cap)
+CQ_rootCapBonus = 20;                    // root insertions may go this far above CQ_maxInfantry (reinforcements alone can fill the cap)
 CQ_helpWaves = true;                     // a root wave first guards the least built unfinished HQ, then founds its own HQ near it
 CQ_helpMaxTime = 900;                    // s: a help wave leaves after this even if the HQ is still not built
 CQ_helpSiteDist = [2000, 4000];          // m: its own HQ this far from the HQ it helped, on the side away from our base
@@ -512,6 +513,7 @@ CQ_reinsertDelay = 300;                  // s: the island empty of enemy HQs thi
 CQ_firstRootDelay = 300;                 // seconds after mission start (debug panel: "Launch game" skips the wait)
 CQ_insertionSpawnDistance = 8000;        // helis appear this far from the site
 CQ_insertionFlyHeight = 80;              // default; each role has its own band below
+CQ_insertionSquads = [1, 0];            // infantry squads in the two troop helicopters of a root insertion (the 2nd also carries the officer group)
 // Altitude bands keep formations from colliding (careless transports never dodge)
 CQ_heightLifter = 70;
 CQ_dropPlaneClass = "I_Heli_Transport_02_F";   // CH-49 Mohawk (base game): carries a vehicle and paradrops it (own parachute)
@@ -568,10 +570,10 @@ CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted
 // --- HQ lifecycle (realistic timings) ---------------------------------------
 // Securing -> Installing -> Hold -> WaitingReinf -> split (child HQ) -> Holding -> WaitingReinf ...
 CQ_activeStates = ["Inbound", "Helping", "Securing", "Installing", "Hold", "Holding", "WaitingReinf"];
-CQ_maxHqs = 6;                           // HQs alive at once
+CQ_maxHqs = 4;                           // HQs alive at once
 CQ_aiEventSize = 20;                     // AI room an event (crash, hostage, EMP) needs under CQ_maxAI before it starts (CQ_fnc_aiRoom)
-CQ_maxAI = 220;                          // hidden safety limit: every enemy AI alive at once (crews included)
-CQ_maxInfantry = 160;                    // enemy foot soldiers alive at once (vehicle / heli / static crews not counted)
+CQ_maxAI = 120;                          // hidden safety limit: every enemy AI alive at once (crews included)
+CQ_maxInfantry = 80;                     // enemy foot soldiers alive at once (vehicle / heli / static crews not counted)
 CQ_carrierHqs = 6;                       // the carrier has supplies for this many CHILD HQs (splits) and re-insertions; the CQ_maxRoots roots are free
 CQ_carrierHqKm = 3000;                   // > 0: CQ_carrierHqs is set from the carrier site instead: one HQ per this many m
                                          // from the site's first HQ to our base (far beach = longer campaign), see CQ_fnc_carrierSetup
@@ -584,9 +586,9 @@ CQ_holdTime = 60;                        // hold after installation, before call
 CQ_waveInterval = 600;                   // a new reinforcement wave every 10 min per HQ
 CQ_waveSpawnDist = [1000, 1500];         // convoy spawns on a road this far from the HQ
 CQ_waveNoPlayerRadius = 1000;
-CQ_waveSquads = 2;
+CQ_waveSquads = 1;
 CQ_hqVehMax = 3;                         // crewed fighting vehicles per HQ: past this, a wave brings only its troop truck
-CQ_waveSize = 25;                        // AI budget reserved for one wave
+CQ_waveSize = 14;                        // AI budget reserved for one wave
 CQ_wavePools = [                         // one vehicle from each pool per wave
     ["truck",  ["O_Truck_02_transport_F", "B_Truck_01_transport_F"]],
     ["armour", ["O_APC_Wheeled_02_rcws_v2_F", "I_APC_tracked_03_cannon_F", "O_APC_Tracked_02_cannon_F"]],   // Marid, Mora, BTR-K Kamysh (no DLC)
@@ -610,8 +612,8 @@ CQ_vehLowFuel = 0.3;                     // ground vehicles under this drive to 
 CQ_vehFuelFullCost = 40;                 // fuel points for a full tank of a ground vehicle
 CQ_fuelConsumption = 2;                  // every enemy vehicle and helicopter burns fuel this many times faster
 // Guerillas: armed locals the HQ raises when stage 4 is done (vanilla FIA on the CSAT side)
-CQ_guerillaSquads = 2;
-CQ_guerillaSize = [6, 8];
+CQ_guerillaSquads = 1;
+CQ_guerillaSize = [4, 6];
 CQ_guerillaVillageRange = 1500;          // they patrol the nearest village this close, else the HQ surroundings
 CQ_guerillaLeader = "leader";            // roles of CQ_civKits (armed civilians, CQ_fnc_civArm)
 CQ_guerillaClasses = ["rifle", "rifle", "mg", "at", "gl", "marksman", "medic", "carbine", "rifle"];
@@ -663,9 +665,9 @@ CQ_enemyCallsigns = ["Viper", "Talon", "Ghost", "Hammer", "Bandit", "Hawk", "Tan
     "Barracuda", "Beast", "Blackjack", "Blaze", "Bone-Saw", "Bloodlust", "Butcher", "Bullet", "Boomslang", "Bison",
     "Blindside", "Butane", "Bam-Bam", "Lasher", "Lazer", "Snake", "Smoke", "Toro", "Chaos", "Steel Rain",
     "Dead Walker", "Skull", "Xerxes", "Mad Dog", "Giant Killer", "Fatal"];
-CQ_cmdEscortClasses = ["O_recon_TL_F", "O_recon_F", "O_recon_F", "O_recon_M_F", "O_recon_LAT_F", "O_recon_medic_F"];   // elite squad always around each enemy HQ commander
+CQ_cmdEscortClasses = ["O_recon_TL_F", "O_recon_F", "O_recon_M_F", "O_recon_medic_F"];   // elite squad always around each enemy HQ commander
 CQ_cmdEscortSkill = 0.8;
-CQ_objGuardSize = 3;                     // ...each site guarded by this many soldiers taken from the HQ patrols
+CQ_objGuardSize = 2;                     // ...each site guarded by this many soldiers taken from the HQ patrols
 CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is finished: compass direction from the HQ (270 = west)
 CQ_hmgTowerDist = 45;                    // ...and distance
 // Enemy support teams: one medic team, one engineer team, dropped again after destruction
@@ -679,7 +681,7 @@ CQ_specialHqRange = 2500;                // m around its HQ where a support team
 CQ_specialRange = 6000;
 // Snipers: with every carrier insertion, CQ_snipersPerWave snipers on high ground on the HQ's
 // west side, driven by the medic and engineer teams to CQ_sniperDrop m short of their spots
-CQ_snipersPerWave = 4;
+CQ_snipersPerWave = 2;
 CQ_sniperClass = "O_sniper_F";           // falls back to the marksman if missing or DLC
 CQ_sniperSeats = 2;                      // Marid cargo seats each team keeps free for them
 CQ_sniperDist = [800, 1200];             // m from the HQ
@@ -926,12 +928,12 @@ CQ_rootDefendCooldown = 1200;            // contact at a root HQ: all its child 
 CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_colonistWalkNear = 1000;              // the squad that walks counts as arrived once within this many m of the site
-CQ_minInfantryToExpand = 16;
+CQ_minInfantryToExpand = 12;
 CQ_splitAge = 1200;                      // s: an HQ splits only once it has been built this long (20 min)
 CQ_splitGap = 1200;                      // s: ...and then at most once per this (20 min)
 CQ_assaultAge = 900;                     // s: an HQ within CQ_assaultRange assaults the base only once built this long (15 min)
 CQ_frontWarnR = 5000;                    // m: CROSSROAD warns once when an HQ is built this close to the base
-CQ_minDefenders = 8;                     // never send away the last 8 infantry of an HQ
+CQ_minDefenders = 6;                     // never send away the last 6 infantry of an HQ
 CQ_childDistance = [3000, 4000];         // child HQ 3-4 km from its parent (the front reaches the base in fewer generations)
 
 // --- Contact, comms and QRF ---------------------------------------------------
