@@ -10,6 +10,7 @@ params ["_p", "_cls"];
 if (!isServer || { isNull _p }) exitWith {};
 private _say = { params ["_t"]; [_t] remoteExec ["hint", _p] };
 private _g = group _p;
+if (missionNamespace getVariable ["CQ_gameOver", false]) exitWith { ["The game is over: the shop is closed until the next game."] call _say };
 if (_g getVariable ["CQ_solo", false] || { leader _g != _p }) exitWith { ["Only a squad leader can buy vehicles"] call _say };
 if (isNil "CQ_shopTerminal" || { _p distance CQ_shopTerminal > CQ_shopRange + 4 }) exitWith { ["Go to the shop terminal"] call _say };
 private _i = CQ_shopCatalog findIf { (_x select 0) == _cls };

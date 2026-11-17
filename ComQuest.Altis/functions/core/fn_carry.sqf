@@ -68,13 +68,9 @@ switch (_mode) do {
             private _g = _x;
             private _m = (units _g) select { isPlayer _x };
             if (side _g == west && { !(_g getVariable ["CQ_solo", true]) } && { !(_g getVariable ["CQ_falcon", false]) } && { _m isNotEqualTo [] }) then {
-                // bought vehicles still alive are refunded: their shop price goes back to the squad's points
-                private _ref = 0;
-                {
-                    private _c = typeOf _x;
-                    private _i = CQ_shopCatalog findIf { (_x select 0) == _c };
-                    if (_i > -1) then { _ref = _ref + ((CQ_shopCatalog select _i) select 1) };
-                } forEach ((_g getVariable ["CQ_sqBought", []]) select { alive _x });
+                // bought vehicles alive when the game ended are refunded (counted then by CQ_fnc_endClear,
+                // so a crash during the debrief costs nothing): their shop price goes back to the points
+                private _ref = _g getVariable ["CQ_endRefund", 0];
                 _sq pushBack [groupId _g, getPlayerUID (leader _g), _m apply { getPlayerUID _x }, (_g getVariable ["CQ_sqPts", 0]) + _ref, _ref];
             };
         } forEach allGroups;

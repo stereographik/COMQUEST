@@ -8,11 +8,24 @@
         static guns and mines, and every HQ's buildings (CQ_hqs "objects"), hostage civilians too
       - a sweep repeats every CQ_endClearEvery s until the restart: anything a running script
         (an insertion already in the air, a sabotage cycle...) still spawns is removed as well
+    Bought vehicles alive now are counted for a refund at the next game (CQ_endRefund).
     Friendlies keep everything: players, squads, MAGPIE, the base and its vehicles. A CSAT vehicle
     a player is using is emptied first (put out once it is on the ground and slow) and removed at the next sweep.
 */
 if (!isServer) exitWith {};
 CQ_gameOver = true; publicVariable "CQ_gameOver";
+
+// bought vehicles alive right now are refunded at the next game (CQ_fnc_carry), whatever happens to them
+// during the debrief; the shop is closed from now on
+{
+    private _ref = 0;
+    {
+        private _c = typeOf _x;
+        private _i = CQ_shopCatalog findIf { (_x select 0) == _c };
+        if (_i > -1) then { _ref = _ref + ((CQ_shopCatalog select _i) select 1) };
+    } forEach ((_x getVariable ["CQ_sqBought", []]) select { alive _x });
+    if (_ref > 0) then { _x setVariable ["CQ_endRefund", _ref]; ["ENDGAME: squad %1 gets %2 points back for its vehicle", [groupId _x, _ref]] call CQ_fnc_log };
+} forEach (allGroups select { side _x == west });
 
 CQ_directorTasks = CQ_directorTasks select { (_x select 0) in CQ_endKeepTasks };
 
