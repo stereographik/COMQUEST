@@ -23,6 +23,17 @@ if (!CQ_introEnabled) exitWith { call _done };
 ("CQ_introBlack" call BIS_fnc_rscLayer) cutText ["", "BLACK FADED", 999];
 waitUntil { sleep 0.1; !isNull player && { !isNull (findDisplay 46) } && { time > 0 } && { isServer || { getClientStateNumber >= 10 } } };
 uiSleep CQ_introLoadPause;
+// back from the last game (CQ_fnc_carry): no cinematic, a short NEXT GAME card, then control
+if ((getPlayerUID player) in (missionNamespace getVariable ["CQ_carryUids", []])) exitWith {
+    (missionNamespace getVariable ["CQ_carryLast", ["", "", 0, 2]]) params ["_res", "_why", "_dur", "_no"];
+    private _lay = "CQ_introNext" call BIS_fnc_rscLayer;
+    _lay cutText [format ["<t font='PuristaBold' size='2.2' color='#F2F1DF'>OPERATION COMQUEST</t><br/><t size='1.3' color='#918C3B'>GAME %1</t><br/><br/><t size='1' color='%2'>last game: %3</t><t size='0.9' color='#A6A381'>  (%4)</t><br/><br/><t size='0.9' color='#A6A381'>%5 · CSAT is landing again. Your kit and your squad are with you.</t>",
+        _no, ["#F09595", "#C0DD97"] select (_res == "win"), ["DEFEAT", "VICTORY"] select (_res == "win"), [_dur max 0, "HH:MM"] call BIS_fnc_secondsToString, [daytime, "HH:MM"] call BIS_fnc_timeToString], "BLACK FADED", 999, true, true];
+    uiSleep 6;
+    _lay cutText ["", "PLAIN"];
+    ("CQ_introBlack" call BIS_fnc_rscLayer) cutText ["", "BLACK IN", 2];
+    call _done;
+};
 private _t0 = time;
 waitUntil { sleep 0.2; (!isNil "CQ_carrierPos" && { !isNil "CQ_musterPos" }) || { time - _t0 > 8 } };
 CQ_introShots params ["_tSat", "_tCoast", "_tFlight", "_tLand"];   // _tFlight: the squad shot

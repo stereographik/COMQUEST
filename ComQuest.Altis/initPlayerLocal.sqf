@@ -20,7 +20,7 @@ call CQ_fnc_playerSetup;
 if (isNil "CQ_unassignedDone") then {
     CQ_unassignedDone = true;
     ["unassign", player] remoteExec ["CQ_fnc_squadCmd", 2];
-    [] spawn { sleep 6; hint parseText "<t size='1.1' color='#F2F1DF'>You are unassigned.</t><br/>Press <t color='#918C3B'>U</t> to join or create a squad."; };
+    [] spawn { sleep 6; if ((getPlayerUID player) in (missionNamespace getVariable ["CQ_carryUids", []])) exitWith {}; hint parseText "<t size='1.1' color='#F2F1DF'>You are unassigned.</t><br/>Press <t color='#918C3B'>U</t> to join or create a squad."; };   // returning players are put back in their squad
 };
 call CQ_fnc_grassCut;      // no grass around the base (local objects)
 [] spawn CQ_fnc_opClient;   // map: Operation (progress checklist) - first section of the briefing
@@ -52,6 +52,7 @@ player createDiaryRecord ["CQ_credits", ["ComQuest.Altis", format [
 [] spawn CQ_fnc_rdfClient;   // radio direction finder panel
 [] spawn CQ_fnc_heavyLift;   // heavy lifters (Mohawk) hook vehicles up to 12 t
 [] spawn CQ_fnc_statsClient; // shots, heals, distances, time played
+[] spawn { waitUntil { sleep 1; !isNil "CQ_endPub" }; sleep 3; [] spawn CQ_fnc_endgameUi };   // game over: the DEBRIEF opens by itself
 call CQ_fnc_heatMapClient;   // MAGPIE heatmap under everything else
 // vanilla difficulty map content: enemies (what friendly infantry spots) off so only MAGPIE reveals
 // them; friendlies off when they go through the data link instead (CQ_bft); mines and pings stay

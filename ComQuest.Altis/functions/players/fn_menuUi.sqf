@@ -34,6 +34,7 @@ private _items = [
     ["GUIDE & RULES", "How to play, server rules, report a player", { ["guide"] spawn CQ_fnc_squadUi }],
     ["SETTINGS", "Graphics: presets, view distance, grass, FPS", { [] spawn CQ_fnc_gfxUi }]
 ];
+if (!isNil "CQ_endPub") then { _items = [["DEBRIEF", "Game over: results and awards", { [] spawn CQ_fnc_endgameUi }]] + _items };
 if (_admin) then { _items pushBack ["DEBUG PANEL", "Test commands (F3)", { [] spawn CQ_fnc_debugUi }] };
 
 // the field transceiver picture (media\comdevice_ca.paa, 1024 x 1024, background cut out); the

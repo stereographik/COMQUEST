@@ -46,6 +46,18 @@ if (_loc isEqualTo []) then {
     } forEach _act;
 };
 
+// ---- endgame HQ timeline: when each HQ was first found (MAGPIE, intel or players within 300 m);
+//      the first player ever within 300 m of an enemy HQ is the Pathfinder
+{
+    private _h = _x;
+    if (isNil "CQ_pathfinder" && { (_h get "state") in CQ_activeStates }) then {
+        private _pn = allPlayers select { alive _x && { side group _x == west } && { _x distance2D (_h get "pos") < 300 } };
+        if (_pn isNotEqualTo []) then { CQ_pathfinder = [getPlayerUID (_pn select 0), name (_pn select 0), time] };
+    };
+    if (_h getOrDefault ["foundT", -1] < 0 && { (_h get "id") in (missionNamespace getVariable ["CQ_magHqSeen", createHashMap]) || { _h getOrDefault ["revealed", false] }
+        || { (allPlayers findIf { alive _x && { _x distance2D (_h get "pos") < 300 } }) > -1 } }) then { _h set ["foundT", time] };
+} forEach _hqs;
+
 // ---- 2 HQ lines (destroyed: time + squad remembered once)
 private _dead = 0;
 private _sub = _built apply {

@@ -2,6 +2,7 @@
     initServer.sqf - ComQuest server start
 */
 ["ComQuest server init (milestone 3: HQ network + ammo logistics)"] call CQ_fnc_log;
+["load"] call CQ_fnc_carry;   // last game's friendlies (kit, class, squad, points, vehicles): before anyone joins
 
 // Start at dawn: CQ_startAfterSunrise minutes after the sun rises on Altis at the mission date
 // (BIS_fnc_sunriseSunsetTime: real sunrise for this date and latitude); the server's date is
@@ -132,6 +133,7 @@ addMissionEventHandler ["EntityKilled", {
     CQ_opStartT = time;
     ["operation", CQ_fnc_opTick] call CQ_fnc_directorAddTask;
     ["stats", CQ_fnc_statsTick] call CQ_fnc_directorAddTask;
+    ["trace", CQ_fnc_traceTick] call CQ_fnc_directorAddTask;   // endgame MAP: who was last on each square
     ["vehRoam", CQ_fnc_vehRoamTick] call CQ_fnc_directorAddTask;
     ["callsigns", CQ_fnc_callsignTick] call CQ_fnc_directorAddTask;
 

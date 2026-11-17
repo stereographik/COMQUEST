@@ -152,6 +152,6 @@ if (isNil "CQ_victory" && { CQ_rootsLaunched >= CQ_maxRoots || { (missionNamespa
         CQ_victory = true;
         ["VICTORY", "The carrier has nothing left to send and every enemy HQ is destroyed"] call CQ_fnc_announce;
         ["victory", []] call CQ_fnc_say;
-        [] spawn { sleep 15; "EveryoneWon" call BIS_fnc_endMissionServer };
+        ["win", "every enemy HQ destroyed, the carrier has nothing left"] call CQ_fnc_endgame;   // DEBRIEF, next game after CQ_endWait s
     };
 };

@@ -120,11 +120,14 @@ switch (_cmd) do {
         private _old = group _p;
         [_p] call _solo;
         if (count units _old == 0) then { deleteGroup _old };
+        ["join", _p] call CQ_fnc_carry;      // back from the last game: kit, class, squad, points, vehicles
     };
     case "create": {
         private _g = group _p;
         if !(_g getVariable ["CQ_solo", false]) exitWith {};
         private _used = (allGroups select { side _x == west }) apply { groupId _x };
+        // last game's squads not back yet keep their name (CQ_fnc_carry) for CQ_carryHold s
+        if (!isNil "CQ_carrySq" && { time < CQ_carryHold }) then { _used append (CQ_carrySq apply { _x select 0 }) };
         private _name = CQ_squadNames param [CQ_squadNames findIf { !(_x in _used) }, format ["Squad %1", floor random 100]];
         _g setGroupIdGlobal [_name];
         _g setVariable ["CQ_solo", false, true];
