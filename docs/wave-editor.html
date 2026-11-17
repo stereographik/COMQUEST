@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ComQuest wave editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans+Condensed:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f110d;--panel:#1a1d16;--panel2:#23271d;--line:#3a4030;--text:#e8e6d9;--muted:#a6a381;--accent:#d9a441;--ok:#8fbf5a;--bad:#c45a4a;--blue:#6fa8c9;
+--display:"Rajdhani","Arial Narrow",sans-serif;--body:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;--mono:"IBM Plex Mono",Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 var(--body)}
+.wrap{max-width:1320px;margin:0 auto;padding:18px}
+header{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}
+h1{font:700 30px/1 var(--display);margin:0;letter-spacing:.5px}h1 small{display:block;font:12px var(--mono);color:var(--muted);letter-spacing:.08em;margin-top:6px;text-transform:uppercase}
+h2{font:700 17px/1.2 var(--display);margin:0 0 8px;letter-spacing:.5px;text-transform:uppercase}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);font:500 13px var(--body);padding:6px 11px;border-radius:3px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:#1a1405;border-color:var(--accent);font:700 14px var(--display)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:14px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px}
+.vars{max-height:calc(100vh - 140px);overflow:auto}
+.grp{margin-bottom:12px}.grp h3{font:600 13px var(--mono);color:var(--accent);margin:8px 0 4px;letter-spacing:.06em;text-transform:uppercase}
+.v{display:grid;grid-template-columns:1fr 60px;gap:2px 8px;align-items:center;margin:5px 0}
+.v label{font-size:13px}.v label i{display:block;font:11px var(--mono);color:var(--muted);font-style:normal}
+.v input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+.v output{font:500 13px var(--mono);text-align:right;color:var(--accent)}
+.charts{display:grid;gap:14px}
+canvas{display:block;width:100%;background:#12140f;border:1px solid var(--line);border-radius:3px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 0;font:12px var(--mono)}
+.legend label{cursor:pointer;display:flex;align-items:center;gap:5px}.legend i{display:inline-block;width:14px;height:3px}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:10px}
+.stats div{background:var(--panel);padding:8px}.stats b{display:block;font:700 22px var(--display)}.stats span{font:11px var(--mono);color:var(--muted);text-transform:uppercase}
+@media (max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}}
+.events{max-height:260px;overflow:auto;font:12px/1.6 var(--mono)}
+.events div{border-bottom:1px solid #262a20;padding:2px 0}.events .t{color:var(--muted);display:inline-block;width:52px}
+.e-root{color:var(--accent)}.e-split{color:var(--ok)}.e-assault{color:var(--bad)}.e-fall{color:var(--blue)}.e-cap{color:#8a8770}.e-end{color:#fff;font-weight:600}
+textarea{width:100%;min-height:150px;background:#12140f;color:var(--text);border:1px solid var(--line);font:12px var(--mono);padding:8px;border-radius:3px}
+.hint{font-size:12px;color:var(--muted)}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Wave editor<small>ComQuest · campaign simulator · not the game, a model of its rules</small></h1>
+  <div class="row">
+    <button class="btn" data-preset="main">Preset: main</button>
+    <button class="btn" data-preset="celling100">Preset: celling100</button>
+    <button class="btn" id="reseed">New random seed</button>
+  </div>
+</header>
+
+<div class="grid">
+  <aside class="panel vars" id="vars" aria-label="Main variables"></aside>
+
+  <main class="charts">
+    <section class="panel">
+      <div class="stats" id="stats"></div>
+      <h2>Timeline</h2>
+      <canvas id="chart" height="360" aria-label="Campaign timeline chart"></canvas>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Wave curve</h2>
+      <p class="hint">Wave size multiplier over game time (× the squads per wave). Drag a point, double-click to add one, right-click to remove it.</p>
+      <canvas id="curve" height="170" aria-label="Wave size curve editor"></canvas>
+      <div class="row" style="margin-top:6px">
+        <button class="btn" id="curveFlat">Flat ×1</button>
+        <button class="btn" id="curveRamp">Ramp up</button>
+        <button class="btn" id="curvePeak">Mid-game peak</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Events</h2>
+      <div class="events" id="events"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Export to settings.sqf</h2>
+      <p class="hint">Paste into <code>cfg/settings.sqf</code>. <code>CQ_waveCurve</code> is new: the mission does not read it yet (ask Claude to wire it).</p>
+      <textarea id="out" readonly></textarea>
+      <div class="row" style="margin-top:6px"><button class="btn primary" id="copy">Copy</button><span class="hint" id="copied"></span></div>
+    </section>
+  </main>
+</div>
+</div>
+
+<script>
+// ---------- variables: [key, label, settings name, min, max, step, group, note]
+const VARS = [
+ ["sim","Game length (min)","",60,360,10,"Simulation",""],
+ ["beachKm","Beachhead → base (km)","",5,17,0.1,"Simulation","the carrier site"],
+ ["killRate","Players kill (inf / min)","",0,4,0.1,"Simulation","player pressure"],
+ ["hqKillEvery","Players destroy an HQ every (min)","",0,90,5,"Simulation","0 = never"],
+ ["maxInfantry","Infantry cap","CQ_maxInfantry",40,240,5,"Caps",""],
+ ["maxHqs","HQs alive at once","CQ_maxHqs",1,8,1,"Caps",""],
+ ["rootCapBonus","Root extra room","CQ_rootCapBonus",0,60,5,"Caps",""],
+ ["maxRoots","Free roots","CQ_maxRoots",1,4,1,"Carrier",""],
+ ["firstRoot","First root after (min)","CQ_firstRootDelay",0,20,1,"Carrier","×60 s"],
+ ["rootInterval","Next root every (min)","CQ_rootInterval",20,120,5,"Carrier","×60 s"],
+ ["carrierHqKm","1 child HQ per (km)","CQ_carrierHqKm",1,6,0.5,"Carrier","supply = distance ÷ this"],
+ ["supplyMin","Supply min","CQ_carrierHqsRange",1,6,1,"Carrier",""],
+ ["supplyMax","Supply max","CQ_carrierHqsRange",2,12,1,"Carrier",""],
+ ["reinsertDelay","Island empty → next root (min)","CQ_reinsertDelay",1,15,1,"Carrier","×60 s"],
+ ["insertInf","Root insertion infantry","CQ_insertionSquads",10,50,1,"HQ life","squads ×8 + officer 5 + truck squad 8"],
+ ["buildMin","Secure + build (min)","",5,30,1,"HQ life","about 15 in game"],
+ ["waveInterval","Wave every (min)","CQ_waveInterval",3,20,1,"Waves","×60 s"],
+ ["waveSquads","Squads per wave","CQ_waveSquads",1,3,1,"Waves","8 men each"],
+ ["waveTravel","Wave travel (min)","",1,8,1,"Waves",""],
+ ["splitAge","Split after built (min)","CQ_splitAge",0,40,1,"Expansion","×60 s"],
+ ["splitGap","Between splits (min)","CQ_splitGap",0,40,1,"Expansion","×60 s"],
+ ["assaultAge","Assault after built (min)","CQ_assaultAge",0,30,1,"Expansion","×60 s"],
+ ["minInfToExpand","Infantry to split","CQ_minInfantryToExpand",4,30,1,"Expansion",""],
+ ["colShare","Colonist share","CQ_colonistShare",0.3,0.9,0.05,"Expansion",""],
+ ["minDefenders","Defenders that stay","CQ_minDefenders",2,16,1,"Expansion",""],
+ ["childKm","Child step toward base (km)","CQ_childDistance",2,5,0.25,"Expansion","3–4 in game"],
+ ["colTravel","Colonist travel (min)","",3,25,1,"Expansion",""],
+ ["assaultKm","Assault range (km)","CQ_assaultRange",2,6,0.5,"Expansion",""],
+ ["flightEvery","Supply flight every (min)","CQ_ammoFlightInterval",5,40,1,"Ammo","×60 s"],
+ ["flightLoad","Flight load","CQ_ammoFlightLoad",100,1200,50,"Ammo",""],
+ ["childStock","Child start ammo","CQ_childStartStock",50,500,10,"Ammo",""],
+ ["ammoUse","Ammo per soldier per min","",0,0.2,0.005,"Ammo","upkeep (patrols, fights)"],
+];
+const PRESETS = {
+ main:{sim:180,beachKm:10,killRate:0.6,hqKillEvery:0,maxInfantry:160,maxHqs:6,rootCapBonus:40,maxRoots:2,firstRoot:5,rootInterval:60,carrierHqKm:3,supplyMin:2,supplyMax:6,reinsertDelay:5,insertInf:37,buildMin:15,waveInterval:10,waveSquads:2,waveTravel:3,splitAge:20,splitGap:20,assaultAge:15,minInfToExpand:16,colShare:0.7,minDefenders:8,childKm:3.5,colTravel:12,assaultKm:3.5,flightEvery:20,flightLoad:600,childStock:250,ammoUse:0.03},
+ celling100:{sim:180,beachKm:10,killRate:0.6,hqKillEvery:0,maxInfantry:80,maxHqs:4,rootCapBonus:20,maxRoots:2,firstRoot:5,rootInterval:60,carrierHqKm:3,supplyMin:2,supplyMax:6,reinsertDelay:5,insertInf:21,buildMin:15,waveInterval:10,waveSquads:1,waveTravel:3,splitAge:20,splitGap:20,assaultAge:15,minInfToExpand:12,colShare:0.7,minDefenders:6,childKm:3.5,colTravel:12,assaultKm:3.5,flightEvery:20,flightLoad:600,childStock:250,ammoUse:0.03},
+};
+let P = {...PRESETS.main};
+let curve = [[0,1],[360,1]];
+let seed = 7;
+
+// ---------- vars panel
+const varsEl = document.getElementById('vars');
+function buildVars(){
+  varsEl.innerHTML = '<h2>Main variables</h2>';
+  let grp = '';
+  let box;
+  for (const [k,label,name,min,max,step,g,note] of VARS){
+    if (g !== grp){ grp = g; box = document.createElement('div'); box.className='grp'; box.innerHTML = `<h3>${g}</h3>`; varsEl.appendChild(box); }
+    const d = document.createElement('div'); d.className='v';
+    d.innerHTML = `<label for="v_${k}">${label}${name||note?`<i>${[name,note].filter(Boolean).join(' · ')}</i>`:''}</label><output id="o_${k}"></output><input type="range" id="v_${k}" min="${min}" max="${max}" step="${step}">`;
+    box.appendChild(d);
+    const inp = d.querySelector('input'), out = d.querySelector('output');
+    inp.value = P[k]; out.textContent = P[k];
+    inp.addEventListener('input', ()=>{ P[k] = +inp.value; out.textContent = P[k]; run(); });
+  }
+}
+
+// ---------- tiny seeded random
+function rng(s){ return ()=>{ s = (s*16807)%2147483647; return (s-1)/2147483646; }; }
+
+function curveAt(t){
+  const c = curve;
+  if (t <= c[0][0]) return c[0][1];
+  for (let i=1;i<c.length;i++){ if (t <= c[i][0]){ const [t0,v0]=c[i-1],[t1,v1]=c[i]; return v0 + (v1-v0)*(t-t0)/Math.max(1e-6,t1-t0); } }
+  return c[c.length-1][1];
+}
+
+// ---------- the model (one step per minute)
+function simulate(){
+  const R = rng(seed);
+  const ev = []; const log = (t,cls,msg)=>ev.push({t,cls,msg});
+  const supply0 = Math.min(P.supplyMax, Math.max(P.supplyMin, Math.round(P.beachKm / P.carrierHqKm)));
+  let supply = supply0, roots = 0, nextRoot = P.firstRoot, emptySince = 0, nextFlight = -1, hqId = 0, lastHqKill = 0;
+  let infTotal = 0, ended = false, assaults = 0, splits = 0, falls = 0, waves = 0, capHits = 0, nextCapLog = 0;
+  const hqs = [];
+  const series = {t:[],hqs:[],inf:[],supply:[],front:[],ammo:[],cap:[]};
+  const active = ()=>hqs.filter(h=>h.alive);
+  const connected = h=>{ let x=h; while(x){ if(!x.alive) return false; if(x.parent<0) return true; x = hqs[x.parent]; } return false; };
+  const sumInf = ()=>active().reduce((a,h)=>a+h.inf,0) + hqs.reduce((a,h)=>a+(h.waveOn?h.waveInf:0),0);
+  const newHq = (t,parent,dist,inf,ammo,kind)=>{ const h={id:++hqId,parent,dist,inf,ammo,alive:true,phase:'move',ready:t+(kind==='root'?4:P.colTravel),built:-1,nextWave:0,waveOn:false,waveAt:0,waveInf:0,lastSplit:-1e9,firstWave:false}; hqs.push(h); return h; };
+
+  for (let t=0; t<=P.sim; t++){
+    // roots (free) and paid re-insertions
+    const act = active();
+    if (act.length===0){ if (emptySince<0) emptySince=t; } else emptySince=-1;
+    const room = sumInf() + P.insertInf <= P.maxInfantry + P.rootCapBonus;
+    let launch = null;
+    if (roots < P.maxRoots){
+      if ((t>=nextRoot) || (roots>0 && emptySince>=0 && t-emptySince>=P.reinsertDelay)) launch='free';
+    } else if (supply>0 && emptySince>=0 && t-emptySince>=P.reinsertDelay) launch='paid';
+    if (launch && room && !ended){
+      if (launch==='free'){ roots++; nextRoot = t + P.rootInterval; } else supply--;
+      const d = roots===1 && launch==='free' ? P.beachKm : Math.max(P.assaultKm+0.5, P.beachKm - 1 - R()*1.5);
+      const h = newHq(t,-1,d,P.insertInf,300,'root');
+      log(t,'e-root',`Root ${launch==='paid'?'RE-INSERTION (paid)':roots+'/'+P.maxRoots} → HQ #${h.id} at ${d.toFixed(1)} km`);
+      emptySince=-1;
+    }
+    // life of each HQ
+    for (const h of active()){
+      if (h.phase==='move' && t>=h.ready){ h.phase='build'; h.ready=t+P.buildMin; }
+      else if (h.phase==='build' && t>=h.ready){ h.phase='hold'; h.built=t; h.nextWave=t+1; if (nextFlight<0) nextFlight=t+P.flightEvery; log(t,'',`HQ #${h.id} operational (${Math.round(h.inf)} inf, ${h.dist.toFixed(1)} km)`); }
+      if (h.phase!=='hold') continue;
+      const isConn = connected(h);
+      // wave request (pacing: no wave while it may not use it, after the first)
+      if (!h.waveOn && t>=h.nextWave && isConn){
+        const near = h.dist < P.assaultKm;
+        const okT = near ? h.built + P.assaultAge : Math.max(h.built + P.splitAge, h.lastSplit + P.splitGap);
+        if (h.firstWave && t < okT){ h.nextWave = okT; }
+        else {
+          const wInf = Math.max(0, Math.round(P.waveSquads * curveAt(t) * 8));
+          if (sumInf() + wInf > P.maxInfantry){ h.nextWave = t+1; capHits++; if (t>=nextCapLog){ log(t,'e-cap',`Wave for HQ #${h.id} postponed: infantry cap (${Math.round(sumInf())}/${P.maxInfantry})`); nextCapLog=t+10; } }
+          else { h.waveOn=true; h.waveAt=t+P.waveTravel; h.waveInf=wInf; h.nextWave=t+P.waveInterval; h.firstWave=true; waves++; }
+        }
+      }
+      // wave arrives: reinforce, then split / assault
+      if (h.waveOn && t>=h.waveAt){
+        h.waveOn=false; h.inf += h.waveInf;
+        const near = h.dist < P.assaultKm, age = t - h.built;
+        const col = Math.floor(Math.min(Math.ceil(h.inf*P.colShare), h.inf - P.minDefenders));
+        if (near){
+          if (age >= P.assaultAge && col>0){ h.inf -= col; assaults++; log(t,'e-assault',`HQ #${h.id} ASSAULTS the base with ${col} soldiers`); }
+        } else if (active().length < P.maxHqs && supply>0 && h.inf>=P.minInfToExpand && age>=P.splitAge && t-h.lastSplit>=P.splitGap && col>0){
+          h.inf -= col; h.lastSplit=t; supply--; splits++;
+          const give = Math.round(h.ammo*0.15); h.ammo -= give;
+          const c = newHq(t,h.id-1,Math.max(0.5,h.dist-P.childKm*(0.9+R()*0.2)),col,Math.max(give,P.childStock),'child');
+          log(t,'e-split',`HQ #${h.id} splits: ${col} colonists found HQ #${c.id} at ${c.dist.toFixed(1)} km (supply ${supply} left)`);
+        }
+      }
+      // upkeep
+      h.ammo = Math.max(0, h.ammo - h.inf*P.ammoUse);
+    }
+    // supply flights to the main HQ (oldest built one)
+    const built = active().filter(h=>h.phase==='hold');
+    if (built.length && nextFlight>=0 && t>=nextFlight){
+      const hub = built[0];
+      const dest = hub.ammo > 0.8*1500 ? built.slice().sort((a,b)=>a.ammo-b.ammo)[0] : hub;
+      dest.ammo = Math.min(dest===hub?1500:400, dest.ammo + P.flightLoad); nextFlight = t + P.flightEvery;
+    }
+    // trucks: an HQ under 40 % gets 200 from one above 60 % (simplified, instant)
+    for (const h of built){ const cap = h===built[0]?1500:400; if (h.ammo < 0.4*cap && connected(h)){ const d = built.find(x=>x!==h && connected(x) && x.ammo > 0.6*(x===built[0]?1500:400)); if (d){ const n=Math.min(200,d.ammo-0.4*(d===built[0]?1500:400)); if(n>30){d.ammo-=n;h.ammo+=n;} } } }
+    // players: kill infantry at the front HQ, and destroy an HQ every N min
+    let kills = P.killRate;
+    const front = active().filter(h=>h.phase==='hold').sort((a,b)=>a.dist-b.dist);
+    for (const h of front){ if (kills<=0) break; const k=Math.min(kills,h.inf); h.inf-=k; kills-=k; }
+    if (P.hqKillEvery>0 && front.length && t-lastHqKill>=P.hqKillEvery && t>=P.firstRoot+P.buildMin+10){ const h=front[0]; h.alive=false; lastHqKill=t; falls++; log(t,'e-fall',`Players destroy HQ #${h.id} (${h.dist.toFixed(1)} km)`); }
+    for (const h of active()){ if (h.phase==='hold' && h.inf<=0.5){ h.alive=false; falls++; log(t,'e-fall',`HQ #${h.id} wiped out`); } }
+    // victory
+    if (!ended && roots>=P.maxRoots && supply<=0 && active().length===0 && t>P.firstRoot+5){ ended=true; log(t,'e-end','VICTORY: no HQ left, carrier empty'); }
+    infTotal = sumInf();
+    const fr = active().length ? Math.min(...active().map(h=>h.dist)) : null;
+    series.t.push(t); series.hqs.push(active().length); series.inf.push(infTotal); series.supply.push(supply);
+    series.front.push(fr); series.ammo.push(active().reduce((a,h)=>a+h.ammo,0)); series.cap.push(P.maxInfantry);
+  }
+  return {series,ev,supply0,splits,assaults,falls,waves,capHits,ended,peakInf:Math.max(...series.inf),peakHq:Math.max(...series.hqs)};
+}
+
+// ---------- chart
+const LINES = [
+ ["inf","Infantry","#d9a441","left",true],["cap","Infantry cap","#8a8770","left",true],["ammo","Ammo (all HQs) ÷10","#8fbf5a","left",true],
+ ["hqs","HQs alive","#e8e6d9","right",true],["supply","Carrier supply","#c45a4a","right",true],["front","Front → base (km)","#6fa8c9","right",true]];
+const show = Object.fromEntries(LINES.map(l=>[l[0],l[4]]));
+const legend = document.getElementById('legend');
+legend.innerHTML = LINES.map(([k,l,c])=>`<label><input type="checkbox" data-k="${k}" checked><i style="background:${c}"></i>${l}</label>`).join('');
+legend.addEventListener('change',e=>{ show[e.target.dataset.k]=e.target.checked; draw(last); });
+
+function fit(cv){ const r=cv.getBoundingClientRect(), d=devicePixelRatio||1; cv.width=r.width*d; cv.height=cv.getAttribute('height')*d; cv.style.height=cv.getAttribute('height')+'px'; const x=cv.getContext('2d'); x.setTransform(d,0,0,d,0,0); return [x,r.width,+cv.getAttribute('height')]; }
+let last;
+function draw(res){
+  last = res;
+  const cv=document.getElementById('chart'); const [x,W,H]=fit(cv);
+  const m={l:44,r:44,t:12,b:26}, w=W-m.l-m.r, h=H-m.t-m.b, s=res.series, T=P.sim;
+  const vals = k=>s[k].map(v=>v==null?null:(k==='ammo'?v/10:v));
+  const lmax = Math.max(10,...['inf','cap','ammo'].filter(k=>show[k]).flatMap(k=>vals(k).filter(v=>v!=null)))*1.1;
+  const rmax = Math.max(4,...['hqs','supply','front'].filter(k=>show[k]).flatMap(k=>vals(k).filter(v=>v!=null)))*1.15;
+  x.clearRect(0,0,W,H); x.font='11px IBM Plex Mono, monospace';
+  x.strokeStyle='#262a20'; x.fillStyle='#a6a381'; x.lineWidth=1;
+  for(let i=0;i<=5;i++){ const y=m.t+h*i/5; x.beginPath(); x.moveTo(m.l,y); x.lineTo(m.l+w,y); x.stroke(); x.textAlign='right'; x.fillText(Math.round(lmax*(1-i/5)),m.l-5,y+4); x.textAlign='left'; x.fillText((rmax*(1-i/5)).toFixed(1),m.l+w+5,y+4); }
+  x.textAlign='center'; for(let tt=0;tt<=T;tt+=30){ const px=m.l+w*tt/T; x.fillText(tt+' min',px,H-8); }
+  // event ticks
+  for (const e of res.ev){ const px=m.l+w*e.t/T; x.strokeStyle={'e-root':'#d9a441','e-split':'#8fbf5a','e-assault':'#c45a4a','e-fall':'#6fa8c9','e-end':'#ffffff'}[e.cls]||null; if(!x.strokeStyle||e.cls===''||e.cls==='e-cap') continue; x.globalAlpha=.35; x.beginPath(); x.moveTo(px,m.t); x.lineTo(px,m.t+h); x.stroke(); x.globalAlpha=1; }
+  for (const [k,,c,side] of LINES){ if(!show[k]) continue; const v=vals(k), mx= side==='left'?lmax:rmax;
+    x.strokeStyle=c; x.lineWidth= k==='cap'?1:2; x.setLineDash(k==='cap'?[5,4]:[]); x.beginPath(); let pen=false;
+    v.forEach((y,i)=>{ if(y==null){pen=false;return;} const px=m.l+w*s.t[i]/T, py=m.t+h*(1-y/mx); if(!pen){x.moveTo(px,py);pen=true;} else x.lineTo(px,py); }); x.stroke(); }
+  x.setLineDash([]);
+  x.fillStyle='#a6a381'; x.textAlign='left'; x.fillText('infantry / ammo÷10',m.l,m.t+10); x.textAlign='right'; x.fillText('HQs / supply / km',m.l+w,m.t+10);
+}
+
+// ---------- curve editor
+const cc=document.getElementById('curve'); let drag=-1;
+function cxy(e){ const r=cc.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top, r.width]; }
+const CM={l:34,r:12,t:10,b:22}, VMAX=2.5;
+function c2p(t,v,W){ const H=170; return [CM.l+(W-CM.l-CM.r)*t/P.sim, CM.t+(H-CM.t-CM.b)*(1-v/VMAX)]; }
+function p2c(px,py,W){ const H=170; return [Math.max(0,Math.min(P.sim,Math.round((px-CM.l)/(W-CM.l-CM.r)*P.sim))), Math.max(0,Math.min(VMAX,+((1-(py-CM.t)/(H-CM.t-CM.b))*VMAX).toFixed(2)))]; }
+function drawCurve(){
+  const [x,W,H]=fit(cc); x.clearRect(0,0,W,H); x.font='11px IBM Plex Mono, monospace'; x.fillStyle='#a6a381';
+  for(const v of [0,0.5,1,1.5,2,2.5]){ const [,py]=c2p(0,v,W); x.strokeStyle= v===1?'#3a4030':'#22261c'; x.beginPath(); x.moveTo(CM.l,py); x.lineTo(W-CM.r,py); x.stroke(); x.textAlign='right'; x.fillText('×'+v,CM.l-4,py+4); }
+  x.textAlign='center'; for(let tt=0;tt<=P.sim;tt+=30){ const [px]=c2p(tt,0,W); x.fillText(tt,px,H-6); }
+  x.strokeStyle='#d9a441'; x.lineWidth=2; x.beginPath();
+  for(let tt=0;tt<=P.sim;tt+=2){ const [px,py]=c2p(tt,curveAt(tt),W); tt?x.lineTo(px,py):x.moveTo(px,py); } x.stroke();
+  x.fillStyle='#d9a441'; curve.forEach(([t,v])=>{ if(t>P.sim) return; const [px,py]=c2p(t,v,W); x.beginPath(); x.arc(px,py,5,0,7); x.fill(); });
+}
+cc.addEventListener('mousedown',e=>{ const [px,py,W]=cxy(e); drag = curve.findIndex(([t,v])=>{ const [qx,qy]=c2p(t,v,W); return Math.hypot(qx-px,qy-py)<9; }); });
+addEventListener('mousemove',e=>{ if(drag<0) return; const [px,py,W]=cxy(e); let [t,v]=p2c(px,py,W); if(drag===0) t=0; curve[drag]=[t,v]; curve.sort((a,b)=>a[0]-b[0]); drag=curve.findIndex(p=>p[0]===t&&p[1]===v); run(); });
+addEventListener('mouseup',()=>drag=-1);
+cc.addEventListener('dblclick',e=>{ const [px,py,W]=cxy(e); curve.push(p2c(px,py,W)); curve.sort((a,b)=>a[0]-b[0]); run(); });
+cc.addEventListener('contextmenu',e=>{ e.preventDefault(); const [px,py,W]=cxy(e); const i=curve.findIndex(([t,v])=>{ const [qx,qy]=c2p(t,v,W); return Math.hypot(qx-px,qy-py)<9; }); if(i>0 && curve.length>2){ curve.splice(i,1); run(); } });
+document.getElementById('curveFlat').onclick=()=>{ curve=[[0,1],[360,1]]; run(); };
+document.getElementById('curveRamp').onclick=()=>{ curve=[[0,0.5],[60,1],[150,1.5],[360,1.5]]; run(); };
+document.getElementById('curvePeak').onclick=()=>{ curve=[[0,0.75],[60,1.25],[110,1.6],[170,1],[360,0.8]]; run(); };
+
+// ---------- output
+function exportSqf(res){
+  const min = k=>Math.round(P[k]*60);
+  return [
+`// --- from the ComQuest wave editor (${new Date().toISOString().slice(0,10)})`,
+`CQ_maxInfantry = ${P.maxInfantry};`,`CQ_maxHqs = ${P.maxHqs};`,`CQ_rootCapBonus = ${P.rootCapBonus};`,
+`CQ_maxRoots = ${P.maxRoots};`,`CQ_firstRootDelay = ${min('firstRoot')};`,`CQ_rootInterval = ${min('rootInterval')};`,
+`CQ_carrierHqKm = ${Math.round(P.carrierHqKm*1000)};`,`CQ_carrierHqsRange = [${P.supplyMin}, ${P.supplyMax}];`,`CQ_reinsertDelay = ${min('reinsertDelay')};`,
+`CQ_waveInterval = ${min('waveInterval')};`,`CQ_waveSquads = ${P.waveSquads};`,
+`CQ_splitAge = ${min('splitAge')};`,`CQ_splitGap = ${min('splitGap')};`,`CQ_assaultAge = ${min('assaultAge')};`,
+`CQ_minInfantryToExpand = ${P.minInfToExpand};`,`CQ_colonistShare = ${P.colShare};`,`CQ_minDefenders = ${P.minDefenders};`,
+`CQ_childDistance = [${Math.round((P.childKm-0.5)*1000)}, ${Math.round((P.childKm+0.5)*1000)}];`,`CQ_assaultRange = ${Math.round(P.assaultKm*1000)};`,
+`CQ_ammoFlightInterval = ${min('flightEvery')};`,`CQ_ammoFlightLoad = ${P.flightLoad};`,`CQ_childStartStock = ${P.childStock};`,
+`CQ_waveCurve = [${curve.map(([t,v])=>`[${t*60}, ${v}]`).join(', ')}];   // NEW: [game time s, x squads per wave] (not read by the mission yet)`
+  ].join('\n');
+}
+function run(){
+  const res = simulate(); draw(res); drawCurve();
+  const st = document.getElementById('stats');
+  st.innerHTML = [[res.peakHq,'peak HQs'],[Math.round(res.peakInf),'peak infantry'],[res.supply0,'carrier supply'],[res.splits,'splits'],[res.assaults,'base assaults'],[res.ended?'yes':'no','victory']].map(([b,s])=>`<div><b>${b}</b><span>${s}</span></div>`).join('');
+  const ev = document.getElementById('events');
+  ev.innerHTML = res.ev.map(e=>`<div class="${e.cls}"><span class="t">${e.t}'</span>${e.msg}</div>`).join('') || '<div>No event.</div>';
+  document.getElementById('out').value = exportSqf(res);
+}
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{ P={...PRESETS[b.dataset.preset]}; buildVars(); run(); });
+document.getElementById('reseed').onclick=()=>{ seed = 1+Math.floor(Math.random()*1e6); run(); };
+document.getElementById('copy').onclick=async()=>{ try{ await navigator.clipboard.writeText(document.getElementById('out').value); document.getElementById('copied').textContent='Copied.'; }catch(e){ const t=document.getElementById('out'); t.select(); document.execCommand('copy'); document.getElementById('copied').textContent='Copied.'; } };
+addEventListener('resize',()=>run());
+buildVars(); run();
+</script>
+</body>
+</html>
