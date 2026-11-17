@@ -120,6 +120,7 @@ switch (_cmd) do {
         private _old = group _p;
         [_p] call _solo;
         if (count units _old == 0) then { deleteGroup _old };
+        ["join", _p] call CQ_fnc_carry;      // back from the last game: kit, class, squad, points, vehicles
     };
     case "create": {
         private _g = group _p;

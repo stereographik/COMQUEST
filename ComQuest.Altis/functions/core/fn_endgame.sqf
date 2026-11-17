@@ -91,6 +91,8 @@ publicVariable "CQ_endPub";
 ["ENDGAME: %1 (%2), %3 s, %4 players, %5 awards; next game in %6 s", [_res, _why, _dur, count _rows, count _aw, CQ_endWait]] call CQ_fnc_log;
 [_res] spawn {
     params ["_res"];
-    sleep CQ_endWait;
+    private _t = time + CQ_endWait;
+    waitUntil { sleep 1; time >= _t || { missionNamespace getVariable ["CQ_endNow", false] } };   // debug "Next game now"
+    ["save"] call CQ_fnc_carry;           // friendlies keep kit, class, squad, points and bought vehicles
     [["EveryoneLost", "EveryoneWon"] select (_res == "win")] call BIS_fnc_endMissionServer;
 };

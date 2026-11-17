@@ -119,6 +119,7 @@ addMissionEventHandler ["EntityKilled", {
     ["hostage", CQ_fnc_hostageTick] call CQ_fnc_directorAddTask;
     ["outpost", CQ_fnc_outpostTick] call CQ_fnc_directorAddTask;
     ["emp", CQ_fnc_empTick] call CQ_fnc_directorAddTask;
+    ["load"] call CQ_fnc_carry;   // last game's friendlies: kit, class, squad, points, vehicles (CQ_fnc_carry)
     call CQ_fnc_statsInit;
     call CQ_fnc_magInit;
     ["magpie", CQ_fnc_magTick] call CQ_fnc_directorAddTask;

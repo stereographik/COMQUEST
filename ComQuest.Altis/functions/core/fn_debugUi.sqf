@@ -91,7 +91,7 @@ private _cats = [
         ["EMP", [["Start EMP", "emp"], ["Why not yet?", "empWhy"], ["Teleport near", "tpEmp"], ["Timer 1 min", "empMin"], ["Kill guards", "empGuards"],
                  ["No engineer", "empNoEng"], ["Defuse now", "empDefuse"], ["Let it blow", "empBoom"], ["Give me terminal", "empTerm"],
                  ["Stomper to me", "empUgv"], ["Load now", "empLoad"], ["Target: nearest HQ", "empTgt"], ["Strike now", "empStrike"], ["Reset EMP", "empReset"]]],
-        ["Game", [["Launch game", "launchGame"], ["End: victory", "endWin"], ["End: defeat", "endLose"]]],
+        ["Game", [["Launch game", "launchGame"], ["End: victory", "endWin"], ["End: defeat", "endLose"], ["Next game now", "endNow"]]],
         ["SABOTAGE", [["Launch now", "sabGo"], ["Teleport near", "tpSab"], ["Wipe team", "sabKill"]]]
     ]],
     ["FRIENDLY", [
