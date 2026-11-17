@@ -38,7 +38,7 @@ private _rl = (0.042 * _wh / (safeZoneH * 0.66)) max 0.03;
     [[_wx, _wy, _ww, _rl * 1.1], CQ_ui get "header"]
 ]] call CQ_fnc_tabletBg;
 uiNamespace setVariable ["CQ_endTab", "end"];
-["create", [_d, [_picX, _picY, _pw, _ph], [["tab_stats", "Debrief", "end"]], "CQ_endTab", ""]] call CQ_fnc_tabletCol;
+["create", [_d, [_picX, _picY, _pw, _ph], [["tab_stats", "Debrief", "end"], ["tab_global", "Map: every group's way, replay the game", "map"]], "CQ_endTab", ""]] call CQ_fnc_tabletCol;
 
 private _mk = {
     params ["_cls", "_pos", ["_txt", ""], ["_grp", controlNull]];
@@ -182,13 +182,83 @@ private _ah = _rl * 1.5;
     [[_cx + _icw, _cy + 0.003, _aw2 - _icw - 0.006, _ah - 0.006], _txts select _forEachIndex, _g] call _st;
 } forEach _aw;
 
-// the countdown to the next game
+// ---- MAP tab: each group's trace (friendlies white -> blue, enemies black -> red over the game),
+//      the HQs, a slider to replay the game minute by minute
+private _mapCtrls = [];
+private _sh = _rl * 0.9;
+private _lg = [[_wx + 0.006, _gy + _gh - _sh * 2.3, _ww - 0.012, _sh], format ["<t size='0.6' color='%1'>friendlies </t><t size='0.6' color='#FFFFFF'>start </t><t size='0.6' color='#2A6CFF'>end</t><t size='0.6' color='%1'>   ·   enemies </t><t size='0.6' color='#777777'>start </t><t size='0.6' color='#FF2A1A'>end</t><t size='0.6' color='%1'>   ·   crosses: HQs (amber = destroyed)</t>", _muted], controlNull, [0.1, 0.11, 0.08, 0.9]] call _st;
+private _tlab = [[_wx + 0.006, _gy + _gh - _sh * 1.15, _ww * 0.2, _sh], format ["<t size='0.65' color='%1'>replay</t>", _muted]] call _st;
+private _sl = _d ctrlCreate ["RscXSliderH", -1];
+_sl ctrlSetPosition [_wx + _ww * 0.12, _gy + _gh - _sh * 1.05, _ww * 0.7, _sh * 0.8];
+_sl ctrlCommit 0;
+_sl sliderSetRange [0, _dur max 1];
+_sl sliderSetPosition (_dur max 1);
+private _tval = [[_wx + _ww * 0.83, _gy + _gh - _sh * 1.15, _ww * 0.16, _sh], ""] call _st;
+private _map = _d ctrlCreate ["RscMapControl", -1];
+_map ctrlSetPosition [_wx + 0.006, _gy, _ww - 0.012, _gh - _sh * 2.4];
+_map ctrlCommit 0;
+_map ctrlMapAnimAdd [0, 0.6, [worldSize / 2, worldSize / 2, 0]];
+ctrlMapAnimCommit _map;
+_mapCtrls = [_map, _lg, _tlab, _sl, _tval];
+uiNamespace setVariable ["CQ_endMapCtrls", _mapCtrls];
+uiNamespace setVariable ["CQ_endDebCtrl", _g];
+uiNamespace setVariable ["CQ_endTval", _tval];
+{ _x ctrlShow false } forEach _mapCtrls;
+
+// segments [p1, p2, t, side] and the colour list for a replay time (rebuilt when the slider moves)
+private _segs = [];
+{
+    _x params ["_side", "_pts"];
+    for "_i" from 1 to (count _pts - 1) do {
+        private _a = _pts select (_i - 1); private _b = _pts select _i;
+        _segs pushBack [[_a select 0, _a select 1, 0], [_b select 0, _b select 1, 0], _b select 2, _side];
+    };
+} forEach ((missionNamespace getVariable ["CQ_endTrace", [[], []]]) select 0);
+uiNamespace setVariable ["CQ_endSegs", _segs];
+CQ_endBuild = {
+    params ["_T"];
+    private _T1 = _T max 1;
+    private _out = [];
+    {
+        _x params ["_a", "_b", "_t", "_side"];
+        if (_t <= _T) then {
+            private _f = (_t / _T1) min 1;
+            _out pushBack [_a, _b, [[1 - 0.835 * _f, 1 - 0.576 * _f, 1, 0.9], [_f, 0.165 * _f, 0.1 * _f, 0.9]] select (_side == 1)];
+        };
+    } forEach (uiNamespace getVariable ["CQ_endSegs", []]);
+    uiNamespace setVariable ["CQ_endDraw", _out];
+    uiNamespace setVariable ["CQ_endT", _T];
+    (uiNamespace getVariable ["CQ_endTval", controlNull]) ctrlSetStructuredText parseText format ["<t size='0.7' align='right' color='#FAC775'>%1</t>", [_T, "HH:MM"] call BIS_fnc_secondsToString];
+};
+[_dur] call CQ_endBuild;
+_sl ctrlAddEventHandler ["SliderPosChanged", { params ["_c", "_v"]; [round _v] call CQ_endBuild }];
+_map ctrlAddEventHandler ["Draw", {
+    params ["_m"];
+    { _m drawLine _x } forEach (uiNamespace getVariable ["CQ_endDraw", []]);
+    private _T = uiNamespace getVariable ["CQ_endT", 0];
+    _m drawIcon ["\A3\ui_f\data\map\markers\nato\b_hq.paa", [0.3, 0.55, 1, 1], CQ_basePos, 24, 24, 0, "BASE", 1, 0.045, "PuristaMedium", "right"];
+    {
+        _x params ["_p", "_dead", "_n", "_fa"];
+        private _gone = _dead && { _fa >= 0 } && { _fa <= _T };
+        _m drawIcon ["\A3\ui_f\data\map\markers\military\destroy_CA.paa", [[1, 0.42, 0.35, 1], [0.98, 0.78, 0.46, 1]] select _gone, _p, 22, 22, 0, _n, 1, 0.045, "PuristaMedium", "right"];
+    } forEach ((missionNamespace getVariable ["CQ_endTrace", [[], []]]) select 1);
+}];
+
+// the countdown to the next game, and the tab switch (DEBRIEF / MAP)
 [_d, _timer, _endAt] spawn {
     disableSerialization;
     params ["_d", "_timer", "_endAt"];
+    private _shown = "end";
     while { !isNull _d } do {
         private _left = (_endAt - serverTime) max 0;
         _timer ctrlSetStructuredText parseText format ["<t align='right' size='0.8' color='#FAC775'>next game in %1</t>", [_left, "MM:SS"] call BIS_fnc_secondsToString];
-        sleep 1;
+        private _tab = uiNamespace getVariable ["CQ_endTab", "end"];
+        if (_tab != _shown) then {
+            _shown = _tab;
+            (uiNamespace getVariable ["CQ_endDebCtrl", controlNull]) ctrlShow (_tab == "end");
+            { _x ctrlShow (_tab == "map") } forEach (uiNamespace getVariable ["CQ_endMapCtrls", []]);
+            ["sel", ["CQ_endTab", _tab]] call CQ_fnc_tabletCol;
+        };
+        sleep 0.1;
     };
 };

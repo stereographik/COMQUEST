@@ -78,6 +78,12 @@ private _down = { (_x get "state") == "Destroyed" } count _hqs;
 private _tl = _hqs apply { [_x get "name", [_x getOrDefault ["born", _t0]] call _rel, [_x getOrDefault ["foundT", -1]] call _rel, [_x getOrDefault ["fallT", -1]] call _rel] };
 private _kia = 0; { _kia = _kia + (_x select 6) } forEach _rows;
 
+// the MAP tab: each group's trace on the ground ([side, [[x, y, s from the start], ...]]), the HQs
+private _trs = [];
+{ if (count (_y select 1) > 1) then { _trs pushBack [_y select 0, (_y select 1) apply { [_x select 0, _x select 1, [_x select 2] call _rel] }] } } forEach (missionNamespace getVariable ["CQ_trace", createHashMap]);
+CQ_endTrace = [_trs, _hqs apply { [_x get "pos", (_x get "state") == "Destroyed", _x get "name", [_x getOrDefault ["fallT", -1]] call _rel] }];
+publicVariable "CQ_endTrace";
+
 CQ_endPub = [_res, _why, _dur, serverTime + CQ_endWait, count _rows,
     [_down, count _hqs], missionNamespace getVariable ["CQ_enKilled", 0], _kia, count _hqs,
     _tl, _rows apply { _x select [0, 15] }, _aw];
