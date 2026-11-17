@@ -1,7 +1,7 @@
 /*
     CQ_fnc_truckRun  (server, spawned by CQ_fnc_logiTick)
     [_hub, _target, _load] spawn CQ_fnc_truckRun;
-    A HEMTT ammo truck leaves the main HQ with _load ammo points (already taken from the hub),
+    A HEMTT ammo truck leaves the supplying HQ (_hub: the main HQ or any HQ with some to spare) with _load ammo points (already taken from it),
     drives to the target HQ's depot, unloads for 20 s, then drives back and returns what is
     left. Destroyed on the way = the load is lost. A prime target for players.
 */
@@ -22,7 +22,7 @@ _cg setBehaviour "SAFE";
 _cg setSpeedMode "NORMAL";
 [_truck, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit;
 
-["Enemy supply truck dispatched", format ["A HEMTT leaves main HQ #%1 for HQ #%2 with %3 ammo and %4 fuel", _hid, _tid, round _load, round _fuelLoad]] call CQ_fnc_announce;
+["Enemy supply truck dispatched", format ["A HEMTT leaves HQ #%1 for HQ #%2 with %3 ammo and %4 fuel", _hid, _tid, round _load, round _fuelLoad]] call CQ_fnc_announce;
 
 private _phase = "out";
 private _t0 = time;

@@ -490,5 +490,6 @@ for "_a" from 15 to 345 step 15 do {
 _hq set ["buildDone", true];
 ["board", [_hq]] spawn CQ_fnc_buildTruck;   // the squad gets back in: the truck waits there to found the next HQ
 _hq set ["builtT", time];
+[["medic", "engineer"] select ((_hq get "id") mod 2 == 1), _hq get "id"] spawn CQ_fnc_specialTeam;   // its own support team
 [_hq] call CQ_fnc_hqStatusMarker;
 [_hq] call CQ_fnc_hqGuerilla;

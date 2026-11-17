@@ -4,8 +4,9 @@
       1 Main HQ (supply hub) = oldest built HQ whose depot stands. Its cap is CQ_hubCap.
       2 Rearm pass at every depot (soldiers, vehicles, statics nearby).
       3 Groups low on ammo stop and go to the nearest stocked HQ; rearmed groups go home.
-      4 HQs linked to the hub by radio and under CQ_requestShare of their cap (ammo or fuel)
-        get a HEMTT from the hub carrying ammo + fuel (CQ_fnc_truckRun).
+      4 HQs on the enemy net under CQ_requestShare of their cap (ammo or fuel) get a HEMTT
+        carrying ammo + fuel from the nearest HQ with some to spare (CQ_shareGive), the main
+        HQ included (CQ_fnc_truckRun).
       5 Supply flight (ammo + fuel) to the hub every CQ_ammoFlightInterval (CQ_fnc_ammoFlight);
         a hub above CQ_flightRedirectShare of its cap: to the poorest HQ on the net instead.
       Low groups rearm only at a depot with CQ_rearmGroupMin, at most once per CQ_rearmRetry.
@@ -106,38 +107,45 @@ if (_hubId != CQ_hubId) then {
 
 // nGD: a main HQ cut off from the network neither receives flights nor sends trucks
 private _hubIso = _hubId > -1 && { _hub getOrDefault ["isolated", false] };
-// ---- 4 delivery requests (trucks leave the main HQ)
-if (_hubId > -1 && { !_hubIso }) then {
-    private _linked = [_hub, _built] call CQ_fnc_hqLinks;
-    {
-        private _h = _x;
-        private _id = _h get "id";
-        if (_id == _hubId) then { continue };
-        private _fuelOk = alive (_h get "tanker") && { alive (_hub get "tanker") };   // fuel only between two tankers
-        private _low = (_h get "stock") < CQ_requestShare * (_h get "cap") || { _fuelOk && { (_h get "fuel") < CQ_requestShare * (_h get "cap") } };
-        if (!_low) then { _h set ["lowWarned", false]; continue };
-
-        if !(_id in _linked) then {
-            if !(_h get "lowWarned") then {
-                _h set ["lowWarned", true];
-                ["Enemy HQ low on ammo", format ["HQ #%1 is running out of ammo and has no radio link to the main HQ", _id]] call CQ_fnc_announce;
-            };
-            continue;
+// ---- 4 delivery requests: a HEMTT from the nearest HQ that has some to spare (not only the main
+// HQ): every HQ on the enemy net (not isolated) above CQ_shareGive of its cap may supply a
+// connected HQ under CQ_requestShare; the main HQ keeps CQ_hubReserve, the others CQ_shareKeep
+{
+    private _h = _x;
+    private _id = _h get "id";
+    private _cap = _h get "cap";
+    private _needAmmo = (_h get "stock") < CQ_requestShare * _cap;
+    private _needFuel = alive (_h get "tanker") && { (_h get "fuel") < CQ_requestShare * _cap };
+    if (!_needAmmo && !_needFuel) then { _h set ["lowWarned", false]; continue };
+    if (_h getOrDefault ["isolated", false]) then {
+        if !(_h get "lowWarned") then {
+            _h set ["lowWarned", true];
+            ["Enemy HQ low on ammo", format ["HQ #%1 is running out of ammo and is cut off from the enemy network", _id]] call CQ_fnc_announce;
         };
-        if (_h get "truckInbound") then { continue };
-        if (CQ_trucksActive >= CQ_trucksMax) then { continue };
+        continue;
+    };
+    if (_h get "truckInbound") then { continue };
+    if (CQ_trucksActive >= CQ_trucksMax) then { continue };
 
-        private _load = (CQ_truckLoad min ((_hub get "stock") - CQ_hubReserve) min ((_h get "cap") - (_h get "stock"))) max 0;
-        private _fuelLoad = if (_fuelOk) then { (CQ_truckFuelLoad min ((_hub get "fuel") - CQ_hubFuelReserve) min ((_h get "cap") - (_h get "fuel"))) max 0 } else { 0 };
-        if (_load < 30 && { _fuelLoad < 30 }) then { continue };
+    private _keepOf = { params ["_d"]; if ((_d get "id") == _hubId) then { CQ_hubReserve } else { CQ_shareKeep * (_d get "cap") } };
+    private _donors = _built select {
+        (_x get "id") != _id && { !(_x getOrDefault ["isolated", false]) }
+        && { (_x get "stock") > CQ_shareGive * (_x get "cap") || { (_x get "id") == _hubId && { (_x get "stock") > CQ_hubReserve + 30 } } }
+    };
+    if (_donors isEqualTo []) then { continue };
+    private _d = ([_donors, [], { (_x get "pos") distance2D (_h get "pos") }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+    private _keep = [_d] call _keepOf;
+    private _fuelOk = alive (_h get "tanker") && { alive (_d get "tanker") };   // fuel only between two tankers
+    private _load = (CQ_truckLoad min ((_d get "stock") - _keep) min (_cap - (_h get "stock"))) max 0;
+    private _fuelLoad = if (_fuelOk) then { (CQ_truckFuelLoad min ((_d get "fuel") - ([CQ_hubFuelReserve, CQ_shareKeep * (_d get "cap")] select ((_d get "id") != _hubId))) min (_cap - (_h get "fuel"))) max 0 } else { 0 };
+    if (_load < 30 && { _fuelLoad < 30 }) then { continue };
 
-        _hub set ["stock", (_hub get "stock") - _load];
-        _hub set ["fuel", (_hub get "fuel") - _fuelLoad];
-        _h set ["truckInbound", true];
-        CQ_trucksActive = CQ_trucksActive + 1;
-        [_hub, _h, _load, _fuelLoad] spawn CQ_fnc_truckRun;
-    } forEach _built;
-};
+    _d set ["stock", (_d get "stock") - _load];
+    _d set ["fuel", (_d get "fuel") - _fuelLoad];
+    _h set ["truckInbound", true];
+    CQ_trucksActive = CQ_trucksActive + 1;
+    [_d, _h, _load, _fuelLoad] spawn CQ_fnc_truckRun;
+} forEach _built;
 
 // ---- 5 ammo flight to the main HQ (brought forward when the hub runs dry)
 if (_hubId > -1 && { !CQ_ammoFlightActive } && { (_hub get "stock") < CQ_hubLowShare * (_hub get "cap") }

@@ -14,6 +14,9 @@
                                         lost (CQ_btEscortMax at most); CQ_btMaxDrops for the whole game
       "board"   [_hq]                   the squad gets back in (waits up to CQ_btBoardTime s)
       "kajman"  [_hq]                   (spawned) a Kajman scouts around the truck while the HQ is built
+      "lend"    [_hq]  -> bool          shared trucks: an HQ still to be built borrows the idle truck of
+                                        the nearest built HQ on the net (CQ_btLendRange); "request"
+                                        tries this first, the lender asks the carrier for a new one
 
     HQ keys: "buildTruck" (object), "btSquad" (group), "btKills" (trucks lost), "btPending".
     The truck is never in the HQ's "vehicles": nothing else (roaming, convoys, colonists) takes it.
@@ -96,10 +99,44 @@ switch (_mode) do {
         ["HQ #%1: build truck escort %2 down", [_id, typeOf _v]] call CQ_fnc_log;
     };
 
+    case "lend": {
+        // shared trucks: an HQ that still has to be BUILT borrows the idle build truck (and its
+        // squad) of the nearest built HQ on the enemy net; the lender asks the carrier for a new one
+        _args params ["_hq"];
+        private _p = _hq get "pos";
+        private _donors = (values CQ_hqs) select {
+            _x != _hq && { (_x get "state") in CQ_activeStates } && { _x get "buildDone" } && { !(_x getOrDefault ["isolated", false]) }
+            && { private _t = _x getOrDefault ["buildTruck", objNull]; alive _t && { canMove _t } && { alive driver _t } }
+            && { (_x get "pos") distance2D _p < CQ_btLendRange }
+        };
+        if (_donors isEqualTo []) exitWith { false };
+        private _d = ([_donors, [], { (_x get "pos") distance2D _p }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+        private _tr = _d get "buildTruck";
+        private _sg = _d getOrDefault ["btSquad", grpNull];
+        _d set ["buildTruck", objNull];
+        _d set ["btSquad", grpNull];
+        ["assign", [_hq, _tr, _sg]] call CQ_fnc_buildTruck;
+        [_hq] spawn {
+            params ["_hq"];
+            ["board", [_hq]] call CQ_fnc_buildTruck;
+            private _tr = _hq getOrDefault ["buildTruck", objNull];
+            if (!alive _tr) exitWith {};
+            private _dg = group driver _tr;
+            [_dg] call CQ_fnc_clearWaypoints;
+            _dg setBehaviour "SAFE";
+            _dg move ((_hq get "pos") getPos [40, random 360]);
+        };
+        ["Enemy build truck shared", format ["HQ #%1 lends its build truck to HQ #%2 (%3 m away)", _d get "id", _hq get "id", round ((_d get "pos") distance2D _p)]] call CQ_fnc_announce;
+        ["request", [_d]] spawn CQ_fnc_buildTruck;
+        true
+    };
+
     case "request": {
         _args params ["_hq"];
         private _id = _hq get "id";
         if (_hq getOrDefault ["btPending", false]) exitWith {};
+        // still to be built: borrow an idle truck on the net before asking the carrier
+        if (!(_hq getOrDefault ["buildDone", false]) && { ["lend", [_hq]] call CQ_fnc_buildTruck }) exitWith {};
         if (isNil "CQ_btDrops") then { CQ_btDrops = 0 };
         if (CQ_btDrops >= CQ_btMaxDrops) exitWith {
             if !(_hq getOrDefault ["btNone", false]) then {

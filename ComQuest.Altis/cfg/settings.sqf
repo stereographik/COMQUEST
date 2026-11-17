@@ -554,6 +554,7 @@ CQ_btStuck = 45;                         // s without moving 5 m: new route, the
 CQ_btLegMax = 240;                       // s per leg at most: the truck is put at its stop (safety)
 CQ_btReplaceDelay = 300;                 // s before the carrier paradrops a replacement truck
 CQ_btMaxDrops = 16;                      // build trucks the carrier can paradrop in the whole game (replacements + new trucks for founding HQs)
+CQ_btLendRange = 6000;                   // m: an HQ still to be built borrows the idle build truck of a built HQ this close (on the net)
 CQ_btFallbackTime = 120;                 // s per stage when the carrier has no build truck left (the build goes on without one)
 CQ_btEscortClass = "O_MRAP_02_hmg_F";    // escort of a replacement truck (Ifrit HMG, CSAT's Hunter)
 CQ_btEscortMax = 3;                      // one escort more per truck the HQ lost, up to this
@@ -584,6 +585,7 @@ CQ_waveInterval = 600;                   // a new reinforcement wave every 10 mi
 CQ_waveSpawnDist = [1000, 1500];         // convoy spawns on a road this far from the HQ
 CQ_waveNoPlayerRadius = 1000;
 CQ_waveSquads = 2;
+CQ_hqVehMax = 3;                         // crewed fighting vehicles per HQ: past this, a wave brings only its troop truck
 CQ_waveSize = 25;                        // AI budget reserved for one wave
 CQ_wavePools = [                         // one vehicle from each pool per wave
     ["truck",  ["O_Truck_02_transport_F", "B_Truck_01_transport_F"]],
@@ -672,6 +674,8 @@ CQ_specialLzR = [100, 1000];             // m from the HQ: where each team is pa
 CQ_specialFirstDelay = 40;               // first drop: 40 s after the first Mohawk vehicle paradrop of the game (engineers 20 s later)
 CQ_specialRespawn = 900;                 // a wiped-out team is dropped again 15 min later
 CQ_specialRespawns = 3;                  // ...at most this many times per team (first drop not counted)
+CQ_specialSize = 4;                      // men per support team (one team per built HQ: medics for even HQ ids, engineers for odd)
+CQ_specialHqRange = 2500;                // m around its HQ where a support team takes jobs
 CQ_specialRange = 6000;
 // Snipers: with every carrier insertion, CQ_snipersPerWave snipers on high ground on the HQ's
 // west side, driven by the medic and engineer teams to CQ_sniperDrop m short of their spots
@@ -973,6 +977,8 @@ CQ_hubLowShare = 0.15;                   // main HQ under 15% of its cap...
 CQ_hubLowFlightDelay = 180;              // ...the next supply flight leaves within 3 min                   // an HQ with less is not a rearm destination
 CQ_logiTickSeconds = 15;
 CQ_requestShare = 0.4;                   // an HQ under 40% of its cap requests a truck
+CQ_shareGive = 0.6;                      // any HQ above this share of its cap (ammo or fuel) may send a HEMTT to a needy HQ on the net
+CQ_shareKeep = 0.4;                      // ...and keeps at least this share for itself (the main HQ keeps CQ_hubReserve)
 CQ_truckClass = "B_Truck_01_ammo_F";     // HEMTT ammo, spawned at the main HQ
 CQ_truckLoad = 200;
 CQ_trucksMax = 3;

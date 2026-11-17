@@ -109,8 +109,7 @@ addMissionEventHandler ["EntityKilled", {
     ["repair", CQ_fnc_baseRepairTick] call CQ_fnc_directorAddTask;
     CQ_crateNext = 0;
     ["crates", CQ_fnc_crateTick] call CQ_fnc_directorAddTask;
-    ["medic"] spawn CQ_fnc_specialTeam;
-    ["engineer"] spawn CQ_fnc_specialTeam;
+    // support teams: one small medic or engineer team per built HQ (CQ_fnc_hqBuild starts it)
     ["groupWatch", CQ_fnc_groupWatch] call CQ_fnc_directorAddTask;
     ["assault", CQ_fnc_assaultTick] call CQ_fnc_directorAddTask;
     ["weather", CQ_fnc_weatherTick] call CQ_fnc_directorAddTask;

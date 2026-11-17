@@ -31,9 +31,13 @@ if (_spawn isEqualTo []) exitWith {
     _hq set ["waveResult", [[], []]];
 };
 
-// --- vehicles, one per pool, 18 m apart along the way in, each spot spacing-checked
+// --- vehicles, one per pool, 18 m apart along the way in, each spot spacing-checked; an HQ that
+// already has CQ_hqVehMax crewed fighting vehicles gets only the troop truck (AI budget for waves)
 private _dir = _spawn getDir _c;
 private _vehs = [];
+private _fighting = { alive _x && { (_x getVariable ["CQ_pool", ""]) != "truck" } && { alive driver _x || { alive gunner _x } } } count (_hq get "vehicles");
+private _pools = if (_fighting >= CQ_hqVehMax) then { CQ_wavePools select { (_x select 0) == "truck" } } else { CQ_wavePools };
+if (_fighting >= CQ_hqVehMax) then { ["HQ #%1: %2 fighting vehicles already, the wave brings only its truck", [_id, _fighting]] call CQ_fnc_log };
 {
     _x params ["_pool", "_classes"];
     private _cls = selectRandom _classes;
@@ -47,7 +51,7 @@ private _vehs = [];
     _cg setBehaviour "AWARE";
     [_v, CQ_vehSpawnAmmo] call CQ_fnc_vehAmmoInit;
     _vehs pushBack _v;
-} forEach CQ_wavePools;
+} forEach _pools;
 
 // --- infantry aboard (truck first, then armour, then the random vehicle)
 private _inf = [];
