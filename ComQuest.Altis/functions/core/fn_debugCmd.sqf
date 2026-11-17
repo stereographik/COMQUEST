@@ -41,7 +41,7 @@ if (_needHq && { count _hq == 0 }) then {
                 };
                 case "Installing": { _hq set ["skipStage", true]; "next build stage now" };
                 case "Hold": { _hq set ["stateT", time - CQ_holdTime - 1]; "hold ended: calling reinforcements" };
-                case "Holding": { _hq set ["nextWaveT", time]; "next reinforcement wave requested" };
+                case "Holding": { _hq set ["nextWaveT", time]; _hq set ["dbgSplit", true]; "next reinforcement wave requested (it may split now: pacing skipped)" };
                 case "WaitingReinf": { _hq set ["waveSkip", true]; "convoy moved to the HQ: split next" };
                 default { format ["state %1 cannot be advanced", _st] };
             };

@@ -39,6 +39,7 @@ if (_reason == "" && { _total < CQ_minInfantryToExpand }) then { _reason = forma
 if (_reason == "" && { !alive (_hq get "commander") || { _hq get "cmdCaptured" } }) then { _reason = "no commander to order it" };
 // pacing: a young HQ holds before it splits or assaults, and splits at most once per CQ_splitGap
 private _age = time - (_hq getOrDefault ["builtT", time]);
+if (_hq getOrDefault ["dbgSplit", false]) then { _hq set ["dbgSplit", false]; _age = 1e6; _hq set ["lastSplitT", -1e6] };   // debug "next wave": pacing skipped
 if (_reason == "" && { _assault } && { _age < CQ_assaultAge }) then { _reason = format ["too new to assault the base (%1 / %2 min)", floor (_age / 60), round (CQ_assaultAge / 60)] };
 if (_reason == "" && { !_assault } && { _age < CQ_splitAge }) then { _reason = format ["too new to split (%1 / %2 min)", floor (_age / 60), round (CQ_splitAge / 60)] };
 if (_reason == "" && { !_assault } && { time - (_hq getOrDefault ["lastSplitT", -1e6]) < CQ_splitGap }) then { _reason = format ["split %1 min ago (once per %2 min)", floor ((time - (_hq get "lastSplitT")) / 60), round (CQ_splitGap / 60)] };
