@@ -1021,6 +1021,7 @@ CQ_engineerClasses = ["B_engineer_F"];   // get engineer + explosiveSpecialist t
 // stat keys, in the order CQ_statsPub carries them
 CQ_endWait = 300;                        // s: after victory / defeat, the DEBRIEF (CQ_fnc_endgameUi) stays up this long, then the next game starts
 CQ_carryMaxAge = 30;                     // min: a game's carry-over (kit, class, squad, points, vehicles: CQ_fnc_carry) is used only by a game started within this
+CQ_carryHold = 600;                      // s after the server start: last game's squad names stay reserved for their members (a new squad takes another name)
 CQ_traceEvery = 10;                      // s between two samples of every group on the ground (endgame MAP traces)
 CQ_traceStep = 100;                      // m a group must have moved for a new trace point
 CQ_statKeys = ["killsInf", "vehLight", "vehArmor", "vehAir", "vehStatic", "deaths", "teamkills", "longest",

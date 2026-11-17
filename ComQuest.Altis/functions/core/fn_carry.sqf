@@ -113,9 +113,14 @@ switch (_mode) do {
         if (isNull _g) then {
             // first one back: his own (unassigned) group becomes the squad, with its points and vehicles
             _g = group _p;
+            // its name taken meanwhile by a new squad (after CQ_carryHold): the first free one instead
+            if (((allGroups select { side _x == west && { _x != _g } }) apply { groupId _x }) find _name > -1) then {
+                private _used = (allGroups select { side _x == west }) apply { groupId _x };
+                _name = CQ_squadNames param [CQ_squadNames findIf { !(_x in _used) }, format ["Squad %1", floor random 100]];
+            };
             _g setGroupIdGlobal [_name];
             _g setVariable ["CQ_solo", false, true];
-            _g setVariable ["CQ_carryName", _name, true];
+            _g setVariable ["CQ_carryName", (CQ_carrySq select _si) select 0, true];   // teammates find it by its old name
             _g setVariable ["CQ_sqPts", _pts, true];
             _g setVariable ["CQ_sqBought", [], true];
             [_g, _vs] spawn {
