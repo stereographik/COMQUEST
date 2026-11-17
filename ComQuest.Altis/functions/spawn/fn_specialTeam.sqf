@@ -36,6 +36,7 @@ while _alive do {
         params ['_v'];
         private _medic = %1;
         private _g = createGroup [east, true];
+        _g setVariable ['CQ_noInfCap', true];   // outside the infantry cap (CQ_maxAI still counts it)
         private _cls = ['O_engineer_F', 'O_medic_F'] select _medic;
         private _mk = { private _u = _g createUnit [_cls, getPosATL _v, [], 5, 'NONE']; [[_u]] call CQ_fnc_unitPrep; _u };
         if (!_medic) then {
