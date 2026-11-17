@@ -9,7 +9,7 @@
       - a sweep repeats every CQ_endClearEvery s until the restart: anything a running script
         (an insertion already in the air, a sabotage cycle...) still spawns is removed as well
     Friendlies keep everything: players, squads, MAGPIE, the base and its vehicles. A CSAT vehicle
-    with a player inside is left alone (it was captured).
+    a player is using is emptied first (put out once it is on the ground and slow) and removed at the next sweep.
 */
 if (!isServer) exitWith {};
 CQ_gameOver = true; publicVariable "CQ_gameOver";
@@ -23,12 +23,20 @@ private _sweep = {
     {
         { [_x] call _kill } forEach (_y getOrDefault ["objects", []]);
     } forEach (missionNamespace getVariable ["CQ_hqs", createHashMap]);
-    // CSAT vehicles, aircraft, drones, static guns (alive or wrecks), unless a player is inside
+    // CSAT vehicles, aircraft, drones, static guns (alive or wrecks). Players inside a captured
+    // one are put out first and it goes at the next sweep; a flying one waits until it lands.
     {
         private _v = _x;
-        if (getNumber (configOf _v >> "side") == 0 && { ((crew _v) findIf { isPlayer _x }) < 0 } && { isNil { _v getVariable "CQ_boughtBy" } }) then {
-            { _v deleteVehicleCrew _x } forEach crew _v;
-            [_v] call _kill;
+        if (getNumber (configOf _v >> "side") == 0 && { isNil { _v getVariable "CQ_boughtBy" } }) then {
+            private _pl = (crew _v) select { isPlayer _x };
+            if (_pl isEqualTo []) then {
+                { _v deleteVehicleCrew _x } forEach crew _v;
+                [_v] call _kill;
+            } else {
+                if ((getPos _v select 2) < 2 && { speed _v < 10 }) then {
+                    { [_x] remoteExec ["moveOut", _x]; ["The enemy has left the field: this CSAT vehicle is removed"] remoteExec ["systemChat", _x] } forEach _pl;
+                };
+            };
         };
     } forEach (vehicles + (allDead select { !(_x isKindOf "CAManBase") }));
     // CSAT soldiers and the hostage civilians, alive or dead
