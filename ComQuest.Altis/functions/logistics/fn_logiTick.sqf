@@ -6,7 +6,9 @@
       3 Groups low on ammo stop and go to the nearest stocked HQ; rearmed groups go home.
       4 HQs linked to the hub by radio and under CQ_requestShare of their cap (ammo or fuel)
         get a HEMTT from the hub carrying ammo + fuel (CQ_fnc_truckRun).
-      5 Supply flight (ammo + fuel) to the hub every CQ_ammoFlightInterval (CQ_fnc_ammoFlight).
+      5 Supply flight (ammo + fuel) to the hub every CQ_ammoFlightInterval (CQ_fnc_ammoFlight);
+        a hub above CQ_flightRedirectShare of its cap: to the poorest HQ on the net instead.
+      Low groups rearm only at a depot with CQ_rearmGroupMin, at most once per CQ_rearmRetry.
 */
 if (time < CQ_logiNext) exitWith {};
 CQ_logiNext = time + CQ_logiTickSeconds;
@@ -40,7 +42,9 @@ if (_hubId != CQ_hubId) then {
 
     private _send = {
         params ["_g", "_isVeh"];
-        private _t = [getPosATL leader _g, CQ_rearmMinStock] call CQ_fnc_nearestStockHq;
+        // only a depot that can really refill it, and not again within CQ_rearmRetry of its last trip
+        if (time - (_g getVariable ["CQ_rearmDoneT", -1e6]) < CQ_rearmRetry) exitWith {};
+        private _t = [getPosATL leader _g, CQ_rearmGroupMin] call CQ_fnc_nearestStockHq;
         // Nothing stocked anywhere: keep patrolling with what is left (no point queuing at an empty depot)
         if (count _t == 0) exitWith {
             if !(_g getVariable ["CQ_dryWarned", false]) then {
@@ -59,6 +63,7 @@ if (_hubId != CQ_hubId) then {
     };
     private _back = {
         params ["_g"];
+        _g setVariable ["CQ_rearmDoneT", time];
         [_g] call CQ_fnc_clearWaypoints;
         _g setVariable ["CQ_roamT", -1];   // vehicles: CQ_fnc_vehRoamTick gives them a new route
         private _prev = _g getVariable ["CQ_prevRole", "patrol"];
@@ -143,7 +148,17 @@ if (_hubId > -1 && { !CQ_ammoFlightActive } && { (_hub get "stock") < CQ_hubLowS
 if (_hubId > -1 && { !_hubIso } && { !CQ_ammoFlightActive } && { CQ_nextAmmoFlight > 0 } && { time >= CQ_nextAmmoFlight }) then {
     CQ_nextAmmoFlight = time + CQ_ammoFlightInterval + ([0, CQ_opSupplyDelay] select ((missionNamespace getVariable ["CQ_corridorLost", -1]) == _hubId));   // corridor outpost lost: later
     CQ_ammoFlightActive = true;
-    [_hub] spawn CQ_fnc_ammoFlight;
+    // a nearly full hub: the flight goes to the poorest HQ on the net instead (nothing wasted)
+    private _dest = _hub;
+    if ((_hub get "stock") > CQ_flightRedirectShare * (_hub get "cap")) then {
+        private _linked = [_hub, _built] call CQ_fnc_hqLinks;
+        private _cands = _built select { (_x get "id") != _hubId && { (_x get "id") in _linked } && { !(_x getOrDefault ["isolated", false]) } };
+        if (_cands isNotEqualTo []) then {
+            _dest = ([_cands, [], { (_x get "stock") / ((_x get "cap") max 1) }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+            ["Supply flight: main HQ #%1 is full (%2 / %3), the flight goes to HQ #%4 (%5 ammo)", [_hubId, round (_hub get "stock"), _hub get "cap", _dest get "id", round (_dest get "stock")]] call CQ_fnc_log;
+        };
+    };
+    [_dest] spawn CQ_fnc_ammoFlight;
 };
 
 // ---- debug: stock report every minute

@@ -143,12 +143,12 @@ _child set ["incomingCol", _n];     // colonists on the way count for the balanc
 _child set ["siteLevel", CQ_lastSiteLevel];
 private _carry = floor (((_hq get "stock") * CQ_childCarryShare) min CQ_childCarryMax);
 _hq set ["stock", (_hq get "stock") - _carry];
-_child set ["stockInit", _carry];
+_child set ["stockInit", _carry max CQ_childStartStock];      // the carrier tops it up (with the build truck drop)
 private _carryFuel = floor (((_hq get "fuel") * CQ_childCarryShare) min CQ_childCarryMax);
 _hq set ["fuel", (_hq get "fuel") - _carryFuel];
-_child set ["fuelInit", _carryFuel];
-["Enemy HQ splitting", format ["HQ #%1: %2 soldiers leave with %7 ammo to found HQ #%3 near grid %4 (%5 m), %6 stay",
-    _id, _n, _child get "id", mapGridPosition _site, round (_site distance2D _c), _total - _n, _carry]] call CQ_fnc_announce;
+_child set ["fuelInit", _carryFuel max CQ_childStartFuel];
+["Enemy HQ splitting", format ["HQ #%1: %2 soldiers leave with %7 ammo to found HQ #%3 near grid %4 (%5 m), %6 stay (it starts with %8 ammo, %9 fuel)",
+    _id, _n, _child get "id", mapGridPosition _site, round (_site distance2D _c), _total - _n, _carry, _child get "stockInit", _child get "fuelInit"]] call CQ_fnc_announce;
 
 [_child, _col, _colVehs, _cmdG] spawn CQ_fnc_colonise;
 
