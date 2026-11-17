@@ -38,7 +38,7 @@ private _rl = (0.042 * _wh / (safeZoneH * 0.66)) max 0.03;
     [[_wx, _wy, _ww, _rl * 1.1], CQ_ui get "header"]
 ]] call CQ_fnc_tabletBg;
 uiNamespace setVariable ["CQ_endTab", "end"];
-["create", [_d, [_picX, _picY, _pw, _ph], [["tab_stats", "Debrief", "end"], ["tab_global", "Map: every group's way, replay the game", "map"]], "CQ_endTab", ""]] call CQ_fnc_tabletCol;
+["create", [_d, [_picX, _picY, _pw, _ph], ([["tab_stats", "Debrief", "end"]] + ([[], [["tab_global", "Map: every group's way, replay the game", "map"]]] select (missionNamespace getVariable ["CQ_traceOn", false]))), "CQ_endTab", ""]] call CQ_fnc_tabletCol;
 
 private _mk = {
     params ["_cls", "_pos", ["_txt", ""], ["_grp", controlNull]];

@@ -16,7 +16,9 @@ CQ_tickSeconds = 5;                      // one server tick every 5 s
 CQ_hqQuietR = 3000;                      // m: an HQ with no player this close...
 CQ_hqQuietContact = 120;                 // s: ...and no contact for this long is "quiet"...
 CQ_hqQuietEvery = 3;                     // ...and is handled every Nth server tick only (HQ loop load)
-CQ_directorAtomic = ["magpie", "magDormant", "link", "linkRepair"];   // director tasks run in one go (unscheduled), not time-sliced with every other script
+CQ_directorAtomic = ["magpie", "magDormant", "link", "linkRepair"];
+CQ_directorAllAtomic = true;             // every director task runs in one go (unscheduled): its real cost, never starved by the
+                                         // script scheduler (at low server FPS a time-sliced task could take minutes). Tasks never wait inside.   // director tasks run in one go (unscheduled), not time-sliced with every other script
 CQ_scriptDumpMin = 40;                   // slow tick with more spawned scripts than this: list them in the log (once a minute)
 
 // --- Player base (Altis International Airport) -----------------------------
@@ -1040,6 +1042,7 @@ CQ_endClearEvery = 10;                   // s: after the end, sweep for enemies 
 CQ_carryMaxAge = 30;                     // min: a game's carry-over (kit, class, squad, points, vehicles: CQ_fnc_carry) is used only by a game started within this
 CQ_carryHold = 600;                      // s after the server start: last game's squad names stay reserved for their members (a new squad takes another name)
 CQ_restartPass = "";                     // dedicated server only: its serverCommandPassword, so the mission restarts itself after a game ("" = it just ends)
+CQ_traceOn = false;                      // record every group's way for the debrief MAP tab (off: no recorder, no MAP tab)
 CQ_traceEvery = 10;                      // s between two samples of every group on the ground (endgame MAP traces)
 CQ_traceStep = 100;                      // m a group must have moved for a new trace point
 CQ_statKeys = ["killsInf", "vehLight", "vehArmor", "vehAir", "vehStatic", "deaths", "teamkills", "longest",

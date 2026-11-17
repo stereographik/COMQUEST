@@ -56,8 +56,21 @@ private _retries = 0;
 waitUntil {
     sleep 3;
     if (alive _v && { _v distance _lastPos > 10 }) then { _lastPos = getPosATL _v; _lastT = time };
-    if (alive _v && { time - _lastT > 45 } && { _retries < 6 }) then {
+    if (alive _v && { time - _lastT > 45 } && { _retries < 10 }) then {
         _retries = _retries + 1;
+        // from the 2nd time: a short hop onto clear ground toward the target (a road if one is close)
+        if (_retries >= 2 && { speed _v < 3 }) then {
+            private _ahead = _v getPos [35, _v getDir _dest];
+            private _rd = [_ahead, 60] call BIS_fnc_nearestRoad;
+            if (!isNull _rd) then { _ahead = getPosATL _rd };
+            private _p = [_ahead, 6, 40, [_v]] call CQ_fnc_clearPos;
+            if (_p isNotEqualTo []) then {
+                _v setDir (_p getDir _dest);
+                _v setPosATL [_p select 0, _p select 1, 0.3];
+                _v setVectorUp surfaceNormal _p;
+                ["%1: %2 nudged %3 m toward its target", [_tag, typeOf _v, round (_p distance2D _lastPos)]] call CQ_fnc_log;
+            };
+        };
         [_retries] call _go;
         _lastT = time;
         ["%1: %2 (%3) stuck at grid %4, order re-issued (%5)", [_tag, typeOf _v, groupId _vg, mapGridPosition _v, _retries]] call CQ_fnc_log;

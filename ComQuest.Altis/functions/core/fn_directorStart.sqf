@@ -19,7 +19,7 @@ CQ_directorHandle = [] spawn {
             // heavy tasks run in one go (unscheduled): no time-slicing against every other script,
             // so they finish in the frame they start and their time is their real cost (timed
             // inside the same unscheduled block, "*" in the log)
-            if (_name in CQ_directorAtomic) then {
+            if (CQ_directorAllAtomic || { _name in CQ_directorAtomic }) then {
                 private _dt1 = 0;
                 isNil { private _t1 = diag_tickTime; [] call _code; _dt1 = diag_tickTime - _t1 };
                 _times pushBack [_dt1, _name + "*"];

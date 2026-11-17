@@ -85,8 +85,10 @@ private _col = [];
 private _n = 0;
 {
     if (_n >= _target) exitWith {};
+    private _k = { alive _x } count units _x;
+    if (_total - (_n + _k) < CQ_minDefenders) then { continue };   // whole squads: never leave the HQ under CQ_minDefenders
     _col pushBack _x;
-    _n = _n + ({ alive _x } count units _x);
+    _n = _n + _k;
 } forEach _cands;
 
 if (_col isEqualTo []) exitWith {

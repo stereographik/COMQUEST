@@ -133,7 +133,7 @@ addMissionEventHandler ["EntityKilled", {
     CQ_opStartT = time;
     ["operation", CQ_fnc_opTick] call CQ_fnc_directorAddTask;
     ["stats", CQ_fnc_statsTick] call CQ_fnc_directorAddTask;
-    ["trace", CQ_fnc_traceTick] call CQ_fnc_directorAddTask;   // endgame MAP: who was last on each square
+    if (CQ_traceOn) then { ["trace", CQ_fnc_traceTick] call CQ_fnc_directorAddTask };   // endgame MAP: who was last on each square
     ["vehRoam", CQ_fnc_vehRoamTick] call CQ_fnc_directorAddTask;
     ["callsigns", CQ_fnc_callsignTick] call CQ_fnc_directorAddTask;
 
