@@ -72,7 +72,8 @@ switch (_mode) do {
                 _sq pushBack [groupId _g, getPlayerUID (leader _g), _m apply { getPlayerUID _x }, _g getVariable ["CQ_sqPts", 0], _vs];
             };
         } forEach allGroups;
-        profileNamespace setVariable ["CQ_carry_v1", [[systemTimeUTC] call _minutes, _pl, _sq]];
+        private _res = (missionNamespace getVariable ["CQ_endPub", ["", "", 0]]) select [0, 3];
+        profileNamespace setVariable ["CQ_carry_v1", [[systemTimeUTC] call _minutes, _pl, _sq, _res, (missionNamespace getVariable ["CQ_gameNo", 1]) + 1]];
         saveProfileNamespace;
         ["CARRY: saved %1 player(s) and %2 squad(s) for the next game", [count _pl, count _sq]] call CQ_fnc_log;
     };
@@ -81,10 +82,17 @@ switch (_mode) do {
         profileNamespace setVariable ["CQ_carry_v1", nil];
         saveProfileNamespace;
         if (_c isEqualTo []) exitWith {};
-        _c params ["_t", "_pl", "_sq"];
+        _c params ["_t", "_pl", "_sq", ["_last", ["", "", 0]], ["_no", 1]];
         private _age = ([systemTimeUTC] call _minutes) - _t;
         if (_age < 0 || { _age > CQ_carryMaxAge }) exitWith { ["CARRY: last game's save is %1 min old, not used", [_age]] call CQ_fnc_log };
         CQ_carryPl = _pl; CQ_carrySq = _sq;
+        CQ_gameNo = _no;
+        // returning players: no intro, no rules again (already accepted), a short NEXT GAME card
+        // instead (CQ_fnc_intro); CQ_carryLast = [result, why, duration s, game number]
+        if (isNil "CQ_rulesUids") then { CQ_rulesUids = [] };
+        { CQ_rulesUids pushBackUnique _x } forEach (keys _pl);
+        CQ_carryUids = keys _pl; publicVariable "CQ_carryUids";
+        CQ_carryLast = _last + [_no]; publicVariable "CQ_carryLast";
         ["CARRY: %1 player(s) and %2 squad(s) carried over from the last game (%3 min ago)", [count _pl, count _sq, _age]] call CQ_fnc_log;
     };
     case "join": {

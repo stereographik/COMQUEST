@@ -35,7 +35,7 @@ private _pub = {
     CQ_conductPub = (keys CQ_conduct) apply { private _r = CQ_conduct get _x; [_x, count (_r select 0), _r select 1] };
     publicVariable "CQ_conductPub";
 };
-if (isServer && { isNil "CQ_conduct" }) then { CQ_conduct = createHashMap; CQ_rulesUids = [] };   // uid -> [[tk times], warnings]
+if (isServer && { isNil "CQ_conduct" }) then { CQ_conduct = createHashMap; if (isNil "CQ_rulesUids") then { CQ_rulesUids = [] } };   // (returning players already in it: CQ_fnc_carry)   // uid -> [[tk times], warnings]
 
 switch (_mode) do {
     // ---------------------------------------------------------------- rules gate
