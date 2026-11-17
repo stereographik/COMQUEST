@@ -171,7 +171,7 @@ if (_needHq && { count _hq == 0 }) then {
             private _r = _hq getOrDefault ["tanker", objNull];
             if (alive _r) then { _r setDamage 1; _msg = format ["HQ #%1: fuel tanker destroyed (%2 fuel points lost)", _id, round (_hq getOrDefault ["fuel", 0])] } else { _msg = format ["HQ #%1 has no fuel tanker", _id] };
         };
-        case "wave": { _hq set ["nextWaveT", time]; _msg = format ["HQ #%1: reinforcement wave requested (state %2)", _id, _hq get "state"] };
+        case "wave": { _hq set ["nextWaveT", time]; _hq set ["dbgSplit", true]; _msg = format ["HQ #%1: reinforcement wave requested (state %2), it may split on arrival (pacing skipped)", _id, _hq get "state"] };
         case "carrierMinus": {
             CQ_carrierLeft = ((missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs]) - 1) max 0;
             call CQ_fnc_carrierMarker; CQ_actNext = 0;
