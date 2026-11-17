@@ -61,6 +61,7 @@ NOTES = {
     "forestCamp": ["UNITS: sentry team x4 (guerillas)", "QS: resistance sentry groups"],
     "siteRadar": ["UNITS: guards x4", "AA nearby"],
     "siteOffshorePlatform": ["UNITS: guards x4-6 (sea objective)"],
+    "siteResearch": ["UNITS: guards x4", "intel / hostage spot inside"],
 }
 
 OBJ = re.compile(r'\["([A-Za-z0-9_]+)",\[(-?[\d.e+-]+),(-?[\d.e+-]+),(-?[\d.e+-]+)\],(-?[\d.e+-]+)')
