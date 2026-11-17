@@ -7,9 +7,14 @@
       - under CQ_vehLowFuel it drives to the nearest HQ whose fuel tanker has fuel
         (role "refuel"); the depot pass (CQ_fnc_hqRearmPass) fills it, then it roams again
     Vehicles on other jobs (QRF, rearm, assault, transfer, busy) are left alone.
+    At most CQ_vehRoamPerTick routes are planned per run (the rest at the next director tick).
 */
 if (time < CQ_vehRoamNext) exitWith {};
 CQ_vehRoamNext = time + 30;
+// route planning is the costly part: at most CQ_vehRoamPerTick new routes per run; when some
+// are left over, the next run comes at the next director tick instead of in 30 s
+private _routes = 0;
+private _more = false;
 
 {
     private _hq = _x;
@@ -53,6 +58,11 @@ CQ_vehRoamNext = time + 30;
                 if (time - (_g getVariable ["CQ_roamPosT", time]) > 90) then { _renew = true };
             };
         };
-        if (_renew) then { [_g, _v, _c] call CQ_fnc_vehRoam };
+        if (_renew) then {
+            if (_routes >= CQ_vehRoamPerTick) exitWith { _more = true };
+            _routes = _routes + 1;
+            [_g, _v, _c] call CQ_fnc_vehRoam;
+        };
     } forEach (_hq get "vehicles");
 } forEach (values CQ_hqs);
+if (_more) then { CQ_vehRoamNext = time };

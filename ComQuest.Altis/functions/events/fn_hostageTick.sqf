@@ -33,6 +33,7 @@ if (!_active) exitWith {
     if (!isNil "CQ_crashState" && { !(CQ_crashState get "secured") } && { time - (CQ_crashState get "t0") < CQ_crashCooldown }) exitWith {};
     if (time - (missionNamespace getVariable ["CQ_crashFrontT", 0]) < CQ_crashStagnant) exitWith {};
     ["Hostage event: triggered (front still for %1 min)", [round ((time - (missionNamespace getVariable ["CQ_crashFrontT", 0])) / 60)]] call CQ_fnc_log;
+    if !([CQ_aiEventSize, "hostage"] call CQ_fnc_aiRoom) exitWith { CQ_hstLastT = time - CQ_crashCooldown + 120 };   // no room: retry in 2 min
     if (call CQ_fnc_hostageStart) then { CQ_crashFrontT = time } else { CQ_hstLastT = time - CQ_crashCooldown + 120 };
 };
 

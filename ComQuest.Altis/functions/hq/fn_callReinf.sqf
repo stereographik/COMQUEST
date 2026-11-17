@@ -3,7 +3,7 @@
     [_hq, _contactPos] call CQ_fnc_callReinf;
     The HQ that spotted players calls for help:
       - the closest armed helicopters with ammo take off to hunt (search & destroy)
-      - every HQ linked to it by radio (both radios standing, within CQ_commsRange) sends a
+      - every HQ on the same enemy net (radio tree, both radios standing, neither isolated) sends a
         share of its available troops, bigger the closer it is to the contact (CQ_qrfShares)
       - no radio tower (not built yet, or destroyed): nobody hears the call; only the spotting
         HQ's own forces and squads near the contact respond, no child HQ rallies to a root
@@ -71,7 +71,7 @@ _air = [_air, [], { (_x get "veh") distance2D _pos }, "ASCEND"] call BIS_fnc_sor
     private _d = (_hq get "pos") distance2D _pos;
     private _linked = _srcRadio
         && { alive (_hq get "radio") } && { !(_hq getOrDefault ["isolated", false]) }
-        && { (_hq get "pos") distance2D (_src get "pos") <= CQ_commsRange };
+        && { !(_src getOrDefault ["isolated", false]) };   // both on the enemy net (the radio tree, CQ_fnc_netTick)
     if (!_isSrc && !_linked) then { continue };
 
     private _share = 0;

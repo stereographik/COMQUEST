@@ -34,6 +34,7 @@ if (isNil "CQ_empState") exitWith {
     if (!isNil "CQ_crashState" && { !(CQ_crashState get "secured") }) exitWith {};
     if (!isNil "CQ_hstState" && { (CQ_hstState get "phase") != "done" }) exitWith {};
     ["EMP event: triggered (CSAT's first loss: HQ #%1)", [(values CQ_hqs) select _loss get "id"]] call CQ_fnc_log;
+    if !([CQ_aiEventSize, "EMP"] call CQ_fnc_aiRoom) exitWith { CQ_empNext = time + 120 };   // no room: retry in 2 min
     if (call CQ_fnc_empStart) then { CQ_empDone = true } else { CQ_empNext = time + 120 };   // no site: retry in 2 min
 };
 

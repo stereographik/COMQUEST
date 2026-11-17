@@ -146,8 +146,9 @@ private _players = allPlayers select { alive _x };
     };
 } forEach CQ_hqs;
 
-// ---- victory: no HQ left, and the carrier cannot send more (all roots landed or no supplies)
-if (isNil "CQ_victory" && { CQ_rootsLaunched >= CQ_maxRoots || { (missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0 } }) then {
+// ---- victory: no HQ left, and the carrier cannot send more (every free root landed AND no supplies:
+// with supplies left, an empty island brings a paid re-insertion, CQ_fnc_rootTick)
+if (isNil "CQ_victory" && { CQ_rootsLaunched >= CQ_maxRoots } && { (missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0 }) then {
     if (((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates }) == -1) then {
         CQ_victory = true;
         ["VICTORY", "The carrier has nothing left to send and every enemy HQ is destroyed"] call CQ_fnc_announce;

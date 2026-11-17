@@ -3,7 +3,7 @@
     ["capture", _commander, _player] call CQ_fnc_cmdCapture;
     The enemy HQ commander surrenders: disarmed, captive, follows the capturing player's squad.
     His HQ counts its commander as gone (it can no longer expand), and his intel goes on the
-    map: every HQ of his network (chain of HQs within CQ_commsRange of each other, starting
+    map: every HQ of his network (the radio tree: parents and children, starting
     from his own) gets an exact position marker for all players.
 */
 params ["_mode", "_cmd", "_p"];
@@ -27,7 +27,7 @@ private _q = [_hq];
 while { _q isNotEqualTo [] } do {
     private _cur = _q deleteAt 0;
     {
-        if (!(_x in _seen) && { ((_x get "pos") distance2D (_cur get "pos")) <= CQ_commsRange }) then { _seen pushBack _x; _q pushBack _x };
+        if (!(_x in _seen) && { (_x getOrDefault ["parent", -1]) == (_cur get "id") || { (_cur getOrDefault ["parent", -1]) == (_x get "id") } }) then { _seen pushBack _x; _q pushBack _x };
     } forEach _act;
 };
 {

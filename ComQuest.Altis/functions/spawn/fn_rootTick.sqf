@@ -1,19 +1,33 @@
 /*
     CQ_fnc_rootTick  (server, director task)
-    Launches a root insertion every CQ_rootInterval s, CQ_maxRoots in total: the first one at the
+    Launches a root insertion every CQ_rootInterval s (at once when the island is empty), CQ_maxRoots
+    in total, free; then re-insertions paid from the carrier's supplies when the island is empty. The first one at the
     carrier site's paired first HQ position, the next ones 1.5-4 km inland from the coast facing the carrier (debug option: 1st one at the runway end). To launch the next one now, run on the
     server from the debug console:  CQ_nextRootTime = 0;
     HELP WAVE: while an HQ is unfinished, a wave first lands next to it and guards it (state
     Helping in CQ_fnc_hqTick), then founds its own HQ near it.
 */
-if (CQ_rootsLaunched >= CQ_maxRoots) exitWith {};
-if ((missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0) exitWith {};          // carrier empty
-if (serverTime < CQ_nextRootTime) exitWith {};
+// Two budgets: CQ_maxRoots free root insertions (the beachhead, then one every CQ_rootInterval s),
+// and the carrier's supplies (CQ_carrierLeft) that only child HQs use. The island emptied by the
+// players brings the next root at once; with no root left, a RE-INSERTION is paid from the
+// supplies (CQ_reinsertDelay s after the island is empty). No root and no supplies: nothing more.
+private _active = ((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates }) > -1;
+if (_active) then { CQ_islandEmptyT = -1 } else { if ((missionNamespace getVariable ["CQ_islandEmptyT", -1]) < 0) then { CQ_islandEmptyT = serverTime } };
+private _paid = false;
+if (CQ_rootsLaunched >= CQ_maxRoots) then {
+    _paid = true;
+    if (_active || { (missionNamespace getVariable ["CQ_carrierLeft", 0]) <= 0 }) exitWith { _paid = false };
+    if (serverTime - CQ_islandEmptyT < CQ_reinsertDelay) exitWith { _paid = false };
+};
+if (CQ_rootsLaunched >= CQ_maxRoots && { !_paid }) exitWith {};
+if (!_paid && { serverTime < CQ_nextRootTime } && { _active || { CQ_rootsLaunched == 0 } || { serverTime - CQ_islandEmptyT < CQ_reinsertDelay } }) exitWith {};
 // root insertions have their own allowance above the cap (HQ reinforcements alone can fill it)
 if ((call CQ_fnc_enemyInfantry) > CQ_maxInfantry + CQ_rootCapBonus - 30) exitWith {
     CQ_nextRootTime = serverTime + 60;
     ["Root insertion postponed: infantry cap (%1/%2)", [call CQ_fnc_enemyInfantry, CQ_maxInfantry + CQ_rootCapBonus]] call CQ_fnc_log;
 };
+
+if !([CQ_waveSize, "root insertion", CQ_rootCapBonus] call CQ_fnc_aiRoom) exitWith { CQ_nextRootTime = serverTime + 60 };
 
 // HELP WAVE: an HQ still unfinished (active, build not done) gets this wave first: it lands next
 // to the least built one (tie: nearest the carrier), guards it until its build is done
@@ -85,9 +99,15 @@ if (_site isEqualTo []) exitWith {
 };
 private _level = CQ_lastSiteLevel;
 
-CQ_rootsLaunched = CQ_rootsLaunched + 1;
-CQ_nextRootTime = serverTime + CQ_rootInterval;
-["Root insertion %1/%2 launched", [CQ_rootsLaunched, CQ_maxRoots]] call CQ_fnc_log;
+if (_paid) then {
+    CQ_rootPaidNext = true;          // CQ_fnc_hqNew: this root uses one of the carrier's supplies
+    CQ_islandEmptyT = -1;
+    ["Root RE-INSERTION launched: the island was empty, paid from the carrier's supplies (%1 left before it)", [missionNamespace getVariable ["CQ_carrierLeft", 0]]] call CQ_fnc_log;
+} else {
+    CQ_rootsLaunched = CQ_rootsLaunched + 1;
+    CQ_nextRootTime = serverTime + CQ_rootInterval;
+    ["Root insertion %1/%2 launched", [CQ_rootsLaunched, CQ_maxRoots]] call CQ_fnc_log;
+};
 
 if (_helpId > -1) then { ["Root insertion %1: HELP wave for HQ #%2 (build %3/6), then its own HQ at %4", [CQ_rootsLaunched, _helpId, (CQ_hqs get _helpId) getOrDefault ["buildStage", 0], mapGridPosition _site]] call CQ_fnc_log };
 [_site, _level, _helpId] spawn CQ_fnc_insertion;

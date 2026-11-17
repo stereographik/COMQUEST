@@ -123,6 +123,7 @@ switch (_mode) do {
             private _first = (_s get "left") == CQ_sabTeams;
             private _roots = (values CQ_hqs) select { (_x getOrDefault ["parent", -1]) == -1 && { (_x get "state") in CQ_activeStates } };
             private _drop = if (_first || { _roots isEqualTo [] }) then { _home } else { ((_roots select 0) get "pos") getPos [300 + random 300, random 360] };
+            if !([count CQ_sabClasses + 2, "sabotage"] call CQ_fnc_aiRoom) exitWith {};   // the enemy AI budget: asked again next tick
             ["spawn", [_drop, !_first]] call CQ_fnc_sabotage;
         };
 

@@ -35,6 +35,7 @@ if (!_busy && { !_hstOn } && { time - (missionNamespace getVariable ["CQ_hstLast
     if (_early || _stale) then {
         if (_early) then { CQ_crashEarlyT = -1 };
         ["Crash event: triggered (%1)", [["front still for " + str round ((time - CQ_crashFrontT) / 60) + " min", "early roll"] select _early]] call CQ_fnc_log;
+        if !([CQ_aiEventSize, "crash"] call CQ_fnc_aiRoom) exitWith { CQ_crashLastT = time - CQ_crashCooldown + 120 };   // no room: retry in 2 min
         if (call CQ_fnc_crashStart) then { CQ_crashFrontT = time } else { CQ_crashLastT = time - CQ_crashCooldown + 120 };   // no site: retry in 2 min
     };
 };

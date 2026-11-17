@@ -22,6 +22,7 @@ while { true } do {
     waitUntil { sleep 2; !isNil "CQ_firstDropT" && { time > CQ_firstDropT + CQ_specialFirstDelay } };
     sleep (20 * (["medic", "engineer"] find _kind));   // the two teams never take off together
     waitUntil { sleep 5; ((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates }) > -1 };
+    waitUntil { sleep 10; [10, _tag] call CQ_fnc_aiRoom };   // the enemy AI budget (CQ_maxAI)
     private _home = CQ_hqs getOrDefault [CQ_hubId, createHashMap];
     if (count _home == 0 || { !((_home get "state") in CQ_activeStates) }) then {
         private _act = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };

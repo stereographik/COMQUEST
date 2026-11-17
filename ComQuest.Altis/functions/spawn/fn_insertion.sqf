@@ -209,9 +209,13 @@ private _handoff = {
         { deleteMarker _x } forEach (_hq get "markers");
         ["Enemy insertion failed", format ["HQ #%1: no troops made it to the ground", _id]] call CQ_fnc_announce;
         // the carrier tries again at the same spot: this landing does not count and its supplies come back
-        CQ_rootsLaunched = (CQ_rootsLaunched - 1) max 0;
-        CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", 0]) + 1;
-        call CQ_fnc_carrierMarker;
+        if (_hq getOrDefault ["paid", false]) then {
+            CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", 0]) + 1;
+            call CQ_fnc_carrierMarker;
+            CQ_rootPaidNext = true;              // the retry is paid again
+        } else {
+            CQ_rootsLaunched = (CQ_rootsLaunched - 1) max 0;
+        };
         CQ_rootRetrySite = _site;
         CQ_nextRootTime = serverTime + CQ_rootRetryDelay;
         ["Root insertion failed: the carrier retries at %1 in %2 s", [mapGridPosition _site, CQ_rootRetryDelay]] call CQ_fnc_log;

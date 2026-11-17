@@ -68,8 +68,13 @@ private _hq = createHashMapFromArray [
 ];
 
 CQ_hqs set [_id, _hq];
-// every new HQ (insertion or split) uses one HQ's worth of the carrier's supplies
-CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs]) - 1;
-call CQ_fnc_carrierMarker;
-["Carrier: supplies for %1 more HQ(s) (%2%%)", [CQ_carrierLeft max 0, round (100 * (CQ_carrierLeft max 0) / CQ_carrierHqs)]] call CQ_fnc_log;
+// the carrier's supplies pay for child HQs and re-insertions; the CQ_maxRoots root insertions are free
+private _paid = _parent != -1 || { missionNamespace getVariable ["CQ_rootPaidNext", false] };
+CQ_rootPaidNext = false;
+_hq set ["paid", _paid];
+if (_paid) then {
+    CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs]) - 1;
+    call CQ_fnc_carrierMarker;
+    ["Carrier: supplies for %1 more HQ(s) (%2%%)", [CQ_carrierLeft max 0, round (100 * (CQ_carrierLeft max 0) / CQ_carrierHqs)]] call CQ_fnc_log;
+};
 _hq

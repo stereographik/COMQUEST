@@ -5,6 +5,8 @@
     reinforcements first) leaves with the truck and the random vehicle, plus a new officer,
     to found a child HQ ~2 km away (CQ_fnc_colonise). The armour and the rest stay.
     No split when caps or numbers forbid it: the wave simply reinforces the garrison.
+    Pacing: no split before CQ_splitAge s after the HQ was built, then once per CQ_splitGap s;
+    no base assault before CQ_assaultAge s.
     Within CQ_assaultRange of the player base the colonists assault the base instead.
 */
 params ["_hq", ["_waveInf", []], ["_waveVehs", []]];
@@ -35,6 +37,11 @@ if (_reason == "" && { !_assault } && { count _active >= CQ_maxHqs }) then { _re
 if (_reason == "" && { !_assault } && { (missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0 }) then { _reason = "the carrier has no supplies left for a new HQ" };
 if (_reason == "" && { _total < CQ_minInfantryToExpand }) then { _reason = format ["only %1 infantry", _total] };
 if (_reason == "" && { !alive (_hq get "commander") || { _hq get "cmdCaptured" } }) then { _reason = "no commander to order it" };
+// pacing: a young HQ holds before it splits or assaults, and splits at most once per CQ_splitGap
+private _age = time - (_hq getOrDefault ["builtT", time]);
+if (_reason == "" && { _assault } && { _age < CQ_assaultAge }) then { _reason = format ["too new to assault the base (%1 / %2 min)", floor (_age / 60), round (CQ_assaultAge / 60)] };
+if (_reason == "" && { !_assault } && { _age < CQ_splitAge }) then { _reason = format ["too new to split (%1 / %2 min)", floor (_age / 60), round (CQ_splitAge / 60)] };
+if (_reason == "" && { !_assault } && { time - (_hq getOrDefault ["lastSplitT", -1e6]) < CQ_splitGap }) then { _reason = format ["split %1 min ago (once per %2 min)", floor ((time - (_hq get "lastSplitT")) / 60), round (CQ_splitGap / 60)] };
 
 private _site = [];
 if (_reason == "" && { !_assault }) then {
@@ -130,6 +137,7 @@ private _from = if (isNull _bld) then { _c } else { getPosATL _bld };
 _cmdG createUnit ["O_officer_F", _from getPos [6, random 360], [], 0, "NONE"];
 [units _cmdG] call CQ_fnc_unitPrep;
 
+_hq set ["lastSplitT", time];
 private _child = [_site, _id] call CQ_fnc_hqNew;
 _child set ["incomingCol", _n];     // colonists on the way count for the balancing (CQ_fnc_hqBalance)
 _child set ["siteLevel", CQ_lastSiteLevel];

@@ -19,6 +19,7 @@ params ["_hq"];
 if (!isNull (missionNamespace getVariable ["CQ_huntGroup", grpNull]) && { ({ alive _x } count units CQ_huntGroup) > 0 }) exitWith {};
 private _left = missionNamespace getVariable ["CQ_huntLeft", CQ_huntTeams];
 if (_left <= 0) exitWith {};
+if !([count CQ_huntClasses, "hunters"] call CQ_fnc_aiRoom) exitWith {};   // the enemy AI budget: asked again on the next trigger
 CQ_huntLeft = _left - 1;
 private _id = _hq get "id";
 private _c = _hq get "pos";

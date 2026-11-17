@@ -2,7 +2,7 @@
     CQ_fnc_netTick  (server, director task, every CQ_netEvery s)            nGD: "break the net"
     The enemy radio network, the spine of the game:
       nodes   built enemy HQs whose radio tower stands
-      links   two nodes within CQ_commsRange of each other
+      links   a TREE: each HQ to the HQ that founded it (its parent), at any distance
       trunk   the carrier talks to every ROOT HQ (parent -1) whose tower stands
     An HQ reached from the trunk through links is CONNECTED. A built HQ that is not (its own
     tower down, or every path to the trunk cut) is ISOLATED:
@@ -26,14 +26,17 @@ private _built = (values CQ_hqs) select { (_x get "state") in CQ_activeStates &&
 private _nodes = _built select { alive (_x get "radio") && { (_x getOrDefault ["empUntil", -1]) < time } };   // an HQ hit by our EMP is off the net (CQ_fnc_empBlast)
 private _roots = _nodes select { (_x getOrDefault ["parent", -1]) == -1 };
 
-// breadth-first search from the trunk
+// the net is a TREE: each HQ talks only to the HQ that founded it (its parent), at any distance,
+// and every root to the carrier. Walk it down from the roots: a tower lost (or an HQ fallen)
+// cuts off its whole branch
 private _seen = _roots apply { _x get "id" };
 private _queue = +_roots;
 while { _queue isNotEqualTo [] } do {
     private _cur = _queue deleteAt 0;
+    private _cid = _cur get "id";
     {
         private _id = _x get "id";
-        if (!(_id in _seen) && { ((_x get "pos") distance2D (_cur get "pos")) <= CQ_commsRange }) then {
+        if (!(_id in _seen) && { (_x getOrDefault ["parent", -1]) == _cid }) then {
             _seen pushBack _id;
             _queue pushBack _x;
         };
@@ -55,6 +58,13 @@ while { _queue isNotEqualTo [] } do {
             ["Enemy HQ reconnected", format ["%1 is back on the enemy network", [_id] call CQ_fnc_objName]] call CQ_fnc_announce;
         };
         [_h] call CQ_fnc_hqStatusMarker;
+    };
+    // the front is near: a built HQ within CQ_frontWarnR (outside assault range), once per HQ
+    private _dB = (_h get "pos") distance2D CQ_basePos;
+    if (!(_h getOrDefault ["frontSaid", false]) && { _dB < CQ_frontWarnR } && { _dB >= CQ_assaultRange }) then {
+        _h set ["frontSaid", true];
+        ["frontNear", [[_id] call CQ_fnc_objName, round (_dB / 100) / 10]] call CQ_fnc_say;
+        ["Front near", format ["%1 is built %2 m from the base", [_id] call CQ_fnc_objName, round _dB]] call CQ_fnc_announce;
     };
     // base threat: close enough to send an assault (CQ_assaultRange), once per HQ
     if (!(_h getOrDefault ["threatSaid", false]) && { (_h get "pos") distance2D CQ_basePos < CQ_assaultRange }) then {
@@ -78,7 +88,7 @@ private _links = [];
 {
     private _a = _x;
     {
-        if ((_x get "id") > (_a get "id") && { ((_x get "pos") distance2D (_a get "pos")) <= CQ_commsRange }) then {
+        if ((_x getOrDefault ["parent", -1]) == (_a get "id")) then {
             _links pushBack [_a get "pos", _x get "pos", (_a get "id") in _seen];
         };
     } forEach _nodes;

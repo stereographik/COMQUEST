@@ -1,8 +1,8 @@
 /*
     CQ_fnc_hqLinks
     [_hub, _built] call CQ_fnc_hqLinks  ->  ids of the HQs connected to the main HQ by radio
-    Breadth-first search: two built HQs are linked when both radio towers stand and they are
-    within CQ_commsRange. Deliveries only go to connected HQs.
+    Breadth-first search over the radio TREE: two built HQs are linked when both radio towers
+    stand and one founded the other (parent / child, any distance). Deliveries only go to connected HQs.
 */
 params ["_hub", "_built"];
 
@@ -15,7 +15,7 @@ while { _queue isNotEqualTo [] } do {
     private _cur = _queue deleteAt 0;
     {
         private _id = _x get "id";
-        if (!(_id in _seen) && { ((_x get "pos") distance2D (_cur get "pos")) <= CQ_commsRange }) then {
+        if (!(_id in _seen) && { (_x getOrDefault ["parent", -1]) == (_cur get "id") || { (_cur getOrDefault ["parent", -1]) == _id } }) then {
             _seen pushBack _id;
             _queue pushBack _x;
         };

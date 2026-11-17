@@ -299,6 +299,11 @@ CQ_story = createHashMapFromArray [
         [["CROSSROAD", "%1 sits %2 km from the airfield. Close enough to come for me. Deal with it, or get ready to defend."]],
         [["CROSSROAD", "Heads up: %1 is %2 km out. Their next wave comes here, not west."]]
     ]],
+    // [hq name, km] - a built HQ within CQ_frontWarnR of the base: the front is getting close
+    ["frontNear", [
+        [["CROSSROAD", "The front is moving. %1 is up, %2 km from the airfield. One more step and they're at my door."]],
+        [["CROSSROAD", "New position: %1, %2 km out. That's their front line now. Hit it before it grows."]]
+    ]],
     // nGD [hq name] - a relay put up on a fallen HQ's tower site
     ["crashDown", [
         [["CROSSROAD", "All stations, a CSAT transport just went down at grid %1. It was carrying their comms gear. We want that crate."]],
@@ -526,7 +531,7 @@ CQ_story = createHashMapFromArray [
 ];
 
 // keys that ignore the speech budget and the silence after a fallen HQ (alarms, act openings)
-CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "empStart", "empFound", "empDefused", "empBlown", "empLoaded", "empProgrammed", "empStrike", "hstStart", "hstFirmware", "hstHeliLost", "hstAboard", "hstHome", "hstDead", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen", "towerHacked"];
+CQ_storyPriority = ["huntContact", "huntDown", "carrier", "act2", "act3", "act4", "defeat", "victory", "contact", "flare", "rootDefend", "breach", "assault", "netCut", "baseThreat", "frontNear", "relayUp", "relayLost", "fallen", "fallenEarly", "crashDown", "crashContact", "crashLate", "crashDrop", "crashSecured", "empStart", "empFound", "empDefused", "empBlown", "empLoaded", "empProgrammed", "empStrike", "hstStart", "hstFirmware", "hstHeliLost", "hstAboard", "hstHome", "hstDead", "decryptEnd", "magOpSpotted", "opExact", "jamOff", "counterJam", "opFallen", "towerHacked"];
 
 CQ_uiCardX = 19;                          // px from the screen's left edge to the card (its border then lines up with the vehicle panel, ~16 px)
 CQ_uiCardY = 300;                         // px from the top: first card (below the map screen's menu)
