@@ -6,6 +6,7 @@
     starts from it (CQ_carrierPos). The site's paired position is the first HQ (CQ_firstHqPos).
     CQ_coastPoint: the first land on the line from the carrier to that HQ, used to choose where
     later root insertions land and by the intro camera.
+    Supplies (CQ_carrierHqs): one HQ per CQ_carrierHqKm from the first HQ to our base, within CQ_carrierHqsRange.
 */
 private _n = count CQ_carrierSites;
 private _last = profileNamespace getVariable ["CQ_lastCarrierSite", -1];
@@ -55,6 +56,12 @@ private _m = createMarker ["cq_carrier", CQ_carrierPos];
 _m setMarkerType "o_naval";
 _m setMarkerColor "ColorOPFOR";
 _m setMarkerText "CSAT carrier group";
+// supplies: one HQ per CQ_carrierHqKm from the beachhead to our base (the farther the beach, the longer the campaign)
+if (CQ_carrierHqKm > 0) then {
+    private _d = CQ_firstHqPos distance2D CQ_basePos;
+    CQ_carrierHqs = (round (_d / CQ_carrierHqKm)) max (CQ_carrierHqsRange select 0) min (CQ_carrierHqsRange select 1);
+    ["Carrier supplies: %1 HQs (beachhead %2 km from the base, one HQ per %3 km)", [CQ_carrierHqs, (round (_d / 100)) / 10, CQ_carrierHqKm / 1000]] call CQ_fnc_log;
+};
 CQ_carrierLeft = CQ_carrierHqs;
 CQ_specialLeft = createHashMapFromArray [["medic", CQ_specialRespawns], ["engineer", CQ_specialRespawns]];
 call CQ_fnc_carrierMarker;
