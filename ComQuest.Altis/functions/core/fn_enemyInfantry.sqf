@@ -2,10 +2,11 @@
     CQ_fnc_enemyInfantry
     Live enemy foot soldiers: on foot or riding as passengers. Drivers, gunners, commanders
     and pilots of vehicles, helicopters and static weapons are not counted. The
-    CQ_maxInfantry cap is checked against this.
+    CQ_maxInfantry cap is checked against this. Not counted either: groups marked CQ_noInfCap
+    (support teams, events, hunters, sabotage): only the all-AI budget (CQ_maxAI) holds them.
 */
 {
-    alive _x && { side group _x == east } && { !(_x getVariable ["CQ_outpost", false]) } && { !(_x getVariable ["CQ_noCap", false]) } && {
+    alive _x && { side group _x == east } && { !(_x getVariable ["CQ_outpost", false]) } && { !(_x getVariable ["CQ_noCap", false]) } && { !((group _x) getVariable ["CQ_noInfCap", false]) } && {
         private _v = vehicle _x;
         _v == _x || { (assignedVehicleRole _x) param [0, ""] == "cargo" }
     }

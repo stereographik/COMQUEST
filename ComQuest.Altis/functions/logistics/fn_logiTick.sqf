@@ -107,6 +107,22 @@ if (_hubId != CQ_hubId) then {
 
 // nGD: a main HQ cut off from the network neither receives flights nor sends trucks
 private _hubIso = _hubId > -1 && { _hub getOrDefault ["isolated", false] };
+// on the enemy net right now: every HQ up the radio tree to the root is standing with its tower
+// (the "isolated" flag of CQ_fnc_netTick can lag a tick behind)
+private _onNet = {
+    params ["_h"];
+    private _c = _h;
+    private _ok = true;
+    for "_i" from 0 to 20 do {
+        if (!((_c get "state") in CQ_activeStates) || { !alive (_c getOrDefault ["radio", objNull]) }) exitWith { _ok = false };
+        private _p = _c getOrDefault ["parent", -1];
+        if (_p < 0) exitWith {};
+        _c = CQ_hqs getOrDefault [_p, createHashMap];
+        if (count _c == 0) exitWith { _ok = false };
+    };
+    _ok
+};
+
 // ---- 4 delivery requests: a HEMTT from the nearest HQ that has some to spare (not only the main
 // HQ): every HQ on the enemy net (not isolated) above CQ_shareGive of its cap may supply a
 // connected HQ under CQ_requestShare; the main HQ keeps CQ_hubReserve, the others CQ_shareKeep
@@ -117,7 +133,7 @@ private _hubIso = _hubId > -1 && { _hub getOrDefault ["isolated", false] };
     private _needAmmo = (_h get "stock") < CQ_requestShare * _cap;
     private _needFuel = alive (_h get "tanker") && { (_h get "fuel") < CQ_requestShare * _cap };
     if (!_needAmmo && !_needFuel) then { _h set ["lowWarned", false]; continue };
-    if (_h getOrDefault ["isolated", false]) then {
+    if (_h getOrDefault ["isolated", false] || { !([_h] call _onNet) }) then {
         if !(_h get "lowWarned") then {
             _h set ["lowWarned", true];
             ["Enemy HQ low on ammo", format ["HQ #%1 is running out of ammo and is cut off from the enemy network", _id]] call CQ_fnc_announce;
@@ -129,7 +145,7 @@ private _hubIso = _hubId > -1 && { _hub getOrDefault ["isolated", false] };
 
     private _keepOf = { params ["_d"]; if ((_d get "id") == _hubId) then { CQ_hubReserve } else { CQ_shareKeep * (_d get "cap") } };
     private _donors = _built select {
-        (_x get "id") != _id && { !(_x getOrDefault ["isolated", false]) }
+        (_x get "id") != _id && { !(_x getOrDefault ["isolated", false]) } && { [_x] call _onNet }
         && { (_x get "stock") > CQ_shareGive * (_x get "cap") || { (_x get "id") == _hubId && { (_x get "stock") > CQ_hubReserve + 30 } } }
     };
     if (_donors isEqualTo []) then { continue };
