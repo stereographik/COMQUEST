@@ -921,7 +921,7 @@ CQ_childDistance = [3000, 4000];         // child HQ 3-4 km from its parent (the
 // --- Contact, comms and QRF ---------------------------------------------------
 CQ_contactRadius = 1500;                 // a group must spot players within this of its HQ
 CQ_contactCooldown = 240;                // one call per HQ every 4 min
-CQ_commsRange = 3000;                    // two HQs are linked when both radios stand within this
+CQ_commsRange = 4500;                    // two HQs are linked when both radios stand within this (above CQ_childDistance: a child starts on its parent's net)
 CQ_qrfShares = [[1000, 0.5], [2000, 0.3], [3000, 0.15]];   // [distance to contact, share of available troops]
 CQ_qrfTime = 600;                        // a QRF hunts 10 min, then returns to patrol its HQ
 CQ_hqHeliClass = "O_Heli_Light_02_dynamicLoadout_F";       // PO-30 Orca parked behind each HQ
