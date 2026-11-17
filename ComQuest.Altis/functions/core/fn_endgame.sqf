@@ -89,6 +89,7 @@ CQ_endPub = [_res, _why, _dur, serverTime + CQ_endWait, count _rows,
     _tl, _rows apply { _x select [0, 15] }, _aw];
 publicVariable "CQ_endPub";
 ["ENDGAME: %1 (%2), %3 s, %4 players, %5 awards; next game in %6 s", [_res, _why, _dur, count _rows, count _aw, CQ_endWait]] call CQ_fnc_log;
+[] call CQ_fnc_endClear;              // the enemy stops and leaves the field during the debrief
 [_res] spawn {
     params ["_res"];
     private _t = time + CQ_endWait;

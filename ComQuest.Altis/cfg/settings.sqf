@@ -1020,6 +1020,8 @@ CQ_engineerClasses = ["B_engineer_F"];   // get engineer + explosiveSpecialist t
 // Player statistics (in memory only, wiped by a server restart)
 // stat keys, in the order CQ_statsPub carries them
 CQ_endWait = 300;                        // s: after victory / defeat, the DEBRIEF (CQ_fnc_endgameUi) stays up this long, then the next game starts
+CQ_endKeepTasks = ["dbgStates", "safeZone", "repair", "crates", "weather", "stats", "callsigns"];   // director tasks still running after the end (CQ_fnc_endClear): base and players only
+CQ_endClearEvery = 10;                   // s: after the end, sweep for enemies a running script still spawns
 CQ_carryMaxAge = 30;                     // min: a game's carry-over (kit, class, squad, points, vehicles: CQ_fnc_carry) is used only by a game started within this
 CQ_carryHold = 600;                      // s after the server start: last game's squad names stay reserved for their members (a new squad takes another name)
 CQ_restartPass = "";                     // dedicated server only: its serverCommandPassword, so the mission restarts itself after a game ("" = it just ends)

@@ -4,12 +4,12 @@
                                          saved on the server (profileNamespace "CQ_carry_v1")
                                            players  uid -> [class, loadout cleaned of loot]
                                            squads   [[name, leader uid, [member uids], points,
-                                                      [bought vehicle classes]], ...]
+                                                      points refunded for bought vehicles], ...]
       ["load"] call CQ_fnc_carry;        server start: taken (once) when saved less than
                                          CQ_carryMaxAge min ago (real time), then wiped
       ["join", _player] call CQ_fnc_carry;   a player connects (after "unassign"): his class and
                                          loadout back, his squad re-created (same name, its points,
-                                         its bought vehicles on the shop pad) or joined, the old
+                                         bought vehicles refunded as points) or joined, the old
                                          leader gets command back
     Loot: the loadout keeps only what the player's class may take at the arsenal
     (CQ_arsenalGates: other classes' role gear, every UAV terminal...).
@@ -68,8 +68,14 @@ switch (_mode) do {
             private _g = _x;
             private _m = (units _g) select { isPlayer _x };
             if (side _g == west && { !(_g getVariable ["CQ_solo", true]) } && { !(_g getVariable ["CQ_falcon", false]) } && { _m isNotEqualTo [] }) then {
-                private _vs = ((_g getVariable ["CQ_sqBought", []]) select { alive _x }) apply { typeOf _x };
-                _sq pushBack [groupId _g, getPlayerUID (leader _g), _m apply { getPlayerUID _x }, _g getVariable ["CQ_sqPts", 0], _vs];
+                // bought vehicles still alive are refunded: their shop price goes back to the squad's points
+                private _ref = 0;
+                {
+                    private _c = typeOf _x;
+                    private _i = CQ_shopCatalog findIf { (_x select 0) == _c };
+                    if (_i > -1) then { _ref = _ref + ((CQ_shopCatalog select _i) select 1) };
+                } forEach ((_g getVariable ["CQ_sqBought", []]) select { alive _x });
+                _sq pushBack [groupId _g, getPlayerUID (leader _g), _m apply { getPlayerUID _x }, (_g getVariable ["CQ_sqPts", 0]) + _ref, _ref];
             };
         } forEach allGroups;
         private _res = (missionNamespace getVariable ["CQ_endPub", ["", "", 0]]) select [0, 3];
@@ -108,7 +114,8 @@ switch (_mode) do {
         // his squad
         private _si = CQ_carrySq findIf { _uid in (_x select 2) };
         if (_si < 0 || { _cls == CQ_falconClass }) exitWith {};
-        (CQ_carrySq select _si) params ["_name", "_lead", "_mem", "_pts", "_vs"];
+        (CQ_carrySq select _si) params ["_name", "_lead", "_mem", "_pts", ["_ref", 0]];
+        if !(_ref isEqualType 0) then { _ref = 0 };   // an older save kept vehicle classes here
         private _g = (allGroups select { side _x == west && { !(_x getVariable ["CQ_solo", true]) } && { (_x getVariable ["CQ_carryName", ""]) == _name } }) param [0, grpNull];
         if (isNull _g) then {
             // first one back: his own (unassigned) group becomes the squad, with its points and vehicles
@@ -123,25 +130,10 @@ switch (_mode) do {
             _g setVariable ["CQ_carryName", (CQ_carrySq select _si) select 0, true];   // teammates find it by its old name
             _g setVariable ["CQ_sqPts", _pts, true];
             _g setVariable ["CQ_sqBought", [], true];
-            [_g, _vs] spawn {
-                params ["_g", "_vs"];
-                {
-                    private _cls = _x;
-                    waitUntil { sleep 2; ((nearestObjects [CQ_shopLZ, ["LandVehicle", "Air"], 9]) select { alive _x }) isEqualTo [] };
-                    if (isNull _g) exitWith {};
-                    private _v = createVehicle [_cls, CQ_shopLZ, [], 0, "NONE"];
-                    _v setDir CQ_shopDir;
-                    _v allowDamage false;
-                    [_v] spawn { params ["_v"]; sleep 8; if (alive _v) then { _v allowDamage true } };
-                    clearWeaponCargoGlobal _v; clearMagazineCargoGlobal _v; clearItemCargoGlobal _v; clearBackpackCargoGlobal _v;
-                    _v addItemCargoGlobal ["FirstAidKit", 4];
-                    _v setVariable ["CQ_boughtBy", groupId _g, true];
-                    if !(_v isKindOf "Air") then { _v setVariable ["CQ_squadGroup", _g, true] };
-                    _g setVariable ["CQ_sqBought", (_g getVariable ["CQ_sqBought", []]) + [_v], true];
-                    [format ["Your squad's %1 is back on the shop pad", getText (configOf _v >> "displayName")]] remoteExec ["systemChat", (units _g) select { isPlayer _x }];
-                } forEach _vs;
+            if (_ref > 0) then {
+                [format ["Squad %1: your vehicle from the last game is refunded (+%2 points, %3 in all)", _name, _ref, _pts]] remoteExec ["systemChat", _p];
             };
-            ["CARRY: %1 re-created squad %2 (%3 points, %4 vehicle(s))", [name _p, _name, _pts, count _vs]] call CQ_fnc_log;
+            ["CARRY: %1 re-created squad %2 (%3 points, %4 refunded for vehicles)", [name _p, _name, _pts, _ref]] call CQ_fnc_log;
         } else {
             private _old = group _p;
             [_p] joinSilent _g;
