@@ -73,7 +73,8 @@ switch (_mode) do {
             };
         } forEach allGroups;
         private _res = (missionNamespace getVariable ["CQ_endPub", ["", "", 0]]) select [0, 3];
-        profileNamespace setVariable ["CQ_carry_v1", [[systemTimeUTC] call _minutes, _pl, _sq, _res, (missionNamespace getVariable ["CQ_gameNo", 1]) + 1]];
+        // (a plain array: a hashmap is not kept in the profile)
+        profileNamespace setVariable ["CQ_carry_v1", [[systemTimeUTC] call _minutes, (keys _pl) apply { [_x, _pl get _x] }, _sq, _res, (missionNamespace getVariable ["CQ_gameNo", 1]) + 1]];
         saveProfileNamespace;
         ["CARRY: saved %1 player(s) and %2 squad(s) for the next game", [count _pl, count _sq]] call CQ_fnc_log;
     };
@@ -85,6 +86,7 @@ switch (_mode) do {
         _c params ["_t", "_pl", "_sq", ["_last", ["", "", 0]], ["_no", 1]];
         private _age = ([systemTimeUTC] call _minutes) - _t;
         if (_age < 0 || { _age > CQ_carryMaxAge }) exitWith { ["CARRY: last game's save is %1 min old, not used", [_age]] call CQ_fnc_log };
+        _pl = createHashMapFromArray _pl;
         CQ_carryPl = _pl; CQ_carrySq = _sq;
         CQ_gameNo = _no;
         // returning players: no intro, no rules again (already accepted), a short NEXT GAME card
