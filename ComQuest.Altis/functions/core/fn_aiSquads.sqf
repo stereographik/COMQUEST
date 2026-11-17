@@ -6,9 +6,9 @@
     Spawn: a ring CQ_aiSqRing m around the base (outside the safe zone), centred on the
     direction of the nearest enemy HQ, squads at least CQ_aiSqGap m apart, on a road when one is
     close, on clear flat ground.
-    Brain (every 20 s per squad): the nearest enemy objective still standing (command building,
-    radio tower, depot, fuel tanker, AA pits, HMG tower of every active HQ) -> search & destroy
-    there; once the squad leader is within CQ_aiSqBlowR m of it, its engineer (or anyone) plants
+    Brain (every 20 s per squad): the nearest enemy RADIO TOWER still standing first, then the
+    nearest other objective (command building, depot, fuel tanker, AA pits, HMG tower) -> rushes
+    there at full speed without stopping to fight (AUTOCOMBAT off), then search & destroy; once the squad leader is within CQ_aiSqBlowR m of it, its engineer (or anyone) plants
     a charge: the objective blows up CQ_aiSqFuse s later. No objective left: hunt the nearest
     enemy group. Sharp skills, never flee.
 */
@@ -101,22 +101,34 @@ switch (_mode) do {
                 private _plantT = -1;
                 while { ({ alive _x } count units _g) > 0 } do {
                     private _l = leader _g;
-                    // objectives of every active HQ, still standing
-                    private _objs = [];
-                    {
-                        private _h = _x;
-                        { if (!isNull _x && { alive _x }) then { _objs pushBack _x } } forEach ([_h get "building", _h get "radio", _h get "depot", _h get "tanker"] + (_h getOrDefault ["installations", []]));
-                    } forEach ((values CQ_hqs) select { (_x get "state") in CQ_activeStates });
-                    _objs = _objs arrayIntersect _objs;
+                    // objectives of every active HQ, still standing: RADIO TOWERS FIRST (they cut the net),
+                    // then the rest
+                    private _act = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
+                    private _objs = (_act apply { _x get "radio" }) select { !isNull _x && { alive _x } };
+                    if (_objs isEqualTo []) then {
+                        {
+                            private _h = _x;
+                            { if (!isNull _x && { alive _x }) then { _objs pushBack _x } } forEach ([_h get "building", _h get "depot", _h get "tanker"] + (_h getOrDefault ["installations", []]));
+                        } forEach _act;
+                        _objs = _objs arrayIntersect _objs;
+                    };
                     if (_objs isNotEqualTo []) then {
                         private _t = ([_objs, [], { _x distance2D _l }, "ASCEND"] call BIS_fnc_sortBy) select 0;
                         if (_t != _cur) then {
                             _cur = _t; _plantT = -1;
+                            // rush there: full speed, no stopping to fight on the way (they still shoot back),
+                            // then search & destroy around it
                             [_g] call CQ_fnc_clearWaypoints;
-                            private _w = _g addWaypoint [getPosATL _t, 60];
-                            _w setWaypointType "SAD";
+                            _g setSpeedMode "FULL";
+                            { _x disableAI "AUTOCOMBAT" } forEach units _g;
+                            private _w = _g addWaypoint [getPosATL _t, 25];
+                            _w setWaypointType "MOVE";
                             _w setWaypointBehaviour "AWARE";
                             _w setWaypointCombatMode "RED";
+                            _w setWaypointSpeed "FULL";
+                            private _w2 = _g addWaypoint [getPosATL _t, 60];
+                            _w2 setWaypointType "SAD";
+                            _w2 setWaypointCombatMode "RED";
                             ["AI task force: %1 goes for %2 at grid %3", [groupId _g, (_t getVariable ["CQ_objType", typeOf _t]), mapGridPosition _t]] call CQ_fnc_log;
                         };
                         // close enough: plant a charge on it
