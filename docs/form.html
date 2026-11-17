@@ -5,41 +5,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ComQuest Loadout Quiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans+Condensed:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  /* Arma 3 inventory: dark olive glass panels, cream text, NATO amber for selection */
-  --bg: #0f110d;
-  --panel: #1a1d16;
-  --panel-2: #23271d;
-  --line: #3a4030;
-  --text: #e8e6d9;
-  --muted: #a6a381;
-  --accent: #d9a441;
-  --accent-ink: #1a1405;
-  --ok: #8fbf5a;
-  --bad: #c45a4a;
-  --display: "Rajdhani", "Arial Narrow", sans-serif;
-  --body: "IBM Plex Sans Condensed", "Arial Narrow", Arial, sans-serif;
-  --mono: "IBM Plex Mono", Consolas, monospace;
-  /* layout: class rail on top, paper-doll slots on the left, the item locker on the right, export at the bottom */
+  /* the mission showcase's palette: deep teal sheets, cream paper text, olive-gold accent, rose for locks */
+  --bg: #00272B;
+  --panel: #03333A;
+  --panel-2: #073E45;
+  --line: #1E4A4C;
+  --text: #F2F1DF;
+  --muted: #A6A381;
+  --accent: #918C3B;
+  --accent-ink: #00272B;
+  --ok: #C9C46A;
+  --bad: #BA392C;
+  --display: "Michroma", "Eurostile", "Arial Black", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  /* layout: banner, class rail, paper-doll slots on the left, the item locker on the right, export at the bottom */
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); font-size: 15px; }
 a { color: var(--accent); }
 button { font: inherit; color: inherit; cursor: pointer; }
-button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--bad); outline-offset: 2px; }
+.banner { display: block; width: 100%; aspect-ratio: 1600 / 453; object-fit: cover; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); }
 .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
 header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
-h1 { font-family: var(--display); font-weight: 700; font-size: 34px; letter-spacing: 1px; margin: 0; line-height: 1; text-transform: uppercase; }
-h1 small { display: block; font-size: 15px; color: var(--muted); letter-spacing: 3px; margin-top: 6px; font-weight: 600; }
+h1 { font-family: var(--display); font-weight: 400; font-size: 26px; letter-spacing: 0; margin: 0; line-height: 1; text-transform: uppercase; }
+h1 small { display: block; font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .08em; margin-top: 8px; }
 .intro { max-width: 62ch; color: var(--muted); margin: 0; line-height: 1.5; }
 .who { display: flex; gap: 8px; align-items: center; }
 .who label { color: var(--muted); font-size: 13px; }
 input[type=text], input[type=search], textarea { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); border-radius: 3px; padding: 7px 9px; font: inherit; }
 .rail { display: flex; flex-wrap: wrap; gap: 6px; }
-.rail button { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 7px 11px; font-family: var(--display); font-weight: 600; font-size: 15px; letter-spacing: .5px; display: flex; gap: 8px; align-items: center; }
+.rail button { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 7px 11px; font-family: var(--mono); font-weight: 500; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; display: flex; gap: 8px; align-items: center; }
 .rail button .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
 .rail button.done .dot { background: var(--ok); }
 .rail button[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -47,27 +48,27 @@ input[type=text], input[type=search], textarea { background: var(--panel-2); bor
 .grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; }
 @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.panel h2 { font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: 1px; margin: 0; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.panel h2 { font-family: var(--display); font-weight: 400; font-size: 16px; letter-spacing: 0; margin: 0; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .panel h2 span { font-size: 13px; color: var(--muted); letter-spacing: 0; font-family: var(--body); font-weight: 400; text-transform: none; }
 .role { color: var(--muted); margin: 0; line-height: 1.45; font-size: 14px; }
 .slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .slot { text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px; padding: 7px 9px; display: flex; flex-direction: column; gap: 2px; min-height: 52px; }
 .slot.wide { grid-column: 1 / -1; }
-.slot .k { font-family: var(--display); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.slot .k { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .slot .v { font-size: 14px; overflow-wrap: anywhere; }
-.slot .v.none { color: #6d6b55; font-style: italic; }
+.slot .v.none { color: #5E7B7B; font-style: italic; }
 .slot[aria-pressed=true] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
 .slot .att { font-size: 12px; color: var(--muted); }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .btn { background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px; padding: 7px 12px; font-size: 14px; }
 .btn:hover { border-color: var(--muted); }
-.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-family: var(--display); font-weight: 700; letter-spacing: 1px; font-size: 16px; text-transform: uppercase; padding: 9px 16px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-family: var(--display); font-weight: 400; letter-spacing: 0; font-size: 13px; text-transform: uppercase; padding: 9px 16px; }
 .list { display: flex; flex-direction: column; gap: 3px; max-height: 470px; overflow-y: auto; padding-right: 4px; }
 .item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; text-align: left; background: var(--panel-2); border: 1px solid transparent; border-radius: 3px; padding: 6px 9px; }
 .item:hover:not([disabled]) { border-color: var(--line); }
 .item .n { font-size: 14px; }
 .item .c { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-.item[aria-pressed=true] { border-color: var(--accent); background: #2d2a18; }
+.item[aria-pressed=true] { border-color: var(--accent); background: #1F3B2E; }
 .item[disabled] { opacity: .45; cursor: not-allowed; }
 .lock { font-size: 11px; color: var(--bad); font-family: var(--mono); }
 .qty { display: flex; gap: 4px; align-items: center; }
@@ -82,9 +83,10 @@ textarea { width: 100%; min-height: 70px; resize: vertical; line-height: 1.4; }
 </head>
 <body>
 <div class="wrap">
+  <img class="banner" src="form_banner.jpg" alt="ComQuest, Arma 3 mod: a field radio with the ComQuest logo" width="1600" height="453">
   <header>
     <div>
-      <h1>ComQuest loadouts<small>Arma 3 · vanilla · no DLC</small></h1>
+      <h1>Loadout quiz<small>Arma 3 · vanilla · no DLC</small></h1>
     </div>
     <p class="intro">Every class starts with its current ComQuest kit (co-op, Altis, NATO). Change it into the kit you think it should spawn with. Everything here is base-game gear. Some role gear is locked to its class, as in the mission's arsenal. When you're done, press <strong>Copy my loadouts</strong> and send the text to the mission author.</p>
     <div class="who"><label for="nick">Your name</label><input type="text" id="nick" placeholder="Your in-game name" maxlength="40"></div>
@@ -109,13 +111,13 @@ textarea { width: 100%; min-height: 70px; resize: vertical; line-height: 1.4; }
       <h2 id="lockerTitle"><b id="slotName">Primary weapon</b><span id="slotHint"></span></h2>
       <input type="search" id="search" placeholder="Filter: MX, 6.5, carryall…" aria-label="Filter the items">
       <div class="list" id="list"></div>
-      <p class="legend">A green dot on a class means you changed its kit. Locked items are role gear for another class (the mission's arsenal rules). Pick a slot on the left to see what fits it.</p>
+      <p class="legend">A gold dot on a class means you changed its kit. Locked items are role gear for another class (the mission's arsenal rules). Pick a slot on the left to see what fits it.</p>
     </section>
   </div>
 
   <section class="panel export" aria-labelledby="exportTitle">
     <h2 id="exportTitle">Send your answer<span id="progress"></span></h2>
-    <p class="note">The text below holds every class you changed (a green dot on its tab), in a format the mission author can read straight into the game. Paste it in a message to him (Discord, forum, Steam).</p>
+    <p class="note">The text below holds every class you changed (a gold dot on its tab), in a format the mission author can read straight into the game. Paste it in a message to him (Discord, forum, Steam).</p>
     <div class="row">
       <button class="btn primary" id="copy" type="button">Copy my loadouts</button>
       <span class="status" id="status" role="status"></span>
