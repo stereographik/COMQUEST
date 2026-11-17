@@ -1240,3 +1240,12 @@ CQ_runwayLength = 3200;                  // m cleared ahead of the drones' take-
 CQ_runwayHalfWidth = 30;                 // ... runway half width either side of the centre line
 CQ_runwayMargin = 30;                    // ... plus this margin around it
 CQ_runwayBehind = 600;                   // m also cleared behind the drones' take-off spot
+
+// --- DEBUG: friendly AI task force (debug panel FRIENDLY > AI squads, CQ_fnc_aiSquads) -----
+CQ_aiSqCount = 4;                        // squads spawned
+CQ_aiSqUnits = ["B_Soldier_SL_F", "B_soldier_AR_F", "B_soldier_LAT_F", "B_medic_F", "B_Soldier_GL_F", "B_engineer_F", "B_soldier_M_F", "B_Soldier_F"];
+CQ_aiSqVehs = ["O_MRAP_02_hmg_F", "I_MRAP_03_hmg_F"];   // per squad: Ifrit HMG + Strider HMG (base game)
+CQ_aiSqRing = [1100, 1500];              // m from the base centre (outside the 800 m safe zone)
+CQ_aiSqGap = 400;                        // m between two squads at spawn
+CQ_aiSqBlowR = 40;                       // m: the squad leader this close to an objective -> a charge is planted
+CQ_aiSqFuse = 20;                        // s before it goes off

@@ -97,7 +97,8 @@ private _cats = [
     ["FRIENDLY", [
         ["MAGPIE", [["Report now", "magReport"], ["Launch missing", "magLaunch"], ["Shoot down", "magKill"], ["Full tentacle", "magTentacle"]]],
         ["Player", [["Heal me", "heal"], ["God mode", "!god"], ["Arsenal", "!arsenal"], ["+500 points", "points"], ["Fix vehicle", "vehFix"]]],
-        ["Base", [["Depot reset", "vehReset"], ["Rebuild def.", "defRebuild"]]]
+        ["Base", [["Depot reset", "vehReset"], ["Rebuild def.", "defRebuild"]]],
+        ["AI squads", [["Spawn 4 squads", "aiSquads"], ["Delete AI squads", "aiSquadsDel"]]]
     ]],
     ["WORLD & STORY", [
         ["Time, weather", [["+1 hour", "time1"], ["Noon", "noon"], ["Night", "night"], ["Clear weather", "clearWx"]]],

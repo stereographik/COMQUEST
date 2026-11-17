@@ -178,6 +178,8 @@ if (_needHq && { count _hq == 0 }) then {
             _msg = format ["carrier: supplies for %1 more HQ(s)", CQ_carrierLeft];
         };
         case "carrierFull": { CQ_carrierLeft = CQ_carrierHqs; call CQ_fnc_carrierMarker; _msg = "carrier refilled" };
+        case "aiSquads": { _msg = format ["%1 AI squads spawned outside the base (TASK FORCE, Ifrit + Strider each)", ["spawn"] call CQ_fnc_aiSquads] };
+        case "aiSquadsDel": { _msg = format ["AI squads deleted (%1 men)", ["delete"] call CQ_fnc_aiSquads] };
         case "killAll": {
             private _n = 0;
             { if (alive _x && { side group _x in [east, independent] }) then { _x setDamage 1; _n = _n + 1 } } forEach allUnits;
