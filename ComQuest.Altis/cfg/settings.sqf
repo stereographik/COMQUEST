@@ -1021,6 +1021,11 @@ CQ_airPatrolBaseGap = 2000;              // patrol points never closer than this
 CQ_airQrfMax = 2;                        // armed helis sent on one contact
 CQ_airQrfRange = 4000;
 CQ_airRearmTime = 60;
+CQ_airIdleWander = true;                 // idle helicopters (not the Kajmans, not one guard Orca per HQ) wander, then go home to the carrier
+CQ_airIdleTime = 60;                     // s parked doing nothing before it takes off to wander
+CQ_airWanderR = 1000;                    // m around its HQ
+CQ_airWanderSee = 1500;                  // m: an enemy (player, our vehicle) its crew knows within this = something found
+CQ_airWanderQuiet = 240;                 // s with nothing found: back to the carrier, removed there
 
 // --- DEBUG overrides (set CQ_debug = false above for the real campaign) -----
 if (CQ_debug) then {

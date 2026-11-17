@@ -10,6 +10,9 @@
       rearming -> CQ_airRearmTime on the ground: rearm (depot) + refuel (fuel tanker);
                   still short (no stock there): keeps waiting for a delivery
     Fleet aircraft whose main HQ fell are re-based at the new main HQ.
+      parked (idle CQ_airIdleTime s, not a Kajman, not its HQ's guard Orca) -> wander round its HQ
+               (CQ_airWanderR): search & destroy if armed; no contact for CQ_airWanderQuiet s ->
+      toCarrier -> flies back to the carrier and is removed there
 */
 private _goRearm = {
     params ["_e"];
@@ -66,6 +69,15 @@ if (time > CQ_airBalanceNext) then {
     };
 };
 
+// Idle helicopters (CQ_airIdleWander): every one but the Kajmans and one guard Orca per HQ
+private _isKaj = { (_this get "veh") isKindOf "Heli_Attack_02_base_F" };
+private _guards = [];
+{
+    private _h = _x get "id";
+    private _i = CQ_air findIf { (_x get "kind") == "armed" && { (_x get "homeId") == _h } && { alive (_x get "veh") } && { !(_x call _isKaj) } && { !((_x get "state") in ["wander", "toCarrier"]) } };
+    if (_i > -1) then { _guards pushBack (CQ_air select _i) };
+} forEach ((values CQ_hqs) select { (_x get "state") in CQ_activeStates });
+
 // Armed helis allowed on patrol at the same time (the rest stay parked as quick reaction)
 private _armedAll = CQ_air select { (_x get "kind") == "armed" };
 private _patrolSlots = (ceil (CQ_airPatrolShare * count _armedAll)) - ({ (_x get "state") == "patrolling" } count _armedAll);
@@ -110,6 +122,7 @@ private _patrolSlots = (ceil (CQ_airPatrolShare * count _armedAll)) - ({ (_x get
                 _v engineOn false;
                 _g setBehaviour "SAFE";
                 _e set ["state", "parked"];
+                _e set ["parkT", time];
                 _e set ["nearT", -1];
                 _e set ["restUntil", time + (CQ_airPatrolRest select 0) + random ((CQ_airPatrolRest select 1) - (CQ_airPatrolRest select 0))];
             };
@@ -126,6 +139,53 @@ private _patrolSlots = (ceil (CQ_airPatrolShare * count _armedAll)) - ({ (_x get
                     [_e, _route] call CQ_fnc_airPatrol;
                     _patrolSlots = _patrolSlots - 1;
                 };
+            };
+            // idle CQ_airIdleTime s: wanders round its HQ (not the Kajmans, not its HQ's guard Orca)
+            if ((_e get "state") == "parked" && { CQ_airIdleWander } && { !_low } && { !(_e call _isKaj) } && { !(_e in _guards) }
+                && { time - (_e getOrDefault ["parkT", time]) > CQ_airIdleTime }) then {
+                private _hh = CQ_hqs getOrDefault [_home, CQ_hqs getOrDefault [CQ_hubId, createHashMap]];
+                _e set ["wanderC", if (count _hh > 0) then { _hh get "pos" } else { getPosATL _v }];
+                _e set ["wanderT", time];
+                _e set ["wanderLeg", 0];
+                _e set ["state", "wander"];
+                _v engineOn true;
+                _g setBehaviour (["SAFE", "AWARE"] select _armed);
+                _v flyInHeight 120;
+                ["Air: %1 idle for %2 s, wandering round HQ #%3", [typeOf _v, CQ_airIdleTime, _home]] call CQ_fnc_log;
+            };
+        };
+        case "wander": {
+            // around its HQ: search & destroy (armed) or a look round (transport); a contact restarts the clock
+            if (_low) exitWith { [_e] call _goRearm };
+            if (((leader _g) targets [true, CQ_airWanderSee]) isNotEqualTo []) then { _e set ["wanderT", time] };
+            if (time - (_e get "wanderT") > CQ_airWanderQuiet) exitWith {
+                [_g] call CQ_fnc_clearWaypoints;
+                _g setBehaviour "CARELESS";
+                _v flyInHeight CQ_heightEscort;
+                _v doMove (missionNamespace getVariable ["CQ_carrierPos", getPosATL _v]);
+                _e set ["state", "toCarrier"];
+                _e set ["until", time + 900];
+                ["Air: %1 found nothing for %2 s, back to the carrier", [typeOf _v, CQ_airWanderQuiet]] call CQ_fnc_log;
+            };
+            if (time > (_e getOrDefault ["wanderLeg", 0]) || { unitReady _v }) then {
+                _e set ["wanderLeg", time + 90];
+                [_g] call CQ_fnc_clearWaypoints;
+                private _w = _g addWaypoint [(_e get "wanderC") getPos [random CQ_airWanderR, random 360], 0];
+                _w setWaypointType (["MOVE", "SAD"] select _armed);
+                _w setWaypointBehaviour (["SAFE", "AWARE"] select _armed);
+                _w setWaypointCombatMode (["GREEN", "RED"] select _armed);
+            };
+        };
+        case "toCarrier": {
+            // home to the carrier, removed there (frees its crew in the AI budget)
+            private _cp = missionNamespace getVariable ["CQ_carrierPos", []];
+            if (_cp isEqualTo [] || { _v distance2D _cp < 500 } || { time > (_e get "until") }) then {
+                private _pad = _e get "pad";
+                if (!isNull _pad && { ((values CQ_hqs) findIf { (_x get "pad") isEqualTo _pad }) == -1 }) then { deleteVehicle _pad };
+                { _v deleteVehicleCrew _x } forEach crew _v;
+                deleteVehicle _v;
+                _e set ["dead", true];
+                ["Air: %1 back on the carrier, removed", [typeOf _v]] call CQ_fnc_log;
             };
         };
         case "patrolling": {
