@@ -1304,6 +1304,7 @@ CQ_lanceHeadFrac = 2 / 3;                // Tete de pont, never closer to the ba
 CQ_lanceSnapR = 800;                     // m around the point on the line where the site is looked for
 CQ_lanceRebuildDelay = 300;              // s after a Relais / Tete fell before it is rebuilt
 CQ_lanceBondStock = 0.6;                 // the Tete moves forward only with this share of its ammo cap (and calm, CQ_splitGap)
+CQ_lanceHeadRequest = 0.5;              // the Tete de pont asks for a truck under this share of its cap, served by the Port first (straight convoy)
 CQ_lanceBondStep = 1 / 3;                // ...by this share of its distance to the base
 CQ_lanceDetour = 2000;                   // m sideways: the corridor of the Lance double
 CQ_lanceBlockedMax = 2;                  // bonds refused in a row because of players -> side corridor

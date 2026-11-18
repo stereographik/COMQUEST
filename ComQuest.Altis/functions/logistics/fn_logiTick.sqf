@@ -130,8 +130,11 @@ private _onNet = {
     private _h = _x;
     private _id = _h get "id";
     private _cap = _h get "cap";
-    private _needAmmo = (_h get "stock") < CQ_requestShare * _cap;
-    private _needFuel = alive (_h get "tanker") && { (_h get "fuel") < CQ_requestShare * _cap };
+    // La Lance: the Tete de pont asks sooner (CQ_lanceHeadRequest) and is served straight from the Port
+    private _isHead = CQ_lanceOn && { (_h getOrDefault ["lRole", ""]) in ["head", "headOld"] };
+    private _reqShare = [CQ_requestShare, CQ_lanceHeadRequest] select _isHead;
+    private _needAmmo = (_h get "stock") < _reqShare * _cap;
+    private _needFuel = alive (_h get "tanker") && { (_h get "fuel") < _reqShare * _cap };
     if (!_needAmmo && !_needFuel) then { _h set ["lowWarned", false]; continue };
     if (_h getOrDefault ["isolated", false] || { !([_h] call _onNet) }) then {
         if !(_h get "lowWarned") then {
@@ -146,11 +149,11 @@ private _onNet = {
     private _keepOf = { params ["_d"]; if ((_d get "id") == _hubId) then { CQ_hubReserve } else { CQ_shareKeep * (_d get "cap") } };
     private _donors = _built select {
         (_x get "id") != _id && { !(_x getOrDefault ["isolated", false]) } && { [_x] call _onNet }
-        && { !CQ_lanceOn || { (_x get "id") == (_h get "parent") } }   // La Lance: only along the chain, Port -> Relais -> Tete
+        && { !CQ_lanceOn || { (_x get "id") == (_h get "parent") } || { _isHead && { (_x getOrDefault ["lRole", ""]) == "port" } } }   // La Lance: along the chain; the Tete also straight from the Port
         && { (_x get "stock") > CQ_shareGive * (_x get "cap") || { (_x get "id") == _hubId && { (_x get "stock") > CQ_hubReserve + 30 } } }
     };
     if (_donors isEqualTo []) then { continue };
-    private _d = ([_donors, [], { (_x get "pos") distance2D (_h get "pos") }, "ASCEND"] call BIS_fnc_sortBy) select 0;
+    private _d = ([_donors, [], { ([0, -1e6] select (_isHead && { (_x getOrDefault ["lRole", ""]) == "port" })) + ((_x get "pos") distance2D (_h get "pos")) }, "ASCEND"] call BIS_fnc_sortBy) select 0;   // the Tete: the Port first
     private _keep = [_d] call _keepOf;
     private _fuelOk = alive (_h get "tanker") && { alive (_d get "tanker") };   // fuel only between two tankers
     private _load = (CQ_truckLoad min ((_d get "stock") - _keep) min (_cap - (_h get "stock"))) max 0;
