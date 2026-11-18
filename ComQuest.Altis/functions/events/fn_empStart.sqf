@@ -80,7 +80,9 @@ _prop setDir (getDir _table);
 
 // ---- the defenders and the armed pickup
 private _g = createGroup [east, true];
-_g setVariable ["CQ_noInfCap", true];   // outside the infantry cap (CQ_maxAI still counts it)
+_g setVariable ["CQ_noInfCap", true];   // an event: out of both caps (infantry and all-AI, CQ_fnc_enemyCount)
+_g setVariable ["CQ_event", true];
+_g setVariable ["CQ_eventPause", true];   // frozen while no player is within CQ_eventPauseR (CQ_fnc_eventPause)
 { _g createUnit [_x, _p getPos [12, random 360], [], 0, "NONE"] } forEach CQ_crashSurvivors;
 [units _g] call CQ_fnc_unitPrep;
 { _x setSkill CQ_crashSkill } forEach units _g;

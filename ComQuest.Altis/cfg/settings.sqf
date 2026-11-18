@@ -676,6 +676,7 @@ CQ_guardSkill = 0.55;
 // Destroyed objective (depot, fuel tanker, HMG tower): the whole site blows up (CQ_fnc_objBlast)
 CQ_blastCount = 5;                       // blasts after the big one at the centre (2-3 s)
 CQ_blastDmgR = 12;
+CQ_eventPauseR = 1500;                   // m: event AI waiting in place (EMP, crash, hostage) is frozen while no player is this close
 CQ_empRepairFuel = 0.5;                  // fuel an engineer team puts back in a vehicle drained by our EMP strike
 CQ_fixSkip = 600;                        // s an engineer team leaves a vehicle it could not get moving
 // Charge objectives (CQ_fnc_chargeHit): engineer charges needed. Depot: against or inside the Cargo House;

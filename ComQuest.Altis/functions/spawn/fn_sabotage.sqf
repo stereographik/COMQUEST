@@ -49,7 +49,8 @@ switch (_mode) do {
             [_x, "O_Soldier_F"] select !(isClass _cfg && { getText (_cfg >> "DLC") == "" })
         };
         private _g = createGroup [east, true];
-        _g setVariable ["CQ_noInfCap", true];   // outside the infantry cap (CQ_maxAI still counts it)
+        _g setVariable ["CQ_noInfCap", true];   // an event: out of both caps (infantry and all-AI, CQ_fnc_enemyCount)
+        _g setVariable ["CQ_event", true];
         _g setGroupIdGlobal ["SABOTAGE"];
         _g setVariable ["CQ_sabotage", true];
         {

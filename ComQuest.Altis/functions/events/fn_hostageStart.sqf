@@ -97,9 +97,13 @@ _h addEventHandler ["HandleDamage", { params ["_u", "_sel", "_dmg", "", "", "_id
 
 // ---- the guards: CQ_hstGuardsIn hold the house at its windows, the rest cover the approaches
 private _gi = createGroup [east, true];
-_gi setVariable ["CQ_noInfCap", true];   // outside the infantry cap (CQ_maxAI still counts it)
+_gi setVariable ["CQ_noInfCap", true];   // an event: out of both caps (infantry and all-AI, CQ_fnc_enemyCount)
+_gi setVariable ["CQ_event", true];
+_gi setVariable ["CQ_eventPause", true];   // frozen while no player is within CQ_eventPauseR (CQ_fnc_eventPause)
 private _go = createGroup [east, true];
-_go setVariable ["CQ_noInfCap", true];   // outside the infantry cap (CQ_maxAI still counts it)
+_go setVariable ["CQ_noInfCap", true];   // an event: out of both caps (infantry and all-AI, CQ_fnc_enemyCount)
+_go setVariable ["CQ_event", true];
+_go setVariable ["CQ_eventPause", true];   // frozen while no player is within CQ_eventPauseR (CQ_fnc_eventPause)
 {
     private _in = _forEachIndex < CQ_hstGuardsIn && { _bps isNotEqualTo [] };
     private _p = if (_in) then { _bps deleteAt 0 } else { _site getPos [8 + random 10, random 360] };
