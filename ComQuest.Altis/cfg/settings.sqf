@@ -675,7 +675,11 @@ CQ_guardClasses = ["O_Soldier_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_
 CQ_guardSkill = 0.55;
 // Destroyed objective (depot, fuel tanker, HMG tower): the whole site blows up (CQ_fnc_objBlast)
 CQ_blastCount = 5;                       // blasts after the big one at the centre (2-3 s)
-CQ_blastDmgR = 12;                       // m: each blast hurts everyone this close (more the closer)
+CQ_blastDmgR = 12;
+// Charge objectives (CQ_fnc_chargeHit): engineer charges needed. Depot: against or inside the Cargo House;
+// fuel tanker: set off INSIDE the hangar (no weapon damages either)
+CQ_chargeNeed = createHashMapFromArray [["Depot", 3], ["Fuel tanker", 2]];
+CQ_chargeReach = 2;                      // m around the depot's box a charge still counts                       // m: each blast hurts everyone this close (more the closer)
 CQ_guardHuntR = 300;                     // m: every site but the AA pits sends half its guards hunting players within this radius (the other half hold in cover)
 CQ_guardSpawnR = 1500;                   // m: a player this close to an HQ -> its guards are at their posts
 CQ_guardDespawnR = 1800;                 // m: no player this close...

@@ -443,7 +443,8 @@ if (!isNull _depot) then {
     ["depot", getPosATL _depot, getDir _depot, _hq get "objects"] call CQ_fnc_compoPlace;
     [_hq, "depot", getPosATL _depot, ["depot"] call _cR] call CQ_fnc_guardSite;
 };
-[_depot] call _engineerOnly;
+// depot: no weapon damage at all; CQ_chargeNeed engineer charges against it destroy it (CQ_fnc_chargeHit)
+if (!isNull _depot) then { _depot addEventHandler ["HandleDamage", { damage (_this select 0) }] };
 _depot setVariable ["CQ_objType", "Depot"];
 [_depot, getPosATL _depot, ["depot"] call _cR] call _blastOn;
 _depot setVariable ["CQ_hqId", _id];
@@ -453,8 +454,10 @@ _depot addEventHandler ["Killed", {
     if (isNil "_hq" || { !((_hq get "state") in CQ_activeStates) }) exitWith {};   // fallen HQ: no score, no announce
     ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
     ["killDepot", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
-    params ["", "_k", "_i"];
-    [[_i, _k] select (isNull _i), 50, "supply depot"] call CQ_fnc_scoreAdd;
+    params ["_o", "_k", "_i"];
+    private _who = [_i, _k] select (isNull _i);
+    if (isNull _who) then { _who = _o getVariable ["CQ_charger", objNull] };   // destroyed by the charge count
+    if (!isNull _who) then { [_who, 50, "supply depot"] call CQ_fnc_scoreAdd };
     _hq set ["stock", 0];
 }];
 
@@ -478,7 +481,7 @@ _hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
 
 // Stage 5 - fuel tanker
 [_sites select 2, ["fuel"] call _cR] call _truckWait;
-// Fuel tanker: holds the HQ's fuel. Any weapon can destroy it. It is parked by the model's hangar.
+// Fuel tanker: holds the HQ's fuel, parked by the model's hangar. Destroyed by engineer charges set off inside the hangar.
 private _hangar = ["Land_Airport_01_hangar_F", _sites select 2, 90, true] call _placeAt;
 private _tanker = objNull;
 if (!isNull _hangar) then {
@@ -500,6 +503,9 @@ if (!isNull _hangar) then {
 };
 if (!isNull _tanker) then {
     _tanker setFuelCargo 0;           // players can't refuel from it
+    // only engineer charges INSIDE the hangar destroy it (CQ_chargeNeed, CQ_fnc_chargeHit); no weapon damage
+    _tanker addEventHandler ["HandleDamage", { damage (_this select 0) }];
+    _tanker setVariable ["CQ_chargeZone", _hangar];
     _tanker lock 2;
     _tanker setVariable ["CQ_hqId", _id];
     _tanker addEventHandler ["Killed", {
