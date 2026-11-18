@@ -123,6 +123,20 @@ private _engineerOnly = {
         if (_ammo in CQ_engineerCharges && { _eng }) then { _dmg } else { damage _o };
     }];
 };
+// Destructible objectives (depot, fuel tanker, HMG tower): the whole site blows up when destroyed (CQ_fnc_objBlast)
+private _blastOn = {
+    params ["_obj", "_c", "_r"];
+    if (isNull _obj) exitWith {};
+    _obj setVariable ["CQ_hqId", _id];
+    _obj setVariable ["CQ_blast", [_c, _r]];
+    _obj addEventHandler ["Killed", {
+        params ["_o"];
+        if (_o getVariable ["CQ_blasted", false]) exitWith {};
+        _o setVariable ["CQ_blasted", true];
+        (_o getVariable ["CQ_blast", []]) params [["_c", getPosATL _o], ["_r", 15]];
+        [_o getVariable ["CQ_hqId", -1], _c, _r, _o] spawn CQ_fnc_objBlast;
+    }];
+};
 // Stage wait: the build truck (CQ_fnc_buildTruck) drives to the stage's site; the stage goes up
 // once it stopped within CQ_btStopDist, its squad got out and CQ_btSpawnDelay s passed. No truck
 // (destroyed, not landed yet): the build is frozen until the carrier's replacement arrives.
@@ -345,6 +359,7 @@ if (!isNull _tower) then {
     (_hq get "objects") pushBack _hmg;
     (_hq get "installations") pushBack _hmg;
     _hmg setVariable ["CQ_objType", "HMG tower"];
+    [_hmg, getPosATL _tower, ["hmgTower"] call _cR] call _blastOn;
     (_hq get "support") pushBack _tg;
     ["HQ #%1: HMG watchtower up at grid %2 (west side)", [_id, mapGridPosition _tower]] call CQ_fnc_log;
     [_hq, "hmgTower", getPosATL _tower, ["hmgTower"] call _cR] call CQ_fnc_guardSite;
@@ -430,6 +445,7 @@ if (!isNull _depot) then {
 };
 [_depot] call _engineerOnly;
 _depot setVariable ["CQ_objType", "Depot"];
+[_depot, getPosATL _depot, ["depot"] call _cR] call _blastOn;
 _depot setVariable ["CQ_hqId", _id];
 _hq set ["depot", _depot];
 _depot addEventHandler ["Killed", {
@@ -495,6 +511,7 @@ if (!isNull _tanker) then {
 };
 _hq set ["tanker", _tanker];
 if (!isNull _tanker) then { _tanker setVariable ["CQ_objType", "Fuel tanker"] };
+[_tanker, [getPosATL _tanker, getPosATL _hangar] select (!isNull _hangar), ["fuel"] call _cR] call _blastOn;
 
 if (!isNull _tanker) then { (_hq get "installations") pushBack _tanker };
 _hq set ["fuel", [(_hq get "fuelInit") min (_hq get "cap"), 0] select (isNull _tanker)];
