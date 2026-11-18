@@ -462,14 +462,21 @@ _hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
 
 // Stage 5 - fuel tanker
 [_sites select 2, ["fuel"] call _cR] call _truckWait;
-// Fuel tanker: holds the HQ's fuel. Any weapon can destroy it. It is parked in the model's hangar.
+// Fuel tanker: holds the HQ's fuel. Any weapon can destroy it. It is parked by the model's hangar.
 private _hangar = ["Land_Airport_01_hangar_F", _sites select 2, 90, true] call _placeAt;
 private _tanker = objNull;
 if (!isNull _hangar) then {
     ["fuel", getPosATL _hangar, getDir _hangar, _hq get "objects"] call CQ_fnc_compoPlace;
+    // parked next to the hangar, not inside: its hitbox clips the hangar's and blows it up.
+    // A free spot clear of the model's tanks and walls; no damage for its first seconds.
+    private _hp = getPosATL _hangar;
+    private _tp = _hp findEmptyPosition [18, 50, CQ_tankerClass];
+    if (_tp isEqualTo []) then { _tp = _hp getPos [24, getDir _hangar] };
     _tanker = createVehicle [CQ_tankerClass, [0, 0, 0], [], 0, "CAN_COLLIDE"];
+    _tanker allowDamage false;
     _tanker setDir (getDir _hangar);
-    _tanker setPosATL [(getPosATL _hangar) select 0, (getPosATL _hangar) select 1, 0];
+    _tanker setPosATL [_tp select 0, _tp select 1, 0.2];
+    [_tanker] spawn { params ["_t"]; sleep 8; if (!isNull _t) then { _t allowDamage true } };
     (_hq get "objects") pushBack _tanker;
     [_hq, "fuel", getPosATL _hangar, ["fuel"] call _cR] call CQ_fnc_guardSite;
 } else {

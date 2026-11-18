@@ -673,6 +673,7 @@ CQ_objGuardSize = 0;                     // ...each site guarded by this many so
 CQ_guardCount = createHashMapFromArray [["hq", 5], ["radio", 4], ["depot", 4], ["fuel", 3], ["hmgTower", 2], ["aaPit", 2]];   // the HQ centre also has the commander + 4 escort
 CQ_guardClasses = ["O_Soldier_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_LAT_F", "O_Soldier_GL_F", "O_Soldier_TL_F"];
 CQ_guardSkill = 0.55;
+CQ_guardHuntR = 300;                     // m: every site but the AA pits sends half its guards hunting players within this radius (the other half hold in cover)
 CQ_guardSpawnR = 1500;                   // m: a player this close to an HQ -> its guards are at their posts
 CQ_guardDespawnR = 1800;                 // m: no player this close...
 CQ_guardDespawnDelay = 60;               // ...for this long -> the living guards are taken off (killed posts stay empty)
