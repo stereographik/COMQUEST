@@ -14,6 +14,7 @@
         4       26 m           0.40      rocks, buildings           base x0.8, HQ spacing x0.5
         5       best land sample seen (fewest blockers, flattest); trees and bushes get cleared
     Rocks and buildings are never accepted inside the clear radius before level 5.
+    Every level keeps CQ_siteCoastMargin m from the sea; level 5 prefers an inland sample too.
 */
 params ["_center", ["_rMin", 0], ["_rMax", 500], ["_strict", true], ["_tries", 40], ["_dir", -1], ["_spread", 180]];
 private _angle = { if (_dir < 0) then { random 360 } else { _dir - _spread + random (2 * _spread) } };
@@ -29,6 +30,10 @@ private _levels = [
     [CQ_siteRadius - 14, 0.40, _hard, 0, 0.5, 500, 0.8]
 ];
 
+// coastal margin: no sea within CQ_siteCoastMargin m (checked at that distance and half of it, 8 directions)
+private _coastOk = { params ["_p"]; private _ok = true;
+    { private _r = _x; for "_a" from 0 to 315 step 45 do { if (surfaceIsWater (_p getPos [_r, _a])) exitWith { _ok = false } }; if (!_ok) exitWith {} } forEach [CQ_siteCoastMargin, CQ_siteCoastMargin / 2];
+    _ok };
 private _result = [];
 private _bestScore = 1e9;
 private _best = [];
@@ -46,9 +51,11 @@ CQ_lastSiteLevel = -1;
         private _nBlock = count (nearestTerrainObjects [_p, CQ_blockerTypes, CQ_siteRadius, false, true]);
         private _nHard = count (nearestTerrainObjects [_p, _hard, CQ_siteRadius, false, true]);
         private _slope = 1 - ((surfaceNormal _p) select 2);
-        private _score = 10 * _nHard + _nBlock + 100 * _slope;
+        private _coast = !([_p] call _coastOk);
+        private _score = 10 * _nHard + _nBlock + 100 * _slope + ([0, 1000] select _coast);   // last resort: inland first
         if (_score < _bestScore) then { _bestScore = _score; _best = _p };
 
+        if (_coast) then { continue };   // every level keeps the coastal margin
         if ((_p isFlatEmpty [-1, -1, _grad, _rad, 0, false, objNull]) isEqualTo []) then { continue };
         if !([_p, _rad, [], _types] call CQ_fnc_isClear) then { continue };
 

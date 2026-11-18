@@ -181,7 +181,7 @@ CQ_carrierSites = [
 ];
 CQ_carrierSiteForce = -1;                // >= 0: always this site (index in CQ_carrierSites), for tests
 CQ_rootInland = [1500, 4000];            // root insertions land this far inland from a coast point
-CQ_firstRootInland = [0, 400];           // the very first one: within 400 m of the site's paired first HQ position
+CQ_firstRootInland = [0, 1500];          // the very first one: within 1500 m of the site's paired first HQ position (it keeps CQ_siteCoastMargin from the sea)
 CQ_rootRetryDelay = 180;                 // s: a root insertion that put nobody on the ground is flown again at the same site
 CQ_rootCoastSpread = 4000;               // later ones: a coast point up to this far either side of the carrier's line to the island
 CQ_corridorAvoid = 3000;                 // m: once the corridor outpost has fallen, root waves land on a coast point at least about this far from it
@@ -546,6 +546,7 @@ CQ_objRadius = createHashMapFromArray [
 CQ_siteMaxGradient = 0.15;
 CQ_siteNoPlayerRadius = 800;
 CQ_siteMinHqSpacing = 1500;
+CQ_siteCoastMargin = 1000;               // m: an HQ site keeps this far from the sea (CQ_fnc_findSite)
 // Build truck (CQ_fnc_buildTruck): no build timer any more, each stage goes up when the truck got there
 CQ_btTruckClass = "O_Truck_02_transport_F";   // Zamak: the first one comes with the root insertion's paradrop
 CQ_btSquad = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_engineer_F", "O_engineer_F", "O_Soldier_GL_F", "O_Soldier_F", "O_Soldier_F"];   // rides in the back

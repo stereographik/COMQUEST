@@ -126,7 +126,8 @@ const P = {   // name: [value, label]
   objMin:      [250, "Objectifs : distance min (m)"],
   objMax:      [900, "Objectifs : distance max (m)"],
   objGap:      [300, "Objectifs : écart min (m)"],
-  aoR:         [1000, "Rayon de l'AO (m)"]
+  aoR:         [1000, "Rayon de l'AO (m)"],
+  coastMargin: [1000, "Marge côtière des HQ (m)"]
 };
 const v = k => P[k][0];
 
@@ -465,10 +466,15 @@ function isWater(p) {
   const i = (y*WN + x)*4, r = WATER[i], g = WATER[i+1], b = WATER[i+2];
   return b > r + 8 && b > g && (r + g + b) < 330;
 }
-// a land spot near p (the real game looks for flat, open land around the point)
+// a land spot near p keeping CQ_siteCoastMargin from the sea (as CQ_fnc_findSite)
+function inland(p) {
+  if (isWater(p)) return false;
+  for (const r of [v("coastMargin"), v("coastMargin")/2]) for (let k = 0; k < 8; k++) if (isWater(getPos(p, r, k*Math.PI/4))) return false;
+  return true;
+}
 function landNear(p, rmax) {
-  if (!isWater(p)) return p;
-  for (let r = 100; r <= (rmax||3000); r += 100) for (let k = 0; k < 16; k++) { const q = getPos(p, r, k*Math.PI/8); if (!isWater(q)) return q; }
+  if (inland(p)) return p;
+  for (let r = 100; r <= (rmax||4000); r += 100) for (let k = 0; k < 16; k++) { const q = getPos(p, r, k*Math.PI/8); if (inland(q)) return q; }
   return p;
 }
 function loadImg(f) { if (!f) return; const u = URL.createObjectURL(f); const im = new Image(); im.onload = () => { bg = im; readWater(im); log("Fond de carte chargé (calé sur 0–30 720 m).", "imp"); }; im.src = u; }

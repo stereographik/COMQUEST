@@ -124,7 +124,7 @@ if (CQ_lanceOn && { !_assault }) then {
 private _site = [];
 if (CQ_lanceOn && { _reason == "" } && { !_assault }) then {
     _site = [_lTarget, 0, CQ_lanceSnapR, true, 40] call CQ_fnc_findSite;
-    if (_site isEqualTo []) then { _site = [_lTarget, 0, 2 * CQ_lanceSnapR, true, 40] call CQ_fnc_findSite };
+    if (_site isEqualTo [] || { CQ_lastSiteLevel == 5 }) then { _site = [_lTarget, 0, 2 * CQ_lanceSnapR, true, 40] call CQ_fnc_findSite };   // wider when nothing good (coast, rocks) near the point
     if (_site isEqualTo []) then { _reason = "Lance: no site near the planned point" };
 };
 if (!CQ_lanceOn && { _reason == "" } && { !_assault }) then {
