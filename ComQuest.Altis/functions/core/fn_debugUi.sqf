@@ -68,7 +68,8 @@ private _cats = [
         ["Admin", [["Warn", "pWarn"], ["Mute 10 min", "pMute"], ["Send to base", "pBase"], ["Kick", "pKick"]]]
     ]],
     ["TELEPORTERS", [
-        ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Relay vehicle", "tpRelayVeh"], ["Log my position", "logPos"], ["Crash site", "tpCrash"], ["Hostage", "tpHst"], ["Outpost", "tpOp"], ["EMP", "tpEmp"], ["Base", "tpBase"]]]
+        ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Relay vehicle", "tpRelayVeh"], ["Log my position", "logPos"], ["Crash site", "tpCrash"], ["Hostage", "tpHst"], ["Outpost", "tpOp"], ["EMP", "tpEmp"], ["Base", "tpBase"]]],
+        ["Objective", [["AA pit 1", "tpObj3"], ["AA pit 2", "tpObj4"], ["AA pit 3", "tpObj5"], ["HMG tower", "tpObj6"], ["Radio tower", "tpObj1"], ["Depot", "tpObj0"], ["Fuel", "tpObj2"], ["HQ centre", "tpObjC"]]]
     ]],
     ["MAP VISIBILITY", [
         ["Show", [["Enemies", "!mapEnemy"], ["Enemy states", "!mapStates"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"], ["Tentacle", "!mapTnt"], ["EMP", "!mapEmp"]]]

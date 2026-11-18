@@ -73,10 +73,12 @@ if (_center isEqualTo []) exitWith { ["Outpost: no site on the corridor (%1 m lo
 private _f = _center getDir CQ_carrierPos;          // facing the corridor / the sea
 { _x hideObjectGlobal true } forEach (nearestTerrainObjects [_center, ["BUSH"], 24, false, true]);
 private _objs = [];
+private _model = false;     // Django's OUTPOST model up: pieces look for a free spot inside it
 private _put = {
     params ["_cls", "_r", "_ang", ["_face", _f]];
     private _p = _center getPos [_r, _f + _ang];
     _p = [_p select 0, _p select 1, 0];
+    if (_model) then { private _e = _p findEmptyPosition [0, 25, _cls]; if (_e isNotEqualTo []) then { _p = [_e select 0, _e select 1, 0] } };
     private _o = createVehicle [_cls, _p, [], 0, "CAN_COLLIDE"];
     _o setDir _face;
     _o setVectorUp surfaceNormal _p;
@@ -85,7 +87,11 @@ private _put = {
     _o
 };
 private _reused = !isNull _tower;
-if (!_reused) then { _tower = [CQ_opTower, 0, 0, _f + 180] call _put };
+if (!_reused) then {
+    _tower = ["Land_Cargo_Patrol_V3_F", 0, 0, _f + 180] call _put;
+    ["outpost", getPosATL _tower, getDir _tower, _objs] call CQ_fnc_compoPlace;
+    _model = true;
+};
 private _jcls = CQ_opJammer param [CQ_opJammer findIf { isClass (configFile >> "CfgVehicles" >> _x) }, "Land_TTowerSmall_1_F"];
 private _jammer = [_jcls, 16, 90] call _put;
 private _aa = []; private _hmg = [];
@@ -127,6 +133,14 @@ private _g = createGroup [east, true];
 _g setGroupIdGlobal ["Corridor outpost"];
 private _bps = (_tower buildingPos -1) select { _x isNotEqualTo [0, 0, 0] };
 _bps = [_bps, [], { _x select 2 }, "DESCEND"] call BIS_fnc_sortBy;
+// the model's other buildings (barrier towers, cargo house): their highest spot each, for the squad
+private _more = [];
+{
+    if (_x != _tower) then {
+        private _b = ((_x buildingPos -1) select { _x isNotEqualTo [0, 0, 0] });
+        if (_b isNotEqualTo []) then { _more pushBack (([_b, [], { _x select 2 }, "DESCEND"] call BIS_fnc_sortBy) select 0) };
+    };
+} forEach ((nearestObjects [_center, ["House", "Building"], 45]) select { _x in _objs });
 private _watcher = _g createUnit [CQ_opWatcher, _center, [], 0, "NONE"];
 if (_bps isNotEqualTo []) then { _watcher setPosATL (_bps deleteAt 0) };
 _watcher disableAI "PATH";
@@ -136,12 +150,13 @@ private _n = (round (count CQ_opSquad * ((missionNamespace getVariable ["CQ_scal
 for "_i" from 0 to _n - 1 do {
     private _u = _g createUnit [CQ_opSquad select _i, _center, [], 0, "NONE"];
     if (_i == 0 && { _bps isNotEqualTo [] }) then { _u setPosATL (_bps deleteAt 0) } else {
+    if (_more isNotEqualTo []) then { _u setPosATL (_more deleteAt 0); _u setUnitPos "UP" } else {
         private _a = _f + (_i * 360 / _n);
         private _p = _center getPos [25 + random 10, _a];
         _u setPosATL [_p select 0, _p select 1, 0];
         _u setDir _a;
         _u setUnitPos "MIDDLE";
-    };
+    }; };
     _u disableAI "PATH";
 };
 [units _g] call CQ_fnc_unitPrep;

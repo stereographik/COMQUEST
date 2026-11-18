@@ -525,7 +525,7 @@ CQ_heightEscort = 150;                   // Orcas and Kajman above everything
 CQ_formationGap = 150;                   // lateral metres between transports
 
 // --- HQ sites and construction ---------------------------------------------
-CQ_siteRadius = 40;                      // flat, empty circle needed (the composition reaches ~31 m)
+CQ_siteRadius = 50;                      // flat, empty circle needed (Django's HQ model reaches ~48 m, a few props 56 m)
 CQ_objectClearance = 0.5;                // extra metres around each object's footprint
 CQ_lzClearance = 14;                     // free radius for a Taru landing / vehicle drop
 // Terrain objects that block a site, an object or an LZ
@@ -536,7 +536,7 @@ CQ_blockerTypes = ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "HOUSE", "BUIL
 CQ_siteBlockerTypes = CQ_blockerTypes - ["BUSH"];
 // Footprint radius (m) of each composition object, used for spacing checks
 CQ_objRadius = createHashMapFromArray [
-    ["Land_Cargo_Patrol_V1_F", 4],
+    ["Land_Cargo_Patrol_V1_F", 4], ["Land_Cargo_Patrol_V3_F", 4], ["Land_Cargo_HQ_V3_F", 8], ["Land_Cargo_House_V3_F", 3.5], ["Land_Airport_01_hangar_F", 12],
     ["Land_Cargo_HQ_V1_F", 8], ["Land_BagFence_Long_F", 1.6], ["Land_BagFence_Round_F", 1.5],
     ["Land_Cargo_House_V1_F", 3.5], ["Box_East_Ammo_F", 0.6], ["Land_TTowerBig_2_F", 3],
     ["Land_HelipadSquare_F", 5], ["O_static_AA_F", 1.2],
@@ -650,7 +650,7 @@ CQ_watchIdle = 180;                      // a patrolling squad standing still 3 
 CQ_objMinGap = 300;                      // HQ objectives (depot, radio tower, fuel tanker, 3 AA, HMG tower): at least this far from each other (relaxed if 7 never fit)
 CQ_objMinR = 250;                        // ...anywhere between this far from the command building
 CQ_objMaxR = 900;                        // ...and this far (inside the 1000 m AO circle)
-CQ_objClearR = 12;                       // ...on a spot with no tree, bush, rock, building or object within this radius
+CQ_objClearR = 18;                       // ...on a spot with no tree, bush, rock, building or object within this radius
 CQ_objMaxSlope = 0.2;                    // ...and flat: max height difference ratio over that radius (isFlatEmpty gradient)
 // Enemy HQ codenames (famous real operation names), one picked at random per HQ, never twice in a
 // game; messages and markers show "NAME (root)", "NAME (P1)"... (rank in the network, CQ_fnc_objName)
@@ -667,7 +667,18 @@ CQ_enemyCallsigns = ["Viper", "Talon", "Ghost", "Hammer", "Bandit", "Hawk", "Tan
     "Dead Walker", "Skull", "Xerxes", "Mad Dog", "Giant Killer", "Fatal"];
 CQ_cmdEscortClasses = ["O_recon_TL_F", "O_recon_F", "O_recon_M_F", "O_recon_medic_F"];   // elite squad always around each enemy HQ commander
 CQ_cmdEscortSkill = 0.8;
-CQ_objGuardSize = 2;                     // ...each site guarded by this many soldiers taken from the HQ patrols
+CQ_objGuardSize = 0;                     // ...each site guarded by this many soldiers taken from the HQ patrols (0: the posted guards below do it)
+// Posted guards (CQ_fnc_guardSite / CQ_fnc_guardTick): fixed posts on every site of an HQ, from Django's
+// models (tower tops and roofs first, then the rim). Out of the infantry cap; only there while a player is near
+CQ_guardCount = createHashMapFromArray [["hq", 5], ["radio", 4], ["depot", 4], ["fuel", 3], ["hmgTower", 2], ["aaPit", 2]];   // the HQ centre also has the commander + 4 escort
+CQ_guardClasses = ["O_Soldier_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_LAT_F", "O_Soldier_GL_F", "O_Soldier_TL_F"];
+CQ_guardSkill = 0.55;
+CQ_guardSpawnR = 1500;                   // m: a player this close to an HQ -> its guards are at their posts
+CQ_guardDespawnR = 1800;                 // m: no player this close...
+CQ_guardDespawnDelay = 60;               // ...for this long -> the living guards are taken off (killed posts stay empty)
+// Django's Eden models (cfg\compositions.sqf, CQ_fnc_compoPlace)
+CQ_compoClearTypes = ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "WALL", "FENCE", "HIDE"];   // terrain objects hidden under a model
+CQ_compoLive = ["cargo_", "medevac", "hbarriertower", "hangar", "flag_", "radar", "ttower", "helipad"];   // keep simulation (buildings); the rest is static
 CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is finished: compass direction from the HQ (270 = west)
 CQ_hmgTowerDist = 45;                    // ...and distance
 // Enemy support teams: one medic team, one engineer team, dropped again after destruction

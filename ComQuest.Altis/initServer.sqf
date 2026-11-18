@@ -87,6 +87,7 @@ addMissionEventHandler ["EntityKilled", {
     ["depot", CQ_fnc_depotTick] call CQ_fnc_directorAddTask;
     ["roots", CQ_fnc_rootTick] call CQ_fnc_directorAddTask;
     ["hqs", CQ_fnc_hqTick] call CQ_fnc_directorAddTask;
+    ["guards", CQ_fnc_guardTick] call CQ_fnc_directorAddTask;   // posted guards near players
     ["logistics", CQ_fnc_logiTick] call CQ_fnc_directorAddTask;
     ["air", CQ_fnc_airTick] call CQ_fnc_directorAddTask;
     ["dbgStates", CQ_fnc_dbgStates] call CQ_fnc_directorAddTask;
