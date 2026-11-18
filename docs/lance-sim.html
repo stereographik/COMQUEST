@@ -44,7 +44,7 @@
 <div id="app">
   <div id="mapWrap">
     <canvas id="map"></canvas>
-    <div id="hint">Molette : zoom · glisser : déplacer · déposer une image de la carte d'Altis ici</div>
+    <div id="hint">Molette : zoom · glisser : déplacer · une autre image de carte peut être déposée ici</div>
     <div id="legend"><span style="background:var(--port)"></span>Port <span style="background:var(--relay)"></span>Relais <span style="background:var(--head)"></span>Tête de pont <span style="background:var(--old)"></span>ancienne Tête <span style="background:var(--base)"></span>base</div>
     <div id="drop">Déposer l'image de la carte d'Altis</div>
   </div>
@@ -172,7 +172,7 @@ function objSites(c) {
     const out = [];
     for (let k = 0; k < 400 && out.length < 7; k++) {
       const p = getPos(c, v("objMin") + rnd()*(v("objMax")-v("objMin")), rnd()*Math.PI*2);
-      if (out.every(o => dist(o,p) >= gap)) out.push(p);
+      if (!isWater(p) && out.every(o => dist(o,p) >= gap)) out.push(p);
     }
     if (out.length === 7) return out;
   }
@@ -246,7 +246,7 @@ function trySplit(h) {
     target = p;
   } else return "cet HQ ne s'étend pas";
   // a site within ~800 m of the point (random, as the real search)
-  target = getPos(target, rnd()*600, rnd()*Math.PI*2);
+  target = landNear(getPos(target, rnd()*600, rnd()*Math.PI*2));
   h.lastSplitT = S.t;
   const c = newHq(next, target, parent, h.pos, v("colSpeed"), paid);
   if (bond) { h.role = "headOld"; log(`BOND : HQ #${h.id} envoie sa Tête de pont en avant → HQ #${c.id} à ${grid(target)}, ${((dist(h.pos,BASE)-dist(target,BASE))/1000).toFixed(1)} km plus près.`, "imp"); }
@@ -260,7 +260,7 @@ function step(dt) {
   // root insertion (and the paid re-landing of a lost Port)
   if (!S.rootDone && S.t >= S.rootAt) {
     S.rootDone = true;
-    const site = getPos(S.A, rnd()*500, rnd()*Math.PI*2);
+    const site = landNear(getPos(S.A, rnd()*500, rnd()*Math.PI*2));
     const h = newHq("port", site, -1, S.C, v("heliSpeed"), false);
     log(`Insertion du Port : hélicoptères en route vers ${grid(site)}.`, "imp");
   }
@@ -268,7 +268,7 @@ function step(dt) {
     if (S.portLostT < 0) S.portLostT = S.t;
     if (S.t - S.portLostT >= v("rebuildDelay") && S.rebuildsLeft > 0) {
       S.portLostT = -1;
-      newHq("port", getPos(S.A, rnd()*600, rnd()*Math.PI*2), -1, S.C, v("heliSpeed"), true);
+      newHq("port", landNear(getPos(S.A, rnd()*600, rnd()*Math.PI*2)), -1, S.C, v("heliSpeed"), true);
       log("Le Port est ré-inséré sur la tête de plage (payant).", "imp");
     }
   } else S.portLostT = -1;
@@ -450,7 +450,28 @@ function buildUi() {
     V.s *= e.deltaY < 0 ? 1.15 : 1/1.15; const w2 = toWorld(e.clientX-r.left, e.clientY-r.top); V.x += w[0]-w2[0]; V.y += w[1]-w2[1]; }, { passive:false });
   addEventListener("resize", resize);
 }
-function loadImg(f) { if (!f) return; const u = URL.createObjectURL(f); const im = new Image(); im.onload = () => { bg = im; log("Fond de carte chargé (calé sur 0–30 720 m).", "imp"); }; im.src = u; }
+// land / sea from the map image: sea pixels are dark and blue
+let WATER = null, WN = 0;
+function readWater(im) {
+  try {
+    WN = 512; const c = document.createElement("canvas"); c.width = c.height = WN;
+    const g = c.getContext("2d"); g.drawImage(im, 0, 0, WN, WN); WATER = g.getImageData(0, 0, WN, WN).data;
+  } catch (e) { WATER = null; }
+}
+function isWater(p) {
+  if (!WATER) return false;
+  const x = Math.floor(p[0]/WORLD*WN), y = Math.floor((1 - p[1]/WORLD)*WN);
+  if (x < 0 || y < 0 || x >= WN || y >= WN) return true;
+  const i = (y*WN + x)*4, r = WATER[i], g = WATER[i+1], b = WATER[i+2];
+  return b > r + 8 && b > g && (r + g + b) < 330;
+}
+// a land spot near p (the real game looks for flat, open land around the point)
+function landNear(p, rmax) {
+  if (!isWater(p)) return p;
+  for (let r = 100; r <= (rmax||3000); r += 100) for (let k = 0; k < 16; k++) { const q = getPos(p, r, k*Math.PI/8); if (!isWater(q)) return q; }
+  return p;
+}
+function loadImg(f) { if (!f) return; const u = URL.createObjectURL(f); const im = new Image(); im.onload = () => { bg = im; readWater(im); log("Fond de carte chargé (calé sur 0–30 720 m).", "imp"); }; im.src = u; }
 function syncSpeed() { document.querySelectorAll("#speeds button").forEach(b => b.classList.toggle("on", +b.dataset.s === S.speed)); }
 function status() {
   const act = S.hqs.filter(active);
@@ -470,6 +491,8 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 buildUi(); resize(); reset(); syncSpeed();
+// the Altis map shipped with the page (calibrated on 0..30720 m, north up)
+{ const im = new Image(); im.onload = () => { bg = im; readWater(im); }; im.src = "altis.jpg"; }
 requestAnimationFrame(frame);
 </script>
 </body>
