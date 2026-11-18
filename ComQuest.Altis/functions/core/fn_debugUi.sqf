@@ -3,7 +3,7 @@
     Who: the host or a logged-in admin (#login) only, also in debug missions (voted admins: no).
     Left: enemy HQ list (select one for the HQ buttons) and a status block.
     Left of the panel: the selected HQ's dashboard (CQ_fnc_debugHqDash), with what it waits for
-    before colonising. (The inventory column stays off; CQ_fnc_debugHqInv is kept.)
+    before colonising; built on request only (Refresh button, or picking an HQ). (The inventory column stays off; CQ_fnc_debugHqInv is kept.)
     Right: buttons by category. Server commands go through CQ_fnc_debugCmd; a few are local
     (map overlays, god mode, arsenal). Toggles show their state in their label.
     Refreshes every 3 s while open.
@@ -62,7 +62,10 @@ _dt ctrlSetFont "PuristaMedium";
 _dt ctrlSetTextColor (CQ_ui get "accent");
 private _dash = ["RscStructuredText", 9002, [_DX + 0.015, _Y + _L * 1.3, _DW - 0.03, _H - _L * 1.5]] call _mk;
 _dash ctrlSetStructuredText parseText "<t size='0.85' color='#A6A381'>Select an HQ in the list to see its dashboard.</t>";
-_list ctrlAddEventHandler ["LBSelChanged", { ["list", call (uiNamespace getVariable "CQ_dbgSel")] remoteExecCall ["CQ_fnc_debugCmd", 2] }];
+// on request only (no automatic refresh): this button, or picking an HQ in the list
+private _dr = ["RscButton", -1, [_DX + _DW - 0.105, _Y + 0.004, 0.09, _L], "Refresh"] call _mk;
+_dr ctrlAddEventHandler ["ButtonClick", { ["dash", call (uiNamespace getVariable "CQ_dbgSel")] remoteExecCall ["CQ_fnc_debugCmd", 2] }];
+_list ctrlAddEventHandler ["LBSelChanged", { ["dash", call (uiNamespace getVariable "CQ_dbgSel")] remoteExecCall ["CQ_fnc_debugCmd", 2] }];   // a new HQ picked: its dashboard
 
 uiNamespace setVariable ["CQ_dbgSel", {
     private _lb = (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) displayCtrl 9000;
