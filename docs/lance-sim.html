@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ComQuest — simulateur La Lance</title>
+<style>
+  :root { --bg:#14150f; --panel:#1d1f17; --line:#3a3d2e; --text:#e9e7d8; --mut:#a6a381; --acc:#c9b458;
+          --port:#d4733a; --relay:#e0b23c; --head:#d9483b; --old:#7d6a5c; --ok:#8fd16a; --base:#5aa0e0; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--text); font:13px/1.4 system-ui,Segoe UI,Roboto,sans-serif; }
+  #app { display:grid; grid-template-columns: 1fr 340px; height:100vh; }
+  #mapWrap { position:relative; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; cursor:grab; }
+  canvas.destroy { cursor:crosshair; }
+  #side { background:var(--panel); border-left:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
+  .sec { padding:10px 12px; border-bottom:1px solid var(--line); }
+  h1 { font-size:15px; margin:0 0 2px; color:var(--acc); letter-spacing:.04em; }
+  .sub { color:var(--mut); font-size:12px; }
+  label { color:var(--mut); font-size:12px; }
+  select, input[type=number] { background:#111208; color:var(--text); border:1px solid var(--line); border-radius:4px; padding:3px 5px; font:inherit; }
+  button { background:#2a2c21; color:var(--text); border:1px solid var(--line); border-radius:4px; padding:4px 8px; font:inherit; cursor:pointer; }
+  button:hover { border-color:var(--acc); }
+  button.on { background:var(--acc); color:#1a1a10; border-color:var(--acc); font-weight:600; }
+  .row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:6px; }
+  #clock { font:600 22px/1 ui-monospace,Consolas,monospace; color:var(--acc); }
+  #status { font-size:12px; color:var(--mut); margin-top:4px; }
+  #log { flex:1; overflow:auto; padding:8px 12px; font:12px/1.45 ui-monospace,Consolas,monospace; min-height:120px; }
+  #log div { border-bottom:1px dotted #2c2e22; padding:1px 0; }
+  #log .t { color:var(--mut); }
+  #log .imp { color:var(--acc); }
+  #log .bad { color:#ff8a7a; }
+  details summary { cursor:pointer; color:var(--acc); }
+  #params { display:grid; grid-template-columns: 1fr 78px; gap:3px 8px; margin-top:6px; max-height:260px; overflow:auto; }
+  #params input { width:78px; }
+  #legend { position:absolute; left:10px; bottom:10px; background:rgba(20,21,15,.85); border:1px solid var(--line); border-radius:6px; padding:6px 9px; font-size:12px; }
+  #legend span { display:inline-block; width:10px; height:10px; border-radius:50%; margin:0 4px 0 10px; vertical-align:-1px; }
+  #legend span:first-child { margin-left:0; }
+  #hint { position:absolute; left:10px; top:10px; background:rgba(20,21,15,.85); border:1px solid var(--line); border-radius:6px; padding:5px 9px; font-size:12px; color:var(--mut); }
+  #drop { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(201,180,88,.15); border:3px dashed var(--acc); font-size:18px; color:var(--acc); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="mapWrap">
+    <canvas id="map"></canvas>
+    <div id="hint">Molette : zoom · glisser : déplacer · déposer une image de la carte d'Altis ici</div>
+    <div id="legend"><span style="background:var(--port)"></span>Port <span style="background:var(--relay)"></span>Relais <span style="background:var(--head)"></span>Tête de pont <span style="background:var(--old)"></span>ancienne Tête <span style="background:var(--base)"></span>base</div>
+    <div id="drop">Déposer l'image de la carte d'Altis</div>
+  </div>
+  <div id="side">
+    <div class="sec">
+      <h1>LA LANCE — simulateur de déploiement</h1>
+      <div class="sub">Branche HQ_ROUTES · timers et cercles seulement, aucun joueur ni combat (sauf « Détruire »)</div>
+      <div class="row">
+        <label>Carrier</label>
+        <select id="site"></select>
+        <button id="reset">Recommencer</button>
+      </div>
+      <div class="row">
+        <label>Fond de carte</label>
+        <input type="file" id="img" accept="image/*" style="max-width:190px">
+      </div>
+    </div>
+    <div class="sec">
+      <div id="clock">00:00:00</div>
+      <div class="row" id="speeds"></div>
+      <div class="row">
+        <button id="launch">Lancer la 1re insertion maintenant</button>
+      </div>
+      <div class="row">
+        <button id="destroyBtn">Mode « Détruire un HQ » (clic)</button>
+        <label><input type="checkbox" id="block"> Joueurs bloquent la Tête</label>
+      </div>
+      <div id="status"></div>
+    </div>
+    <div class="sec">
+      <details>
+        <summary>Réglages (cfg/settings.sqf)</summary>
+        <div id="params"></div>
+      </details>
+    </div>
+    <div id="log"></div>
+  </div>
+</div>
+<script>
+"use strict";
+// ---------------------------------------------------------------- data (cfg/settings.sqf, branch HQ_ROUTES)
+const WORLD = 30720;
+const BASE = [14233.9, 16106.7];
+const SITES = [
+  [[14612,26312],[14288,23012],"C1 nord"],[[17188,25012],[16188,21462],"C2"],[[20488,24238],[22662,21512],"C3"],
+  [[23762,27362],[23912,23788],"C4"],[[28312,28562],[27862,25288],"C5 pointe nord-est"],[[27812,17438],[25388,19638],"C6 est"],
+  [[26538,13862],[24112,15688],"C7"],[[25012,11088],[21712,11362],"C8"],[[25988,7188],[22462,7162],"C9"],
+  [[21838,2112],[21562,5962],"C10 sud-est"],[[16588,4238],[18762,6362],"C11 sud"],[[11662,3662],[9862,8788],"C12"],
+  [[4862,6762],[7288,11338],"C13 sud-ouest"],[[1512,15862],[4912,14712],"C14 ouest"],[[3962,25312],[8912,22938],"C15 nord-ouest"],
+  [[11162,25688],[11912,22588],"C16 nord"]
+];
+const P = {   // name: [value, label]
+  rootDelay:   [300, "1re insertion après (s)"],
+  heliSpeed:   [55, "Vitesse hélico (m/s)"],
+  secureT:     [60, "Sécurisation max (s)"],
+  truckSpeed:  [6, "Camion de construction (m/s)"],
+  stageExtra:  [25, "Par étape : descente + pose (s)"],
+  hqStageExtra:[60, "Étape 6 (centre) en plus (s)"],
+  holdT:       [60, "Attente après construction (s)"],
+  waveInterval:[600, "Intervalle des vagues (s)"],
+  waveDist:    [1250, "Distance d'apparition des vagues (m)"],
+  waveSpeed:   [9, "Vitesse des convois (m/s)"],
+  splitAge:    [180, "Calme avant expansion (s)"],
+  splitGap:    [1200, "Entre deux expansions (s)"],
+  colSpeed:    [7, "Vitesse des colons (m/s)"],
+  rebuildDelay:[300, "Reconstruction après chute (s)"],
+  rebuilds:    [4, "Reconstructions du carrier"],
+  relayFrac:   [0.333, "Relais : part du trajet"],
+  headFrac:    [0.667, "Tête : part du trajet"],
+  bondStep:    [0.333, "Bond : part de la distance restante"],
+  assaultRange:[3500, "Portée d'assaut de la base (m)"],
+  assaultAge:  [900, "Délai avant assaut (s)"],
+  detour:      [2000, "Lance double : décalage (m)"],
+  blockedMax:  [2, "Bonds bloqués avant contournement"],
+  tideMax:     [4, "Marée : niveau max"],
+  tideSoldiers:[2, "Marée : soldats en plus / niveau"],
+  tideInterval:[0.25, "Marée : vagues ×(1+x) / niveau"],
+  tideAssault: [180, "Marée : assaut plus tôt / niveau (s)"],
+  objMin:      [250, "Objectifs : distance min (m)"],
+  objMax:      [900, "Objectifs : distance max (m)"],
+  objGap:      [300, "Objectifs : écart min (m)"],
+  aoR:         [1000, "Rayon de l'AO (m)"]
+};
+const v = k => P[k][0];
+
+// ---------------------------------------------------------------- helpers
+const dist = (a,b) => Math.hypot(a[0]-b[0], a[1]-b[1]);
+const dirTo = (a,b) => Math.atan2(b[0]-a[0], b[1]-a[1]);          // compass radians (0 = north)
+const getPos = (a,r,d) => [a[0] + r*Math.sin(d), a[1] + r*Math.cos(d)];
+const lerp = (a,b,f) => [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f];
+const fmt = s => { s = Math.max(0, Math.floor(s)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return [h,m,x].map(n=>String(n).padStart(2,"0")).join(":"); };
+const mmss = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
+const grid = p => String(Math.floor(p[0]/100)).padStart(3,"0") + String(Math.floor(p[1]/100)).padStart(3,"0");
+let seed = 1; const rnd = () => { seed = (seed*16807) % 2147483647; return (seed-1)/2147483646; };
+
+// ---------------------------------------------------------------- state
+let S;
+function reset() {
+  const i = +document.getElementById("site").value;
+  seed = 1234 + i*97;
+  S = { t:0, speed:10, paused:false, site:i, C:SITES[i][0], A:SITES[i][1], hqs:[], moves:[], nextId:1,
+        rootAt:v("rootDelay"), rootDone:false, rebuildsLeft:v("rebuilds"), tide:0, side:0, portLostT:-1,
+        destroyMode:false, assaults:0 };
+  document.getElementById("log").innerHTML = "";
+  log(`Carrier repéré au ${SITES[i][2]} (grid ${grid(S.C)}). Tête de plage ${grid(S.A)}, ${(dist(S.A,BASE)/1000).toFixed(1)} km de la base.`, "imp");
+  log(`Insertion du Port dans ${mmss(S.rootAt)}.`);
+  fitView();
+}
+
+function log(msg, cls) {
+  const d = document.createElement("div");
+  d.innerHTML = `<span class="t">${fmt(S.t)}</span> <span class="${cls||""}">${msg}</span>`;
+  const L = document.getElementById("log"); L.prepend(d);
+  while (L.children.length > 400) L.lastChild.remove();
+}
+
+const roleName = r => ({port:"Port", relay:"Relais", head:"Tête de pont", headOld:"ancienne Tête"})[r] || r;
+const active = h => !["destroyed","withdrawn"].includes(h.state);
+const findRole = r => S.hqs.find(h => h.role === r && active(h));
+const lastFall = r => S.hqs.filter(h => h.role === r && h.state === "destroyed").sort((a,b)=>b.fallT-a.fallT)[0];
+
+// objective sites: 7 spots between objMin and objMax, objGap apart (0 depot, 1 radio, 2 fuel, 3-5 AA, 6 HMG)
+function objSites(c) {
+  for (let gap = v("objGap"); gap > 50; gap -= 50) {
+    const out = [];
+    for (let k = 0; k < 400 && out.length < 7; k++) {
+      const p = getPos(c, v("objMin") + rnd()*(v("objMax")-v("objMin")), rnd()*Math.PI*2);
+      if (out.every(o => dist(o,p) >= gap)) out.push(p);
+    }
+    if (out.length === 7) return out;
+  }
+  return Array.from({length:7}, (_,k) => getPos(c, 500, k*Math.PI*2/7));
+}
+// build order: [label, site index list]
+const STAGES = [["3 AA pits",[3,4,5]],["tour HMG",[6]],["tour radio",[1]],["dépôt",[0]],["fuel",[2]],["poste de commandement",[]]];
+
+function newHq(role, pos, parent, from, speed, paid) {
+  const h = { id:S.nextId++, role, pos, parent, state:"inbound", built:false, stage:0, stageEnd:0, truck:pos,
+              objs:objSites(pos), objUp:[], lastSplitT:-1e9, nextWave:Infinity, waveArr:Infinity, builtT:Infinity,
+              blocked:0, born:S.t };
+  const tt = dist(from,pos)/speed;
+  h.arrive = S.t + tt;
+  S.moves.push({from, to:pos, t0:S.t, t1:h.arrive, kind: role==="port" ? "heli" : "col", hq:h.id});
+  S.hqs.push(h);
+  if (paid) {
+    S.rebuildsLeft--; S.tide = Math.min(v("tideMax"), S.tide+1);
+    log(`Le carrier reconstruit (${S.rebuildsLeft} reconstruction(s) restante(s)). Marée niveau ${S.tide} : vagues +${S.tide*v("tideSoldiers")} soldats, ×${(1+S.tide*v("tideInterval")).toFixed(2)} plus rares.`, "bad");
+  }
+  return h;
+}
+
+// ---------------------------------------------------------------- La Lance: who expands, where
+function lancePoint(f) { return getPos(S.A, dist(S.A,BASE)*f, dirTo(S.A,BASE)); }
+function sideShift(p) { return S.side === 0 ? p : getPos(p, v("detour"), dirTo(S.A,BASE) + S.side*Math.PI/2); }
+function keepOut(p) { return dist(p,BASE) < v("assaultRange")+300 ? getPos(BASE, v("assaultRange")+300, dirTo(BASE,p)) : p; }
+const tideMul = () => 1 + S.tide*v("tideInterval");
+
+function trySplit(h) {
+  const quiet = S.t - h.builtT;
+  if (dist(h.pos,BASE) < v("assaultRange")) {
+    const age = Math.max(300, v("assaultAge") - S.tide*v("tideAssault"));
+    if (quiet < age) return `trop récent pour attaquer la base (${mmss(quiet)} / ${mmss(age)})`;
+    S.assaults++; h.assaultT = S.t;
+    log(`ASSAUT SUR LA BASE depuis HQ #${h.id} (${(dist(h.pos,BASE)/1000).toFixed(1)} km) — vague n°${S.assaults}`, "bad");
+    return "";
+  }
+  if (h.role === "head" && document.getElementById("block").checked) {
+    h.blocked++;
+    if (h.blocked >= v("blockedMax") && S.side === 0) {
+      S.side = rnd() < 0.5 ? -1 : 1; h.blocked = 0;
+      log(`LANCE DOUBLE : la Tête est bloquée, CSAT contourne par un couloir décalé de ${v("detour")} m.`, "imp");
+    }
+    return "des joueurs sont dans la zone (pas de calme)";
+  }
+  if (quiet < v("splitAge")) return `pas assez calme (${Math.floor(quiet)} / ${v("splitAge")} s)`;
+  if (S.t - h.lastSplitT < v("splitGap")) return `expansion il y a ${mmss(S.t-h.lastSplitT)} (une toutes les ${mmss(v("splitGap"))})`;
+  let next = "", target = null, parent = h.id, bond = false, paid = false;
+  const rebuild = r => {
+    const f = lastFall(r); if (!f) return true;
+    paid = true;
+    if (S.t - f.fallT < v("rebuildDelay")) return `${roleName(r)} reconstruit dans ${mmss(v("rebuildDelay")-(S.t-f.fallT))}`;
+    if (S.rebuildsLeft <= 0) return "le carrier n'a plus de reconstruction";
+    return true;
+  };
+  if (h.role === "port") {
+    if (findRole("relay")) return "le Relais est debout";
+    const r = rebuild("relay"); if (r !== true) return r;
+    next = "relay"; target = lancePoint(v("relayFrac"));
+  } else if (h.role === "relay") {
+    if (findRole("head")) return "la Tête est debout";
+    const r = rebuild("head"); if (r !== true) return r;
+    next = "head";
+    const f = lastFall("head");
+    target = f ? lerp(h.pos, f.pos, 0.5) : keepOut(sideShift(lancePoint(v("headFrac"))));
+  } else if (h.role === "head") {
+    next = "head"; bond = true; parent = h.parent;
+    let p = getPos(h.pos, dist(h.pos,BASE)*v("bondStep"), dirTo(h.pos,BASE));
+    if (S.side !== 0) p = sideShift(getPos(BASE, dist(p,BASE), dirTo(BASE,S.A)));
+    target = p;
+  } else return "cet HQ ne s'étend pas";
+  // a site within ~800 m of the point (random, as the real search)
+  target = getPos(target, rnd()*600, rnd()*Math.PI*2);
+  h.lastSplitT = S.t;
+  const c = newHq(next, target, parent, h.pos, v("colSpeed"), paid);
+  if (bond) { h.role = "headOld"; log(`BOND : HQ #${h.id} envoie sa Tête de pont en avant → HQ #${c.id} à ${grid(target)}, ${((dist(h.pos,BASE)-dist(target,BASE))/1000).toFixed(1)} km plus près.`, "imp"); }
+  else log(`HQ #${h.id} (${roleName(h.role)}) fonde le ${roleName(next)} HQ #${c.id} à ${grid(target)} (${(dist(h.pos,target)/1000).toFixed(1)} km).`, "imp");
+  return "";
+}
+
+// ---------------------------------------------------------------- the clock
+function step(dt) {
+  const t0 = S.t; S.t += dt;
+  // root insertion (and the paid re-landing of a lost Port)
+  if (!S.rootDone && S.t >= S.rootAt) {
+    S.rootDone = true;
+    const site = getPos(S.A, rnd()*500, rnd()*Math.PI*2);
+    const h = newHq("port", site, -1, S.C, v("heliSpeed"), false);
+    log(`Insertion du Port : hélicoptères en route vers ${grid(site)}.`, "imp");
+  }
+  if (S.rootDone && !findRole("port")) {
+    if (S.portLostT < 0) S.portLostT = S.t;
+    if (S.t - S.portLostT >= v("rebuildDelay") && S.rebuildsLeft > 0) {
+      S.portLostT = -1;
+      newHq("port", getPos(S.A, rnd()*600, rnd()*Math.PI*2), -1, S.C, v("heliSpeed"), true);
+      log("Le Port est ré-inséré sur la tête de plage (payant).", "imp");
+    }
+  } else S.portLostT = -1;
+
+  for (const h of S.hqs) {
+    if (!active(h)) continue;
+    if (h.state === "inbound" && S.t >= h.arrive) {
+      h.state = "securing"; h.stateEnd = S.t + v("secureT");
+      log(`HQ #${h.id} (${roleName(h.role)}) au sol à ${grid(h.pos)} : sécurisation du périmètre.`);
+    }
+    if (h.state === "securing" && S.t >= h.stateEnd) { h.state = "building"; h.stage = 0; startStage(h); }
+    while (h.state === "building" && S.t >= h.stageEnd) {
+      const [lab, sites] = STAGES[h.stage];
+      sites.forEach(k => h.objUp.push(k));
+      log(`HQ #${h.id} étape ${h.stage+1}/6 : ${lab}.`);
+      h.stage++;
+      if (h.stage >= 6) {
+        h.built = true; h.builtT = S.t; h.state = "hold"; h.stateEnd = S.t + v("holdT");
+        log(`HQ #${h.id} (${roleName(h.role)}) opérationnel.`, "imp");
+        // an old Tete packs up once the new one is built
+        if (h.role === "head") for (const o of S.hqs) if (o.role === "headOld" && active(o)) {
+          o.state = "withdrawn"; o.wT = S.t; log(`HQ #${o.id} (ancienne Tête) plie bagage : ses troupes rejoignent HQ #${h.id}.`);
+        }
+        break;
+      }
+      startStage(h);
+    }
+    if (h.state === "hold" && S.t >= h.stateEnd) requestWave(h);
+    if (h.state === "holding" && S.t >= h.nextWave) requestWave(h);
+    if (h.state === "waiting" && S.t >= h.waveArr) {
+      h.state = "holding"; h.nextWave = S.t + v("waveInterval")*tideMul();
+      log(`HQ #${h.id} reçoit sa vague (+${14 + S.tide*v("tideSoldiers")} soldats).`);
+      const why = trySplit(h);
+      if (why) log(`HQ #${h.id} : pas d'expansion, ${why}.`);
+    }
+  }
+  // a new Tete lost on the way: the old one stays the Tete
+  for (const o of S.hqs) if (o.role === "headOld" && active(o) && !S.hqs.some(h => h.role === "head" && active(h))) o.role = "head";
+  S.moves = S.moves.filter(m => S.t < m.t1 + 2);
+}
+function startStage(h) {
+  const [, sites] = STAGES[h.stage];
+  const dest = sites.length ? h.objs[sites[0]] : h.pos;
+  const tt = dist(h.truck, dest)/v("truckSpeed") + v("stageExtra") + (sites.length ? 0 : v("hqStageExtra"));
+  h.stageStart = S.t; h.stageEnd = S.t + tt;
+  S.moves.push({from:h.truck, to:dest, t0:S.t, t1:S.t + tt - v("stageExtra"), kind:"truck", hq:h.id});
+  h.truck = dest;
+}
+function requestWave(h) {
+  h.state = "waiting";
+  const tt = v("waveDist")/v("waveSpeed");
+  h.waveArr = S.t + tt;
+  const from = getPos(h.pos, v("waveDist"), dirTo(h.pos, S.A) + (rnd()-0.5));
+  S.moves.push({from, to:h.pos, t0:S.t, t1:h.waveArr, kind:"wave", hq:h.id});
+}
+function destroyAt(p) {
+  let best = null, bd = 1e9;
+  for (const h of S.hqs) if (active(h)) { const d = dist(h.pos,p); if (d < bd) { bd = d; best = h; } }
+  if (!best || bd > 1500) return;
+  best.state = "destroyed"; best.fallT = S.t;
+  log(`HQ #${best.id} (${roleName(best.role)}) DÉTRUIT par les joueurs.`, "bad");
+}
+
+// ---------------------------------------------------------------- view
+const cv = document.getElementById("map"), ctx = cv.getContext("2d");
+let V = { x:0, y:0, s:1 }, bg = null;
+function fitView() {
+  const r = cv.getBoundingClientRect();
+  const pts = [S.C, S.A, BASE];
+  const xs = pts.map(p=>p[0]), ys = pts.map(p=>p[1]);
+  const pad = 3000, w = Math.max(...xs)-Math.min(...xs)+2*pad, hgt = Math.max(...ys)-Math.min(...ys)+2*pad;
+  V.s = Math.min(r.width/w, r.height/hgt);
+  V.x = (Math.min(...xs)+Math.max(...xs))/2; V.y = (Math.min(...ys)+Math.max(...ys))/2;
+}
+const toScr = p => { const r = cv.getBoundingClientRect(); return [r.width/2 + (p[0]-V.x)*V.s, r.height/2 - (p[1]-V.y)*V.s]; };
+const toWorld = (x,y) => { const r = cv.getBoundingClientRect(); return [V.x + (x - r.width/2)/V.s, V.y - (y - r.height/2)/V.s]; };
+function resize() { const r = cv.getBoundingClientRect(), d = devicePixelRatio||1; cv.width = r.width*d; cv.height = r.height*d; ctx.setTransform(d,0,0,d,0,0); }
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ROLEC = { port:"--port", relay:"--relay", head:"--head", headOld:"--old" };
+
+function circle(p, rM, stroke, fill, dash, lw) {
+  const [x,y] = toScr(p); ctx.beginPath(); ctx.arc(x, y, Math.max(1.5, rM*V.s), 0, Math.PI*2);
+  ctx.setLineDash(dash||[]); if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw||1.5; ctx.stroke(); } ctx.setLineDash([]);
+}
+function line(a,b,col,dash,lw) { const A = toScr(a), B = toScr(b); ctx.beginPath(); ctx.moveTo(...A); ctx.lineTo(...B); ctx.setLineDash(dash||[]); ctx.strokeStyle = col; ctx.lineWidth = lw||1; ctx.stroke(); ctx.setLineDash([]); }
+function text(p, s, col, dy, size, bold) { const [x,y] = toScr(p); ctx.font = `${bold?"600 ":""}${size||12}px system-ui,sans-serif`; ctx.fillStyle = col; ctx.textAlign = "center"; ctx.fillText(s, x, y+(dy||0)); }
+
+function draw() {
+  const r = cv.getBoundingClientRect();
+  ctx.fillStyle = "#1a1c14"; ctx.fillRect(0,0,r.width,r.height);
+  if (bg) { const a = toScr([0,WORLD]), b = toScr([WORLD,0]); ctx.globalAlpha = .85; ctx.drawImage(bg, a[0], a[1], b[0]-a[0], b[1]-a[1]); ctx.globalAlpha = 1; }
+  // grid every km
+  ctx.lineWidth = 1;
+  for (let k = 0; k <= WORLD; k += 1000) {
+    ctx.strokeStyle = k % 10000 === 0 ? "rgba(201,180,88,.25)" : "rgba(255,255,255,.05)";
+    let a = toScr([k,0]), b = toScr([k,WORLD]); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke();
+    a = toScr([0,k]); b = toScr([WORLD,k]); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke();
+  }
+  { const a = toScr([0,WORLD]), b = toScr([WORLD,0]); ctx.strokeStyle = "rgba(201,180,88,.5)"; ctx.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]); }
+  // carrier sites
+  SITES.forEach((s,i) => { const on = i === S.site; circle(s[0], on?260:140, on?"#ffd27a":"rgba(255,210,122,.35)", on?"rgba(255,210,122,.25)":null); if (on || V.s > .02) text(s[0], s[2].split(" ")[0], on?"#ffd27a":"rgba(255,210,122,.5)", -10, 11, on); });
+  // the line beachhead -> base (+ side corridor)
+  line(S.A, BASE, "rgba(201,180,88,.55)", [8,6], 1.5);
+  if (S.side !== 0) line(sideShift(lerp(S.A,BASE,.3)), keepOut(sideShift(lerp(S.A,BASE,.85))), "rgba(255,138,122,.6)", [4,6], 1.5);
+  [["relayFrac","R"],["headFrac","T"]].forEach(([k,l]) => { const p = k==="headFrac" ? keepOut(sideShift(lancePoint(v(k)))) : lancePoint(v(k)); const [x,y] = toScr(p); ctx.strokeStyle = "rgba(201,180,88,.6)"; ctx.beginPath(); ctx.moveTo(x-6,y); ctx.lineTo(x+6,y); ctx.moveTo(x,y-6); ctx.lineTo(x,y+6); ctx.stroke(); text(p, l, "rgba(201,180,88,.8)", -9, 11); });
+  // base + assault range
+  circle(BASE, v("assaultRange"), "rgba(90,160,224,.35)", null, [6,6]);
+  circle(BASE, 350, css("--base"), "rgba(90,160,224,.35)", null, 2);
+  text(BASE, "BASE", css("--base"), 4, 12, true);
+  // HQs
+  for (const h of S.hqs) {
+    const col = css(ROLEC[h.role] || "--old");
+    if (h.state === "destroyed") { circle(h.pos, 300, "#777", "rgba(80,80,80,.3)"); text(h.pos, `#${h.id} détruit`, "#999", 4, 11); continue; }
+    if (h.state === "withdrawn") { circle(h.pos, 300, "rgba(125,106,92,.5)", null, [3,4]); text(h.pos, `#${h.id} abandonné`, "rgba(170,150,130,.7)", 4, 11); continue; }
+    if (h.state === "inbound") { circle(h.pos, 250, col, null, [4,4]); text(h.pos, `#${h.id} ${roleName(h.role)} · arrive ${mmss(h.arrive - S.t)}`, col, -14, 11); continue; }
+    if (h.built) circle(h.pos, v("aoR"), col, null, [], 1.2);
+    if (h.built) { ctx.globalAlpha = .08; circle(h.pos, v("aoR"), null, col); ctx.globalAlpha = 1; }
+    h.objs.forEach((o,k) => { const up = h.objUp.includes(k); circle(o, 70, up ? col : "rgba(255,255,255,.35)", up ? col : null, up ? [] : [3,3], 1.2); });
+    circle(h.pos, 160, col, h.built ? col : null, h.built ? [] : [5,4], 2);
+    // stage progress ring
+    let label = `#${h.id} ${roleName(h.role)}`, sub = "";
+    if (h.state === "securing") sub = `sécurisation ${mmss(h.stateEnd - S.t)}`;
+    if (h.state === "building") {
+      const f = (S.t - h.stageStart)/(h.stageEnd - h.stageStart), [x,y] = toScr(h.pos), rr = Math.max(8, 260*V.s);
+      ctx.beginPath(); ctx.arc(x, y, rr, -Math.PI/2, -Math.PI/2 + Math.PI*2*Math.min(1,f)); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.stroke();
+      sub = `étape ${h.stage+1}/6 ${STAGES[h.stage][0]} · ${mmss(h.stageEnd - S.t)}`;
+    }
+    if (h.state === "hold") sub = `en place · vague dans ${mmss(h.stateEnd - S.t)}`;
+    if (h.state === "waiting") sub = `vague en route · ${mmss(h.waveArr - S.t)}`;
+    if (h.state === "holding") sub = `prochaine vague ${mmss(h.nextWave - S.t)} · calme ${mmss(S.t - h.builtT)}`;
+    if (h.assaultT && S.t - h.assaultT < 120) { ctx.globalAlpha = .5 + .5*Math.sin(S.t); line(h.pos, BASE, "#ff5a4a", [], 3); ctx.globalAlpha = 1; }
+    text(h.pos, label, col, -Math.max(14, 300*V.s), 12, true);
+    if (sub) text(h.pos, sub, "#e9e7d8", -Math.max(14, 300*V.s) + 14, 11);
+  }
+  // parent links (the radio chain)
+  for (const h of S.hqs) if (active(h) && h.parent > 0) { const p = S.hqs.find(x => x.id === h.parent); if (p && active(p)) line(p.pos, h.pos, "rgba(233,231,216,.25)", [2,5]); }
+  // moving things
+  for (const m of S.moves) {
+    if (S.t < m.t0 || S.t > m.t1) continue;
+    const f = (S.t - m.t0)/(m.t1 - m.t0), p = lerp(m.from, m.to, f);
+    line(m.from, m.to, m.kind === "heli" ? "rgba(255,210,122,.35)" : m.kind === "col" ? "rgba(233,231,216,.35)" : "rgba(255,255,255,.12)", [3,4]);
+    const [x,y] = toScr(p); ctx.beginPath(); ctx.arc(x, y, m.kind === "truck" ? 3 : 4.5, 0, Math.PI*2);
+    ctx.fillStyle = { heli:"#ffd27a", col:"#e9e7d8", wave:"#bdb48a", truck:"#ffffff" }[m.kind]; ctx.fill();
+  }
+}
+
+// ---------------------------------------------------------------- UI
+const SPEEDS = [0,1,10,50,200,1000,5000];
+function buildUi() {
+  const sel = document.getElementById("site");
+  SITES.forEach((s,i) => sel.add(new Option(`${s[2]} — tête de plage ${(dist(s[1],BASE)/1000).toFixed(1)} km`, i)));
+  sel.value = 4;
+  sel.onchange = reset;
+  document.getElementById("reset").onclick = reset;
+  const sp = document.getElementById("speeds");
+  SPEEDS.forEach(x => { const b = document.createElement("button"); b.textContent = x === 0 ? "Pause" : "×" + x; b.dataset.s = x; b.onclick = () => { S.speed = x; syncSpeed(); }; sp.appendChild(b); });
+  document.getElementById("launch").onclick = () => { if (!S.rootDone) { S.rootAt = S.t; log("Insertion lancée maintenant."); } };
+  const db = document.getElementById("destroyBtn");
+  db.onclick = () => { S.destroyMode = !S.destroyMode; db.classList.toggle("on", S.destroyMode); cv.classList.toggle("destroy", S.destroyMode); };
+  const pp = document.getElementById("params");
+  for (const k in P) {
+    const l = document.createElement("label"); l.textContent = P[k][1];
+    const i = document.createElement("input"); i.type = "number"; i.value = P[k][0]; i.step = P[k][0] < 1 ? 0.01 : 1;
+    i.onchange = () => { P[k][0] = +i.value; };
+    pp.append(l, i);
+  }
+  document.getElementById("img").onchange = e => loadImg(e.target.files[0]);
+  const wrap = document.getElementById("mapWrap"), drop = document.getElementById("drop");
+  wrap.addEventListener("dragover", e => { e.preventDefault(); drop.style.display = "flex"; });
+  wrap.addEventListener("dragleave", () => drop.style.display = "none");
+  wrap.addEventListener("drop", e => { e.preventDefault(); drop.style.display = "none"; if (e.dataTransfer.files[0]) loadImg(e.dataTransfer.files[0]); });
+  // pan / zoom / click
+  let drag = null;
+  cv.addEventListener("mousedown", e => { drag = { x:e.clientX, y:e.clientY, vx:V.x, vy:V.y, moved:false }; });
+  addEventListener("mousemove", e => { if (!drag) return; const dx = e.clientX-drag.x, dy = e.clientY-drag.y; if (Math.abs(dx)+Math.abs(dy) > 3) drag.moved = true; V.x = drag.vx - dx/V.s; V.y = drag.vy + dy/V.s; });
+  addEventListener("mouseup", e => { if (drag && !drag.moved && S.destroyMode) { const r = cv.getBoundingClientRect(); destroyAt(toWorld(e.clientX-r.left, e.clientY-r.top)); } drag = null; });
+  cv.addEventListener("wheel", e => { e.preventDefault(); const r = cv.getBoundingClientRect(); const w = toWorld(e.clientX-r.left, e.clientY-r.top);
+    V.s *= e.deltaY < 0 ? 1.15 : 1/1.15; const w2 = toWorld(e.clientX-r.left, e.clientY-r.top); V.x += w[0]-w2[0]; V.y += w[1]-w2[1]; }, { passive:false });
+  addEventListener("resize", resize);
+}
+function loadImg(f) { if (!f) return; const u = URL.createObjectURL(f); const im = new Image(); im.onload = () => { bg = im; log("Fond de carte chargé (calé sur 0–30 720 m).", "imp"); }; im.src = u; }
+function syncSpeed() { document.querySelectorAll("#speeds button").forEach(b => b.classList.toggle("on", +b.dataset.s === S.speed)); }
+function status() {
+  const act = S.hqs.filter(active);
+  document.getElementById("status").innerHTML =
+    `HQ actifs : ${act.length} · reconstructions : ${S.rebuildsLeft}/${v("rebuilds")} · marée : ${S.tide}/${v("tideMax")} · couloir : ${S.side === 0 ? "principal" : "décalé"} · assauts : ${S.assaults}` +
+    (S.rootDone ? "" : `<br>Insertion du Port dans ${mmss(S.rootAt - S.t)}`);
+}
+
+// main loop: big steps are cut into 1 s pieces so every timer fires in order
+let last = performance.now();
+function frame(now) {
+  const real = Math.min(0.25, (now - last)/1000); last = now;
+  let dt = real * S.speed;
+  while (dt > 0) { const d = Math.min(1, dt); step(d); dt -= d; }
+  document.getElementById("clock").textContent = fmt(S.t);
+  status(); draw();
+  requestAnimationFrame(frame);
+}
+buildUi(); resize(); reset(); syncSpeed();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
