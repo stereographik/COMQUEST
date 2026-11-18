@@ -87,7 +87,6 @@ addMissionEventHandler ["EntityKilled", {
     ["depot", CQ_fnc_depotTick] call CQ_fnc_directorAddTask;
     ["roots", CQ_fnc_rootTick] call CQ_fnc_directorAddTask;
     ["hqs", CQ_fnc_hqTick] call CQ_fnc_directorAddTask;
-    call CQ_fnc_hqFireWatch;   // enemy fire in an HQ area resets its calm before a split
     ["guards", CQ_fnc_guardTick] call CQ_fnc_directorAddTask;   // posted guards near players
     ["eventPause", CQ_fnc_eventPause] call CQ_fnc_directorAddTask;   // static event AI frozen far from players
     ["logistics", CQ_fnc_logiTick] call CQ_fnc_directorAddTask;

@@ -47,8 +47,8 @@ private _ai = call CQ_fnc_enemyCount; private _infAll = call CQ_fnc_enemyInfantr
 if (_assault) then {
     ["Age (assault)", _age >= CQ_assaultAge, format ["%1 / %2 min", floor (_age / 60), round (CQ_assaultAge / 60)]] call _gate;
 } else {
-    private _quiet = time - ((_hq getOrDefault ["builtT", time]) max (_hq getOrDefault ["lastFireT", -1e6]));
-    ["Calm (no enemy fire)", (_hq get "buildDone") && { _quiet >= CQ_splitAge }, format ["%1 / %2 s", floor (_quiet max 0), CQ_splitAge]] call _gate;
+    private _quiet = time - ((_hq getOrDefault ["builtT", time]) max (_hq getOrDefault ["lastNearT", -1e6]));
+    ["Calm (no player 1 km)", (_hq get "buildDone") && { _quiet >= CQ_splitAge }, format ["%1 / %2 s", floor (_quiet max 0), CQ_splitAge]] call _gate;
     private _ls = time - (_hq getOrDefault ["lastSplitT", -1e6]);
     ["Last split", _ls >= CQ_splitGap, format ["%1 min ago (every %2)", floor (_ls / 60), round (CQ_splitGap / 60)]] call _gate;
     ["HQ count", _activeN < CQ_maxHqs, format ["%1 / %2 (limit)", _activeN, CQ_maxHqs]] call _gate;

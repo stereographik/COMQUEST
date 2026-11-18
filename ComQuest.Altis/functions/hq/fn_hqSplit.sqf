@@ -41,10 +41,10 @@ if (_reason == "" && { !alive (_hq get "commander") || { _hq get "cmdCaptured" }
 private _age = time - (_hq getOrDefault ["builtT", time]);
 if (_hq getOrDefault ["dbgSplit", false]) then { _hq set ["dbgSplit", false]; _age = 1e6; _hq set ["lastSplitT", -1e6]; _hq set ["dbgSkipQuiet", true] };   // debug "next wave": pacing skipped
 if (_reason == "" && { _assault } && { _age < CQ_assaultAge }) then { _reason = format ["too new to assault the base (%1 / %2 min)", floor (_age / 60), round (CQ_assaultAge / 60)] };
-// a split needs CQ_splitAge s of calm: since the build ended AND since the last enemy shot in the HQ's area (CQ_fnc_hqFireWatch)
-private _quiet = time - ((_hq getOrDefault ["builtT", time]) max (_hq getOrDefault ["lastFireT", -1e6]));
+// a split needs CQ_splitAge s of calm: since the build ended AND since a player was last within CQ_secureRadius m (CQ_fnc_hqTick)
+private _quiet = time - ((_hq getOrDefault ["builtT", time]) max (_hq getOrDefault ["lastNearT", -1e6]));
 if (_hq getOrDefault ["dbgSkipQuiet", false]) then { _quiet = 1e6 };
-if (_reason == "" && { !_assault } && { _quiet < CQ_splitAge }) then { _reason = format ["not calm enough (%1 / %2 s without enemy fire in its area)", floor _quiet, CQ_splitAge] };
+if (_reason == "" && { !_assault } && { _quiet < CQ_splitAge }) then { _reason = format ["not calm enough (%1 / %2 s with no player within 1 km)", floor _quiet, CQ_splitAge] };
 if (_reason == "" && { !_assault } && { time - (_hq getOrDefault ["lastSplitT", -1e6]) < CQ_splitGap }) then { _reason = format ["split %1 min ago (once per %2 min)", floor ((time - (_hq get "lastSplitT")) / 60), round (CQ_splitGap / 60)] };
 
 _hq set ["dbgSkipQuiet", false];

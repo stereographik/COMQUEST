@@ -6,7 +6,7 @@
     before colonising; built on request only (Refresh button, or picking an HQ). (The inventory column stays off; CQ_fnc_debugHqInv is kept.)
     Right: buttons by category. Server commands go through CQ_fnc_debugCmd; a few are local
     (map overlays, god mode, arsenal). Toggles show their state in their label.
-    Refreshes every 3 s while open.
+    Refreshed on request only: every button answer, the Refresh button, picking an HQ.
 */
 if (!hasInterface) exitWith {};
 if !(isServer || { (call BIS_fnc_admin) == 2 }) exitWith { hint "Debug panel: host or logged-in admin only" };
@@ -268,11 +268,8 @@ call (uiNamespace getVariable "CQ_dbgToggleLabels");
             { private _k = _pc lbAdd (_x select 0); _pc lbSetData [_k, _x select 1]; if ((_x select 1) == _keep) then { _pc lbSetCurSel _k } } forEach _rows;
         };
         sleep 3;
-        // one refresh in flight at a time (the server's answer clears CQ_dbgPending): a busy server
-        // used to pile up dozens of unanswered dashboard requests
-        if (time - (missionNamespace getVariable ["CQ_dbgPending", -1e6]) > 15) then {
-            CQ_dbgPending = time;
-            ["list", call (uiNamespace getVariable ["CQ_dbgSel", { -1 }])] remoteExecCall ["CQ_fnc_debugCmd", 2];
-        };
+        // no automatic server refresh any more: a panel left open stalled the whole script engine
+        // (its answers piled up by the dozen). The list, status and dashboard come with every button
+        // answer, and with the Refresh button.
     };
 };

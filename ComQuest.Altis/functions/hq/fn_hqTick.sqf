@@ -26,6 +26,8 @@ private _players = allPlayers select { alive _x };
     // quiet HQ (no player within CQ_hqQuietR, no contact for CQ_hqQuietContact s): handled
     // every CQ_hqQuietEvery-th tick only, staggered by id so they don't all run on the same one
     private _hp0 = _hq get "pos";
+    // calm before a split: a player within CQ_secureRadius m keeps resetting it (CQ_fnc_hqSplit)
+    if ((_players findIf { _x distance2D _hp0 < CQ_secureRadius }) > -1) then { _hq set ["lastNearT", _now] };
     if ((_players findIf { _x distance2D _hp0 < CQ_hqQuietR }) == -1
         && { _now - (_hq get "lastContactT") > CQ_hqQuietContact }
         && { (CQ_hqTickN + _id) mod CQ_hqQuietEvery != 0 }) then { continue };
@@ -139,7 +141,7 @@ private _players = allPlayers select { alive _x };
             if (_now >= (_hq get "nextWaveT") && { !(_hq getOrDefault ["dbgSplit", false]) }) then {
                 private _bt = _hq getOrDefault ["builtT", _now];
                 private _ok = if (((_hq get "pos") distance2D CQ_basePos) < CQ_assaultRange) then { _bt + CQ_assaultAge } else {
-                    ((_bt max (_hq getOrDefault ["lastFireT", -1e6])) + CQ_splitAge) max ((_hq getOrDefault ["lastSplitT", -1e6]) + CQ_splitGap) };   // calm since the build and the last enemy shot
+                    ((_bt max (_hq getOrDefault ["lastNearT", -1e6])) + CQ_splitAge) max ((_hq getOrDefault ["lastSplitT", -1e6]) + CQ_splitGap) };   // calm since the build and since a player was last near
                 if (_now < _ok) then {
                     _hq set ["nextWaveT", _ok];
                     ["HQ #%1: next wave held until it may expand (in %2 min)", [_id, ceil ((_ok - _now) / 60)]] call CQ_fnc_log;

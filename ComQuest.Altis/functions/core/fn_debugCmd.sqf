@@ -617,4 +617,4 @@ private _status = format ["<t size='0.85'>Act <t color='#918C3B'>%1</t>   |   ca
 
 // the HQ dashboard is built only on request (its Refresh button, or a new HQ picked in the list):
 // never on the 3 s refresh
-[_rows, _msg, _status, ["", [_hq] call CQ_fnc_debugHqDash] select (_cmd == "dash")] remoteExec ["CQ_fnc_debugUiFill", _caller];
+[_rows, _msg, _status, ["", [_hq] call CQ_fnc_debugHqDash] select (_cmd == "dash")] remoteExecCall ["CQ_fnc_debugUiFill", _caller];   // unscheduled: an answer never waits in the scheduler
