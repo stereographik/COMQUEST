@@ -21,7 +21,7 @@ private _c = _hq get "pos";
 
 _hq set ["state", "Holding"];
 _hq set ["stateT", time];
-_hq set ["nextWaveT", time + CQ_waveInterval];
+_hq set ["nextWaveT", time + CQ_waveInterval * ([1, 1 + (missionNamespace getVariable ["CQ_lanceTide", 0]) * CQ_lanceTideInterval] select CQ_lanceOn)];   // Maree: rarer waves
 
 private _inf = (_hq get "infantry") select { ({ alive _x } count units _x) > 0 };
 private _total = [_inf] call CQ_fnc_aliveCount;
@@ -34,13 +34,14 @@ private _reason = "";
 if (([_waveInf] call CQ_fnc_aliveCount) == 0) then { _reason = "the reinforcements never arrived" };
 private _active = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
 if (_reason == "" && { !_assault } && { count _active >= CQ_maxHqs }) then { _reason = format ["HQ limit %1 reached", CQ_maxHqs] };
-if (_reason == "" && { !_assault } && { (missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0 }) then { _reason = "the carrier has no supplies left for a new HQ" };
+if (_reason == "" && { !_assault } && { !CQ_lanceOn } && { (missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0 }) then { _reason = "the carrier has no supplies left for a new HQ" };
 if (_reason == "" && { _total < CQ_minInfantryToExpand }) then { _reason = format ["only %1 infantry", _total] };
 if (_reason == "" && { !alive (_hq get "commander") || { _hq get "cmdCaptured" } }) then { _reason = "no commander to order it" };
 // pacing: a young HQ holds before it splits or assaults, and splits at most once per CQ_splitGap
 private _age = time - (_hq getOrDefault ["builtT", time]);
 if (_hq getOrDefault ["dbgSplit", false]) then { _hq set ["dbgSplit", false]; _age = 1e6; _hq set ["lastSplitT", -1e6]; _hq set ["dbgSkipQuiet", true] };   // debug "next wave": pacing skipped
-if (_reason == "" && { _assault } && { _age < CQ_assaultAge }) then { _reason = format ["too new to assault the base (%1 / %2 min)", floor (_age / 60), round (CQ_assaultAge / 60)] };
+private _assaultAge = if (CQ_lanceOn) then { (CQ_assaultAge - (missionNamespace getVariable ["CQ_lanceTide", 0]) * CQ_lanceTideAssault) max 300 } else { CQ_assaultAge };   // Maree: earlier assault
+if (_reason == "" && { _assault } && { _age < _assaultAge }) then { _reason = format ["too new to assault the base (%1 / %2 min)", floor (_age / 60), round (_assaultAge / 60)] };
 // a split needs CQ_splitAge s of calm: since the build ended AND since a player was last within CQ_secureRadius m (CQ_fnc_hqTick)
 private _quiet = time - ((_hq getOrDefault ["builtT", time]) max (_hq getOrDefault ["lastNearT", -1e6]));
 if (_hq getOrDefault ["dbgSkipQuiet", false]) then { _quiet = 1e6 };
@@ -48,8 +49,85 @@ if (_reason == "" && { !_assault } && { _quiet < CQ_splitAge }) then { _reason =
 if (_reason == "" && { !_assault } && { time - (_hq getOrDefault ["lastSplitT", -1e6]) < CQ_splitGap }) then { _reason = format ["split %1 min ago (once per %2 min)", floor ((time - (_hq get "lastSplitT")) / 60), round (CQ_splitGap / 60)] };
 
 _hq set ["dbgSkipQuiet", false];
+
+// ---- LA LANCE: who may expand, and where (Port -> Relais -> Tete de pont, on the line beachhead -> base)
+private _lNext = ""; private _lTarget = []; private _lParent = _id; private _lBond = false; private _lFree = true;
+if (CQ_lanceOn && { !_assault }) then {
+    private _lRole = _hq getOrDefault ["lRole", "port"];
+    // Lance double: a Tete kept from moving by players (not calm) twice in a row takes a side corridor
+    if (_lRole == "head" && { (_reason find "not calm") == 0 }) then {
+        private _nb = (_hq getOrDefault ["bondBlocked", 0]) + 1;
+        _hq set ["bondBlocked", _nb];
+        if (_nb >= CQ_lanceBlockedMax && { (missionNamespace getVariable ["CQ_lanceSide", 0]) == 0 }) then {
+            private _A = missionNamespace getVariable ["CQ_lanceA", _c];
+            private _ax = _A getDir CQ_basePos;
+            // the side with land and the fewest players
+            private _score = { params ["_s"]; private _q = _c getPos [CQ_lanceDetour, _ax + 90 * _s]; ([0, -1e6] select (surfaceIsWater _q)) - 1000 * ({ _x distance2D _q < 2500 } count allPlayers) };
+            CQ_lanceSide = [-1, 1] select (([1] call _score) > ([-1] call _score));
+            _hq set ["bondBlocked", 0];
+            ["CSAT is going around", format ["HQ #%1 is blocked on the main road: CSAT bypasses by the %2", _id,
+                ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"] select ((round ((_ax + 90 * CQ_lanceSide) / 45)) mod 8)]] call CQ_fnc_announce;
+        };
+    };
+    if (_reason == "") then {
+        private _A = missionNamespace getVariable ["CQ_lanceA", _c];
+        private _B = CQ_basePos;
+        private _ax = _A getDir _B;
+        private _act = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
+        private _has = { params ["_r"]; (_act findIf { (_x getOrDefault ["lRole", ""]) == _r }) > -1 };
+        private _lastFall = { params ["_r"]; private _d = (values CQ_hqs) select { (_x get "state") == "Destroyed" && { (_x getOrDefault ["lRole", ""]) == _r } };
+            if (_d isEqualTo []) exitWith { createHashMap }; ([_d, [], { _x getOrDefault ["fallT", 0] }, "DESCEND"] call BIS_fnc_sortBy) select 0 };
+        private _side = { params ["_p"]; private _s = missionNamespace getVariable ["CQ_lanceSide", 0]; if (_s == 0) then { _p } else { _p getPos [CQ_lanceDetour, _ax + 90 * _s] } };
+        private _keepOut = { params ["_p"]; if (_p distance2D _B < CQ_assaultRange + 300) then { _B getPos [CQ_assaultRange + 300, _B getDir _p] } else { _p } };
+        private _rebuild = {
+            params ["_r"];
+            private _f = [_r] call _lastFall;
+            if (count _f == 0) exitWith { true };
+            _lFree = false;
+            if (time - (_f getOrDefault ["fallT", 0]) < CQ_lanceRebuildDelay) exitWith { _reason = format ["Lance: the %1 is rebuilt in %2 s", _r, round (CQ_lanceRebuildDelay - (time - (_f getOrDefault ["fallT", 0])))]; false };
+            if ((missionNamespace getVariable ["CQ_carrierLeft", 0]) <= 0) exitWith { _reason = "Lance: the carrier has no reconstruction left"; false };
+            true
+        };
+        switch (_lRole) do {
+            case "port": {
+                if (["relay"] call _has) exitWith { _reason = "Lance: the Relais stands (the Port only rebuilds it)" };
+                if !(["relay"] call _rebuild) exitWith {};
+                _lNext = "relay";
+                _lTarget = _A getPos [(_A distance2D _B) * CQ_lanceRelayFrac, _ax];
+            };
+            case "relay": {
+                if (["head"] call _has) exitWith { _reason = "Lance: the Tete de pont stands (the Relais only rebuilds it)" };
+                if !(["head"] call _rebuild) exitWith {};
+                _lNext = "head";
+                private _f = ["head"] call _lastFall;
+                _lTarget = if (count _f > 0) then { [((_c select 0) + ((_f get "pos") select 0)) / 2, ((_c select 1) + ((_f get "pos") select 1)) / 2, 0] }
+                    else { [[_A getPos [(_A distance2D _B) * CQ_lanceHeadFrac, _ax]] call _side] call _keepOut };
+            };
+            case "head": {
+                if ((_hq get "stock") < CQ_lanceBondStock * (_hq get "cap")) exitWith { _reason = format ["Lance: too little ammo to move forward (%1 / %2)", round (_hq get "stock"), round (CQ_lanceBondStock * (_hq get "cap"))] };
+                // bond: a third of the way to the base, on the current corridor, the new Tete hangs off the Relais
+                _lNext = "head"; _lBond = true; _lParent = _hq get "parent";
+                private _d = _c distance2D _B;
+                private _p = _c getPos [_d * CQ_lanceBondStep, _c getDir _B];
+                if ((missionNamespace getVariable ["CQ_lanceSide", 0]) != 0) then {
+                    // keep on the side corridor: the point the same distance from the base, off the main line
+                    _p = [_B getPos [_p distance2D _B, _B getDir _A]] call _side;
+                };
+                _lTarget = _p;
+                _hq set ["bondBlocked", 0];
+            };
+            default { _reason = "Lance: this HQ does not expand" };
+        };
+    };
+};
+
 private _site = [];
-if (_reason == "" && { !_assault }) then {
+if (CQ_lanceOn && { _reason == "" } && { !_assault }) then {
+    _site = [_lTarget, 0, CQ_lanceSnapR, true, 40] call CQ_fnc_findSite;
+    if (_site isEqualTo []) then { _site = [_lTarget, 0, 2 * CQ_lanceSnapR, true, 40] call CQ_fnc_findSite };
+    if (_site isEqualTo []) then { _reason = "Lance: no site near the planned point" };
+};
+if (!CQ_lanceOn && { _reason == "" } && { !_assault }) then {
     // ~2 km toward the player base, wandering +/- CQ_childSpread degrees; the search relaxes
     // its tolerance until it finds a place (CQ_fnc_findSite)
     private _toBase = _c getDir CQ_basePos;
@@ -145,7 +223,12 @@ _cmdG createUnit ["O_officer_F", _from getPos [6, random 360], [], 0, "NONE"];
 [units _cmdG] call CQ_fnc_unitPrep;
 
 _hq set ["lastSplitT", time];
-private _child = [_site, _id] call CQ_fnc_hqNew;
+if (CQ_lanceOn) then { CQ_lanceRoleNext = _lNext; CQ_lanceFreeNext = _lFree };
+private _child = [_site, [_id, _lParent] select CQ_lanceOn] call CQ_fnc_hqNew;
+if (CQ_lanceOn && { _lBond }) then {
+    _hq set ["lRole", "headOld"];   // it packs up once the new Tete is built (CQ_fnc_lanceTick)
+    ["CSAT moves forward", format ["HQ #%1 sends its spearhead forward: a new position near grid %2, %3 m closer to your base", _id, mapGridPosition _site, round ((_c distance2D CQ_basePos) - (_site distance2D CQ_basePos))]] call CQ_fnc_announce;
+};
 _child set ["incomingCol", _n];     // colonists on the way count for the balancing (CQ_fnc_hqBalance)
 _child set ["siteLevel", CQ_lastSiteLevel];
 private _carry = floor (((_hq get "stock") * CQ_childCarryShare) min CQ_childCarryMax);

@@ -146,6 +146,7 @@ private _onNet = {
     private _keepOf = { params ["_d"]; if ((_d get "id") == _hubId) then { CQ_hubReserve } else { CQ_shareKeep * (_d get "cap") } };
     private _donors = _built select {
         (_x get "id") != _id && { !(_x getOrDefault ["isolated", false]) } && { [_x] call _onNet }
+        && { !CQ_lanceOn || { (_x get "id") == (_h get "parent") } }   // La Lance: only along the chain, Port -> Relais -> Tete
         && { (_x get "stock") > CQ_shareGive * (_x get "cap") || { (_x get "id") == _hubId && { (_x get "stock") > CQ_hubReserve + 30 } } }
     };
     if (_donors isEqualTo []) then { continue };
@@ -174,7 +175,7 @@ if (_hubId > -1 && { !_hubIso } && { !CQ_ammoFlightActive } && { CQ_nextAmmoFlig
     CQ_ammoFlightActive = true;
     // a nearly full hub: the flight goes to the poorest HQ on the net instead (nothing wasted)
     private _dest = _hub;
-    if ((_hub get "stock") > CQ_flightRedirectShare * (_hub get "cap")) then {
+    if (!CQ_lanceOn && { (_hub get "stock") > CQ_flightRedirectShare * (_hub get "cap") }) then {   // La Lance: flights land at the Port only
         private _linked = [_hub, _built] call CQ_fnc_hqLinks;
         private _cands = _built select { (_x get "id") != _hubId && { (_x get "id") in _linked } && { !(_x getOrDefault ["isolated", false]) } };
         if (_cands isNotEqualTo []) then {

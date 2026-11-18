@@ -88,6 +88,7 @@ addMissionEventHandler ["EntityKilled", {
     ["roots", CQ_fnc_rootTick] call CQ_fnc_directorAddTask;
     ["hqs", CQ_fnc_hqTick] call CQ_fnc_directorAddTask;
     ["guards", CQ_fnc_guardTick] call CQ_fnc_directorAddTask;   // posted guards near players
+    ["lance", CQ_fnc_lanceTick] call CQ_fnc_directorAddTask;   // La Lance: an old Tete packs up once the new one is built
     ["eventPause", CQ_fnc_eventPause] call CQ_fnc_directorAddTask;   // static event AI frozen far from players
     ["logistics", CQ_fnc_logiTick] call CQ_fnc_directorAddTask;
     ["air", CQ_fnc_airTick] call CQ_fnc_directorAddTask;

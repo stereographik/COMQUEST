@@ -21,7 +21,7 @@ private _t = format ["<t size='1.05' font='PuristaMedium' color='%1'>HQ #%2  %3<
 private _st = _hq get "state";
 _t = _t + ("PHASE" call _head);
 _t = _t + (["State", format ["%1 (%2)", _st, (_hq get "stateT") call _ago], [_ok, _bad] select !(_st in CQ_activeStates)] call _row);
-_t = _t + (["Role", if (_id == CQ_hubId) then { "MAIN HQ" } else { if ((_hq get "parent") > -1) then { format ["child of #%1", _hq get "parent"] } else { "root" } }] call _row);
+_t = _t + (["Role", (if (_id == CQ_hubId) then { "MAIN HQ" } else { if ((_hq get "parent") > -1) then { format ["child of #%1", _hq get "parent"] } else { "root" } }) + (if (CQ_lanceOn) then { "  /  " + (createHashMapFromArray [["port", "PORT"], ["relay", "RELAIS"], ["head", "TETE DE PONT"], ["headOld", "old Tete (packing)"]] getOrDefault [_hq getOrDefault ["lRole", ""], "?"]) } else { "" })] call _row);
 _t = _t + (["Grid / age", format ["%1  /  %2", mapGridPosition (_hq get "pos"), (_hq get "born") call _ago]] call _row);
 _t = _t + (["Build", if (_hq get "buildDone") then { "done 6/6" } else { format ["stage %1/6", _hq getOrDefault ["buildStage", 0]] }] call _row);
 private _nv = _hq getOrDefault ["nerv", 0];

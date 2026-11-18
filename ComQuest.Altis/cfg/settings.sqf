@@ -503,9 +503,9 @@ CQ_magOrbitMove = 400;                   // m: their orbit follows WASP when it 
 CQ_testMagDirect = false;                // TEST ONLY, set false before merging to main: the two Sentinels fly straight to the first enemy HQ site instead of their search circuits
 
 // --- Enemy root insertions --------------------------------------------------
-CQ_maxRoots = 2;                         // free root insertions in a campaign: the beachhead, then one more after CQ_rootInterval (at once if the island is empty)
+CQ_maxRoots = 1;                         // free root insertions in a campaign: the beachhead, then one more after CQ_rootInterval (at once if the island is empty)
 CQ_rootCapBonus = 20;                    // root insertions may go this far above CQ_maxInfantry (reinforcements alone can fill the cap)
-CQ_helpWaves = true;                     // a root wave first guards the least built unfinished HQ, then founds its own HQ near it
+CQ_helpWaves = false;                     // a root wave first guards the least built unfinished HQ, then founds its own HQ near it
 CQ_helpMaxTime = 900;                    // s: a help wave leaves after this even if the HQ is still not built
 CQ_helpSiteDist = [2000, 4000];          // m: its own HQ this far from the HQ it helped, on the side away from our base
 CQ_helpLzOffset = 300;                   // m: its drop zone, from the helped HQ toward its own site
@@ -571,12 +571,12 @@ CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted
 // --- HQ lifecycle (realistic timings) ---------------------------------------
 // Securing -> Installing -> Hold -> WaitingReinf -> split (child HQ) -> Holding -> WaitingReinf ...
 CQ_activeStates = ["Inbound", "Helping", "Securing", "Installing", "Hold", "Holding", "WaitingReinf"];
-CQ_maxHqs = 4;                           // HQs alive at once
+CQ_maxHqs = 4;                             // HQs alive at once
 CQ_aiEventSize = 20;                     // AI room an event (crash, hostage, EMP) needs under CQ_maxAI before it starts (CQ_fnc_aiRoom)
 CQ_maxAI = 150;                          // hidden safety limit: every enemy AI alive at once (crews included)
 CQ_maxInfantry = 80;                     // enemy foot soldiers alive at once (vehicle / heli / static crews not counted)
-CQ_carrierHqs = 6;                       // the carrier has supplies for this many CHILD HQs (splits) and re-insertions; the CQ_maxRoots roots are free
-CQ_carrierHqKm = 3000;                   // > 0: CQ_carrierHqs is set from the carrier site instead: one HQ per this many m
+CQ_carrierHqs = 4;                       // the carrier has supplies for this many CHILD HQs (splits) and re-insertions; the CQ_maxRoots roots are free
+CQ_carrierHqKm = 0;                      // > 0: CQ_carrierHqs is set from the carrier site instead: one HQ per this many m
                                          // from the site's first HQ to our base (far beach = longer campaign), see CQ_fnc_carrierSetup
 CQ_carrierHqsRange = [2, 6];             // ...kept within [min, max]
 CQ_secureRadius = 1000;                  // squads post out to this perimeter before building
@@ -1285,3 +1285,28 @@ CQ_aiSqRing = [1100, 1500];              // m from the base centre (outside the 
 CQ_aiSqGap = 400;                        // m between two squads at spawn
 CQ_aiSqBlowR = 40;                       // m: the squad leader this close to an objective -> a charge is planted
 CQ_aiSqFuse = 20;                        // s before it goes off
+
+// ============================================================================================
+// LA LANCE (branch HQ_ROUTES): 1 root and 2 children on the line beachhead -> player base
+//   Port (the root, on the beach): supply flights land there; it only (re)builds the Relais
+//   Relais (child 1, CQ_lanceRelayFrac of the way): it only (re)builds the Tete; trucks go Port -> Relais -> Tete
+//   Tete de pont (child 2, CQ_lanceHeadFrac): the only one that moves forward (bond) and assaults the base
+//   The radio tree follows the chain: a Relais cut off isolates the Tete (no trucks, no waves). Nobody surrenders.
+//   A fallen Relais / Tete is rebuilt CQ_lanceRebuildDelay s later (Tete: halfway between the Relais and
+//   where it fell); every rebuild (and a re-landed Port) costs one of the carrier's CQ_carrierHqs reconstructions.
+//   Lance double: a Tete kept from moving twice in a row by players -> its next bonds take a side corridor.
+//   Maree: every reconstruction spent raises the tide one level (max 4): bigger, rarer waves, earlier assault.
+// ============================================================================================
+CQ_lanceOn = true;
+CQ_lanceRelayFrac = 1 / 3;               // Relais this share of the way from the beachhead to the base
+CQ_lanceHeadFrac = 2 / 3;                // Tete de pont, never closer to the base than CQ_assaultRange + 300 m
+CQ_lanceSnapR = 800;                     // m around the point on the line where the site is looked for
+CQ_lanceRebuildDelay = 300;              // s after a Relais / Tete fell before it is rebuilt
+CQ_lanceBondStock = 0.6;                 // the Tete moves forward only with this share of its ammo cap (and calm, CQ_splitGap)
+CQ_lanceBondStep = 1 / 3;                // ...by this share of its distance to the base
+CQ_lanceDetour = 2000;                   // m sideways: the corridor of the Lance double
+CQ_lanceBlockedMax = 2;                  // bonds refused in a row because of players -> side corridor
+CQ_lanceTideMax = 4;
+CQ_lanceTideSoldiers = 2;                // per tide level: soldiers added to every wave
+CQ_lanceTideInterval = 0.25;             // per tide level: wave interval x (1 + this)
+CQ_lanceTideAssault = 180;               // per tide level: s taken off CQ_assaultAge

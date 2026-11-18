@@ -69,6 +69,17 @@ for "_i" from 1 to CQ_waveSquads do {
     _inf pushBack _g;
 };
 
+// Maree: CQ_lanceTideSoldiers more per tide level, in the free seats
+if (CQ_lanceOn && { (missionNamespace getVariable ["CQ_lanceTide", 0]) > 0 } && { _inf isNotEqualTo [] }) then {
+    private _g = _inf select 0;
+    for "_k" from 1 to (CQ_lanceTide * CQ_lanceTideSoldiers) do {
+        private _u = _g createUnit [selectRandom ["O_Soldier_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_Soldier_GL_F"], _spawn getPos [30, _dir + 90], [], 5, "NONE"];
+        [[_u]] call CQ_fnc_unitPrep;
+        private _in = false;
+        { if (!_in && { (_x emptyPositions "cargo") > 0 }) then { _u moveInCargo _x; _in = vehicle _u != _u } } forEach _vehs;
+        if (!_in) then { deleteVehicle _u; _lost = _lost + 1 };
+    };
+};
 ["Enemy reinforcements en route", format ["HQ #%1: %2 with %3 soldiers, %4 m out",
     _id, (_vehs apply { getText (configOf _x >> "displayName") }) joinString " + ",
     [_inf] call CQ_fnc_aliveCount, round (_spawn distance2D _c)]] call CQ_fnc_announce;

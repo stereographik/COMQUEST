@@ -12,6 +12,8 @@
 // players brings the next root at once; with no root left, a RE-INSERTION is paid from the
 // supplies (CQ_reinsertDelay s after the island is empty). No root and no supplies: nothing more.
 private _active = ((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates }) > -1;
+// La Lance: the Port is what counts (a fallen Port is re-landed, paid, even with the Relais / Tete still up)
+if (CQ_lanceOn) then { _active = ((values CQ_hqs) findIf { (_x get "state") in CQ_activeStates && { (_x getOrDefault ["lRole", ""]) == "port" } }) > -1 };
 if (_active) then { CQ_islandEmptyT = -1 } else { if ((missionNamespace getVariable ["CQ_islandEmptyT", -1]) < 0) then { CQ_islandEmptyT = serverTime } };
 private _paid = false;
 if (CQ_rootsLaunched >= CQ_maxRoots) then {
@@ -90,6 +92,11 @@ private _site = if (_helpId > -1) then { _helpSite } else { if (CQ_rootsLaunched
     }
 } } };
 
+// La Lance: a re-landed Port goes back to the beachhead
+if (CQ_lanceOn && { CQ_rootsLaunched > 0 } && { !isNil "CQ_lanceA" }) then {
+    _site = [CQ_lanceA, 0, 1200, true, 40] call CQ_fnc_findSite;
+    ["Lance: the Port is re-landed at the beachhead (grid %1)", [if (_site isEqualTo []) then { "none" } else { mapGridPosition _site }]] call CQ_fnc_log;
+};
 if (!isNil "CQ_rootRetrySite") then {
     _site = CQ_rootRetrySite; CQ_rootRetrySite = nil;
     ["Root insertion: second attempt at the failed landing site %1", [mapGridPosition _site]] call CQ_fnc_log;

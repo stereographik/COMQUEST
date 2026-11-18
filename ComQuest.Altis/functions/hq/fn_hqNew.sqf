@@ -71,10 +71,23 @@ CQ_hqs set [_id, _hq];
 // the carrier's supplies pay for child HQs and re-insertions; the CQ_maxRoots root insertions are free
 private _paid = _parent != -1 || { missionNamespace getVariable ["CQ_rootPaidNext", false] };
 CQ_rootPaidNext = false;
+// La Lance: the first Relais / Tete and every bond are free; rebuilds and a re-landed Port are paid
+if (CQ_lanceOn) then {
+    if (missionNamespace getVariable ["CQ_lanceFreeNext", false]) then { _paid = false };
+    _hq set ["lRole", if (_parent == -1) then { "port" } else { missionNamespace getVariable ["CQ_lanceRoleNext", "relay"] }];
+    if (_parent == -1 && { isNil "CQ_lanceA" }) then { CQ_lanceA = [_pos select 0, _pos select 1, 0] };
+};
+CQ_lanceFreeNext = false; CQ_lanceRoleNext = nil;
 _hq set ["paid", _paid];
 if (_paid) then {
     CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs]) - 1;
     call CQ_fnc_carrierMarker;
     ["Carrier: supplies for %1 more HQ(s) (%2%%)", [CQ_carrierLeft max 0, round (100 * (CQ_carrierLeft max 0) / CQ_carrierHqs)]] call CQ_fnc_log;
+    if (CQ_lanceOn) then {
+        ["Carrier rebuilds a position", format ["The carrier can rebuild %1 more position(s)", CQ_carrierLeft max 0]] call CQ_fnc_announce;
+        // Maree: one level per reconstruction spent
+        CQ_lanceTide = ((missionNamespace getVariable ["CQ_lanceTide", 0]) + 1) min CQ_lanceTideMax;
+        ["The tide is rising", format ["CSAT level %1/%2: bigger waves (+%3 soldiers), less often, earlier assault", CQ_lanceTide, CQ_lanceTideMax, CQ_lanceTide * CQ_lanceTideSoldiers]] call CQ_fnc_announce;
+    };
 };
 _hq
