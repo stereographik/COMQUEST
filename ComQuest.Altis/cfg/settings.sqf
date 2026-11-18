@@ -21,6 +21,7 @@ CQ_directorAtomic = ["magpie", "magDormant", "link", "linkRepair"];
 CQ_directorAllAtomic = true;             // every director task runs in one go (unscheduled): its real cost, never starved by the
                                          // script scheduler (at low server FPS a time-sliced task could take minutes). Tasks never wait inside.   // director tasks run in one go (unscheduled), not time-sliced with every other script
 CQ_scriptDumpMin = 40;                   // slow tick with more spawned scripts than this: list them in the log (once a minute)
+CQ_scriptDumpStall = 20;                 // s: a tick this slow (or the director silent this long) means a starved scheduler: every running script is listed (file:line)
 
 // --- Player base (Altis International Airport) -----------------------------
 CQ_basePos = [14233.9, 16106.7, 0];     // centre of the keep (class change zone), inside CQ_basePerimeter
