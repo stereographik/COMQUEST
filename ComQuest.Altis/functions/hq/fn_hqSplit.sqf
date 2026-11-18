@@ -39,11 +39,15 @@ if (_reason == "" && { _total < CQ_minInfantryToExpand }) then { _reason = forma
 if (_reason == "" && { !alive (_hq get "commander") || { _hq get "cmdCaptured" } }) then { _reason = "no commander to order it" };
 // pacing: a young HQ holds before it splits or assaults, and splits at most once per CQ_splitGap
 private _age = time - (_hq getOrDefault ["builtT", time]);
-if (_hq getOrDefault ["dbgSplit", false]) then { _hq set ["dbgSplit", false]; _age = 1e6; _hq set ["lastSplitT", -1e6] };   // debug "next wave": pacing skipped
+if (_hq getOrDefault ["dbgSplit", false]) then { _hq set ["dbgSplit", false]; _age = 1e6; _hq set ["lastSplitT", -1e6]; _hq set ["dbgSkipQuiet", true] };   // debug "next wave": pacing skipped
 if (_reason == "" && { _assault } && { _age < CQ_assaultAge }) then { _reason = format ["too new to assault the base (%1 / %2 min)", floor (_age / 60), round (CQ_assaultAge / 60)] };
-if (_reason == "" && { !_assault } && { _age < CQ_splitAge }) then { _reason = format ["too new to split (%1 / %2 min)", floor (_age / 60), round (CQ_splitAge / 60)] };
+// a split needs CQ_splitAge s of calm: since the build ended AND since the last enemy shot in the HQ's area (CQ_fnc_hqFireWatch)
+private _quiet = time - ((_hq getOrDefault ["builtT", time]) max (_hq getOrDefault ["lastFireT", -1e6]));
+if (_hq getOrDefault ["dbgSkipQuiet", false]) then { _quiet = 1e6 };
+if (_reason == "" && { !_assault } && { _quiet < CQ_splitAge }) then { _reason = format ["not calm enough (%1 / %2 s without enemy fire in its area)", floor _quiet, CQ_splitAge] };
 if (_reason == "" && { !_assault } && { time - (_hq getOrDefault ["lastSplitT", -1e6]) < CQ_splitGap }) then { _reason = format ["split %1 min ago (once per %2 min)", floor ((time - (_hq get "lastSplitT")) / 60), round (CQ_splitGap / 60)] };
 
+_hq set ["dbgSkipQuiet", false];
 private _site = [];
 if (_reason == "" && { !_assault }) then {
     // ~2 km toward the player base, wandering +/- CQ_childSpread degrees; the search relaxes

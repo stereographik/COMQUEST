@@ -139,7 +139,7 @@ private _players = allPlayers select { alive _x };
             if (_now >= (_hq get "nextWaveT") && { !(_hq getOrDefault ["dbgSplit", false]) }) then {
                 private _bt = _hq getOrDefault ["builtT", _now];
                 private _ok = if (((_hq get "pos") distance2D CQ_basePos) < CQ_assaultRange) then { _bt + CQ_assaultAge } else {
-                    (_bt + CQ_splitAge) max ((_hq getOrDefault ["lastSplitT", -1e6]) + CQ_splitGap) };
+                    ((_bt max (_hq getOrDefault ["lastFireT", -1e6])) + CQ_splitAge) max ((_hq getOrDefault ["lastSplitT", -1e6]) + CQ_splitGap) };   // calm since the build and the last enemy shot
                 if (_now < _ok) then {
                     _hq set ["nextWaveT", _ok];
                     ["HQ #%1: next wave held until it may expand (in %2 min)", [_id, ceil ((_ok - _now) / 60)]] call CQ_fnc_log;
