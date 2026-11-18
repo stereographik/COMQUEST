@@ -4,7 +4,7 @@
       a player within CQ_guardSpawnR m of an active HQ -> each site's guards appear at their posts
       no player within CQ_guardDespawnR m for CQ_guardDespawnDelay s -> the living ones are removed
     A killed guard's post stays empty for the rest of the game (no farming).
-    Out of the infantry cap (CQ_noInfCap); they still count in the all-AI total.
+    Out of the infantry cap (CQ_noInfCap) and of the all-AI total (CQ_noCap).
     Every site but the AA pits: half the men hold the posts in cover (doStop, crouched behind the
     barriers, tower tops and roofs standing; they never leave), the other half
     hunt: they patrol the site and run at any player they know of within CQ_guardHuntR m.
@@ -70,6 +70,7 @@
                     _u setDir _dir;
                     _u setSkill CQ_guardSkill;
                     _u setVariable ["CQ_gPost", [_hid, _si, _pi]];
+                    _u setVariable ["CQ_noCap", true];   // out of the all-AI total too (they only exist near players)
                     _u addEventHandler ["Killed", {
                         ((_this select 0) getVariable ["CQ_gPost", []]) params [["_h", -1], ["_si", -1], ["_pi", -1]];
                         private _hq = CQ_hqs getOrDefault [_h, createHashMap];

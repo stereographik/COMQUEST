@@ -33,6 +33,38 @@ if (_nw > time) then { _t = _t + (["Next wave", format ["in %1 s", round (_nw - 
 _t = _t + (["Site tolerance", str (_hq getOrDefault ["siteLevel", 0])] call _row);
 
 // ---- objectives
+// ---- what the HQ waits for before it colonises (same gates as CQ_fnc_hqTick / hqRequestWave / hqSplit)
+_t = _t + ("BEFORE COLONISING" call _head);
+private _gate = { params ["_k", "_okNow", "_txt"]; _t = _t + ([_k, if (_okNow) then { "OK" } else { _txt }, [_bad, _ok] select _okNow] call _row) };
+private _assault = ((_hq get "pos") distance2D CQ_basePos) < CQ_assaultRange;
+private _age = time - (_hq getOrDefault ["builtT", time]);
+private _infG = (_hq get "infantry") select { !isNull _x && { ({ alive _x } count units _x) > 0 } };
+private _nInf = [_infG] call _men;
+private _activeN = { (_x get "state") in CQ_activeStates } count (values CQ_hqs);
+private _ai = call CQ_fnc_enemyCount; private _infAll = call CQ_fnc_enemyInfantry;
+["Built", _hq get "buildDone", format ["stage %1/6", _hq getOrDefault ["buildStage", 0]]] call _gate;
+["Commander", alive (_hq get "commander") && { !(_hq getOrDefault ["cmdCaptured", false]) }, ["dead: never again", "captured: never again"] select (_hq getOrDefault ["cmdCaptured", false])] call _gate;
+if (_assault) then {
+    ["Age (assault)", _age >= CQ_assaultAge, format ["%1 / %2 min", floor (_age / 60), round (CQ_assaultAge / 60)]] call _gate;
+} else {
+    ["Age", _age >= CQ_splitAge, format ["%1 / %2 min", floor (_age / 60), round (CQ_splitAge / 60)]] call _gate;
+    private _ls = time - (_hq getOrDefault ["lastSplitT", -1e6]);
+    ["Last split", _ls >= CQ_splitGap, format ["%1 min ago (every %2)", floor (_ls / 60), round (CQ_splitGap / 60)]] call _gate;
+    ["HQ count", _activeN < CQ_maxHqs, format ["%1 / %2 (limit)", _activeN, CQ_maxHqs]] call _gate;
+    ["Carrier supplies", (missionNamespace getVariable ["CQ_carrierLeft", 1]) > 0, "none left"] call _gate;
+};
+["Radio / network", alive (_hq get "radio") && { !(_hq getOrDefault ["isolated", false]) }, ["isolated", "radio down"] select !alive (_hq get "radio")] call _gate;
+["AI room for a wave", _ai <= CQ_maxAI - CQ_waveSize && { _infAll <= CQ_maxInfantry - CQ_waveSize }, format ["inf %1/%2, all %3/%4", _infAll, CQ_maxInfantry - CQ_waveSize, _ai, CQ_maxAI - CQ_waveSize]] call _gate;
+["Infantry after wave", _nInf + CQ_waveSize >= CQ_minInfantryToExpand, format ["%1 + %2 < %3", _nInf, CQ_waveSize, CQ_minInfantryToExpand]] call _gate;
+private _st2 = _hq get "state";
+private _nw = (_hq getOrDefault ["nextWaveT", 0]) - time;
+_t = _t + (["Next wave", switch (true) do {
+    case (_st2 == "WaitingReinf"): { "on its way" };
+    case (_st2 == "Holding" && { _nw > 0 }): { format ["in %1", (time - _nw) call _ago] };
+    case (_st2 == "Holding"): { "asking now" };
+    default { _st2 };
+}] call _row);
+
 _t = _t + ("OBJECTIVES" call _head);
 private _cmd = _hq get "commander";
 _t = _t + (["Commander", if (_hq get "cmdCaptured") then { "CAPTURED" } else { if (isNull _cmd) then { "not yet" } else { (alive _cmd) call _yn select 0 } },

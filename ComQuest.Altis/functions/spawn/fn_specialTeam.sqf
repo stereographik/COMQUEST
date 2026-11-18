@@ -95,7 +95,10 @@ while _alive do {
             } else {
                 vehicles select { alive _x && { side group effectiveCommander _x == east || { _x getVariable ["CQ_hqId", -1] > -1 } }
                     && { _x != _v } && { !(_x isKindOf "Air") || { isTouchingGround _x } }
-                    && { damage _x > 0.15 || { !canMove _x && { _x isKindOf "LandVehicle" } } } && { _x distance2D (_home get "pos") < CQ_specialHqRange } }
+                    && { time > (_x getVariable ["CQ_fixSkipT", -1]) }
+                    // damaged, fried by our EMP strike, or stuck for another reason than an empty tank (fuel is the logistics' job)
+                    && { damage _x > 0.15 || { _x getVariable ["CQ_empHit", false] } || { !canMove _x && { _x isKindOf "LandVehicle" } && { fuel _x > 0 } } }
+                    && { _x distance2D (_home get "pos") < CQ_specialHqRange } }
             };
             if (_cands isNotEqualTo []) then {
                 _job = ([_cands, [], { _x distance2D _p }, "ASCEND"] call BIS_fnc_sortBy) select 0;
@@ -117,7 +120,18 @@ while _alive do {
                     { if (alive _x && { side group _x == east } && { damage _x > 0.05 }) then { _x setDamage 0; _n = _n + 1 } } forEach (_v nearEntities [["CAManBase"], 45]);
                     ["%1 treated %2 soldiers at grid %3", [_tag, _n, mapGridPosition _v]] call CQ_fnc_log;
                 } else {
-                    if (alive _job) then { _job setDamage 0; ["%1 repaired %2 at grid %3", [_tag, typeOf _job, mapGridPosition _job]] call CQ_fnc_log };
+                    if (alive _job) then {
+                        _job setDamage 0;
+                        private _emp = _job getVariable ["CQ_empHit", false];
+                        if (_emp) then {
+                            // EMP strike: engine, turret and gun back (setDamage 0), and the fuel the pulse drained
+                            [_job, (fuel _job) max CQ_empRepairFuel] remoteExec ["setFuel", _job];
+                            _job setVariable ["CQ_empHit", false, true];
+                        };
+                        // still unable to move after the fix: leave it for CQ_fixSkip s (no repair loop)
+                        [_job] spawn { params ["_j"]; sleep 2; if (alive _j && { !canMove _j }) then { _j setVariable ["CQ_fixSkipT", time + CQ_fixSkip] } };
+                        ["%1 repaired %2 at grid %3%4", [_tag, typeOf _job, mapGridPosition _job, ["", " (EMP damage)"] select _emp]] call CQ_fnc_log;
+                    };
                 };
                 _job = objNull;
             };

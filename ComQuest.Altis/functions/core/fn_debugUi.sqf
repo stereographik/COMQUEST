@@ -2,8 +2,8 @@
     CQ_fnc_debugUi  (client)  F3, or the scroll action "Debug panel"
     Who: the host or a logged-in admin (#login) only, also in debug missions (voted admins: no).
     Left: enemy HQ list (select one for the HQ buttons) and a status block.
-    (The HQ dashboard and inventory columns were removed; CQ_fnc_debugHqDash / CQ_fnc_debugHqInv
-    are kept but no longer called.)
+    Left of the panel: the selected HQ's dashboard (CQ_fnc_debugHqDash), with what it waits for
+    before colonising. (The inventory column stays off; CQ_fnc_debugHqInv is kept.)
     Right: buttons by category. Server commands go through CQ_fnc_debugCmd; a few are local
     (map overlays, god mode, arsenal). Toggles show their state in their label.
     Refreshes every 3 s while open.
@@ -52,6 +52,16 @@ _lt ctrlSetFontHeight (_L * 0.6);
 private _list = ["RscListBox", 9000, [_X + 0.015, _Y + _L * 6.4, _lw, _L * 4.8]] call _mk;
 _list ctrlSetFontHeight (_L * 0.62);
 
+// ---- dashboard column, left of the panel: the selected HQ (CQ_fnc_debugHqDash, every 3 s)
+private _DW = safeZoneW / 5.5;
+private _DX = _X - _DW;
+(["RscText", -1, [_DX, _Y, _DW, _H]] call _mk) ctrlSetBackgroundColor (((CQ_ui get "panel") select [0, 3]) + [0.92]);
+(["RscText", -1, [_DX, _Y, 0.004, _H]] call _mk) ctrlSetBackgroundColor (CQ_ui get "accent");
+private _dt = ["RscText", -1, [_DX + 0.015, _Y + 0.004, _DW - 0.03, _L * 1.1], "HQ DASHBOARD"] call _mk;
+_dt ctrlSetFont "PuristaMedium";
+_dt ctrlSetTextColor (CQ_ui get "accent");
+private _dash = ["RscStructuredText", 9002, [_DX + 0.015, _Y + _L * 1.3, _DW - 0.03, _H - _L * 1.5]] call _mk;
+_dash ctrlSetStructuredText parseText "<t size='0.85' color='#A6A381'>Select an HQ in the list to see its dashboard.</t>";
 _list ctrlAddEventHandler ["LBSelChanged", { ["list", call (uiNamespace getVariable "CQ_dbgSel")] remoteExecCall ["CQ_fnc_debugCmd", 2] }];
 
 uiNamespace setVariable ["CQ_dbgSel", {

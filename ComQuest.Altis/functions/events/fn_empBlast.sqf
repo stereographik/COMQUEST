@@ -17,7 +17,7 @@ private _kill = {
     params ["_v", ["_guns", false]];
     // 0.95: dead until repaired, but short of "destroyed" (a destroyed engine can set the vehicle on fire)
     { [_v, [_x, 0.95]] remoteExec ["setHitPointDamage", _v] } forEach (["HitEngine"] + (if (_guns) then { ["HitTurret", "HitGun"] } else { [] }));
-    if (_guns) then { [_v, 0] remoteExec ["setFuel", _v] };
+    if (_guns) then { [_v, 0] remoteExec ["setFuel", _v]; _v setVariable ["CQ_empHit", true, true] };   // enemy vehicle: its HQ's engineer team can repair it (CQ_fnc_specialTeam)
     [_v, false] remoteExec ["engineOn", _v];
     [_v, false] remoteExec ["setPilotLight", _v];
 };

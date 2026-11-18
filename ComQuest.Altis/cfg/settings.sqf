@@ -572,7 +572,7 @@ CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted
 CQ_activeStates = ["Inbound", "Helping", "Securing", "Installing", "Hold", "Holding", "WaitingReinf"];
 CQ_maxHqs = 4;                           // HQs alive at once
 CQ_aiEventSize = 20;                     // AI room an event (crash, hostage, EMP) needs under CQ_maxAI before it starts (CQ_fnc_aiRoom)
-CQ_maxAI = 120;                          // hidden safety limit: every enemy AI alive at once (crews included)
+CQ_maxAI = 150;                          // hidden safety limit: every enemy AI alive at once (crews included)
 CQ_maxInfantry = 80;                     // enemy foot soldiers alive at once (vehicle / heli / static crews not counted)
 CQ_carrierHqs = 6;                       // the carrier has supplies for this many CHILD HQs (splits) and re-insertions; the CQ_maxRoots roots are free
 CQ_carrierHqKm = 3000;                   // > 0: CQ_carrierHqs is set from the carrier site instead: one HQ per this many m
@@ -676,6 +676,8 @@ CQ_guardSkill = 0.55;
 // Destroyed objective (depot, fuel tanker, HMG tower): the whole site blows up (CQ_fnc_objBlast)
 CQ_blastCount = 5;                       // blasts after the big one at the centre (2-3 s)
 CQ_blastDmgR = 12;
+CQ_empRepairFuel = 0.5;                  // fuel an engineer team puts back in a vehicle drained by our EMP strike
+CQ_fixSkip = 600;                        // s an engineer team leaves a vehicle it could not get moving
 // Charge objectives (CQ_fnc_chargeHit): engineer charges needed. Depot: against or inside the Cargo House;
 // fuel tanker: set off INSIDE the hangar (no weapon damages either)
 CQ_chargeNeed = createHashMapFromArray [["Depot", 3], ["Fuel tanker", 2]];
@@ -1162,7 +1164,7 @@ CQ_magDormant = true;
 CQ_magDormantGap = 500;                  // m between two points (grid)
 CQ_magDormantWake = 500;                 // m: a ground enemy this close wakes the point
 CQ_magDormantBase = 2500;                // m: no point this close to the player base
-CQ_magDormantMax = 6;                    // woken Darters alive at once, at most
+CQ_magDormantMax = 10;                   // woken Darters alive at once, at most
 CQ_magDormantAlt = 250;                  // m flight altitude (sensor ~600 m)
 CQ_magDormantFlee = 0.9;                 // flee until this fraction of the sensor range from the enemy (> 80 %)
 CQ_magDormantReplace = 60;               // s before a destroyed woken Darter is replaced
