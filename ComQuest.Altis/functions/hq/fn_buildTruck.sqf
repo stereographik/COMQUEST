@@ -189,6 +189,8 @@ switch (_mode) do {
         private _release = {
             if (count _e > 0 && { alive (_e get "veh") }) then {
                 (_e get "veh") setVariable ["CQ_btKaj", nil, true];
+                (_e get "veh") setVariable ["CQ_kajLeashed", false];
+                { _x enableAI "AUTOTARGET"; _x enableAI "TARGET" } forEach crew (_e get "veh");
                 _e set ["state", "toPark"]; _e set ["nearT", -1];
                 (_e get "veh") flyInHeight 110;
                 (_e get "veh") doMove (getPosATL (_e get "pad"));
@@ -242,6 +244,31 @@ switch (_mode) do {
                 [_g] call CQ_fnc_clearWaypoints;
                 _g setBehaviour "AWARE"; _g setCombatMode "RED";
                 _ptT = 0;
+            };
+            // on a leash: it secures CQ_btKajLeash m around the truck and nothing pulls it away.
+            // Drones (MAGPIE's Darters, the WASP...) are forgotten as targets at every check; farther
+            // than the leash (joining, or dragged off by a fight) it stops picking targets and flies back
+            if (count _e > 0 && { alive (_e get "veh") }) then {
+                private _v = _e get "veh";
+                private _g = group _v;
+                private _cm = effectiveCommander _v;
+                if (!isNull _cm) then { { _g forgetTarget _x } forEach ((_cm targets [true, 3000]) select { _x isKindOf "UAV" || { unitIsUAV _x } }) };
+                private _dk = _v distance2D _ctr;
+                if (_dk > CQ_btKajLeash) then {
+                    if !(_v getVariable ["CQ_kajLeashed", false]) then {
+                        _v setVariable ["CQ_kajLeashed", true];
+                        { _x disableAI "AUTOTARGET"; _x disableAI "TARGET" } forEach crew _v;
+                        ["HQ #%1: build truck Kajman %2 m from the truck, flies back to it (targets ignored)", [_id, round _dk]] call CQ_fnc_log;
+                    };
+                    _v flyInHeight 80;
+                    _v doMove (_ctr getPos [150, random 360]);
+                    _ptT = time + 15;
+                } else {
+                    if (_v getVariable ["CQ_kajLeashed", false] && { _dk < 0.8 * CQ_btKajLeash }) then {
+                        _v setVariable ["CQ_kajLeashed", false];
+                        { _x enableAI "AUTOTARGET"; _x enableAI "TARGET" } forEach crew _v;
+                    };
+                };
             };
             // scouting: a new point CQ_btKajRange around the truck every CQ_btKajEvery s
             if (count _e > 0 && { time >= _ptT }) then {
