@@ -27,13 +27,16 @@ CQ_magDrawEnemies = {
         ctrlPosition _map params ["_cx", "_cy", "_cw", "_ch"];
         private _tl = _map ctrlMapScreenToWorld [_cx, _cy];
         private _br = _map ctrlMapScreenToWorld [_cx + _cw, _cy + _ch];
-        private _h = CQ_rangeCell / 2;
+        // zoomed out: the coarse grid (CQ_rangeCoarse m cells, far fewer to draw)
+        private _coarse = ctrlMapScale _map > CQ_rangeCoarseScale;
+        private _h = [CQ_rangeCell, CQ_rangeCoarse] select _coarse;
+        _h = _h / 2;
         {
             _y params ["_x0", "_y0", "_cnt", "_cone"];
             if (_x0 + _h < (_tl select 0) || { _x0 - _h > (_br select 0) } || { _y0 - _h > (_tl select 1) } || { _y0 + _h < (_br select 1) }) then { continue };
             private _a = (CQ_rangeAlpha select 0) + (CQ_rangeAlpha select 1) * ((_cnt min 4) - 1) + ([0, CQ_rangeAlpha select 2] select (_cone > 0));
             _map drawRectangle [[_x0, _y0], _h, _h, 0, [_cr, _cg, _cb, _a min 0.6], "#(argb,8,8,3)color(1,1,1,1)"];
-        } forEach (missionNamespace getVariable ["CQ_rangeAgg", createHashMap]);
+        } forEach (missionNamespace getVariable [["CQ_rangeAgg", "CQ_rangeAggC"] select _coarse, createHashMap]);
     };
     // enemies in sight: one icon per vehicle (crew share it), regular size, no text
     private _sz = CQ_enemyIconPx * CQ_mapIconScale;

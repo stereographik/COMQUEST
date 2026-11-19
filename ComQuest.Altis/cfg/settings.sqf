@@ -1220,6 +1220,9 @@ CQ_tigrisGuide = 0.5;                    // share of launches forced onto the dr
 // sight through terrain + buildings, vegetation ignored, within his weapon range), fire cone darker
 CQ_rangeMap = true;
 CQ_rangeCell = 25;                       // m per cell
+CQ_rangeCoarse = 100;                    // m per cell of the zoomed-out grid (16 fine cells): far fewer squares to draw
+CQ_rangeCoarseScale = 0.06;              // map zoom (ctrlMapScale) above which the coarse grid is drawn (bigger = more zoomed out)
+CQ_rangeCoarseMin = 4;                   // a coarse cell shows when at least this many of its 16 fine cells are in range
 CQ_rangeOf = createHashMapFromArray [["rifle", 400], ["mg", 700], ["launcher", 500], ["sniper", 900], ["vehicle", 1000], ["static", 1200]];   // m by weapon
 CQ_rangeCone = 45;                       // deg either side of where the enemy faces = fire cone
 CQ_rangeMove = 40;                       // m an enemy must move before his range is recomputed

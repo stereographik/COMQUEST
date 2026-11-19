@@ -13,6 +13,8 @@
 */
 if (!hasInterface || { !CQ_rangeMap }) exitWith {};
 CQ_rangeAgg = createHashMap;
+CQ_rangeAggC = createHashMap;      // the same grid in CQ_rangeCoarse m cells, drawn when the map is zoomed out
+CQ_rangeDirty = false;
 CQ_rangeUnits = createHashMap;     // hashValue -> [unit, pos, dir, cells [[key, x, y, bearing]], range]
 
 private _rangeOf = {
@@ -42,6 +44,7 @@ private _apply = {
         _a set [3, (_a select 3) + _sgn * _cone];
         if ((_a select 2) <= 0) then { CQ_rangeAgg deleteAt _k } else { CQ_rangeAgg set [_k, _a] };
     } forEach _cells;
+    CQ_rangeDirty = true;
 };
 // vegetation (Arma model names start with t_ for trees, b_ for bushes): ignored, like ArmaFly
 private _isVeg = {
@@ -104,6 +107,25 @@ private _isVeg = {
             CQ_rangeUnits set [_k, _rec];
             [_rec, 1] call _apply;
         } forEach _vis;
+        // coarse grid for the zoomed-out map: a coarse cell shows when at least CQ_rangeCoarseMin of
+        // its fine cells are in range; it keeps the most enemies and the fire cone of its cells
+        if (CQ_rangeDirty) then {
+            CQ_rangeDirty = false;
+            private _cc = CQ_rangeCoarse;
+            private _g = createHashMap;
+            {
+                _y params ["_x0", "_y0", "_cnt", "_cone"];
+                private _ix = floor (_x0 / _cc); private _iy = floor (_y0 / _cc);
+                private _k = _ix * 100000 + _iy;
+                private _a = _g getOrDefault [_k, [(_ix + 0.5) * _cc, (_iy + 0.5) * _cc, 0, 0, 0]];
+                _a set [2, (_a select 2) max _cnt];
+                _a set [3, (_a select 3) + ([0, 1] select (_cone > 0))];
+                _a set [4, (_a select 4) + 1];
+                _g set [_k, _a];
+            } forEach CQ_rangeAgg;
+            CQ_rangeAggC = createHashMap;
+            { if ((_y select 4) >= CQ_rangeCoarseMin) then { CQ_rangeAggC set [_x, [_y select 0, _y select 1, _y select 2, [0, 1] select ((_y select 3) >= (_y select 4) / 2)]] } } forEach _g;
+        };
         uiSleep 1;
     };
 };
