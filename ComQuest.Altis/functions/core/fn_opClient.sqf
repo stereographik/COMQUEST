@@ -61,10 +61,14 @@ private _diff = {
             _x params ["_st", "_txt"];
             if (_st == 0) then { continue };                       // greyed: nothing to say yet
             private _lb = _txt call _label;
-            private _or = _oRows param [_forEachIndex, [0, ""]];
+            // the same line in the old list, by its name (lines appear in the middle once spotted)
+            private _oi = _oRows findIf { ((_x select 1) call _label) == _lb };
+            private _or = if (_oi < 0) then { _oRows param [_forEachIndex, [0, ""]] } else { _oRows select _oi };
+            if (_oi < 0 && { ((_or select 1) call _label) != _lb }) then { _or = [0, ""] };
             _or params ["_ost", "_otxt"];
             private _olb = _otxt call _label;
             switch (true) do {
+                case (_ost == 0 && { _st == 2 }): { _out pushBack format ["%1 destroyed (%2)", _one, _lb] };
                 case (_ost == 0): { _out pushBack format ["New %1 (%2)", _one, _lb] };
                 case (_st == 2 && { _ost != 2 }): { _out pushBack format ["%1 destroyed (%2)", _one, _lb] };
                 case ((_txt find "found at") > -1 && { (_otxt find "found at") == -1 }): { _out pushBack format ["%1 found (%2)", _one, _lb] };   // spotted by a drone

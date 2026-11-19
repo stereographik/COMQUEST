@@ -53,6 +53,10 @@ switch (_mode) do {
         _g setVariable ["CQ_event", true];
         _g setGroupIdGlobal ["SABOTAGE"];
         _g setVariable ["CQ_sabotage", true];
+        private _team = CQ_sabTeams - (_s get "left") + 1;
+        _g setVariable ["CQ_sabTeam", _team];
+        // OPERATION briefing: a side-event line as soon as the team is on the island
+        [format ["sab%1", _team], 1, format ["Sabotage team %1/%2 (hunts our drones)", _team, CQ_sabTeams], "on the island"] call CQ_fnc_opSide;
         {
             private _u = _g createUnit [_x, _pos, [], 6, "NONE"];
             [[_u]] call CQ_fnc_unitPrep;
@@ -64,6 +68,8 @@ switch (_mode) do {
                 private _who = [_i, _k] select (isNull _i);
                 if (({ alive _x } count units group _u) > 0) exitWith {};
                 ["SABOTAGE: team wiped out at grid %1", [mapGridPosition _u]] call CQ_fnc_log;
+                private _tm = (group _u) getVariable ["CQ_sabTeam", 1];
+                [format ["sab%1", _tm], 2, format ["Sabotage team %1/%2 (hunts our drones)", _tm, CQ_sabTeams], "wiped out", _who] call CQ_fnc_opSide;
                 ["sabDown", []] call CQ_fnc_say;
                 if (!isNull _who && { isPlayer _who }) then {
                     private _pg = group _who;

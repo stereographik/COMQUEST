@@ -128,8 +128,10 @@ private _withObj = [_hqs select { (_x get "installations") isNotEqualTo [] }, []
         private _k = (_n getOrDefault [_type, 0]) + 1;
         _n set [_type, _k];
         private _total = { (_x getVariable ["CQ_objType", ""]) == _type } count (_h get "installations");
-        // spotted by a drone (CQ_spotted, on the players' map): named after its HQ, with its grid
+        // spotted by a drone (CQ_spotted, on the players' map): named after its HQ, with its grid.
+        // An objective is listed once spotted (or once it is down): nothing unseen in the list
         private _spot = _o getVariable ["CQ_spotted", false];
+        if (!_spot && { (_c select 1) < 0 }) then { continue };
         private _nm = [_name, [_h get "id"] call CQ_fnc_objName] select _spot;
         private _label = if (_total > 1 || { _type == "AA" }) then { format ["%1  #%2", _nm, _k] } else { _nm };
         private _rows = _objRows getOrDefault [_type, []];
@@ -143,7 +145,7 @@ private _objSteps = _objTypes apply {
     private _rows = _objRows getOrDefault [_type, []];
     private _down = { (_x select 0) == 2 } count _rows;
     private _cnt = count _rows;
-    if (_rows isEqualTo []) then { _rows = [[0, "none found yet"]] };
+    if (_rows isEqualTo []) then { _rows = [[0, "none spotted yet"]] };
     [_cnt > 0 && { _down == _cnt }, _title, format ["%1 / %2 destroyed", _down, _cnt], _rows, _icon]
 };
 
