@@ -123,6 +123,7 @@ private _withObj = [_hqs select { (_x get "installations") isNotEqualTo [] }, []
         };
         // fallback (died before the briefing first saw it): the HQ's last known attacker
         if ((_c select 1) < 0 && { !alive _o || { _o getVariable ["CQ_neutral", false] } }) then { _c set [1, time]; _c set [2, [_h getOrDefault ["lastKiller", objNull]] call _squad] };
+        if ((_c select 0) == "") then { _c set [0, _o getVariable ["CQ_objType", ""]] };
         private _type = _c select 0;
         if (_type == "") then { continue };
         private _k = (_n getOrDefault [_type, 0]) + 1;
@@ -205,6 +206,8 @@ private _steps = [
 ];
 _steps = (_steps select [0, 2]) + _objSteps + (_steps select [2, count _steps]);
 if !(_steps isEqualTo (missionNamespace getVariable ["CQ_opPub", []])) then {
+    // what the players' page now lists (shown sections and their live lines), to check it from the .rpt
+    ["OPERATION page: %1", [(_steps apply { format ["%1 %2/%3", _x select 1, { (_x select 0) > 0 } count (_x select 3), count (_x select 3)] }) joinString " | "]] call CQ_fnc_log;
     CQ_opPub = _steps;
     publicVariable "CQ_opPub";
 };

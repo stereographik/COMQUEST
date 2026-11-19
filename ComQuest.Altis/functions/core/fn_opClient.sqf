@@ -115,5 +115,9 @@ while { true } do {
         ["COMHAT", _msg] call CQ_fnc_storyUi;
         systemChat format ["[COMHAT] %1", _msg];
     };
+    // the map just opened: redraw the page (a page already on screen does not refresh by itself)
+    private _mapOn = visibleMap;
+    if (_mapOn && { !(missionNamespace getVariable ["CQ_opMapWas", false]) } && { alive player }) then { call _render };
+    CQ_opMapWas = _mapOn;
     sleep 2;
 };
