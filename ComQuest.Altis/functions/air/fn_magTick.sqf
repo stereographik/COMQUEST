@@ -719,26 +719,8 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
             { if ((_row select _forEachIndex) > 0) then { _cells = _cells + format ["   <img size='0.75' image='%1'/> %2", _x, _row select _forEachIndex] } } forEach _ico;
             _rich = _rich + format ["<br/><t size='0.78' font='PuristaMedium' color='#A6A381'>%1</t><t size='0.8' color='#F2F1DF'>%2</t>", _x, _cells];
         } forEach _order;
-        // every enemy vehicle identified and still alive, by GROUND / AIR:
-        // [type] [hdg:heading when spotted] [spd:speed when spotted]
-        private _vehs = (values CQ_magSeen) select { alive (_x select 0) && { (_x select 4) != "inf" } };
-        _vehs = [_vehs, [], { _x select 1 }] call BIS_fnc_sortBy;
-        {
-            _x params ["_title", "_list"];
-            if (_list isEqualTo []) then { continue };
-            _rich = _rich + format ["<br/><t size='0.72' font='PuristaMedium' color='#918C3B'>%1 (%2)</t>", _title, count _list];
-            {
-                (_x param [6, [0, 0]]) params ["_hdg", "_spd"];
-                private _h = str (_hdg mod 360);
-                while { count _h < 3 } do { _h = "0" + _h };     // 3 digits: 045
-                _rich = _rich + format ["<br/><t size='0.72' color='#F2F1DF'>[%1] </t><t size='0.72' color='#A6A381'>[hdg:%2] [spd:%3 km/h]</t>",
-                    getText (configOf (_x select 0) >> "displayName"), _h, _spd];
-            } forEach (_list select [0, CQ_magReportVehMax]);
-            if (count _list > CQ_magReportVehMax) then { _rich = _rich + format ["<br/><t size='0.7' color='#A6A381'>+%1 more</t>", count _list - CQ_magReportVehMax] };
-        } forEach [
-            ["GROUND", _vehs select { (_x select 4) != "air" }],
-            ["AIR", _vehs select { (_x select 4) == "air" }]
-        ];
+        // the vehicle list stays on the tablet (MAGPIE REPORT, U twice): the notice only points to it
+        _rich = _rich + "<br/><t size='0.72' font='PuristaMedium' color='#918C3B'>Check stats (U twice).</t>";
         // photo grid under the report: "<ph>id:class,...</ph>" (read by CQ_fnc_storyClient)
         if (CQ_magPhotoPend isNotEqualTo []) then {
             _rich = _rich + "<ph>" + ((CQ_magPhotoPend apply { format ["%1:%2", _x select 0, _x select 1] }) joinString ",") + "</ph>";
