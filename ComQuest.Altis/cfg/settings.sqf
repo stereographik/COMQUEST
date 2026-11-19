@@ -504,7 +504,7 @@ CQ_testMagDirect = false;                // TEST ONLY, set false before merging 
 
 // --- Enemy root insertions --------------------------------------------------
 CQ_maxRoots = 1;                         // free root insertions in a campaign: the beachhead, then one more after CQ_rootInterval (at once if the island is empty)
-CQ_rootCapBonus = 20;                    // root insertions may go this far above CQ_maxInfantry (reinforcements alone can fill the cap)
+CQ_rootCapBonus = 20;                    // root insertions may go this far above CQ_maxAI (reinforcements alone can fill the cap)
 CQ_helpWaves = false;                     // a root wave first guards the least built unfinished HQ, then founds its own HQ near it
 CQ_helpMaxTime = 900;                    // s: a help wave leaves after this even if the HQ is still not built
 CQ_helpSiteDist = [2000, 4000];          // m: its own HQ this far from the HQ it helped, on the side away from our base
@@ -580,7 +580,7 @@ CQ_maxHqs = 4;                             // HQs alive at once
 CQ_aiEventSize = 20;                     // AI room an event (crash, hostage, EMP) needs under CQ_maxAI before it starts (CQ_fnc_aiRoom)
 CQ_maxAI = 150;                          // hidden safety limit: every enemy AI alive at once (crews included)
 CQ_censusEvery = 600;                    // .rpt census of units / groups by side, kind and HQ (s)
-CQ_maxInfantry = 80;                     // enemy foot soldiers alive at once (vehicle / heli / static crews not counted)
+CQ_maxInfantry = 80;                     // NOT USED for waves any more (ONE CAP: CQ_maxAI; the garrison target sizes the infantry). Still shown in the census / debug
 CQ_crewTrim = true;                      // lighter CSAT crews (CQ_fnc_crewKeep): armour without commander, aircraft without an unarmed copilot
 CQ_crewTrimFakeWeapons = ["FakeWeapon", "Laserdesignator_mounted", "Laserdesignator_pilotCamera", "CMFlareLauncher", "SmokeLauncher"];   // not real weapons for that test
 CQ_carrierHqs = 4;                       // the carrier has supplies for this many CHILD HQs (splits) and re-insertions; the CQ_maxRoots roots are free

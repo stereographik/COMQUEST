@@ -62,7 +62,7 @@ if (_assault) then {
     };
 };
 ["Radio / network", alive (_hq get "radio") && { !(_hq getOrDefault ["isolated", false]) }, ["isolated", "radio down"] select !alive (_hq get "radio")] call _gate;
-["AI room for a wave", _ai <= CQ_maxAI - CQ_waveSize && { _infAll <= CQ_maxInfantry - CQ_waveSize }, format ["inf %1/%2, all %3/%4", _infAll, CQ_maxInfantry - CQ_waveSize, _ai, CQ_maxAI - CQ_waveSize]] call _gate;
+["AI room for a wave", _ai <= CQ_maxAI - CQ_waveSize, format ["AI %1/%2 (refill to the garrison target ignores it)", _ai, CQ_maxAI - CQ_waveSize]] call _gate;
 ["Garrison (target + split)", _nInf >= CQ_garrisonTarget + CQ_splitSize, format ["%1 / %2 (keeps %3, sends %4); wants %5 now", _nInf, CQ_garrisonTarget + CQ_splitSize, CQ_garrisonTarget, CQ_splitSize, _hq getOrDefault ["wantInf", CQ_garrisonTarget]]] call _gate;
 private _st2 = _hq get "state";
 private _nw = (_hq getOrDefault ["nextWaveT", 0]) - time;

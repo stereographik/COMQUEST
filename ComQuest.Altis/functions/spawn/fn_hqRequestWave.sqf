@@ -10,7 +10,8 @@ private _id = _hq get "id";
 // GARRISON TARGET: refilling an HQ up to CQ_garrisonTarget always goes (caps ignored, the wave
 // brings only what it is short of); the extra CQ_splitSize for a split waits for room under the caps
 private _have = [(_hq get "infantry")] call CQ_fnc_aliveCount;
-private _capFull = (call CQ_fnc_enemyCount) > CQ_maxAI - CQ_waveSize || { (call CQ_fnc_enemyInfantry) > CQ_maxInfantry - CQ_waveSize };
+// ONE CAP (2026-11-19): every enemy AI alive (CQ_maxAI); how much of it is infantry is the garrison target's job
+private _capFull = (call CQ_fnc_enemyCount) > CQ_maxAI - CQ_waveSize;
 if (_capFull && { _have < CQ_garrisonTarget } && { (_hq get "buildDone") }) then {
     _hq set ["waveNeed", ((CQ_garrisonTarget - _have) max CQ_waveMin) min CQ_waveMax];
     ["HQ #%1: caps full, but %2 / %3 infantry: refill wave of %4 goes anyway", [_id, _have, CQ_garrisonTarget, _hq get "waveNeed"]] call CQ_fnc_log;
@@ -19,7 +20,7 @@ if (_capFull && { _have < CQ_garrisonTarget } && { (_hq get "buildDone") }) then
 if (_capFull) exitWith {
     _hq set ["state", "Holding"];
     _hq set ["nextWaveT", time + 60];
-    ["HQ #%1: wave postponed, cap (infantry %2/%3, all AI %4/%5)", [_id, call CQ_fnc_enemyInfantry, CQ_maxInfantry, call CQ_fnc_enemyCount, CQ_maxAI]] call CQ_fnc_log;
+    ["HQ #%1: wave postponed, AI cap (%2/%3)", [_id, call CQ_fnc_enemyCount, CQ_maxAI]] call CQ_fnc_log;
 };
 // nGD: an HQ cut off from the network (own tower down, or no path to the carrier trunk) gets no wave
 if ((_hq get "buildDone") && { !alive (_hq get "radio") || { _hq getOrDefault ["isolated", false] } }) exitWith {

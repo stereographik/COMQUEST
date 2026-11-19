@@ -24,9 +24,9 @@ if (CQ_rootsLaunched >= CQ_maxRoots) then {
 if (CQ_rootsLaunched >= CQ_maxRoots && { !_paid }) exitWith {};
 if (!_paid && { serverTime < CQ_nextRootTime } && { _active || { CQ_rootsLaunched == 0 } || { serverTime - CQ_islandEmptyT < CQ_reinsertDelay } }) exitWith {};
 // root insertions have their own allowance above the cap (HQ reinforcements alone can fill it)
-if ((call CQ_fnc_enemyInfantry) > CQ_maxInfantry + CQ_rootCapBonus - 30) exitWith {
+if ((call CQ_fnc_enemyCount) > CQ_maxAI + CQ_rootCapBonus - 30) exitWith {
     CQ_nextRootTime = serverTime + 60;
-    ["Root insertion postponed: infantry cap (%1/%2)", [call CQ_fnc_enemyInfantry, CQ_maxInfantry + CQ_rootCapBonus]] call CQ_fnc_log;
+    ["Root insertion postponed: AI cap (%1/%2)", [call CQ_fnc_enemyCount, CQ_maxAI + CQ_rootCapBonus]] call CQ_fnc_log;
 };
 
 if !([CQ_waveSize, "root insertion", CQ_rootCapBonus] call CQ_fnc_aiRoom) exitWith { CQ_nextRootTime = serverTime + 60 };
