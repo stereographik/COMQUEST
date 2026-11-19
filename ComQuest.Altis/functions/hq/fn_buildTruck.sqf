@@ -179,8 +179,12 @@ switch (_mode) do {
         private _id = _hq get "id";
         _hq set ["kajLoop", true];
         private _e = createHashMap;
-        private _nextT = time + 90;  // when a (new) Kajman may be fetched (90 s: the landing's own Kajman joins the fleet first)
-        private _carrierT = time + 240;  // first fetch: the carrier sends one only if no fleet Kajman frees up within 240 s
+        // every active build truck has its Kajman: borrowed at once (the previous HQ's first, then the
+        // nearest), else the carrier flies one in after CQ_btKajCarrierWait s
+        // (a root HQ waits 90 s first: the landing's own Kajman joins the fleet)
+        private _par = _hq getOrDefault ["parent", -1];
+        private _nextT = time + ([0, 90] select (_par == -1));
+        private _carrierT = _nextT + CQ_btKajCarrierWait;
         private _ptT = 0;
         private _release = {
             if (count _e > 0 && { alive (_e get "veh") }) then {
@@ -208,17 +212,20 @@ switch (_mode) do {
             };
             private _free = [];
             if (count _e == 0 && { time >= _nextT }) then {
+                // any Kajman not already escorting a truck nor rearming / leaving (a patrol, a hunt or a
+                // wander is broken off for it), with ammo and fuel
                 _free = CQ_air select {
-                    alive (_x get "veh") && { (typeOf (_x get "veh")) find "O_Heli_Attack_02" == 0 } && { (_x get "state") in ["parked", "toPark", "patrolling"] }
+                    alive (_x get "veh") && { (typeOf (_x get "veh")) find "O_Heli_Attack_02" == 0 } && { (_x get "state") in ["parked", "toPark", "patrolling", "hunting", "wander", "fleet"] }
                     && { ([_x get "veh"] call CQ_fnc_vehAmmoLevel) >= CQ_airLowAmmo } && { fuel (_x get "veh") >= CQ_airLowFuel }   // not the one just sent to rearm
                 };
             };
             // no free one yet and the landing's escorts may still be on their way to the fleet: wait
             if (count _e == 0 && { time >= _nextT } && { _free isNotEqualTo [] || { time >= _carrierT && { ["kajman", format ["build truck escort, HQ #%1", _id]] call CQ_fnc_carrierSpend } } }) then {
                 if (_free isNotEqualTo []) then {
-                    _free = [_free, [], { (_x get "veh") distance2D _ctr }, "ASCEND"] call BIS_fnc_sortBy;
+                    // the previous HQ's (the parent's) first, then the nearest
+                    _free = [_free, [], { ([0, 1e6] select ((_x get "homeId") != _par)) + ((_x get "veh") distance2D _ctr) }, "ASCEND"] call BIS_fnc_sortBy;
                     _e = _free select 0;
-                    ["HQ #%1: fleet Kajman %2 teams with the build truck (%3 m away)", [_id, groupId (_e get "grp"), round ((_e get "veh") distance2D _ctr)]] call CQ_fnc_log;
+                    ["HQ #%1: fleet Kajman %2 (from HQ #%4, was %5) teams with the build truck (%3 m away)", [_id, groupId (_e get "grp"), round ((_e get "veh") distance2D _ctr), _e get "homeId", _e get "state"]] call CQ_fnc_log;
                 } else {
                     private _from = if (!isNil "CQ_carrierPos") then { CQ_carrierPos getPos [300, CQ_carrierPos getDir _ctr] } else { _ctr getPos [5000, random 360] };
                     ([CQ_btKajClass, [_from select 0, _from select 1, 0], _from getDir _ctr, false, CQ_heightEscort] call CQ_fnc_spawnHeli) params ["_h", "_hg"];

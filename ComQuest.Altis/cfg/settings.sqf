@@ -566,7 +566,8 @@ CQ_btEscortMax = 3;                      // one escort more per truck the HQ los
 CQ_btKajClass = "O_Heli_Attack_02_dynamicLoadout_F";   // Kajman teaming with the build truck while an HQ is built
 CQ_btKajRange = [100, 500];              // m around the truck: its scouting points
 CQ_btKajEvery = [30, 40];                // s between two scouting points
-CQ_btKajDelay = 300;                     // s before another Kajman joins after one is lost
+CQ_btKajDelay = 30;                      // s before another Kajman joins after one is lost (every active build truck has one)
+CQ_btKajCarrierWait = 60;                // s: no Kajman to borrow by then -> the carrier flies one in
 CQ_hqMarkerRadius = 400;                 // approximate circle shown to players
 CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted", "SatchelCharge_Remote_Ammo", "SatchelCharge_Remote_Ammo_Scripted"];
 
