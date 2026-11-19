@@ -19,8 +19,14 @@ switch (_mode) do {
         if (!alive _h || { !isNull attachedTo _h } || { vehicle _h != _h } || { !isNil { player getVariable "CQ_hstCarrying" } }) exitWith {};
         player setVariable ["CQ_hstCarrying", _h];
         _h setVariable ["CQ_hstCarrier", player, true];
-        player action ["SwitchWeapon", player, player, 299];   // weapon on the back
-        player playMoveNow "AcinPknlMstpSnonWnonDnon_AcinPercMrunSnonWnonDnon";
+        // as Quicksilver does it (Apex Framework): walking only (the carry moves have no proper run or
+        // sprint: the legs would stop), straight into the standing carry pose for everyone; with no
+        // weapon in hand, a short rifle stance first or the pose may not take
+        player forceWalk true;
+        [] spawn {
+            if ((currentWeapon player) == "") then { [player, "amovpercmstpsraswrfldnon"] remoteExec ["switchMove", 0]; sleep 0.1 };
+            [player, "acinpercmstpsnonwnondnon"] remoteExec ["switchMove", 0];
+        };
         _h attachTo [player, [0.4, -0.1, -1.25], "LeftShoulder"];
         [_h, 194] remoteExec ["setDir", 0];
         [_h, _carriedAnim] remoteExec ["switchMove", 0];
@@ -43,7 +49,8 @@ switch (_mode) do {
         player setVariable ["CQ_hstCarrying", nil];
         { player removeAction _x } forEach (player getVariable ["CQ_hstActs", []]);
         player setVariable ["CQ_hstActs", nil];
-        if (alive player && { vehicle player == player }) then { player switchMove "" };
+        player forceWalk false;
+        if (alive player && { vehicle player == player }) then { [player, ""] remoteExec ["switchMove", 0] };   // back to normal moves, for everyone
         if (isNull _h) exitWith {};
         _h setVariable ["CQ_hstCarrier", objNull, true];
         if (attachedTo _h == player) then {

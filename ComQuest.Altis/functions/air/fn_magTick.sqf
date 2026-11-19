@@ -706,39 +706,19 @@ if (time - CQ_magReportT >= CQ_magReportEvery) then {
         // "outside known AOs" last
         private _out = "Outside known AOs";
         if (_out in _order) then { _order = (_order - [_out]) + [_out] };
-        private _ico = [
-            "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa",
-            "\A3\ui_f\data\map\vehicleicons\iconCar_ca.paa",
-            "\A3\ui_f\data\map\vehicleicons\iconHelicopter_ca.paa"
-        ];
+        // two lines: what is new (HQ news, then new vehicle types), and every contact MAGPIE knows still alive
+        private _disc = _news apply { _x select [0, count _x - 1] };      // HQ news, no final dot
+        private _types = [];
+        { if (alive _x && { !(_x isKindOf "CAManBase") }) then { _types pushBackUnique getText (configOf _x >> "displayName") } } forEach _newObjs;
+        _disc append _types;
+        if (_disc isEqualTo []) then { _disc = [format ["%1 infantry", _new]] };
+        private _alive = (values CQ_magSeen) select { alive (_x select 0) };
+        private _cnt = { params ["_k"]; { (_x select 4) == _k } count _alive };
+        private _nAir = ["air"] call _cnt;
+        private _nInf = ["inf"] call _cnt;
         private _rich = "<rich>";
-        { _rich = _rich + format ["<br/><t size='0.8' color='#F2F1DF'>%1</t>", _x] } forEach _news;
-        {
-            private _row = _tab get _x;
-            private _cells = "";
-            { if ((_row select _forEachIndex) > 0) then { _cells = _cells + format ["   <img size='0.75' image='%1'/> %2", _x, _row select _forEachIndex] } } forEach _ico;
-            _rich = _rich + format ["<br/><t size='0.78' font='PuristaMedium' color='#A6A381'>%1</t><t size='0.8' color='#F2F1DF'>%2</t>", _x, _cells];
-        } forEach _order;
-        // every enemy vehicle identified and still alive, by GROUND / AIR:
-        // [type] [hdg:heading when spotted] [spd:speed when spotted]
-        private _vehs = (values CQ_magSeen) select { alive (_x select 0) && { (_x select 4) != "inf" } };
-        _vehs = [_vehs, [], { _x select 1 }] call BIS_fnc_sortBy;
-        {
-            _x params ["_title", "_list"];
-            if (_list isEqualTo []) then { continue };
-            _rich = _rich + format ["<br/><t size='0.72' font='PuristaMedium' color='#918C3B'>%1 (%2)</t>", _title, count _list];
-            {
-                (_x param [6, [0, 0]]) params ["_hdg", "_spd"];
-                private _h = str (_hdg mod 360);
-                while { count _h < 3 } do { _h = "0" + _h };     // 3 digits: 045
-                _rich = _rich + format ["<br/><t size='0.72' color='#F2F1DF'>[%1] </t><t size='0.72' color='#A6A381'>[hdg:%2] [spd:%3 km/h]</t>",
-                    getText (configOf (_x select 0) >> "displayName"), _h, _spd];
-            } forEach (_list select [0, CQ_magReportVehMax]);
-            if (count _list > CQ_magReportVehMax) then { _rich = _rich + format ["<br/><t size='0.7' color='#A6A381'>+%1 more</t>", count _list - CQ_magReportVehMax] };
-        } forEach [
-            ["GROUND", _vehs select { (_x select 4) != "air" }],
-            ["AIR", _vehs select { (_x select 4) == "air" }]
-        ];
+        _rich = _rich + format ["<br/><t size='0.8' font='PuristaMedium' color='#A6A381'>Discovered: </t><t size='0.8' color='#F2F1DF'>%1</t>", _disc joinString ", "];
+        _rich = _rich + format ["<br/><t size='0.8' font='PuristaMedium' color='#A6A381'>Records: </t><t size='0.8' color='#F2F1DF'>air: %1 | ground: %2 | inf: %3</t>", _nAir, count _alive - _nAir - _nInf, _nInf];
         // photo grid under the report: "<ph>id:class,...</ph>" (read by CQ_fnc_storyClient)
         if (CQ_magPhotoPend isNotEqualTo []) then {
             _rich = _rich + "<ph>" + ((CQ_magPhotoPend apply { format ["%1:%2", _x select 0, _x select 1] }) joinString ",") + "</ph>";

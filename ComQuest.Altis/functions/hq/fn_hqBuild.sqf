@@ -6,7 +6,9 @@
     Offsets are [right, forward] metres in the HQ's own frame (rotated by its "dir").
       1 3 AA pits   2 HMG watchtower   3 radio tower (they can communicate)
       4 supply depot + field supply truck   5 fuel tanker
-      6 helipad + parked QRF helicopter, command building, sandbag ring (gaps front and back)
+      6 command post (Django's HQ model) + helipad with the parked QRF helicopter
+    Every stage puts up its Eden model around the key object (CQ_fnc_compoPlace, cfg\compositions.sqf)
+    and registers its guard posts (CQ_fnc_guardSite, manned by CQ_fnc_guardTick while a player is near).
     The 7 objectives (depot, radio tower, fuel tanker, 3 AA pits, HMG tower) each stand on their
     own site anywhere CQ_objMinR..CQ_objMaxR m from the command building, at least CQ_objMinGap m
     apart, on flat open ground (no trees, rocks or buildings) so players can reach them (the HMG
@@ -121,19 +123,33 @@ private _engineerOnly = {
         if (_ammo in CQ_engineerCharges && { _eng }) then { _dmg } else { damage _o };
     }];
 };
+// Destructible objectives (depot, fuel tanker, HMG tower): the whole site blows up when destroyed (CQ_fnc_objBlast)
+private _blastOn = {
+    params ["_obj", "_c", "_r"];
+    if (isNull _obj) exitWith {};
+    _obj setVariable ["CQ_hqId", _id];
+    _obj setVariable ["CQ_blast", [_c, _r]];
+    _obj addEventHandler ["Killed", {
+        params ["_o"];
+        if (_o getVariable ["CQ_blasted", false]) exitWith {};
+        _o setVariable ["CQ_blasted", true];
+        (_o getVariable ["CQ_blast", []]) params [["_c", getPosATL _o], ["_r", 15]];
+        [_o getVariable ["CQ_hqId", -1], _c, _r, _o] spawn CQ_fnc_objBlast;
+    }];
+};
 // Stage wait: the build truck (CQ_fnc_buildTruck) drives to the stage's site; the stage goes up
 // once it stopped within CQ_btStopDist, its squad got out and CQ_btSpawnDelay s passed. No truck
 // (destroyed, not landed yet): the build is frozen until the carrier's replacement arrives.
 // Safety: no progress for CQ_btStuck s -> new route, then a short hop onto free ground; a leg
 // longer than CQ_btLegMax s -> the truck is put at the stop. The debug panel skips the drive.
 private _truckWait = {
-    params ["_dest"];
+    params ["_dest", ["_stopD", CQ_btStopDist]];
     private _legT = -1; private _lastP = [0, 0, 0]; private _moveT = time; private _stuckN = 0;
     private _tr = objNull; private _frozen = false; private _frozenT = time;
     private _stop = {
         params ["_tr"];
-        private _p = (_dest getPos [CQ_btStopDist - 4, _dest getDir _tr]) findEmptyPosition [0, 40, typeOf _tr];
-        if (_p isEqualTo []) then { _p = _dest getPos [CQ_btStopDist - 4, _dest getDir _tr] };
+        private _p = (_dest getPos [_stopD - 4, _dest getDir _tr]) findEmptyPosition [0, 40, typeOf _tr];
+        if (_p isEqualTo []) then { _p = _dest getPos [_stopD - 4, _dest getDir _tr] };
         _tr setVelocity [0, 0, 0];
         _tr setPosATL [_p select 0, _p select 1, 0.3];
     };
@@ -169,7 +185,7 @@ private _truckWait = {
             _legT = time; _moveT = time; _lastP = getPosATL _tr; _stuckN = 0;
             _hq set ["btPhase", format ["to site %1/6", (_hq getOrDefault ["buildStage", 0]) + 1]];
         };
-        if (_tr distance2D _dest <= CQ_btStopDist) exitWith { true };
+        if (_tr distance2D _dest <= _stopD) exitWith { true };
         if (_tr distance2D _lastP > 5) then { _lastP = getPosATL _tr; _moveT = time };
         if (time - _moveT > CQ_btStuck) then {
             if (_stuckN == 0) then {
@@ -252,28 +268,58 @@ private _stage = {
     if (_sk != "") then { [_sk, [[_id] call CQ_fnc_objName], _hq] call CQ_fnc_say };
 };
 
+// Django's Eden models (CQ_compos, cfg\compositions.sqf): footprint of each, the build truck stops outside it
+private _cR = {
+    params ["_name"];
+    private _r = 6;
+    { private _o = _x select 1; _r = _r max (sqrt (((_o select 0) ^ 2) + ((_o select 1) ^ 2))) } forEach (CQ_compos getOrDefault [_name, []]);
+    _r + 8
+};
+private _hqR = ["hq"] call _cR;
+
 // Objective sites first: every installation goes on its own spot of the ring
 private _sites = call _sitesFor;
 _hq set ["objSites", _sites];
 
 // Stage 1 - 3 AA pits (air cover before anything else)
-[_sites select 3] call _truckWait;
+[_sites select 3, ["aaPit"] call _cR] call _truckWait;
 private _aaGroup = createGroup [east, true];
 {
     private _sp = _x;
-    private _aa = ["O_static_AA_F", _sp] call _placeAt;
+    private _aa = ["O_static_AA_F", _sp, 0, true] call _placeAt;
     if (!isNull _aa) then {
         private _ap = getPosATL _aa;
-        { ["Land_BagFence_Round_F", _ap getPos [2.6, _d + _x], _x + 180] call _placeAt } forEach [0, 120, 240];
+        // the pit model around it; its other gun spot gets a second AA (same pit: neutralised when both crews are dead)
+        private _guns = [_aa];
+        {
+            _x params ["_role", "_sp2", "_dir2"];
+            if (_role == "aa") then {
+                private _a2 = createVehicle ["O_static_AA_F", [0, 0, 0], [], 0, "CAN_COLLIDE"];
+                _a2 setDir _dir2; _a2 setPosATL _sp2;
+                (_hq get "objects") pushBack _a2;
+                _guns pushBack _a2;
+            };
+        } forEach (["aaPit", _ap, _d, _hq get "objects"] call CQ_fnc_compoPlace);
+        _aa setVariable ["CQ_pitGuns", _guns];
+        {
+            if (_x != _aa) then {
+                createVehicleCrew _x;
+                (crew _x) joinSilent _aaGroup;
+                { _x setVariable ["CQ_crewOf", _aa] } forEach crew _x;
+                [_x, 1] call CQ_fnc_vehAmmoInit;
+            };
+        } forEach _guns;
         createVehicleCrew _aa;
         _aa setVariable ["CQ_objType", "AA"];
         (_hq get "installations") pushBack _aa;
         (crew _aa) joinSilent _aaGroup;
-        // the pit is neutralised once its crew is dead: marker gone, counted as destroyed
+        // the pit is neutralised once the crews of both its guns are dead: marker gone, counted as destroyed
+        private _allCrew = [];
+        { _allCrew append (crew _x) } forEach _guns;
         { _x setVariable ["CQ_crewOf", _aa]; _x addEventHandler ["Killed", {
             params ["_u", "_k", "_i"];
             private _aa = _u getVariable ["CQ_crewOf", objNull];
-            if (isNull _aa || { _aa getVariable ["CQ_neutral", false] } || { ((crew _aa) findIf { alive _x }) > -1 }) exitWith {};
+            if (isNull _aa || { _aa getVariable ["CQ_neutral", false] } || { ((_aa getVariable ["CQ_pitGuns", [_aa]]) findIf { ((crew _x) findIf { alive _x }) > -1 }) > -1 }) exitWith {};
             _aa setVariable ["CQ_neutral", true, true];
             private _w = [_i, _k] select (isNull _i);
             if (!isNull _w && { !(_w isKindOf "CAManBase") }) then { _w = effectiveCommander _w };
@@ -282,8 +328,9 @@ private _aaGroup = createGroup [east, true];
             _aa lock 2;
             CQ_opNext = 0;
             ["AA pit at %1 neutralised (crew dead)", [mapGridPosition _aa]] call CQ_fnc_log;
-        }] } forEach crew _aa;
+        }] } forEach _allCrew;
         [_aa, 1] call CQ_fnc_vehAmmoInit;
+        [_hq, "aaPit", _ap, ["aaPit"] call _cR] call CQ_fnc_guardSite;
     };
 } forEach (_sites select [3, 3]);
 _aaGroup setBehaviour "AWARE";
@@ -292,10 +339,11 @@ _aaGroup setCombatMode "RED";
 [1, "3 AA pits"] call _stage;
 
 // Stage 2 - HMG watchtower on the west side (facing the player's side of the island)
-[_sites select 6] call _truckWait;
+[_sites select 6, ["hmgTower"] call _cR] call _truckWait;
 private _ta = CQ_hmgTowerDir - _d;
-private _tower = ["Land_Cargo_Patrol_V1_F", _sites select 6, _ta, true] call _placeAt;
+private _tower = ["Land_Cargo_Patrol_V3_F", _sites select 6, _ta, true] call _placeAt;
 if (!isNull _tower) then {
+    ["hmgTower", getPosATL _tower, getDir _tower, _hq get "objects"] call CQ_fnc_compoPlace;
     private _bp = _tower buildingPos 0;
     if (_bp isEqualTo [0, 0, 0]) then { _bp = (getPosATL _tower) vectorAdd [0, 0, 4.3] };
     private _hmg = createVehicle ["O_HMG_01_high_F", [0, 0, 0], [], 0, "CAN_COLLIDE"];
@@ -311,15 +359,21 @@ if (!isNull _tower) then {
     (_hq get "objects") pushBack _hmg;
     (_hq get "installations") pushBack _hmg;
     _hmg setVariable ["CQ_objType", "HMG tower"];
+    [_hmg, getPosATL _tower, ["hmgTower"] call _cR] call _blastOn;
     (_hq get "support") pushBack _tg;
     ["HQ #%1: HMG watchtower up at grid %2 (west side)", [_id, mapGridPosition _tower]] call CQ_fnc_log;
+    [_hq, "hmgTower", getPosATL _tower, ["hmgTower"] call _cR] call CQ_fnc_guardSite;
 };
 
 [2, "HMG watchtower"] call _stage;
 
 // Stage 3 - radio tower, so the HQ can talk to the network
-[_sites select 1] call _truckWait;
+[_sites select 1, ["radio"] call _cR] call _truckWait;
 private _radio = ["Land_TTowerBig_2_F", _sites select 1, 0, true] call _placeAt;
+private _termSpot = [];
+if (!isNull _radio) then {
+    { if ((_x select 0) == "term") then { _termSpot = _x } } forEach (["radio", getPosATL _radio, getDir _radio, _hq get "objects"] call CQ_fnc_compoPlace);
+};
 // the tower is never blown up: it is hacked by an engineer (CQ_fnc_towerHack) and becomes our relay
 _radio addEventHandler ["HandleDamage", {
     params ["_o", "", "", "_src", "", "", "_inst"];
@@ -334,10 +388,11 @@ _radio setVariable ["CQ_hackable", true, true];
 // the hack is done like defusing a bomb: on a field terminal at the tower's foot, it opens while
 // anyone works on it (an Engineer CQ_hackTime s, others CQ_hackSlowFactor times longer; interrupted if he moves away or is hit)
 if (!isNull _radio) then {
-    private _tp = (getPosATL _radio) getPos [6, (getPosATL _radio) getDir _c];
+    // the field terminal on the model's computer spot (else 6 m from the tower, HQ side)
+    private _tp = if (_termSpot isNotEqualTo []) then { _termSpot select 1 } else { (getPosATL _radio) getPos [6, (getPosATL _radio) getDir _c] };
     _tp = [_tp select 0, _tp select 1, 0];
     private _term = createVehicle ["Land_DataTerminal_01_F", _tp, [], 0, "CAN_COLLIDE"];
-    _term setDir ((_tp getDir (getPosATL _radio)) + 180);
+    _term setDir (if (_termSpot isNotEqualTo []) then { _termSpot select 2 } else { (_tp getDir (getPosATL _radio)) + 180 });
     _term setVectorUp surfaceNormal _tp;
     _term allowDamage false;
     _term setVariable ["CQ_tower", _radio, true];
@@ -363,24 +418,8 @@ if (!isNull _radio) then {
         ["(_this getVariable ['CQ_class', '']) != 'Engineer'", CQ_hackTime * CQ_hackSlowFactor, " (slow: not an engineer)"]
     ];
 };
-// heavily guarded: a squad of its own around the tower (scaled, out of the AI caps)
-if (!isNull _radio) then {
-    private _gg = createGroup [east, true];
-    _gg setGroupIdGlobal [format ["Tower guard %1", _id]];
-    private _n = (round (count CQ_towerGuard * ((missionNamespace getVariable ["CQ_scale", 1]) max 0.5))) min count CQ_towerGuard;
-    for "_i" from 0 to _n - 1 do {
-        private _p = (getPosATL _radio) getPos [12 + random 10, _i * 360 / _n];
-        private _u = _gg createUnit [CQ_towerGuard select _i, [_p select 0, _p select 1, 0], [], 0, "NONE"];
-        _u setSkill CQ_towerGuardSkill;
-        _u setVariable ["CQ_noCap", true, true];
-    };
-    [units _gg] call CQ_fnc_unitPrep;
-    _gg setBehaviour "AWARE"; _gg setCombatMode "RED";
-    _gg enableDynamicSimulation false;
-    [_gg, getPosATL _radio, 35] call BIS_fnc_taskDefend;
-    (_hq get "support") pushBack _gg;
-    ["HQ #%1: radio tower guarded by %2 men", [_id, count units _gg]] call CQ_fnc_log;
-};
+// guarded by posted men (CQ_fnc_guardSite / CQ_fnc_guardTick), there while a player is near
+if (!isNull _radio) then { [_hq, "radio", getPosATL _radio, ["radio"] call _cR] call CQ_fnc_guardSite };
 _radio setVariable ["CQ_objType", "Radio tower"];
 _radio setVariable ["CQ_hqId", _id];
 _hq set ["radio", _radio];
@@ -398,11 +437,16 @@ _radio addEventHandler ["Killed", {
 [3, "radio tower"] call _stage;
 
 // Stage 4 - supply depot + ammo boxes, field resupply truck
-[_sites select 0] call _truckWait;
-private _depot = ["Land_Cargo_House_V1_F", _sites select 0, 90, true] call _placeAt;
-if (!isNull _depot) then { { ["Box_East_Ammo_F", (getPosATL _depot) getPos [7, _d + 180 + _x]] call _placeAt } forEach [-25, 0, 25] };
-[_depot] call _engineerOnly;
+[_sites select 0, ["depot"] call _cR] call _truckWait;
+private _depot = ["Land_Cargo_House_V3_F", _sites select 0, 90, true] call _placeAt;
+if (!isNull _depot) then {
+    ["depot", getPosATL _depot, getDir _depot, _hq get "objects"] call CQ_fnc_compoPlace;
+    [_hq, "depot", getPosATL _depot, ["depot"] call _cR] call CQ_fnc_guardSite;
+};
+// depot: no weapon damage at all; CQ_chargeNeed engineer charges against it destroy it (CQ_fnc_chargeHit)
+if (!isNull _depot) then { _depot addEventHandler ["HandleDamage", { damage (_this select 0) }] };
 _depot setVariable ["CQ_objType", "Depot"];
+[_depot, getPosATL _depot, ["depot"] call _cR] call _blastOn;
 _depot setVariable ["CQ_hqId", _id];
 _hq set ["depot", _depot];
 _depot addEventHandler ["Killed", {
@@ -410,13 +454,15 @@ _depot addEventHandler ["Killed", {
     if (isNil "_hq" || { !((_hq get "state") in CQ_activeStates) }) exitWith {};   // fallen HQ: no score, no announce
     ["Supply depot destroyed", format ["HQ #%1 lost its %2 ammo: no more rearming there", _hq get "id", round (_hq get "stock")]] call CQ_fnc_announce;
     ["killDepot", [[_hq get "id"] call CQ_fnc_objName]] call CQ_fnc_say;
-    params ["", "_k", "_i"];
-    [[_i, _k] select (isNull _i), 50, "supply depot"] call CQ_fnc_scoreAdd;
+    params ["_o", "_k", "_i"];
+    private _who = [_i, _k] select (isNull _i);
+    if (isNull _who) then { _who = _o getVariable ["CQ_charger", objNull] };   // destroyed by the charge count
+    if (!isNull _who) then { [_who, 50, "supply depot"] call CQ_fnc_scoreAdd };
     _hq set ["stock", 0];
 }];
 
 // Field resupply truck: driven out to groups short of ammo (CQ_fnc_fieldResupply)
-private _ftruck = [CQ_fieldTruckClass, -18, -20, 90] call _place;
+private _ftruck = [CQ_fieldTruckClass, -_hqR, -12, 90] call _place;     // outside the HQ model
 if (!isNull _ftruck) then {
     _ftruck setAmmoCargo 0;
     _ftruck lock 2;
@@ -430,16 +476,36 @@ if (!isNull _ftruck) then {
 };
 _hq set ["fieldTruck", _ftruck];
 if (!isNull _depot) then { (_hq get "installations") pushBack _depot };
-[_depot, true] call _guardNow;
 _hq set ["stock", (_hq get "stockInit") min (_hq get "cap")];
 [4, format ["supply depot (%1 ammo), field supply truck", round (_hq get "stock")]] call _stage;
 
 // Stage 5 - fuel tanker
-[_sites select 2] call _truckWait;
-// Fuel tanker: holds the HQ's fuel. Any weapon can destroy it.
-private _tanker = [CQ_tankerClass, _sites select 2, 90] call _placeAt;
+[_sites select 2, ["fuel"] call _cR] call _truckWait;
+// Fuel tanker: holds the HQ's fuel, parked by the model's hangar. Destroyed by engineer charges set off inside the hangar.
+private _hangar = ["Land_Airport_01_hangar_F", _sites select 2, 90, true] call _placeAt;
+private _tanker = objNull;
+if (!isNull _hangar) then {
+    ["fuel", getPosATL _hangar, getDir _hangar, _hq get "objects"] call CQ_fnc_compoPlace;
+    // parked next to the hangar, not inside: its hitbox clips the hangar's and blows it up.
+    // A free spot clear of the model's tanks and walls; no damage for its first seconds.
+    private _hp = getPosATL _hangar;
+    private _tp = _hp findEmptyPosition [18, 50, CQ_tankerClass];
+    if (_tp isEqualTo []) then { _tp = _hp getPos [24, getDir _hangar] };
+    _tanker = createVehicle [CQ_tankerClass, [0, 0, 0], [], 0, "CAN_COLLIDE"];
+    _tanker allowDamage false;
+    _tanker setDir (getDir _hangar);
+    _tanker setPosATL [_tp select 0, _tp select 1, 0.2];
+    [_tanker] spawn { params ["_t"]; sleep 8; if (!isNull _t) then { _t allowDamage true } };
+    (_hq get "objects") pushBack _tanker;
+    [_hq, "fuel", getPosATL _hangar, ["fuel"] call _cR] call CQ_fnc_guardSite;
+} else {
+    _tanker = [CQ_tankerClass, _sites select 2, 90] call _placeAt;
+};
 if (!isNull _tanker) then {
     _tanker setFuelCargo 0;           // players can't refuel from it
+    // only engineer charges INSIDE the hangar destroy it (CQ_chargeNeed, CQ_fnc_chargeHit); no weapon damage
+    _tanker addEventHandler ["HandleDamage", { damage (_this select 0) }];
+    _tanker setVariable ["CQ_chargeZone", _hangar];
     _tanker lock 2;
     _tanker setVariable ["CQ_hqId", _id];
     _tanker addEventHandler ["Killed", {
@@ -451,19 +517,33 @@ if (!isNull _tanker) then {
 };
 _hq set ["tanker", _tanker];
 if (!isNull _tanker) then { _tanker setVariable ["CQ_objType", "Fuel tanker"] };
+[_tanker, [getPosATL _tanker, getPosATL _hangar] select (!isNull _hangar), ["fuel"] call _cR] call _blastOn;
 
 if (!isNull _tanker) then { (_hq get "installations") pushBack _tanker };
-[_tanker, true] call _guardNow;
 _hq set ["fuel", [(_hq get "fuelInit") min (_hq get "cap"), 0] select (isNull _tanker)];
 [5, format ["fuel tanker (%1 fuel)", round (_hq get "fuel")]] call _stage;
 
-// Stage 6 - helipad with the QRF helicopter, command building, sandbag ring
-[[-32, -32] call _at] call _truckWait;     // off the command post footprint (ring 13 m, helipad on the right)
-private _pad = ["Land_HelipadSquare_F", 26, 0, 0, true] call _place;
+// Stage 6 - command post (HQ model), helipad with the QRF helicopter
+[[-_hqR, -_hqR] call _at] call _truckWait;     // outside the HQ model
+private _bld = ["Land_Cargo_HQ_V3_F", 0, 0, 0, true] call _place;
+_hq set ["building", _bld];
+private _padSpot = [];
+if (!isNull _bld) then {
+    { if ((_x select 0) == "pad") then { _padSpot = _x } } forEach (["hq", getPosATL _bld, getDir _bld, _hq get "objects"] call CQ_fnc_compoPlace);
+};
+private _pad = objNull;
+if (_padSpot isNotEqualTo []) then {
+    _pad = createVehicle ["Land_HelipadSquare_F", [0, 0, 0], [], 0, "CAN_COLLIDE"];
+    _pad setDir (_padSpot select 2);
+    _pad setPosATL [(_padSpot select 1) select 0, (_padSpot select 1) select 1, 0];
+    (_hq get "objects") pushBack _pad;
+} else {
+    _pad = ["Land_HelipadSquare_F", _hqR, 0, 0, true] call _place;
+};
 _hq set ["pad", _pad];
 if (!isNull _pad) then {
     private _heli = createVehicle [CQ_hqHeliClass, getPosATL _pad, [], 0, "CAN_COLLIDE"];
-    _heli setDir _d;
+    _heli setDir (getDir _pad);
     private _hg = [_heli] call CQ_fnc_crewVehicle;
     _hg setBehaviour "SAFE";
     _heli engineOn false;
@@ -472,18 +552,9 @@ if (!isNull _pad) then {
     [_heli, _hg, "armed", _id, _pad, [], true] call CQ_fnc_airRegister;
     (_hq get "support") pushBack _hg;
 };
+if (!isNull _bld) then { [_hq, "hq", getPosATL _bld, _hqR - 8] call CQ_fnc_guardSite };
 
-private _bld = ["Land_Cargo_HQ_V1_F", 0, 0, 0, true] call _place;
-_hq set ["building", _bld];
-
-// sandbag ring, radius 13 m, gaps at the front (0) and back (180)
-for "_a" from 15 to 345 step 15 do {
-    if (_a != 180) then {
-        ["Land_BagFence_Long_F", 13 * sin _a, 13 * cos _a, _a + 90] call _place;
-    };
-};
-
-[6, "helipad with QRF helicopter, command building, sandbag ring"] call _stage;
+[6, "command post, helipad with QRF helicopter"] call _stage;
 
 // Recall the perimeter squads and set the garrison
 [_hq] call CQ_fnc_hqGarrison;

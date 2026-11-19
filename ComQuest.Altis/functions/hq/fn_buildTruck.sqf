@@ -144,6 +144,13 @@ switch (_mode) do {
                 ["Carrier out of build trucks", format ["HQ #%1: the carrier has no build truck left (%2 sent), its construction stays frozen", _id, CQ_btDrops]] call CQ_fnc_announce;
             };
         };
+        // La Lance: the carrier pays for the drop; no points left: the men carry the build in
+        if !(["truck", format ["build truck for HQ #%1", _id]] call CQ_fnc_carrierSpend) exitWith {
+            if !(_hq getOrDefault ["btNone", false]) then {
+                _hq set ["btNone", true];
+                ["HQ #%1: the carrier cannot pay a build truck, the stages go up without one", [_id]] call CQ_fnc_log;
+            };
+        };
         CQ_btDrops = CQ_btDrops + 1;
         _hq set ["btPending", true];
         private _esc = (_hq getOrDefault ["btKills", 0]) min CQ_btEscortMax;
@@ -207,7 +214,7 @@ switch (_mode) do {
                 };
             };
             // no free one yet and the landing's escorts may still be on their way to the fleet: wait
-            if (count _e == 0 && { time >= _nextT } && { _free isNotEqualTo [] || { time >= _carrierT } }) then {
+            if (count _e == 0 && { time >= _nextT } && { _free isNotEqualTo [] || { time >= _carrierT && { ["kajman", format ["build truck escort, HQ #%1", _id]] call CQ_fnc_carrierSpend } } }) then {
                 if (_free isNotEqualTo []) then {
                     _free = [_free, [], { (_x get "veh") distance2D _ctr }, "ASCEND"] call BIS_fnc_sortBy;
                     _e = _free select 0;

@@ -2,11 +2,11 @@
     CQ_fnc_debugUi  (client)  F3, or the scroll action "Debug panel"
     Who: the host or a logged-in admin (#login) only, also in debug missions (voted admins: no).
     Left: enemy HQ list (select one for the HQ buttons) and a status block.
-    (The HQ dashboard and inventory columns were removed; CQ_fnc_debugHqDash / CQ_fnc_debugHqInv
-    are kept but no longer called.)
+    Left of the panel: the selected HQ's dashboard (CQ_fnc_debugHqDash), with what it waits for
+    before colonising; built on request only (Refresh button, or picking an HQ). (The inventory column stays off; CQ_fnc_debugHqInv is kept.)
     Right: buttons by category. Server commands go through CQ_fnc_debugCmd; a few are local
     (map overlays, god mode, arsenal). Toggles show their state in their label.
-    Refreshes every 3 s while open.
+    Refreshed on request only: every button answer, the Refresh button, picking an HQ.
 */
 if (!hasInterface) exitWith {};
 if !(isServer || { (call BIS_fnc_admin) == 2 }) exitWith { hint "Debug panel: host or logged-in admin only" };
@@ -52,7 +52,20 @@ _lt ctrlSetFontHeight (_L * 0.6);
 private _list = ["RscListBox", 9000, [_X + 0.015, _Y + _L * 6.4, _lw, _L * 4.8]] call _mk;
 _list ctrlSetFontHeight (_L * 0.62);
 
-_list ctrlAddEventHandler ["LBSelChanged", { ["list", call (uiNamespace getVariable "CQ_dbgSel")] remoteExecCall ["CQ_fnc_debugCmd", 2] }];
+// ---- dashboard column, left of the panel: the selected HQ (CQ_fnc_debugHqDash, every 3 s)
+private _DW = safeZoneW / 5.5;
+private _DX = _X - _DW;
+(["RscText", -1, [_DX, _Y, _DW, _H]] call _mk) ctrlSetBackgroundColor (((CQ_ui get "panel") select [0, 3]) + [0.92]);
+(["RscText", -1, [_DX, _Y, 0.004, _H]] call _mk) ctrlSetBackgroundColor (CQ_ui get "accent");
+private _dt = ["RscText", -1, [_DX + 0.015, _Y + 0.004, _DW - 0.03, _L * 1.1], "HQ DASHBOARD"] call _mk;
+_dt ctrlSetFont "PuristaMedium";
+_dt ctrlSetTextColor (CQ_ui get "accent");
+private _dash = ["RscStructuredText", 9002, [_DX + 0.015, _Y + _L * 1.3, _DW - 0.03, _H - _L * 1.5]] call _mk;
+_dash ctrlSetStructuredText parseText "<t size='0.85' color='#A6A381'>Select an HQ in the list to see its dashboard.</t>";
+// on request only (no automatic refresh): this button, or picking an HQ in the list
+private _dr = ["RscButton", -1, [_DX + _DW - 0.105, _Y + 0.004, 0.09, _L], "Refresh"] call _mk;
+_dr ctrlAddEventHandler ["ButtonClick", { ["dash", call (uiNamespace getVariable "CQ_dbgSel")] remoteExecCall ["CQ_fnc_debugCmd", 2] }];
+_list ctrlAddEventHandler ["LBSelChanged", { ["dash", call (uiNamespace getVariable "CQ_dbgSel")] remoteExecCall ["CQ_fnc_debugCmd", 2] }];   // a new HQ picked: its dashboard
 
 uiNamespace setVariable ["CQ_dbgSel", {
     private _lb = (uiNamespace getVariable ["CQ_dbgDisplay", displayNull]) displayCtrl 9000;
@@ -68,7 +81,8 @@ private _cats = [
         ["Admin", [["Warn", "pWarn"], ["Mute 10 min", "pMute"], ["Send to base", "pBase"], ["Kick", "pKick"]]]
     ]],
     ["TELEPORTERS", [
-        ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Relay vehicle", "tpRelayVeh"], ["Log my position", "logPos"], ["Crash site", "tpCrash"], ["Hostage", "tpHst"], ["Outpost", "tpOp"], ["EMP", "tpEmp"], ["Base", "tpBase"]]]
+        ["Teleport", [["Near HQ", "tpHq"], ["Radio tower", "tpTower"], ["Build truck", "tpBt"], ["Relay vehicle", "tpRelayVeh"], ["Log my position", "logPos"], ["Crash site", "tpCrash"], ["Hostage", "tpHst"], ["Outpost", "tpOp"], ["EMP", "tpEmp"], ["Base", "tpBase"]]],
+        ["Objective", [["AA pit 1", "tpObj3"], ["AA pit 2", "tpObj4"], ["AA pit 3", "tpObj5"], ["HMG tower", "tpObj6"], ["Radio tower", "tpObj1"], ["Depot", "tpObj0"], ["Fuel", "tpObj2"], ["HQ centre", "tpObjC"]]]
     ]],
     ["MAP VISIBILITY", [
         ["Show", [["Enemies", "!mapEnemy"], ["Enemy states", "!mapStates"], ["Friendlies", "!mapFriend"], ["HQ sites", "!mapHq"], ["Tentacle", "!mapTnt"], ["EMP", "!mapEmp"]]]
@@ -254,11 +268,8 @@ call (uiNamespace getVariable "CQ_dbgToggleLabels");
             { private _k = _pc lbAdd (_x select 0); _pc lbSetData [_k, _x select 1]; if ((_x select 1) == _keep) then { _pc lbSetCurSel _k } } forEach _rows;
         };
         sleep 3;
-        // one refresh in flight at a time (the server's answer clears CQ_dbgPending): a busy server
-        // used to pile up dozens of unanswered dashboard requests
-        if (time - (missionNamespace getVariable ["CQ_dbgPending", -1e6]) > 15) then {
-            CQ_dbgPending = time;
-            ["list", call (uiNamespace getVariable ["CQ_dbgSel", { -1 }])] remoteExecCall ["CQ_fnc_debugCmd", 2];
-        };
+        // no automatic server refresh any more: a panel left open stalled the whole script engine
+        // (its answers piled up by the dozen). The list, status and dashboard come with every button
+        // answer, and with the Refresh button.
     };
 };

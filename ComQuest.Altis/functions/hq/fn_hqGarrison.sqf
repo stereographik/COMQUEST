@@ -109,7 +109,8 @@ if (isNull (_hq getOrDefault ["escort", grpNull]) && { alive (_hq get "commander
 };
 
 // Guard team on every objective site away from the command building, taken from the patrols
-// (never their leader, a group keeps at least 2 men)
+// (never their leader, a group keeps at least 2 men). 0 = off: the posted guards (CQ_fnc_guardTick) hold the sites
+if (CQ_objGuardSize > 0) then {
 {
     private _site = getPosATL _x;
     private _donor = ((_hq get "infantry") select { (_x getVariable ["CQ_role", ""]) == "patrol" && { ({ alive _x } count units _x) >= CQ_objGuardSize + 2 } }) param [0, grpNull];
@@ -123,6 +124,7 @@ if (isNull (_hq getOrDefault ["escort", grpNull]) && { alive (_hq get "commander
     _g enableDynamicSimulation CQ_dynSimGarrison;
     (_hq get "infantry") pushBack _g;
 } forEach ((_hq get "installations") select { alive _x && { (_x distance2D _c) > 80 } && { !(_x getVariable ["CQ_guarded", false]) } });   // sites guarded during the build keep their team
+};
 
 // Vehicles: armed ones patrol 400 m, the truck parks by the depot
 {

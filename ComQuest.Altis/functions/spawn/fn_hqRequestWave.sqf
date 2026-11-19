@@ -19,6 +19,11 @@ if ((_hq get "buildDone") && { !alive (_hq get "radio") || { _hq getOrDefault ["
     ["HQ #%1: %2, cannot call reinforcements", [_id, ["isolated from the network", "radio down"] select !alive (_hq get "radio")]] call CQ_fnc_log;
 };
 
+// La Lance: the carrier pays for the wave
+if !(["wave", format ["wave for HQ #%1", _id]] call CQ_fnc_carrierSpend) exitWith {
+    _hq set ["state", "Holding"];
+    _hq set ["nextWaveT", time + CQ_waveInterval];
+};
 _hq set ["state", "WaitingReinf"];
 _hq set ["stateT", time];
 _hq set ["waveResult", []];

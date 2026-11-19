@@ -48,7 +48,8 @@ private _cls = CQ_huntClasses apply {
     [_x, "O_Soldier_F"] select !(isClass _cfg && { getText (_cfg >> "DLC") == "" })
 };
 private _g = createGroup [east, true];
-_g setVariable ["CQ_noInfCap", true];   // outside the infantry cap (CQ_maxAI still counts it)
+_g setVariable ["CQ_noInfCap", true];   // an event: out of both caps (infantry and all-AI, CQ_fnc_enemyCount)
+_g setVariable ["CQ_event", true];
 CQ_huntGroup = _g;
 _g setGroupIdGlobal ["Spectre"];
 private _lz = (getPosATL leader _tg) getPos [(CQ_huntDropDist select 0) + random ((CQ_huntDropDist select 1) - (CQ_huntDropDist select 0)), random 360];

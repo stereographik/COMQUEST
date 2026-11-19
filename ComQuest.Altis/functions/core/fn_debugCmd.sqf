@@ -21,7 +21,7 @@ if !(_caller == 2 || { (admin _caller) == 2 }) exitWith {};     // host or logge
 private _p = (allPlayers select { owner _x == _caller }) param [0, objNull];
 private _hq = CQ_hqs getOrDefault [_id, createHashMap];
 private _msg = "";
-private _needHq = _cmd in ["btKill", "btNow", "tpBt", "hack", "tpTower", "next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq"];
+private _needHq = _cmd in ["btKill", "btNow", "tpBt", "hack", "tpTower", "next", "ammo", "fuel", "destroy", "killCmd", "capture", "tower", "depot", "wave", "tpHq", "tpObj0", "tpObj1", "tpObj2", "tpObj3", "tpObj4", "tpObj5", "tpObj6", "tpObjC"];
 
 if (_needHq && { count _hq == 0 }) then {
     _msg = "Select an HQ in the list first";
@@ -489,6 +489,28 @@ if (_needHq && { count _hq == 0 }) then {
                 };
             };
         };
+        // objective teleports: its site (built or not yet), CQ_dbgTpDist m out on the far side from the HQ
+        // objSites order (CQ_fnc_hqBuild): 0 depot, 1 radio, 2 fuel, 3-5 AA pits, 6 HMG tower
+        case "tpObj0"; case "tpObj1"; case "tpObj2"; case "tpObj3"; case "tpObj4"; case "tpObj5"; case "tpObj6"; case "tpObjC": {
+            private _k = _cmd select [5];
+            private _names = ["depot", "radio tower", "fuel", "AA pit 1", "AA pit 2", "AA pit 3", "HMG tower"];
+            private _sites = _hq getOrDefault ["objSites", []];
+            private _q = []; private _what = "centre";
+            if (_k == "C") then { _q = _hq get "pos" } else {
+                private _i = parseNumber _k;
+                _what = _names select _i;
+                if (_i < count _sites) then { _q = _sites select _i };
+            };
+            if (_q isEqualTo []) then { _msg = format ["HQ #%1: %2 site not chosen yet (the build has not started)", _id, _what] } else {
+                if (!isNull _p) then {
+                    private _c = _hq get "pos";
+                    private _t = if (_k == "C" || { _q distance2D _c < 1 }) then { _q getPos [CQ_dbgTpDist, random 360] } else { _q getPos [CQ_dbgTpDist, _c getDir _q] };
+                    [_p] remoteExec ["moveOut", _p];
+                    [_p, _t] spawn { params ["_p", "_t"]; sleep 0.5; _p setPosATL [_t select 0, _t select 1, 0] };
+                    _msg = format ["teleported %1 m from HQ #%2's %3", CQ_dbgTpDist, _id, _what];
+                };
+            };
+        };
         case "tpHq": {
             if (!isNull _p) then {
                 private _t = (_hq get "pos") getPos [CQ_dbgTpDist, random 360];
@@ -593,4 +615,6 @@ private _status = format ["<t size='0.85'>Act <t color='#918C3B'>%1</t>   |   ca
     (missionNamespace getVariable ["CQ_specialLeft", createHashMap]) getOrDefault ["engineer", "-"],
     [daytime, "HH:MM"] call BIS_fnc_timeToString, count allPlayers];
 
-[_rows, _msg, _status] remoteExec ["CQ_fnc_debugUiFill", _caller];
+// the HQ dashboard is built only on request (its Refresh button, or a new HQ picked in the list):
+// never on the 3 s refresh
+[_rows, _msg, _status, ["", [_hq] call CQ_fnc_debugHqDash] select (_cmd == "dash")] remoteExecCall ["CQ_fnc_debugUiFill", _caller];   // unscheduled: an answer never waits in the scheduler

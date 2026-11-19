@@ -45,7 +45,9 @@ for "_i" from 1 to 10 do {
 };
 if (_from isEqualTo []) then { _from = _hp getPos [CQ_hstGuerDist select 1, random 360] };
 private _gg = createGroup [east, true];
-_gg setVariable ["CQ_noInfCap", true];   // outside the infantry cap (CQ_maxAI still counts it)
+_gg setVariable ["CQ_noInfCap", true];   // an event: out of both caps (infantry and all-AI, CQ_fnc_enemyCount)
+_gg setVariable ["CQ_event", true];
+_gg setVariable ["CQ_eventPause", true];   // frozen while no player is within CQ_eventPauseR (CQ_fnc_eventPause)
 private _classes = [CQ_guerillaLeader] + ((CQ_guerillaClasses call BIS_fnc_arrayShuffle) select [0, _n - 1]);
 { [_gg, _from, _x, 10] call CQ_fnc_civArm } forEach _classes;
 [units _gg] call CQ_fnc_unitPrep;

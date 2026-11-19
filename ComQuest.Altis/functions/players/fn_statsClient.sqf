@@ -16,6 +16,16 @@ while { true } do {
         _last = player;
         _pos = getPosASL player;
         player addEventHandler ["Fired", { CQ_stShots = CQ_stShots + 1 }];
+        // demolition charges: where each one goes off is sent to the server (objectives that need N charges, CQ_fnc_chargeHit)
+        player addEventHandler ["Fired", {
+            params ["_u", "", "", "", "_ammo", "", "_proj"];
+            if (!(_ammo in CQ_engineerCharges) || { isNull _proj }) exitWith {};
+            _proj setVariable ["CQ_by", _u];
+            _proj addEventHandler ["Explode", {
+                params ["_p", "_pos"];
+                [ASLToAGL _pos, _p getVariable ["CQ_by", player]] remoteExec ["CQ_fnc_chargeHit", 2];
+            }];
+        }];
         player addEventHandler ["HandleHeal", {
             params ["_unit", "_healer"];
             if (!isNull _healer && { _healer != _unit } && { isPlayer _healer }) then {

@@ -71,7 +71,9 @@ _objs pushBack _crate;
 
 // ---- survivors: a sharp squad guarding the crate
 private _g = createGroup [east, true];
-_g setVariable ["CQ_noInfCap", true];   // outside the infantry cap (CQ_maxAI still counts it)
+_g setVariable ["CQ_noInfCap", true];   // an event: out of both caps (infantry and all-AI, CQ_fnc_enemyCount)
+_g setVariable ["CQ_event", true];
+_g setVariable ["CQ_eventPause", true];   // frozen while no player is within CQ_eventPauseR (CQ_fnc_eventPause)
 {
     private _u = _g createUnit [_x, _cp getPos [6 + random 12, random 360], [], 0, "NONE"];
     _u setSkill CQ_crashSkill;

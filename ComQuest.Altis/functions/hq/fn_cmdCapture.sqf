@@ -1,7 +1,7 @@
 /*
     CQ_fnc_cmdCapture  (server, from the hold action through remoteExec)
     ["capture", _commander, _player] call CQ_fnc_cmdCapture;
-    The enemy HQ commander surrenders: disarmed, captive, follows the capturing player's squad.
+    The enemy HQ commander surrenders: disarmed, captive, handcuffed and frozen on the spot (kneeling).
     His HQ counts its commander as gone (it can no longer expand), and his intel goes on the
     map: every HQ of his network (the radio tree: parents and children, starting
     from his own) gets an exact position marker for all players.
@@ -15,9 +15,12 @@ _cmd setVariable ["CQ_captured", true, true];
 _hq set ["cmdCaptured", true];
 removeAllWeapons _cmd;
 _cmd setCaptive true;
-_cmd enableAI "PATH";
-[_cmd] joinSilent (group _p);
+// handcuffed and frozen where he was taken: kneeling, hands behind his back, alone in his own group
+[_cmd] joinSilent (createGroup [civilian, true]);
 _cmd allowFleeing 0;
+{ _cmd disableAI _x } forEach ["MOVE", "PATH", "ANIM", "TARGET", "AUTOTARGET", "FSM", "AUTOCOMBAT"];
+doStop _cmd;
+[_cmd, "Acts_ExecutionVictim_Loop"] remoteExec ["switchMove", 0, _cmd];
 [_p, 80, "HQ commander captured"] call CQ_fnc_scoreAdd;
 
 // his network: BFS over active HQs within comms range

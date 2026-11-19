@@ -7,11 +7,25 @@ if (!isServer) exitWith {};
 if (!isNil "CQ_directorHandle") exitWith { ["Director already running"] call CQ_fnc_log };
 if (isNil "CQ_directorTasks") then { CQ_directorTasks = [] };
 
+// stall watchdog, unscheduled (it runs even when the scheduler is starved): the director has not
+// moved for CQ_scriptDumpStall s -> every running script is listed with its current file:line
+CQ_dirBeat = diag_tickTime; CQ_dirStallLogT = -1e6;
+addMissionEventHandler ["EachFrame", {
+    if (diag_tickTime - CQ_dirBeat < CQ_scriptDumpStall || { diag_tickTime - CQ_dirStallLogT < 60 }) exitWith {};
+    CQ_dirStallLogT = diag_tickTime;
+    private _h = createHashMap;
+    { private _f = (_x select 1) splitString "\/"; private _k = format ["%1 (%2:%3)", _x select 0, _f param [count _f - 1, "?"], _x select 3]; _h set [_k, (_h getOrDefault [_k, 0]) + 1] } forEach diag_activeSQFScripts;
+    private _l = (_h toArray false) apply { [_x select 1, _x select 0] };
+    _l sort false;
+    ["STALL: director silent for %1 s (fps %2). Scripts: %3", [round (diag_tickTime - CQ_dirBeat), round diag_fps, ((_l select [0, 40]) apply { format ["%1x %2", _x select 0, _x select 1] }) joinString " | "]] call CQ_fnc_log;
+}];
+
 CQ_directorHandle = [] spawn {
     ["Director started, tick %1 s, %2 task(s)", [CQ_tickSeconds, count CQ_directorTasks]] call CQ_fnc_log;
 
     while { true } do {
         private _t0 = diag_tickTime;
+        CQ_dirBeat = _t0;
 
         private _times = [];
         {
@@ -28,6 +42,7 @@ CQ_directorHandle = [] spawn {
                 [] call _code;
                 _times pushBack [diag_tickTime - _t1, _name];
             };
+            CQ_dirBeat = diag_tickTime;
         } forEach CQ_directorTasks;
 
         private _dt = diag_tickTime - _t0;
@@ -39,13 +54,14 @@ CQ_directorHandle = [] spawn {
             ["Slow tick: %1 s (slowest: %2) | scripts spawn %3 execVM %4 fsm %5 | fps %6 | units %7, groups %8",
                 [_dt toFixed 2, _top joinString ", ", _sp, _ex, _fsm, round diag_fps, count allUnits, count allGroups]] call CQ_fnc_log;
             // once a minute: which scripts are running (file:line, most common first)
-            if (time - (missionNamespace getVariable ["CQ_scriptDumpT", -1e6]) > 60 && { _sp > CQ_scriptDumpMin }) then {
+            // ...and on any stall (tick over CQ_scriptDumpStall s: the scheduler is starved), whatever the count
+            if (time - (missionNamespace getVariable ["CQ_scriptDumpT", -1e6]) > 60 && { _sp > CQ_scriptDumpMin || { _dt > CQ_scriptDumpStall } }) then {
                 CQ_scriptDumpT = time;
                 private _h = createHashMap;
                 { private _f = (_x select 1) splitString "\/"; private _k = format ["%1 (%2:%3)", _x select 0, _f param [count _f - 1, "?"], _x select 3]; _h set [_k, (_h getOrDefault [_k, 0]) + 1] } forEach diag_activeSQFScripts;
                 private _l = (_h toArray false) apply { [_x select 1, _x select 0] };
                 _l sort false;
-                ["Scripts running: %1", [((_l select [0, 8]) apply { format ["%1x %2", _x select 0, _x select 1] }) joinString " | "]] call CQ_fnc_log;
+                ["Scripts running: %1", [((_l select [0, [8, 40] select (_dt > CQ_scriptDumpStall)]) apply { format ["%1x %2", _x select 0, _x select 1] }) joinString " | "]] call CQ_fnc_log;
             };
         };
 

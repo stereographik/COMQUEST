@@ -23,6 +23,7 @@ if ((_veh emptyPositions "driver") > 0) then {
     _u moveInDriver _veh;
 };
 {
+    if !([_veh, _x] call CQ_fnc_crewKeep) then { continue };   // lighter crews: no armour commander, no unarmed copilot
     private _u = _g createUnit [_cls, getPosATL _veh, [], 5, "NONE"];
     _u moveInTurret [_veh, _x];
 } forEach (allTurrets [_veh, false]);

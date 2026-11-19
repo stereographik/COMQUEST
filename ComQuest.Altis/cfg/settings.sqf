@@ -21,6 +21,7 @@ CQ_directorAtomic = ["magpie", "magDormant", "link", "linkRepair"];
 CQ_directorAllAtomic = true;             // every director task runs in one go (unscheduled): its real cost, never starved by the
                                          // script scheduler (at low server FPS a time-sliced task could take minutes). Tasks never wait inside.   // director tasks run in one go (unscheduled), not time-sliced with every other script
 CQ_scriptDumpMin = 40;                   // slow tick with more spawned scripts than this: list them in the log (once a minute)
+CQ_scriptDumpStall = 20;                 // s: a tick this slow (or the director silent this long) means a starved scheduler: every running script is listed (file:line)
 
 // --- Player base (Altis International Airport) -----------------------------
 CQ_basePos = [14233.9, 16106.7, 0];     // centre of the keep (class change zone), inside CQ_basePerimeter
@@ -180,7 +181,7 @@ CQ_carrierSites = [
 ];
 CQ_carrierSiteForce = -1;                // >= 0: always this site (index in CQ_carrierSites), for tests
 CQ_rootInland = [1500, 4000];            // root insertions land this far inland from a coast point
-CQ_firstRootInland = [0, 400];           // the very first one: within 400 m of the site's paired first HQ position
+CQ_firstRootInland = [0, 1500];          // the very first one: within 1500 m of the site's paired first HQ position (it keeps CQ_siteCoastMargin from the sea)
 CQ_rootRetryDelay = 180;                 // s: a root insertion that put nobody on the ground is flown again at the same site
 CQ_rootCoastSpread = 4000;               // later ones: a coast point up to this far either side of the carrier's line to the island
 CQ_corridorAvoid = 3000;                 // m: once the corridor outpost has fallen, root waves land on a coast point at least about this far from it
@@ -502,9 +503,9 @@ CQ_magOrbitMove = 400;                   // m: their orbit follows WASP when it 
 CQ_testMagDirect = false;                // TEST ONLY, set false before merging to main: the two Sentinels fly straight to the first enemy HQ site instead of their search circuits
 
 // --- Enemy root insertions --------------------------------------------------
-CQ_maxRoots = 2;                         // free root insertions in a campaign: the beachhead, then one more after CQ_rootInterval (at once if the island is empty)
+CQ_maxRoots = 1;                         // free root insertions in a campaign: the beachhead, then one more after CQ_rootInterval (at once if the island is empty)
 CQ_rootCapBonus = 20;                    // root insertions may go this far above CQ_maxInfantry (reinforcements alone can fill the cap)
-CQ_helpWaves = true;                     // a root wave first guards the least built unfinished HQ, then founds its own HQ near it
+CQ_helpWaves = false;                     // a root wave first guards the least built unfinished HQ, then founds its own HQ near it
 CQ_helpMaxTime = 900;                    // s: a help wave leaves after this even if the HQ is still not built
 CQ_helpSiteDist = [2000, 4000];          // m: its own HQ this far from the HQ it helped, on the side away from our base
 CQ_helpLzOffset = 300;                   // m: its drop zone, from the helped HQ toward its own site
@@ -525,7 +526,7 @@ CQ_heightEscort = 150;                   // Orcas and Kajman above everything
 CQ_formationGap = 150;                   // lateral metres between transports
 
 // --- HQ sites and construction ---------------------------------------------
-CQ_siteRadius = 40;                      // flat, empty circle needed (the composition reaches ~31 m)
+CQ_siteRadius = 50;                      // flat, empty circle needed (Django's HQ model reaches ~48 m, a few props 56 m)
 CQ_objectClearance = 0.5;                // extra metres around each object's footprint
 CQ_lzClearance = 14;                     // free radius for a Taru landing / vehicle drop
 // Terrain objects that block a site, an object or an LZ
@@ -536,7 +537,7 @@ CQ_blockerTypes = ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "HOUSE", "BUIL
 CQ_siteBlockerTypes = CQ_blockerTypes - ["BUSH"];
 // Footprint radius (m) of each composition object, used for spacing checks
 CQ_objRadius = createHashMapFromArray [
-    ["Land_Cargo_Patrol_V1_F", 4],
+    ["Land_Cargo_Patrol_V1_F", 4], ["Land_Cargo_Patrol_V3_F", 4], ["Land_Cargo_HQ_V3_F", 8], ["Land_Cargo_House_V3_F", 3.5], ["Land_Airport_01_hangar_F", 12],
     ["Land_Cargo_HQ_V1_F", 8], ["Land_BagFence_Long_F", 1.6], ["Land_BagFence_Round_F", 1.5],
     ["Land_Cargo_House_V1_F", 3.5], ["Box_East_Ammo_F", 0.6], ["Land_TTowerBig_2_F", 3],
     ["Land_HelipadSquare_F", 5], ["O_static_AA_F", 1.2],
@@ -545,6 +546,7 @@ CQ_objRadius = createHashMapFromArray [
 CQ_siteMaxGradient = 0.15;
 CQ_siteNoPlayerRadius = 800;
 CQ_siteMinHqSpacing = 1500;
+CQ_siteCoastMargin = 1000;               // m: an HQ site keeps this far from the sea (CQ_fnc_findSite)
 // Build truck (CQ_fnc_buildTruck): no build timer any more, each stage goes up when the truck got there
 CQ_btTruckClass = "O_Truck_02_transport_F";   // Zamak: the first one comes with the root insertion's paradrop
 CQ_btSquad = ["O_Soldier_SL_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_engineer_F", "O_engineer_F", "O_Soldier_GL_F", "O_Soldier_F", "O_Soldier_F"];   // rides in the back
@@ -553,6 +555,7 @@ CQ_btStopDist = 20;                      // m from the stage's site: the truck s
 CQ_btSpawnDelay = 3;                     // s after the stop before the stage appears
 CQ_btBoardTime = 25;                     // s the squad gets to board before the truck leaves (near ones are put in)
 CQ_btStuck = 45;                         // s without moving 5 m: new route, then a short hop onto free ground
+CQ_btTripMax = 600;                      // s at most for the trip parent -> new site with the colonists: then put near the site
 CQ_btLegMax = 240;                       // s per leg at most: the truck is put at its stop (safety)
 CQ_btReplaceDelay = 300;                 // s before the carrier paradrops a replacement truck
 CQ_btMaxDrops = 16;                      // build trucks the carrier can paradrop in the whole game (replacements + new trucks for founding HQs)
@@ -570,12 +573,15 @@ CQ_engineerCharges = ["DemoCharge_Remote_Ammo", "DemoCharge_Remote_Ammo_Scripted
 // --- HQ lifecycle (realistic timings) ---------------------------------------
 // Securing -> Installing -> Hold -> WaitingReinf -> split (child HQ) -> Holding -> WaitingReinf ...
 CQ_activeStates = ["Inbound", "Helping", "Securing", "Installing", "Hold", "Holding", "WaitingReinf"];
-CQ_maxHqs = 4;                           // HQs alive at once
+CQ_maxHqs = 4;                             // HQs alive at once
 CQ_aiEventSize = 20;                     // AI room an event (crash, hostage, EMP) needs under CQ_maxAI before it starts (CQ_fnc_aiRoom)
-CQ_maxAI = 120;                          // hidden safety limit: every enemy AI alive at once (crews included)
+CQ_maxAI = 150;                          // hidden safety limit: every enemy AI alive at once (crews included)
+CQ_censusEvery = 600;                    // .rpt census of units / groups by side, kind and HQ (s)
 CQ_maxInfantry = 80;                     // enemy foot soldiers alive at once (vehicle / heli / static crews not counted)
-CQ_carrierHqs = 6;                       // the carrier has supplies for this many CHILD HQs (splits) and re-insertions; the CQ_maxRoots roots are free
-CQ_carrierHqKm = 3000;                   // > 0: CQ_carrierHqs is set from the carrier site instead: one HQ per this many m
+CQ_crewTrim = true;                      // lighter CSAT crews (CQ_fnc_crewKeep): armour without commander, aircraft without an unarmed copilot
+CQ_crewTrimFakeWeapons = ["FakeWeapon", "Laserdesignator_mounted", "Laserdesignator_pilotCamera", "CMFlareLauncher", "SmokeLauncher"];   // not real weapons for that test
+CQ_carrierHqs = 4;                       // the carrier has supplies for this many CHILD HQs (splits) and re-insertions; the CQ_maxRoots roots are free
+CQ_carrierHqKm = 0;                      // > 0: CQ_carrierHqs is set from the carrier site instead: one HQ per this many m
                                          // from the site's first HQ to our base (far beach = longer campaign), see CQ_fnc_carrierSetup
 CQ_carrierHqsRange = [2, 6];             // ...kept within [min, max]
 CQ_secureRadius = 1000;                  // squads post out to this perimeter before building
@@ -650,7 +656,7 @@ CQ_watchIdle = 180;                      // a patrolling squad standing still 3 
 CQ_objMinGap = 300;                      // HQ objectives (depot, radio tower, fuel tanker, 3 AA, HMG tower): at least this far from each other (relaxed if 7 never fit)
 CQ_objMinR = 250;                        // ...anywhere between this far from the command building
 CQ_objMaxR = 900;                        // ...and this far (inside the 1000 m AO circle)
-CQ_objClearR = 12;                       // ...on a spot with no tree, bush, rock, building or object within this radius
+CQ_objClearR = 18;                       // ...on a spot with no tree, bush, rock, building or object within this radius
 CQ_objMaxSlope = 0.2;                    // ...and flat: max height difference ratio over that radius (isFlatEmpty gradient)
 // Enemy HQ codenames (famous real operation names), one picked at random per HQ, never twice in a
 // game; messages and markers show "NAME (root)", "NAME (P1)"... (rank in the network, CQ_fnc_objName)
@@ -667,7 +673,29 @@ CQ_enemyCallsigns = ["Viper", "Talon", "Ghost", "Hammer", "Bandit", "Hawk", "Tan
     "Dead Walker", "Skull", "Xerxes", "Mad Dog", "Giant Killer", "Fatal"];
 CQ_cmdEscortClasses = ["O_recon_TL_F", "O_recon_F", "O_recon_M_F", "O_recon_medic_F"];   // elite squad always around each enemy HQ commander
 CQ_cmdEscortSkill = 0.8;
-CQ_objGuardSize = 2;                     // ...each site guarded by this many soldiers taken from the HQ patrols
+CQ_objGuardSize = 0;                     // ...each site guarded by this many soldiers taken from the HQ patrols (0: the posted guards below do it)
+// Posted guards (CQ_fnc_guardSite / CQ_fnc_guardTick): fixed posts on every site of an HQ, from Django's
+// models (tower tops and roofs first, then the rim). Out of the infantry cap; only there while a player is near
+CQ_guardCount = createHashMapFromArray [["hq", 5], ["radio", 4], ["depot", 4], ["fuel", 3], ["hmgTower", 2], ["aaPit", 2]];   // the HQ centre also has the commander + 4 escort
+CQ_guardClasses = ["O_Soldier_F", "O_Soldier_AR_F", "O_soldier_M_F", "O_Soldier_LAT_F", "O_Soldier_GL_F", "O_Soldier_TL_F"];
+CQ_guardSkill = 0.55;
+// Destroyed objective (depot, fuel tanker, HMG tower): the whole site blows up (CQ_fnc_objBlast)
+CQ_blastCount = 5;                       // blasts after the big one at the centre (2-3 s)
+CQ_blastDmgR = 12;
+CQ_eventPauseR = 1500;                   // m: event AI waiting in place (EMP, crash, hostage) is frozen while no player is this close
+CQ_empRepairFuel = 0.5;                  // fuel an engineer team puts back in a vehicle drained by our EMP strike
+CQ_fixSkip = 600;                        // s an engineer team leaves a vehicle it could not get moving
+// Charge objectives (CQ_fnc_chargeHit): engineer charges needed. Depot: against or inside the Cargo House;
+// fuel tanker: set off INSIDE the hangar (no weapon damages either)
+CQ_chargeNeed = createHashMapFromArray [["Depot", 3], ["Fuel tanker", 2]];
+CQ_chargeReach = 2;                      // m around the depot's box a charge still counts                       // m: each blast hurts everyone this close (more the closer)
+CQ_guardHuntR = 300;                     // m: every site but the AA pits sends half its guards hunting players within this radius (the other half hold in cover)
+CQ_guardSpawnR = 1500;                   // m: a player this close to an HQ -> its guards are at their posts
+CQ_guardDespawnR = 1800;                 // m: no player this close...
+CQ_guardDespawnDelay = 60;               // ...for this long -> the living guards are taken off (killed posts stay empty)
+// Django's Eden models (cfg\compositions.sqf, CQ_fnc_compoPlace)
+CQ_compoClearTypes = ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "WALL", "FENCE", "HIDE"];   // terrain objects hidden under a model
+CQ_compoLive = ["cargo_", "medevac", "hbarriertower", "hangar", "flag_", "radar", "ttower", "helipad"];   // keep simulation (buildings); the rest is static
 CQ_hmgTowerDir = 270;                    // HMG watchtower built when an HQ is finished: compass direction from the HQ (270 = west)
 CQ_hmgTowerDist = 45;                    // ...and distance
 // Enemy support teams: one medic team, one engineer team, dropped again after destruction
@@ -929,7 +957,7 @@ CQ_colonistShare = 0.7;                  // share of infantry leaving to found a
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_colonistWalkNear = 1000;              // the squad that walks counts as arrived once within this many m of the site
 CQ_minInfantryToExpand = 12;
-CQ_splitAge = 1200;                      // s: an HQ splits only once it has been built this long (20 min)
+CQ_splitAge = 180;                       // s of calm before every split: after the build ended AND with no player within CQ_secureRadius m of the HQ (CQ_fnc_hqTick)
 CQ_splitGap = 1200;                      // s: ...and then at most once per this (20 min)
 CQ_assaultAge = 900;                     // s: an HQ within CQ_assaultRange assaults the base only once built this long (15 min)
 CQ_frontWarnR = 5000;                    // m: CROSSROAD warns once when an HQ is built this close to the base
@@ -1143,7 +1171,7 @@ CQ_magDormant = true;
 CQ_magDormantGap = 500;                  // m between two points (grid)
 CQ_magDormantWake = 500;                 // m: a ground enemy this close wakes the point
 CQ_magDormantBase = 2500;                // m: no point this close to the player base
-CQ_magDormantMax = 6;                    // woken Darters alive at once, at most
+CQ_magDormantMax = 10;                   // woken Darters alive at once, at most
 CQ_magDormantAlt = 250;                  // m flight altitude (sensor ~600 m)
 CQ_magDormantFlee = 0.9;                 // flee until this fraction of the sensor range from the enemy (> 80 %)
 CQ_magDormantReplace = 60;               // s before a destroyed woken Darter is replaced
@@ -1262,3 +1290,44 @@ CQ_aiSqRing = [1100, 1500];              // m from the base centre (outside the 
 CQ_aiSqGap = 400;                        // m between two squads at spawn
 CQ_aiSqBlowR = 40;                       // m: the squad leader this close to an objective -> a charge is planted
 CQ_aiSqFuse = 20;                        // s before it goes off
+
+// ============================================================================================
+// LA LANCE (branch HQ_ROUTES): 1 root and 2 children on the line beachhead -> player base
+//   Port (the root, on the beach): supply flights land there; it only (re)builds the Relais
+//   Relais (child 1, CQ_lanceRelayFrac of the way): it only (re)builds the Tete; trucks go Port -> Relais -> Tete
+//   Tete de pont (child 2, CQ_lanceHeadFrac): the only one that moves forward (bond) and assaults the base
+//   The radio tree follows the chain: a Relais cut off isolates the Tete (no trucks, no waves). Nobody surrenders.
+//   A fallen Relais / Tete is rebuilt CQ_lanceRebuildDelay s later (Tete: halfway between the Relais and
+//   where it fell); every rebuild (and a re-landed Port) costs one of the carrier's CQ_carrierHqs reconstructions.
+//   Lance double: a Tete kept from moving twice in a row by players -> its next bonds take a side corridor.
+//   Maree: every reconstruction spent raises the tide one level (max 4): bigger, rarer waves, earlier assault.
+// ============================================================================================
+CQ_lanceOn = true;
+CQ_lanceRelayFrac = 1 / 3;               // Relais this share of the way from the beachhead to the base
+CQ_lanceHeadFrac = 2 / 3;                // Tete de pont, never closer to the base than CQ_assaultRange + 300 m
+CQ_lanceSnapR = 800;                     // m around the point on the line where the site is looked for
+CQ_lanceRebuildDelay = 300;              // s after a Relais / Tete fell before it is rebuilt
+CQ_lanceBondStock = 0.6;                 // the Tete moves forward only with this share of its ammo cap (and calm, CQ_splitGap)
+CQ_lanceHeadRequest = 0.5;              // the Tete de pont asks for a truck under this share of its cap, served by the Port first (straight convoy)
+CQ_lanceBondStep = 1 / 3;                // ...by this share of its distance to the base
+CQ_lanceDetour = 2000;                   // m sideways: the corridor of the Lance double
+CQ_lanceBlockedMax = 2;                  // bonds refused in a row because of players -> side corridor
+CQ_lanceTideMax = 4;
+// Economy: the carrier holds CQ_lanceBudget points (CQ_carrierLeft / CQ_carrierHqs) and pays for all it sends
+// (CQ_fnc_carrierSpend). The acts (60 / 30 / 0 %) and the tide (one level per CQ_lanceTideStep spent) follow it.
+// It cannot pay even a supply flight any more -> ALL-IN: every surviving ground group attacks the base (CQ_fnc_lanceAllIn);
+// hold and you win.
+CQ_lanceBudget = 1000;
+CQ_lanceCost = createHashMapFromArray [
+    ["wave", 40],                        // reinforcement wave
+    ["flight", 20],                      // supply flight (ammo + fuel) to the Port
+    ["truck", 60],                       // build truck paradropped
+    ["kajman", 50],                      // Kajman flown in from the carrier (build truck escort)
+    ["position", 100],                   // new Relais / Tete / bond
+    ["rebuild", 200]                     // a fallen Relais / Tete rebuilt, a fallen Port re-landed
+];
+CQ_lanceTideStep = 0.25;                 // one tide level each time the carrier loses this share
+CQ_lanceThinkEvery = 60;                 // s: an HQ with nothing better to do checks split / bond / assault on its own (no wave needed)
+CQ_lanceTideSoldiers = 2;                // per tide level: soldiers added to every wave
+CQ_lanceTideInterval = 0.25;             // per tide level: wave interval x (1 + this)
+CQ_lanceTideAssault = 180;               // per tide level: s taken off CQ_assaultAge

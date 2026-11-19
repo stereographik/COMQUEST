@@ -4,6 +4,7 @@
 */
 call compile preprocessFileLineNumbers "cfg\settings.sqf";
 call compile preprocessFileLineNumbers "cfg\story.sqf";
+call compile preprocessFileLineNumbers "cfg\compositions.sqf";   // Django's Eden models (HQ, objectives, outpost)
 call compile preprocessFileLineNumbers "cfg\version.sqf";
 call compile preprocessFileLineNumbers "cfg\guide.sqf";
 call compile preprocessFileLineNumbers "cfg\rules.sqf";
