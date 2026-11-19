@@ -7,7 +7,16 @@
 params ["_hq"];
 private _id = _hq get "id";
 
-if ((call CQ_fnc_enemyCount) > CQ_maxAI - CQ_waveSize || { (call CQ_fnc_enemyInfantry) > CQ_maxInfantry - CQ_waveSize }) exitWith {
+// GARRISON TARGET: refilling an HQ up to CQ_garrisonTarget always goes (caps ignored, the wave
+// brings only what it is short of); the extra CQ_splitSize for a split waits for room under the caps
+private _have = [(_hq get "infantry")] call CQ_fnc_aliveCount;
+private _capFull = (call CQ_fnc_enemyCount) > CQ_maxAI - CQ_waveSize || { (call CQ_fnc_enemyInfantry) > CQ_maxInfantry - CQ_waveSize };
+if (_capFull && { _have < CQ_garrisonTarget } && { (_hq get "buildDone") }) then {
+    _hq set ["waveNeed", ((CQ_garrisonTarget - _have) max CQ_waveMin) min CQ_waveMax];
+    ["HQ #%1: caps full, but %2 / %3 infantry: refill wave of %4 goes anyway", [_id, _have, CQ_garrisonTarget, _hq get "waveNeed"]] call CQ_fnc_log;
+    _capFull = false;
+};
+if (_capFull) exitWith {
     _hq set ["state", "Holding"];
     _hq set ["nextWaveT", time + 60];
     ["HQ #%1: wave postponed, cap (infantry %2/%3, all AI %4/%5)", [_id, call CQ_fnc_enemyInfantry, CQ_maxInfantry, call CQ_fnc_enemyCount, CQ_maxAI]] call CQ_fnc_log;

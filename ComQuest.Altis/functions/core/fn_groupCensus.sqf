@@ -73,7 +73,7 @@ private _players = { isPlayer _x } count allUnits;
     [_kinds, _kind, _n, 1] call _add;
 
     // infantry the way CQ_fnc_enemyInfantry counts it
-    private _inf = { !(_x getVariable ["CQ_outpost", false]) && { !(_x getVariable ["CQ_noCap", false]) } && { !(_g getVariable ["CQ_noInfCap", false]) } && { vehicle _x == _x || { (assignedVehicleRole _x) param [0, ""] == "cargo" } } } count _live;
+    private _inf = { !(_x getVariable ["CQ_outpost", false]) && { !(_x getVariable ["CQ_noCap", false]) } && { !(_g getVariable ["CQ_noInfCap", false]) } && { !((_g getVariable ["CQ_role", ""]) in ["guerilla", "escort"]) } && { private _r = (assignedVehicleRole _x) param [0, ""]; (vehicle _x == _x && { !(_r in ["driver", "turret"]) }) || { _r == "cargo" } } } count _live;
     if (_inf > 0) then { [_infKinds, _kind, _inf, 1] call _add };
 
     (_g getVariable ["CQ_cenOwn", [-1, ""]]) params ["_ot", "_otag"];

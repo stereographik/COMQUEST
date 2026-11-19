@@ -11,6 +11,7 @@
         CQ_transportPickRange, else on foot; one squad of each move always walks
       3 those who stay are redispatched around their own HQ (fresh patrol loops)
 */
+if (!CQ_balanceOn) exitWith {};   // garrison target: each HQ fills its own garrison (waves), no squads moved between HQs
 private _forced = CQ_balanceForceT > 0 && { time > CQ_balanceForceT };
 if (!_forced && { time < CQ_balanceNext }) exitWith {};
 CQ_balanceNext = time + CQ_balanceInterval;

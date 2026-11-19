@@ -658,6 +658,7 @@ CQ_civKits = createHashMapFromArray [
     ["marksman", ["srifle_DMR_01_F",    "10Rnd_762x54_Mag", 6, "optic_DMS"]],
     ["medic",    ["arifle_Katiba_C_F",  "30Rnd_65x39_caseless_green", 5, "", "", "", 0, [["FirstAidKit", 3]]]]
 ];
+CQ_balanceOn = false;                    // false (garrison target): squads are no longer evened out between HQs (it emptied HQ P1, 2026-11-19)
 CQ_balanceInterval = 60;                 // every minute, infantry is evened out over the fully built HQs
 CQ_balanceMargin = 6;                    // only when an HQ is this many soldiers off the average
 CQ_balanceNewBonus = 8;                  // an HQ still securing / building counts this many soldiers short: helped first
