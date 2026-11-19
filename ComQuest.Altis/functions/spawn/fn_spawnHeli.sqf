@@ -15,6 +15,9 @@ if ((toUpper _class) find "O_" != 0) then {
     _grp = [_heli] call CQ_fnc_crewVehicle;
 };
 
+// lighter crews: an unarmed copilot is taken off (CQ_fnc_crewKeep)
+{ private _u = _heli turretUnit _x; if (!isNull _u && { !([_heli, _x] call CQ_fnc_crewKeep) }) then { deleteVehicle _u } } forEach (allTurrets [_heli, false]);
+
 _heli setPosASL [_pos select 0, _pos select 1, (getTerrainHeightASL _pos max 0) + _height];
 _heli setDir _dir;
 _heli setVelocityModelSpace [0, 40, 0];
