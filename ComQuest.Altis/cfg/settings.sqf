@@ -575,6 +575,7 @@ CQ_activeStates = ["Inbound", "Helping", "Securing", "Installing", "Hold", "Hold
 CQ_maxHqs = 4;                             // HQs alive at once
 CQ_aiEventSize = 20;                     // AI room an event (crash, hostage, EMP) needs under CQ_maxAI before it starts (CQ_fnc_aiRoom)
 CQ_maxAI = 150;                          // hidden safety limit: every enemy AI alive at once (crews included)
+CQ_censusEvery = 600;                    // .rpt census of units / groups by side, kind and HQ (s)
 CQ_maxInfantry = 80;                     // enemy foot soldiers alive at once (vehicle / heli / static crews not counted)
 CQ_carrierHqs = 4;                       // the carrier has supplies for this many CHILD HQs (splits) and re-insertions; the CQ_maxRoots roots are free
 CQ_carrierHqKm = 0;                      // > 0: CQ_carrierHqs is set from the carrier site instead: one HQ per this many m

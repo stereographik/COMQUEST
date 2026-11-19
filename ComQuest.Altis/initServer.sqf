@@ -114,6 +114,7 @@ addMissionEventHandler ["EntityKilled", {
     ["crates", CQ_fnc_crateTick] call CQ_fnc_directorAddTask;
     // support teams: one small medic or engineer team per built HQ (CQ_fnc_hqBuild starts it)
     ["groupWatch", CQ_fnc_groupWatch] call CQ_fnc_directorAddTask;
+    ["census", CQ_fnc_groupCensus] call CQ_fnc_directorAddTask;   // empty groups swept, unit/group census in the .rpt
     ["assault", CQ_fnc_assaultTick] call CQ_fnc_directorAddTask;
     ["weather", CQ_fnc_weatherTick] call CQ_fnc_directorAddTask;
     ["net", CQ_fnc_netTick] call CQ_fnc_directorAddTask;
