@@ -264,15 +264,47 @@ if (alive _bt && { canMove _bt } && { alive driver _bt }) then {
     _hq set ["buildTruck", objNull];
     _hq set ["btSquad", grpNull];
     ["assign", [_child, _bt, _sg]] call CQ_fnc_buildTruck;
+    // the trip to the new site, with the colonists: same safety nets as a build leg (stuck -> new
+    // route, then a hop onto free ground; too long -> put near the site). The build (CQ_fnc_hqBuild)
+    // takes the truck over as soon as it starts.
     [_child, _site] spawn {
         params ["_child", "_site"];
+        private _cid = _child get "id";
         ["board", [_child]] call CQ_fnc_buildTruck;
         private _tr = _child getOrDefault ["buildTruck", objNull];
         if (!alive _tr) exitWith {};
+        private _dest = _site getPos [40, _site getDir _tr];
         private _dg = group driver _tr;
         [_dg] call CQ_fnc_clearWaypoints;
-        _dg setBehaviour "SAFE";
-        _dg move (_site getPos [40, random 360]);
+        _dg setBehaviour "SAFE"; _dg setSpeedMode "NORMAL";
+        _dg move _dest;
+        private _t0 = time; private _moveT = time; private _lastP = getPosATL _tr; private _stuckN = 0;
+        waitUntil {
+            sleep 2;
+            _tr = _child getOrDefault ["buildTruck", objNull];
+            if (!alive _tr || { !alive driver _tr } || { _child getOrDefault ["buildStarted", false] } || { !((_child get "state") in CQ_activeStates) }) exitWith { true };
+            if (_tr distance2D _site < 150) exitWith { ["HQ #%1: build truck arrived with the colonists (%2 s)", [_cid, round (time - _t0)]] call CQ_fnc_log; true };
+            if (_tr distance2D _lastP > 5) then { _lastP = getPosATL _tr; _moveT = time };
+            if (time - _moveT > CQ_btStuck) then {
+                if (_stuckN == 0) then {
+                    ["HQ #%1: build truck stuck at grid %2 on its way, new route", [_cid, mapGridPosition _tr]] call CQ_fnc_log;
+                } else {
+                    private _p = (_tr getPos [25, _tr getDir _dest]) findEmptyPosition [0, 40, typeOf _tr];
+                    if (_p isNotEqualTo []) then { _tr setVelocity [0, 0, 0]; _tr setPosATL [_p select 0, _p select 1, 0.3] };
+                    ["HQ #%1: build truck still stuck on its way, moved onto free ground at grid %2", [_cid, mapGridPosition _tr]] call CQ_fnc_log;
+                };
+                (group driver _tr) move _dest;
+                _stuckN = _stuckN + 1; _moveT = time; _lastP = getPosATL _tr;
+            };
+            if (time - _t0 > CQ_btTripMax) exitWith {
+                private _p = _dest findEmptyPosition [0, 60, typeOf _tr];
+                if (_p isEqualTo []) then { _p = _dest };
+                _tr setVelocity [0, 0, 0]; _tr setPosATL [_p select 0, _p select 1, 0.3];
+                ["HQ #%1: build truck trip over %2 s, put near the site", [_cid, CQ_btTripMax]] call CQ_fnc_log;
+                true
+            };
+            false
+        };
     };
     ["HQ #%1: build truck leaves for HQ #%2", [_id, _child get "id"]] call CQ_fnc_log;
 };

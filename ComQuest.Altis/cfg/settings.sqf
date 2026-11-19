@@ -555,6 +555,7 @@ CQ_btStopDist = 20;                      // m from the stage's site: the truck s
 CQ_btSpawnDelay = 3;                     // s after the stop before the stage appears
 CQ_btBoardTime = 25;                     // s the squad gets to board before the truck leaves (near ones are put in)
 CQ_btStuck = 45;                         // s without moving 5 m: new route, then a short hop onto free ground
+CQ_btTripMax = 600;                      // s at most for the trip parent -> new site with the colonists: then put near the site
 CQ_btLegMax = 240;                       // s per leg at most: the truck is put at its stop (safety)
 CQ_btReplaceDelay = 300;                 // s before the carrier paradrops a replacement truck
 CQ_btMaxDrops = 16;                      // build trucks the carrier can paradrop in the whole game (replacements + new trucks for founding HQs)
