@@ -62,6 +62,7 @@ if (CQ_carrierHqKm > 0) then {
     CQ_carrierHqs = (round (_d / CQ_carrierHqKm)) max (CQ_carrierHqsRange select 0) min (CQ_carrierHqsRange select 1);
     ["Carrier supplies: %1 HQs (beachhead %2 km from the base, one HQ per %3 km)", [CQ_carrierHqs, (round (_d / 100)) / 10, CQ_carrierHqKm / 1000]] call CQ_fnc_log;
 };
+if (CQ_lanceOn) then { CQ_carrierHqs = CQ_lanceBudget };   // La Lance: a budget in points (CQ_fnc_carrierSpend)
 CQ_carrierLeft = CQ_carrierHqs;
 CQ_specialLeft = createHashMapFromArray [["medic", CQ_specialRespawns], ["engineer", CQ_specialRespawns]];
 call CQ_fnc_carrierMarker;

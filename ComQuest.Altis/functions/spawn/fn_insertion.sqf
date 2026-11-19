@@ -210,7 +210,7 @@ private _handoff = {
         ["Enemy insertion failed", format ["HQ #%1: no troops made it to the ground", _id]] call CQ_fnc_announce;
         // the carrier tries again at the same spot: this landing does not count and its supplies come back
         if (_hq getOrDefault ["paid", false]) then {
-            CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", 0]) + 1;
+            CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", 0]) + ([1, CQ_lanceCost get "rebuild"] select CQ_lanceOn);
             call CQ_fnc_carrierMarker;
             CQ_rootPaidNext = true;              // the retry is paid again
         } else {

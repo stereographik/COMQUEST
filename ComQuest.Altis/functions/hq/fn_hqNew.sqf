@@ -79,6 +79,11 @@ if (CQ_lanceOn) then {
 };
 CQ_lanceFreeNext = false; CQ_lanceRoleNext = nil;
 _hq set ["paid", _paid];
+// La Lance: the carrier pays in points (a re-landed Port: a rebuild; children were paid by CQ_fnc_hqSplit)
+if (CQ_lanceOn) exitWith {
+    if (_paid && { _parent == -1 }) then { ["rebuild", "Port re-landed"] call CQ_fnc_carrierSpend; ["Carrier lands a new Port", "CSAT spends heavily to get back on the beach"] call CQ_fnc_announce };
+    _hq
+};
 if (_paid) then {
     CQ_carrierLeft = (missionNamespace getVariable ["CQ_carrierLeft", CQ_carrierHqs]) - 1;
     call CQ_fnc_carrierMarker;

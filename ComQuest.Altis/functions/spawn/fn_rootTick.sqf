@@ -18,7 +18,7 @@ if (_active) then { CQ_islandEmptyT = -1 } else { if ((missionNamespace getVaria
 private _paid = false;
 if (CQ_rootsLaunched >= CQ_maxRoots) then {
     _paid = true;
-    if (_active || { (missionNamespace getVariable ["CQ_carrierLeft", 0]) <= 0 }) exitWith { _paid = false };
+    if (_active || { (missionNamespace getVariable ["CQ_carrierLeft", 0]) <= ([0, (CQ_lanceCost get "rebuild") - 1] select CQ_lanceOn) } || { missionNamespace getVariable ["CQ_lanceAllIn", false] }) exitWith { _paid = false };
     if (serverTime - CQ_islandEmptyT < CQ_reinsertDelay) exitWith { _paid = false };
 };
 if (CQ_rootsLaunched >= CQ_maxRoots && { !_paid }) exitWith {};

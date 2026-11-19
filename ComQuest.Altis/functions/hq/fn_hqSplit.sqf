@@ -9,7 +9,9 @@
     no base assault before CQ_assaultAge s.
     Within CQ_assaultRange of the player base the colonists assault the base instead.
 */
-params ["_hq", ["_waveInf", []], ["_waveVehs", []]];
+params ["_hq", ["_waveInf", []], ["_waveVehs", []], ["_think", false]];
+// _think (La Lance, CQ_fnc_hqTick every CQ_lanceThinkEvery s): no wave, the HQ only checks whether it
+// may split / bond / assault with the men it has; nothing announced when it may not
 
 private _id = _hq get "id";
 private _c = _hq get "pos";
@@ -19,9 +21,11 @@ private _c = _hq get "pos";
 (_hq get "vehicles") append _waveVehs;
 { _x enableDynamicSimulation CQ_dynSimGarrison } forEach _waveInf;
 
+if (!_think) then {
 _hq set ["state", "Holding"];
 _hq set ["stateT", time];
 _hq set ["nextWaveT", time + CQ_waveInterval * ([1, 1 + (missionNamespace getVariable ["CQ_lanceTide", 0]) * CQ_lanceTideInterval] select CQ_lanceOn)];   // Maree: rarer waves
+};
 
 private _inf = (_hq get "infantry") select { ({ alive _x } count units _x) > 0 };
 private _total = [_inf] call CQ_fnc_aliveCount;
@@ -31,7 +35,8 @@ private _total = [_inf] call CQ_fnc_aliveCount;
 private _assault = (_c distance2D CQ_basePos) < CQ_assaultRange;
 
 private _reason = "";
-if (([_waveInf] call CQ_fnc_aliveCount) == 0) then { _reason = "the reinforcements never arrived" };
+if (!_think && { ([_waveInf] call CQ_fnc_aliveCount) == 0 }) then { _reason = "the reinforcements never arrived" };
+if (missionNamespace getVariable ["CQ_lanceAllIn", false]) then { _reason = "all-in: every group is already on the base" };
 private _active = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
 if (_reason == "" && { !_assault } && { count _active >= CQ_maxHqs }) then { _reason = format ["HQ limit %1 reached", CQ_maxHqs] };
 if (_reason == "" && { !_assault } && { !CQ_lanceOn } && { (missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0 }) then { _reason = "the carrier has no supplies left for a new HQ" };
@@ -55,7 +60,7 @@ private _lNext = ""; private _lTarget = []; private _lParent = _id; private _lBo
 if (CQ_lanceOn && { !_assault }) then {
     private _lRole = _hq getOrDefault ["lRole", "port"];
     // Lance double: a Tete kept from moving by players (not calm) twice in a row takes a side corridor
-    if (_lRole == "head" && { (_reason find "not calm") == 0 }) then {
+    if (!_think && { _lRole == "head" } && { (_reason find "not calm") == 0 }) then {
         private _nb = (_hq getOrDefault ["bondBlocked", 0]) + 1;
         _hq set ["bondBlocked", _nb];
         if (_nb >= CQ_lanceBlockedMax && { (missionNamespace getVariable ["CQ_lanceSide", 0]) == 0 }) then {
@@ -85,7 +90,7 @@ if (CQ_lanceOn && { !_assault }) then {
             if (count _f == 0) exitWith { true };
             _lFree = false;
             if (time - (_f getOrDefault ["fallT", 0]) < CQ_lanceRebuildDelay) exitWith { _reason = format ["Lance: the %1 is rebuilt in %2 s", _r, round (CQ_lanceRebuildDelay - (time - (_f getOrDefault ["fallT", 0])))]; false };
-            if ((missionNamespace getVariable ["CQ_carrierLeft", 0]) <= 0) exitWith { _reason = "Lance: the carrier has no reconstruction left"; false };
+            if ((missionNamespace getVariable ["CQ_carrierLeft", 0]) < (CQ_lanceCost get "rebuild")) exitWith { _reason = format ["Lance: the carrier cannot pay a rebuild (%1 / %2 pts)", round CQ_carrierLeft, CQ_lanceCost get "rebuild"]; false };
             true
         };
         switch (_lRole) do {
@@ -153,6 +158,7 @@ private _toPatrol = {
     if (!isNull _vg && { (_x getVariable ["CQ_pool", ""]) == "armour" }) then { [[_vg]] call _toPatrol };
 } forEach _waveVehs;
 
+if (_reason != "" && { _think }) exitWith { _hq set ["thinkWhy", _reason] };
 if (_reason != "") exitWith {
     [_waveInf select { ({ alive _x } count units _x) > 0 }] call _toPatrol;
     { private _vg = group effectiveCommander _x; if (!isNull _vg && { (_x getVariable ["CQ_pool", ""]) != "armour" }) then { [[_vg]] call _toPatrol } } forEach _waveVehs;
@@ -173,6 +179,7 @@ private _n = 0;
     _n = _n + _k;
 } forEach _cands;
 
+if (_col isEqualTo [] && { _think }) exitWith { _hq set ["thinkWhy", "no free squad"] };
 if (_col isEqualTo []) exitWith {
     ["Reinforcements joined", format ["HQ #%1 now has %2 infantry. No expansion: no free squad", _id, _total]] call CQ_fnc_announce;
 };
@@ -212,6 +219,13 @@ if (_assault) exitWith {
     ["assault", [[_id] call CQ_fnc_objName]] call CQ_fnc_say;
 };
 
+// La Lance: the carrier pays for the new position (a rebuild costs more); not enough points: no split
+if (CQ_lanceOn && { !([["position", "rebuild"] select !_lFree, format ["HQ #%1 founds a new %2", _id, _lNext]] call CQ_fnc_carrierSpend) }) exitWith {
+    _hq set ["thinkWhy", "the carrier cannot pay the new position"];
+    if (!_think) then { [_col] call _toPatrol };
+};
+_hq set ["thinkWhy", ""];
+if (_think) then { ["HQ #%1: Lance, expands on its own (no wave)", [_id]] call CQ_fnc_log };
 _hq set ["infantry", (_hq get "infantry") - _col];
 _hq set ["vehicles", (_hq get "vehicles") - _colVehs];
 

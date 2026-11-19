@@ -52,7 +52,14 @@ if (_assault) then {
     private _ls = time - (_hq getOrDefault ["lastSplitT", -1e6]);
     ["Last split", _ls >= CQ_splitGap, format ["%1 min ago (every %2)", floor (_ls / 60), round (CQ_splitGap / 60)]] call _gate;
     ["HQ count", _activeN < CQ_maxHqs, format ["%1 / %2 (limit)", _activeN, CQ_maxHqs]] call _gate;
-    ["Carrier supplies", (missionNamespace getVariable ["CQ_carrierLeft", 1]) > 0, "none left"] call _gate;
+    if (CQ_lanceOn) then {
+        private _cl = missionNamespace getVariable ["CQ_carrierLeft", 0];
+        ["Carrier points", _cl >= (CQ_lanceCost get "position"), format ["%1 / %2 pts (position %3, rebuild %4)", round _cl, CQ_carrierHqs, CQ_lanceCost get "position", CQ_lanceCost get "rebuild"]] call _gate;
+        private _why = _hq getOrDefault ["thinkWhy", ""];
+        if (_why != "") then { ["Last check (every min)", false, _why] call _gate };
+    } else {
+        ["Carrier supplies", (missionNamespace getVariable ["CQ_carrierLeft", 1]) > 0, "none left"] call _gate;
+    };
 };
 ["Radio / network", alive (_hq get "radio") && { !(_hq getOrDefault ["isolated", false]) }, ["isolated", "radio down"] select !alive (_hq get "radio")] call _gate;
 ["AI room for a wave", _ai <= CQ_maxAI - CQ_waveSize && { _infAll <= CQ_maxInfantry - CQ_waveSize }, format ["inf %1/%2, all %3/%4", _infAll, CQ_maxInfantry - CQ_waveSize, _ai, CQ_maxAI - CQ_waveSize]] call _gate;

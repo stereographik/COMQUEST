@@ -136,6 +136,11 @@ private _players = allPlayers select { alive _x };
             if (_now - (_hq get "stateT") >= CQ_holdTime) then { [_hq] call CQ_fnc_hqRequestWave };
         };
         case "Holding": {
+            // La Lance: no need to wait for a wave, the HQ checks on its own whether it may split / bond / assault
+            if (CQ_lanceOn && { _hq get "buildDone" } && { _now >= (_hq getOrDefault ["thinkT", 0]) }) then {
+                _hq set ["thinkT", _now + CQ_lanceThinkEvery];
+                [_hq, [], [], true] call CQ_fnc_hqSplit;
+            };
             // pacing: no new wave while the HQ may not use it yet (too new to split or assault, split
             // too recently): the next one is due once it may (a debug wave skips this)
             if (_now >= (_hq get "nextWaveT") && { !(_hq getOrDefault ["dbgSplit", false]) }) then {
@@ -159,6 +164,14 @@ private _players = allPlayers select { alive _x };
     };
 } forEach CQ_hqs;
 
+// ---- La Lance victory: the all-in (carrier empty) is wiped out
+if (CQ_lanceOn && { isNil "CQ_victory" } && { missionNamespace getVariable ["CQ_lanceAllIn", false] }
+    && { ((missionNamespace getVariable ["CQ_lanceAllInGroups", []]) findIf { !isNull _x && { ({ alive _x } count units _x) > 0 } }) == -1 }) then {
+    CQ_victory = true;
+    ["VICTORY", "The carrier threw everything it had left at your base, and you held"] call CQ_fnc_announce;
+    ["victory", []] call CQ_fnc_say;
+    ["win", "the all-in assault was beaten, the carrier has nothing left"] call CQ_fnc_endgame;
+};
 // ---- victory: no HQ left, and the carrier cannot send more (every free root landed AND no supplies:
 // with supplies left, an empty island brings a paid re-insertion, CQ_fnc_rootTick)
 if (isNil "CQ_victory" && { CQ_rootsLaunched >= CQ_maxRoots } && { (missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0 }) then {

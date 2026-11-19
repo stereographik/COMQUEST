@@ -3,7 +3,7 @@
 
 author = "Django";
 onLoadName = "ComQuest";
-onLoadMission = "Destroy the CSAT HQ network on Altis.   v0.13.0  -  HQ_ROUTES  -  2026-11-19 09:05";   // version line: updated with every deploy
+onLoadMission = "Destroy the CSAT HQ network on Altis.   v0.13.0  -  HQ_ROUTES  -  2026-11-19 10:15";   // version line: updated with every deploy
 loadScreen = "media\loading.jpg";          // the mission visual, 2048 x 1024 (2:1)
 overviewPicture = "media\loading.jpg";     // same picture in the mission list / lobby
 overviewText = "Co-op, up to 26 players. A CSAT carrier plants a network of HQs on Altis: find it and cut it apart.";
@@ -204,6 +204,8 @@ class CfgFunctions
             class guardSite {};
             class guardTick {};
             class lanceTick {};
+            class carrierSpend {};
+            class lanceAllIn {};
             class objBlast {};
             class chargeHit {};
         };

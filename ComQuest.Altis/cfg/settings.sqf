@@ -1310,6 +1310,21 @@ CQ_lanceBondStep = 1 / 3;                // ...by this share of its distance to 
 CQ_lanceDetour = 2000;                   // m sideways: the corridor of the Lance double
 CQ_lanceBlockedMax = 2;                  // bonds refused in a row because of players -> side corridor
 CQ_lanceTideMax = 4;
+// Economy: the carrier holds CQ_lanceBudget points (CQ_carrierLeft / CQ_carrierHqs) and pays for all it sends
+// (CQ_fnc_carrierSpend). The acts (60 / 30 / 0 %) and the tide (one level per CQ_lanceTideStep spent) follow it.
+// It cannot pay even a supply flight any more -> ALL-IN: every surviving ground group attacks the base (CQ_fnc_lanceAllIn);
+// hold and you win.
+CQ_lanceBudget = 1000;
+CQ_lanceCost = createHashMapFromArray [
+    ["wave", 40],                        // reinforcement wave
+    ["flight", 20],                      // supply flight (ammo + fuel) to the Port
+    ["truck", 60],                       // build truck paradropped
+    ["kajman", 50],                      // Kajman flown in from the carrier (build truck escort)
+    ["position", 100],                   // new Relais / Tete / bond
+    ["rebuild", 200]                     // a fallen Relais / Tete rebuilt, a fallen Port re-landed
+];
+CQ_lanceTideStep = 0.25;                 // one tide level each time the carrier loses this share
+CQ_lanceThinkEvery = 60;                 // s: an HQ with nothing better to do checks split / bond / assault on its own (no wave needed)
 CQ_lanceTideSoldiers = 2;                // per tide level: soldiers added to every wave
 CQ_lanceTideInterval = 0.25;             // per tide level: wave interval x (1 + this)
 CQ_lanceTideAssault = 180;               // per tide level: s taken off CQ_assaultAge

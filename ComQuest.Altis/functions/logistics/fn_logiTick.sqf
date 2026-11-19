@@ -186,7 +186,7 @@ if (_hubId > -1 && { !_hubIso } && { !CQ_ammoFlightActive } && { CQ_nextAmmoFlig
             ["Supply flight: main HQ #%1 is full (%2 / %3), the flight goes to HQ #%4 (%5 ammo)", [_hubId, round (_hub get "stock"), _hub get "cap", _dest get "id", round (_dest get "stock")]] call CQ_fnc_log;
         };
     };
-    [_dest] spawn CQ_fnc_ammoFlight;
+    if (["flight", format ["supply flight to HQ #%1", _dest get "id"]] call CQ_fnc_carrierSpend) then { [_dest] spawn CQ_fnc_ammoFlight } else { CQ_ammoFlightActive = false };
 };
 
 // ---- debug: stock report every minute

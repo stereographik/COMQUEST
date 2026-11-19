@@ -30,6 +30,16 @@ if (_act > _was) then {
     ["Story: act %1 (carrier %2%%)", [_act, round (_pct * 100)]] call CQ_fnc_log;
 };
 
+// La Lance: the tide follows what the carrier spent; nothing left to pay even a flight -> all-in
+if (CQ_lanceOn) then {
+    private _tide = (floor ((1 - _pct) / CQ_lanceTideStep + 0.001)) min CQ_lanceTideMax;
+    if (_tide > (missionNamespace getVariable ["CQ_lanceTide", 0])) then {
+        CQ_lanceTide = _tide;
+        ["The tide is rising", format ["CSAT level %1/%2 (carrier %3%%): bigger waves (+%4 soldiers), less often, earlier assault", CQ_lanceTide, CQ_lanceTideMax, round (_pct * 100), CQ_lanceTide * CQ_lanceTideSoldiers]] call CQ_fnc_announce;
+    };
+    if (!(missionNamespace getVariable ["CQ_lanceAllIn", false]) && { _left < selectMin (values CQ_lanceCost) }) then { call CQ_fnc_lanceAllIn };
+};
+
 // SITREP
 if (isNil "CQ_sitrepT") then { CQ_sitrepT = time };
 if (time - CQ_sitrepT >= CQ_sitrepEvery && { time >= (missionNamespace getVariable ["CQ_storyQuietUntil", -1]) }) then {
