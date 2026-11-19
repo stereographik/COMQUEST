@@ -54,25 +54,31 @@ if (_fighting >= CQ_hqVehMax) then { ["HQ #%1: %2 fighting vehicles already, the
 } forEach _pools;
 
 // --- infantry aboard (truck first, then armour, then the random vehicle)
+// GARRISON TARGET: as many soldiers as the HQ is short (CQ_fnc_hqTick "waveNeed"): one squad,
+// trimmed or topped up below (+ the tide's extra)
+private _need = _hq getOrDefault ["waveNeed", 8];
 private _inf = [];
 private _lost = 0;
 for "_i" from 1 to CQ_waveSquads do {
     private _g = [_spawn getPos [30, _dir + 90], east, _squadCfg] call BIS_fnc_spawnGroup;
-    [units _g] call CQ_fnc_unitPrep;
+    private _keep = (units _g) select [0, _need max 1];
+    { deleteVehicle _x } forEach ((units _g) - _keep);
+    [_keep] call CQ_fnc_unitPrep;
     {
         private _u = _x;
         private _in = false;
         { if (!_in && { (_x emptyPositions "cargo") > 0 }) then { _u moveInCargo _x; _in = vehicle _u != _u } } forEach _vehs;
         if (!_in) then { deleteVehicle _u; _lost = _lost + 1 };
-    } forEach units _g;
+    } forEach _keep;
     _g setVariable ["CQ_role", "reinf"];
     _inf pushBack _g;
 };
 
-// Maree: CQ_lanceTideSoldiers more per tide level, in the free seats
-if (CQ_lanceOn && { (missionNamespace getVariable ["CQ_lanceTide", 0]) > 0 } && { _inf isNotEqualTo [] }) then {
+// more than a squad short (up to CQ_waveMax) + Maree: CQ_lanceTideSoldiers more per tide level, in the free seats
+private _more = ((_need - ({ alive _x } count flatten (_inf apply { units _x }))) max 0) + ([0, (missionNamespace getVariable ["CQ_lanceTide", 0]) * CQ_lanceTideSoldiers] select CQ_lanceOn);
+if (_more > 0 && { _inf isNotEqualTo [] }) then {
     private _g = _inf select 0;
-    for "_k" from 1 to (CQ_lanceTide * CQ_lanceTideSoldiers) do {
+    for "_k" from 1 to _more do {
         private _u = _g createUnit [selectRandom ["O_Soldier_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_Soldier_GL_F"], _spawn getPos [30, _dir + 90], [], 5, "NONE"];
         [[_u]] call CQ_fnc_unitPrep;
         private _in = false;

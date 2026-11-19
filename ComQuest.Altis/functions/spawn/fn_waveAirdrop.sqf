@@ -6,12 +6,12 @@
     THE FIRST WAVE OF EVERY HQ, AIRDROPPED: when its perimeter is secured (the build starts), two
     Mohawks from the carrier drop the wave's armour and random vehicle (CQ_wavePools), each under
     its own parachute, CQ_airWaveDist m from the build truck (else from the site). The squad
-    (OIA_InfSquad, + the tide's extra soldiers) rides inside them during the drop: crew at their
+    (as many as the HQ is short of CQ_garrisonTarget, CQ_waveMax at most, + the tide's extra) rides inside them during the drop: crew at their
     posts, soldiers in the cargo seats; any soldier with no seat left jumps on his own parachute
     next to the last vehicle. No damage until on the ground. Landed: the vehicles drive to the HQ,
     the soldiers dismount there and join its garrison (fresh reinforcements, CQ_role "reinf").
     The carrier pays a wave (CQ_lanceCost "wave"); the caps are not checked (it is the HQ's starting
-    force). It is the HQ's first wave: its next one (road convoy) comes CQ_waveInterval s after the build.
+    force). After the build, road convoys fill whatever the HQ is still short of (CQ_fnc_hqTick).
 */
 params ["_mode", "_a"];
 switch (_mode) do {
@@ -37,6 +37,10 @@ switch (_mode) do {
         // the squad: its classes, waiting for seats (+ the tide's extra soldiers)
         private _squadCfg = configFile >> "CfgGroups" >> "East" >> "OPF_F" >> "Infantry" >> "OIA_InfSquad";
         private _cls = ("true" configClasses _squadCfg) apply { getText (_x >> "vehicle") };
+        // GARRISON TARGET: as many as the new HQ is short of CQ_garrisonTarget (its colonists count)
+        private _need = ((CQ_garrisonTarget - ([(_hq get "infantry")] call CQ_fnc_aliveCount)) max CQ_waveMin) min CQ_waveMax;
+        _cls = _cls select [0, _need];
+        while { count _cls < _need } do { _cls pushBack (selectRandom ["O_Soldier_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_Soldier_GL_F"]) };
         if (CQ_lanceOn) then { for "_k" from 1 to ((missionNamespace getVariable ["CQ_lanceTide", 0]) * CQ_lanceTideSoldiers) do { _cls pushBack (selectRandom ["O_Soldier_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_Soldier_GL_F"]) } };
         // the squad's group is made at the first drop: an empty "delete when empty" group made now
         // would be removed by the engine before the Mohawks get there (0 soldiers, 2026-11-19)

@@ -1,8 +1,8 @@
 /*
     CQ_fnc_hqSplit  (server, from CQ_fnc_hqTick when a wave has arrived)
     [_hq, _waveInfantry, _waveVehicles] call CQ_fnc_hqSplit;
-    The wave joins the HQ, then the HQ splits: CQ_colonistShare of its infantry (fresh
-    reinforcements first) leaves with the truck and the random vehicle, plus a new officer,
+    The wave joins the HQ, then the HQ splits (GARRISON TARGET): once it has CQ_garrisonTarget +
+    CQ_splitSize infantry, exactly CQ_splitSize of them (fresh reinforcements first) leave with the truck and the random vehicle, plus a new officer,
     to found a child HQ ~2 km away (CQ_fnc_colonise). The armour and the rest stay.
     No split when caps or numbers forbid it: the wave simply reinforces the garrison.
     Pacing: no split before CQ_splitAge s after the HQ was built, then once per CQ_splitGap s;
@@ -24,7 +24,7 @@ private _c = _hq get "pos";
 if (!_think) then {
 _hq set ["state", "Holding"];
 _hq set ["stateT", time];
-_hq set ["nextWaveT", time + CQ_waveInterval * ([1, 1 + (missionNamespace getVariable ["CQ_lanceTide", 0]) * CQ_lanceTideInterval] select CQ_lanceOn)];   // Maree: rarer waves
+_hq set ["nextWaveT", time + CQ_waveGap * ([1, 1 + (missionNamespace getVariable ["CQ_lanceTide", 0]) * CQ_lanceTideInterval] select CQ_lanceOn)];   // Maree: rarer waves
 };
 
 private _inf = (_hq get "infantry") select { ({ alive _x } count units _x) > 0 };
@@ -40,7 +40,6 @@ if (missionNamespace getVariable ["CQ_lanceAllIn", false]) then { _reason = "all
 private _active = (values CQ_hqs) select { (_x get "state") in CQ_activeStates };
 if (_reason == "" && { !_assault } && { count _active >= CQ_maxHqs }) then { _reason = format ["HQ limit %1 reached", CQ_maxHqs] };
 if (_reason == "" && { !_assault } && { !CQ_lanceOn } && { (missionNamespace getVariable ["CQ_carrierLeft", 1]) <= 0 }) then { _reason = "the carrier has no supplies left for a new HQ" };
-if (_reason == "" && { _total < CQ_minInfantryToExpand }) then { _reason = format ["only %1 infantry", _total] };
 if (_reason == "" && { !alive (_hq get "commander") || { _hq get "cmdCaptured" } }) then { _reason = "no commander to order it" };
 // pacing: a young HQ holds before it splits or assaults, and splits at most once per CQ_splitGap
 private _age = time - (_hq getOrDefault ["builtT", time]);
@@ -158,6 +157,11 @@ private _toPatrol = {
     if (!isNull _vg && { (_x getVariable ["CQ_pool", ""]) == "armour" }) then { [[_vg]] call _toPatrol };
 } forEach _waveVehs;
 
+// GARRISON TARGET: it may go (nothing else stops it) -> it wants CQ_splitSize men on top of its
+// CQ_garrisonTarget, and goes once it has them (the waves fill the gap, CQ_fnc_hqTick)
+private _need = CQ_garrisonTarget + CQ_splitSize;
+_hq set ["wantInf", [CQ_garrisonTarget, _need] select (_reason == "")];
+if (_reason == "" && { _total < _need }) then { _reason = format ["%1 / %2 infantry (keeps %3, sends %4)", _total, _need, CQ_garrisonTarget, CQ_splitSize] };
 if (_reason != "" && { _think }) exitWith { _hq set ["thinkWhy", _reason] };
 if (_reason != "") exitWith {
     [_waveInf select { ({ alive _x } count units _x) > 0 }] call _toPatrol;
@@ -166,7 +170,7 @@ if (_reason != "") exitWith {
 };
 
 // --- pick the colonists: fresh reinforcements first, then patrols; defenders stay
-private _target = ceil (_total * CQ_colonistShare) min (_total - CQ_minDefenders);
+private _target = CQ_splitSize;
 private _cands = _inf select { (_x getVariable ["CQ_role", ""]) in ["reinf", "patrol"] && { ([_x] call CQ_fnc_infAmmo) >= CQ_minAmmoToAdvance } };
 _cands = [_cands, [], { [1, 0] select ((_x getVariable ["CQ_role", ""]) == "reinf") }, "ASCEND"] call BIS_fnc_sortBy;
 private _col = [];
@@ -174,7 +178,7 @@ private _n = 0;
 {
     if (_n >= _target) exitWith {};
     private _k = { alive _x } count units _x;
-    if (_total - (_n + _k) < CQ_minDefenders) then { continue };   // whole squads: never leave the HQ under CQ_minDefenders
+    if (_total - (_n + _k) < CQ_garrisonTarget - 2) then { continue };   // whole squads: the HQ keeps its garrison (2 men of slack for odd squad sizes)
     _col pushBack _x;
     _n = _n + _k;
 } forEach _cands;

@@ -592,6 +592,15 @@ CQ_secureShare = 0.5;                    // perimeter counts as secured once eve
 CQ_secureTimeout = 60;                   // build starts anyway after 1 min (squads keep walking to their posts)
 CQ_hqFallenBlow = 60;           // s after an HQ falls: its depot and tanker are blown up by the leaving troops
 CQ_holdTime = 60;                        // hold after installation, before calling reinforcements
+// GARRISON TARGET (simple rule): every HQ keeps CQ_garrisonTarget infantry. A wave leaves whenever it
+// is short (as big as the gap, CQ_waveMax at most; one at a time; at most every CQ_waveGap s; caps and
+// carrier permitting). Once it may expand (calm, gap, La Lance), it also wants CQ_splitSize more and,
+// with them, sends exactly CQ_splitSize men to found the next HQ / bond / assault, keeping its target.
+CQ_garrisonTarget = 16;
+CQ_splitSize = 8;
+CQ_waveMax = 12;                         // soldiers per wave at most (+ the tide's extra)
+CQ_waveMin = 4;                          // a wave never brings fewer
+CQ_waveGap = 120;                        // s at least between two waves of one HQ
 CQ_waveInterval = 600;                   // a new reinforcement wave every 10 min per HQ
 CQ_airWave = true;                       // every HQ's FIRST wave is airdropped when its perimeter is secured (CQ_fnc_waveAirdrop): armour + random vehicle on parachutes, the squad inside, no cap check
 CQ_airWaveDist = [200, 400];             // m from the build truck (else the site) where the first wave lands
@@ -958,10 +967,10 @@ CQ_flareGarrisonShare = 0.3;             // heavy support: 30% of the HQ garriso
 CQ_flareRecallRange = 2500;              // half of the roaming squads within this fall back to the HQ
 CQ_flareCooldown = 600;
 CQ_rootDefendCooldown = 1200;            // contact at a root HQ: all its child HQs rally (once per 20 min)
-CQ_colonistShare = 0.7;                  // share of infantry leaving to found a child HQ
+CQ_colonistShare = 0.7;                  // NOT USED any more (garrison target: CQ_splitSize men leave)
 CQ_colonistArrivalShare = 0.6;           // a child HQ starts securing once 60% of its colonists are on site
 CQ_colonistWalkNear = 1000;              // the squad that walks counts as arrived once within this many m of the site
-CQ_minInfantryToExpand = 12;
+CQ_minInfantryToExpand = 12;             // NOT USED any more (garrison target: CQ_garrisonTarget + CQ_splitSize)
 CQ_splitAge = 180;                       // s of calm before every split: after the build ended AND with no player within CQ_secureRadius m of the HQ (CQ_fnc_hqTick)
 CQ_splitGap = 1200;                      // s: ...and then at most once per this (20 min)
 CQ_assaultAge = 900;                     // s: an HQ within CQ_assaultRange assaults the base only once built this long (15 min)

@@ -6,7 +6,7 @@
       Installing    4 build stages (CQ_fnc_hqBuild, spawned)       -> buildDone
       Hold          holds CQ_holdTime                              -> requests a wave
       WaitingReinf  convoy on its way (CQ_fnc_waveSend)            -> arrived: CQ_fnc_hqSplit
-      Holding       defends until the next wave (CQ_waveInterval)  -> requests a wave
+      Holding       defends; short of its garrison target -> requests a wave (as big as the gap)
     Quiet HQs (no player near, no recent contact) run every CQ_hqQuietEvery-th tick only.
     In every state: contact -> CQ_fnc_callReinf (heli + QRF), QRF groups return after
     CQ_qrfTime. Helicopters: CQ_fnc_airTick. Ammo: CQ_fnc_logiTick.
@@ -136,14 +136,10 @@ private _players = allPlayers select { alive _x };
         };
         case "Hold": {
             if (_now - (_hq get "stateT") >= CQ_holdTime) then {
-                // its first wave came by air during the build: the next one (road convoy) in CQ_waveInterval s
-                if (_hq getOrDefault ["airWave", false]) then {
-                    _hq set ["state", "Holding"];
-                    _hq set ["stateT", _now];
-                    _hq set ["nextWaveT", _now + CQ_waveInterval];
-                } else {
-                    [_hq] call CQ_fnc_hqRequestWave;
-                };
+                // garrison target: Holding calls a wave whenever the HQ is short (its first one may have come by air)
+                _hq set ["state", "Holding"];
+                _hq set ["stateT", _now];
+                _hq set ["nextWaveT", _now];
             };
         };
         case "Holding": {
@@ -152,18 +148,14 @@ private _players = allPlayers select { alive _x };
                 _hq set ["thinkT", _now + CQ_lanceThinkEvery];
                 [_hq, [], [], true] call CQ_fnc_hqSplit;
             };
-            // pacing: no new wave while the HQ may not use it yet (too new to split or assault, split
-            // too recently): the next one is due once it may (a debug wave skips this)
-            if (_now >= (_hq get "nextWaveT") && { !(_hq getOrDefault ["dbgSplit", false]) }) then {
-                private _bt = _hq getOrDefault ["builtT", _now];
-                private _ok = if (((_hq get "pos") distance2D CQ_basePos) < CQ_assaultRange) then { _bt + CQ_assaultAge } else {
-                    ((_bt max (_hq getOrDefault ["lastNearT", -1e6])) + CQ_splitAge) max ((_hq getOrDefault ["lastSplitT", -1e6]) + CQ_splitGap) };   // calm since the build and since a player was last near
-                if (_now < _ok) then {
-                    _hq set ["nextWaveT", _ok];
-                    ["HQ #%1: next wave held until it may expand (in %2 min)", [_id, ceil ((_ok - _now) / 60)]] call CQ_fnc_log;
-                };
+            // GARRISON TARGET: a wave whenever it is short of infantry (CQ_garrisonTarget, + CQ_splitSize once
+            // it may expand: "wantInf", set by CQ_fnc_hqSplit), as big as the gap; a debug wave always goes
+            private _have = [(_hq get "infantry")] call CQ_fnc_aliveCount;
+            private _want = _hq getOrDefault ["wantInf", [CQ_garrisonTarget + CQ_splitSize, CQ_garrisonTarget] select CQ_lanceOn];
+            if (_now >= (_hq get "nextWaveT") && { _have < _want || { _hq getOrDefault ["dbgSplit", false] } }) then {
+                _hq set ["waveNeed", ((_want - _have) max CQ_waveMin) min CQ_waveMax];
+                [_hq] call CQ_fnc_hqRequestWave;
             };
-            if (_now >= (_hq get "nextWaveT")) then { [_hq] call CQ_fnc_hqRequestWave };
         };
         case "WaitingReinf": {
             private _res = _hq get "waveResult";
