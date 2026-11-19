@@ -38,10 +38,10 @@ switch (_mode) do {
         private _squadCfg = configFile >> "CfgGroups" >> "East" >> "OPF_F" >> "Infantry" >> "OIA_InfSquad";
         private _cls = ("true" configClasses _squadCfg) apply { getText (_x >> "vehicle") };
         if (CQ_lanceOn) then { for "_k" from 1 to ((missionNamespace getVariable ["CQ_lanceTide", 0]) * CQ_lanceTideSoldiers) do { _cls pushBack (selectRandom ["O_Soldier_F", "O_Soldier_AR_F", "O_Soldier_LAT_F", "O_Soldier_GL_F"]) } };
-        private _g = createGroup [east, true];
-        _g setVariable ["CQ_role", "reinf"];
+        // the squad's group is made at the first drop: an empty "delete when empty" group made now
+        // would be removed by the engine before the Mohawks get there (0 soldiers, 2026-11-19)
         private _pools = CQ_wavePools select { (_x select 0) in ["armour", "random"] };
-        _hq set ["awGroup", _g];
+        _hq set ["awGroup", grpNull];
         _hq set ["awPending", _cls];
         _hq set ["awVehs", []];
         _hq set ["awDrops", count _pools];
@@ -61,6 +61,7 @@ switch (_mode) do {
         private _t0 = time;
         waitUntil { sleep 3; (_hq get "awLanded") >= (_hq get "awDrops") || { time - _t0 > 420 } || { !((_hq get "state") in CQ_activeStates) } };
         private _vehs = (_hq get "awVehs") select { alive _x };
+        private _g = _hq get "awGroup";
         private _dest = _c getPos [70, _c getDir _lz];
         { if (canMove _x && { alive driver _x }) then { (group driver _x) move _dest } } forEach _vehs;
         if (({ alive _x && { vehicle _x == _x } } count units _g) > 0) then { _g move _dest };   // the ones who jumped walk in
@@ -73,10 +74,14 @@ switch (_mode) do {
         // never left invulnerable (a landing that was not reported)
         { _x allowDamage true; { _x allowDamage true } forEach crew _x } forEach (_hq get "awVehs");
         // the squad (its own group: the crews are in theirs) gets out at the HQ
-        { if (vehicle _x != _x) then { unassignVehicle _x; moveOut _x } } forEach units _g;
-        { _g leaveVehicle _x } forEach _vehs;
-        _g move (_c getPos [40, random 360]);
+        if (!isNull _g) then {
+            { if (vehicle _x != _x) then { unassignVehicle _x; moveOut _x } } forEach units _g;
+            { _g leaveVehicle _x } forEach _vehs;
+            _g move (_c getPos [40, random 360]);
+        };
         private _n = { alive _x } count units _g;
+        // nobody made it: it does not count as the HQ's first wave (the usual one comes after the build)
+        if (_n == 0) then { _hq set ["airWave", false] };
         if ((_hq get "state") in CQ_activeStates) then {
             if (_n > 0) then { (_hq get "infantry") pushBack _g; _g enableDynamicSimulation CQ_dynSimGarrison };
             (_hq get "vehicles") append _vehs;
@@ -97,7 +102,13 @@ switch (_mode) do {
             { _x allowDamage false } forEach crew _v;
             (_hq get "awVehs") pushBack _v;
             private _g = _hq get "awGroup";
+            if (isNull _g) then {
+                _g = createGroup [east, true];
+                _g setVariable ["CQ_role", "reinf"];
+                _hq set ["awGroup", _g];
+            };
             private _pend = _hq get "awPending";
+            private _n0 = count _pend;
             while { _pend isNotEqualTo [] && { (_v emptyPositions "cargo") > 0 } } do {
                 private _u = _g createUnit [_pend deleteAt 0, getPosATL _v, [], 0, "CAN_COLLIDE"];
                 [[_u]] call CQ_fnc_unitPrep;
@@ -105,6 +116,7 @@ switch (_mode) do {
                 _u moveInCargo _v;
                 if (vehicle _u == _u) exitWith { deleteVehicle _u };
             };
+            ["HQ #%1: first wave, %2 soldiers aboard the %3 (%4 still waiting for a seat)", [_id, _n0 - count _pend, typeOf _v, count _pend]] call CQ_fnc_log;
             // last vehicle out: the soldiers with no seat jump on their own parachutes next to it
             _hq set ["awDropped", (_hq getOrDefault ["awDropped", 0]) + 1];
             if ((_hq get "awDropped") >= (_hq get "awDrops") && { _pend isNotEqualTo [] }) then {
