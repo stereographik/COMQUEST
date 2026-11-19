@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ComQuest caps tuner</title>
+<style>
+  :root { --bg:#14150f; --panel:#1d1e16; --line:#33352a; --txt:#e9e7d3; --dim:#a6a381; --acc:#c9b458; --inf:#e07a5f; --ai:#7fb7be; --cap:#f2f1df; --car:#9dbb61; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:13px/1.4 system-ui, "Segoe UI", sans-serif; }
+  header { padding:14px 18px 6px; }
+  h1 { margin:0; font-size:18px; letter-spacing:.04em; color:var(--acc); }
+  header p { margin:4px 0 0; color:var(--dim); max-width:980px; }
+  .wrap { display:grid; grid-template-columns: 360px 1fr; gap:14px; padding:10px 18px 24px; }
+  @media (max-width: 900px) { .wrap { grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+  .side { max-height: calc(100vh - 90px); overflow:auto; }
+  @media (max-width: 900px) { .side { max-height:none; } }
+  details { border-top:1px solid var(--line); padding:6px 0; }
+  details:first-child { border-top:none; }
+  summary { cursor:pointer; color:var(--acc); font-weight:600; padding:2px 0; }
+  .row { display:grid; grid-template-columns: 1fr 120px 52px; gap:6px; align-items:center; margin:5px 0; }
+  .row label { color:var(--txt); }
+  .row small { display:block; color:var(--dim); font-size:11px; }
+  .row input[type=range] { width:100%; accent-color:var(--acc); }
+  .row input[type=number] { width:52px; background:#0f100b; color:var(--txt); border:1px solid var(--line); border-radius:4px; padding:2px 4px; }
+  .row.chk { grid-template-columns: 1fr auto; }
+  .stats { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:8px; margin-bottom:10px; }
+  .stat { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+  .stat b { display:block; font-size:20px; }
+  .stat span { color:var(--dim); font-size:11px; }
+  .good b { color:#9dbb61; } .warn b { color:#e0b04f; } .bad b { color:#e07a5f; }
+  canvas { width:100%; display:block; background:#0f100b; border:1px solid var(--line); border-radius:8px; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; color:var(--dim); font-size:12px; margin:6px 0 10px; }
+  .legend i { display:inline-block; width:14px; height:3px; vertical-align:middle; margin-right:5px; }
+  button { background:var(--acc); color:#14150f; border:none; border-radius:5px; padding:6px 12px; font-weight:700; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--acc); border:1px solid var(--acc); }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+  pre { background:#0f100b; border:1px solid var(--line); border-radius:6px; padding:8px; color:var(--txt); white-space:pre-wrap; font-size:12px; margin:6px 0 0; }
+  .note { color:var(--dim); font-size:12px; }
+  table { border-collapse:collapse; width:100%; font-size:12px; }
+  td, th { border-bottom:1px solid var(--line); padding:3px 6px; text-align:left; }
+  th { color:var(--dim); font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>COMQUEST · CAPS TUNER (La Lance)</h1>
+  <p>Simulates the enemy on Altis minute by minute: HQs come up, each one calls a wave every interval when the caps leave room
+  (all AI ≤ maxAI − waveSize and infantry ≤ maxInfantry − waveSize), you kill at the rate you set, the carrier pays.
+  Aim: infantry and all AI that stay flat, waves rarely postponed, the carrier empty when you want the all-in.</p>
+</header>
+<div class="wrap">
+  <div class="panel side" id="controls"></div>
+  <div>
+    <div class="stats" id="stats"></div>
+    <canvas id="chart" height="360"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--inf)"></i>infantry (cap view)</span>
+      <span><i style="background:var(--ai)"></i>all AI (cap view)</span>
+      <span><i style="background:var(--cap)"></i>caps (dashed: wave gate)</span>
+      <span><i style="background:var(--car)"></i>carrier % (right axis)</span>
+      <span><i style="background:#c9b458"></i>▲ wave sent · ✕ postponed (bottom)</span>
+    </div>
+    <div class="panel">
+      <div class="btns">
+        <button id="suggest">Suggest flat values</button>
+        <button class="ghost" id="reset">Reset to game values</button>
+        <button class="ghost" id="copy">Copy settings.sqf lines</button>
+        <span class="note" id="copied"></span>
+      </div>
+      <div id="advice" class="note"></div>
+      <pre id="sqf"></pre>
+    </div>
+    <div class="panel" style="margin-top:10px">
+      <b style="color:var(--acc)">Per HQ, at the end of the run</b>
+      <table id="hqtab"></table>
+    </div>
+  </div>
+</div>
+<script>
+// ---------------------------------------------------------------- parameters (game values, HQ_ROUTES 2026-11-19)
+const P = [
+  ["Caps", [
+    ["maxAI", "CQ_maxAI", "all enemy AI alive (crews included)", 150, 60, 300, 5],
+    ["maxInf", "CQ_maxInfantry", "foot soldiers alive", 80, 30, 200, 5],
+    ["waveSize", "CQ_waveSize", "room kept free for one wave", 14, 4, 30, 1],
+  ]],
+  ["Waves", [
+    ["interval", "CQ_waveInterval", "s between two waves of one HQ", 600, 120, 2400, 30],
+    ["squads", "CQ_waveSquads", "infantry squads per wave (8 men)", 1, 0, 3, 1],
+    ["snipers", "CQ_snipersPerWave", "snipers per wave (on foot)", 2, 0, 4, 1],
+    ["crewWave", "", "crew per wave (truck 1 + armour 3 + random 2)", 6, 0, 12, 1],
+    ["hqVehMax", "CQ_hqVehMax", "crewed fighting vehicles per HQ (then truck only)", 3, 0, 8, 1],
+    ["convoy", "", "min from call to arrival", 5, 1, 15, 1],
+    ["retry", "", "min before a postponed wave asks again", 1, 1, 10, 1],
+  ]],
+  ["HQs (La Lance)", [
+    ["t1", "", "Port operational (min)", 24, 0, 120, 1],
+    ["t2", "", "Relais operational (min)", 61, 0, 200, 1],
+    ["t3", "", "Tête operational (min)", 90, 0, 240, 1],
+    ["bondEvery", "", "Tête bonds every (min, 0 = never)", 25, 0, 90, 1],
+    ["garInf", "", "infantry an HQ starts with (cmd + escort + squad)", 15, 0, 40, 1],
+    ["statics", "", "static weapon crews per HQ", 7, 0, 20, 1],
+    ["guerilla", "", "armed civilians per HQ (count as infantry)", 3, 0, 10, 1],
+    ["btSquad", "", "build-truck squad per new position (infantry)", 8, 0, 12, 1],
+  ]],
+  ["Other enemy", [
+    ["air", "", "helicopter crews in the air / parked", 12, 0, 40, 1],
+    ["crewInf", "", "% of vehicle crews counted as infantry (out / in the back)", 60, 0, 100, 5],
+    ["outpost", "", "corridor outpost (out of the caps)", 20, 0, 40, 1],
+    ["guards", "", "posted guards near players (out of the caps)", 12, 0, 40, 1],
+    ["events", "", "event AI (out of the caps)", 8, 0, 40, 1],
+  ]],
+  ["Your fire", [
+    ["killInf", "", "infantry you kill per 10 min", 8, 0, 60, 1],
+    ["killCrew", "", "vehicle crew you kill per 10 min", 3, 0, 30, 1],
+    ["fightFrom", "", "fighting starts at (min)", 30, 0, 120, 5],
+  ]],
+  ["Carrier (economy)", [
+    ["budget", "CQ_lanceBudget", "points at start", 1000, 200, 4000, 50],
+    ["cWave", "wave", "wave", 40, 0, 200, 5],
+    ["cFlight", "flight", "supply flight", 20, 0, 200, 5],
+    ["flightEvery", "CQ_ammoFlightInterval", "s between supply flights", 1200, 300, 3600, 60],
+    ["cTruck", "truck", "build truck", 60, 0, 300, 5],
+    ["cKaj", "kajman", "Kajman from the carrier (per position)", 50, 0, 300, 5],
+    ["cPos", "position", "new position (Relais / Tête / bond)", 100, 0, 400, 10],
+    ["tideStep", "CQ_lanceTideStep", "tide level every (share spent)", 0.25, 0.1, 0.5, 0.05],
+    ["tideSoldiers", "CQ_lanceTideSoldiers", "extra soldiers per wave per level", 2, 0, 6, 1],
+    ["tideInterval", "CQ_lanceTideInterval", "wave interval × (1 + this) per level", 0.25, 0, 1, 0.05],
+  ]],
+  ["Run", [
+    ["hours", "", "length of the simulation (h)", 3, 1, 8, 0.5],
+  ]],
+];
+const DEF = {}; P.forEach(([, rows]) => rows.forEach(r => DEF[r[0]] = r[3]));
+const V = Object.assign({}, DEF);
+try { const s = JSON.parse(localStorage.getItem("cqCaps") || "null"); if (s) Object.assign(V, s); } catch (e) {}
+
+// ---------------------------------------------------------------- UI
+const ctl = document.getElementById("controls");
+function buildControls() {
+  ctl.innerHTML = "";
+  P.forEach(([title, rows], gi) => {
+    const d = document.createElement("details"); d.open = gi < 3;
+    d.innerHTML = `<summary>${title}</summary>`;
+    rows.forEach(([k, sqf, label, def, min, max, step]) => {
+      const r = document.createElement("div"); r.className = "row";
+      r.innerHTML = `<label>${label}<small>${sqf && sqf.startsWith("CQ_") ? sqf : (sqf ? "cost: " + sqf : "model")} · game ${def}</small></label>
+        <input type="range" min="${min}" max="${max}" step="${step}" value="${V[k]}" data-k="${k}">
+        <input type="number" min="${min}" max="${max}" step="${step}" value="${V[k]}" data-k="${k}">`;
+      d.appendChild(r);
+    });
+    ctl.appendChild(d);
+  });
+  ctl.querySelectorAll("input").forEach(inp => inp.addEventListener("input", e => {
+    const k = e.target.dataset.k; V[k] = parseFloat(e.target.value);
+    ctl.querySelectorAll(`input[data-k="${k}"]`).forEach(o => { if (o !== e.target) o.value = V[k]; });
+    run();
+  }));
+}
+
+// ---------------------------------------------------------------- simulation (1 step = 1 min)
+function simulate(v) {
+  const T = Math.round(v.hours * 60);
+  const builtAt = [v.t1, v.t2, v.t3];
+  const hq = builtAt.map((t, i) => ({ id: i + 1, role: ["Port", "Relais", "Tête"][i], t, up: false, inf: 0, crew: 0, next: 0, inbound: -1, sent: 0, post: 0 }));
+  let air = v.air, carrier = v.budget, tide = 0, allIn = -1, nextFlight = v.flightEvery / 60, lastBond = v.t3;
+  const out = { inf: [], ai: [], car: [], sent: [], post: [], tide: [], atCap: 0, waves: 0, postponed: 0, allIn: -1, spent: {} };
+  const spend = (k, c) => { if (allIn >= 0 || carrier < c) return false; carrier -= c; out.spent[k] = (out.spent[k] || 0) + c; return true; };
+  const minCost = Math.min(v.cWave, v.cFlight, v.cTruck, v.cKaj, v.cPos);
+  const counted = () => {
+    let inf = 0, crew = 0, stat = 0;
+    hq.forEach(h => { if (h.up) { inf += h.inf + v.guerilla; crew += h.crew; stat += v.statics; } });
+    const infCap = inf + crew * v.crewInf / 100;
+    return { infCap, all: inf + crew + stat + air };
+  };
+  for (let m = 0; m <= T; m++) {
+    const sentNow = [], postNow = [];
+    // HQs come up (first Port is free; Relais / Tête cost a position, a truck and a Kajman)
+    hq.forEach((h, i) => {
+      if (!h.up && m >= h.t) {
+        if (i > 0) { spend("position", v.cPos); spend("truck", v.cTruck); spend("kajman", v.cKaj); }
+        h.up = true; h.inf = v.garInf + (i > 0 ? v.btSquad : v.btSquad); h.next = m + 1;
+      }
+    });
+    // bonds: the Tête moves forward (new position paid, a new build squad lands)
+    if (v.bondEvery > 0 && hq[2].up && m - lastBond >= v.bondEvery && allIn < 0) {
+      if (spend("position", v.cPos)) { spend("truck", v.cTruck); spend("kajman", v.cKaj); hq[2].inf += v.btSquad; lastBond = m; }
+    }
+    // supply flights
+    if (m >= nextFlight) { spend("flight", v.cFlight); nextFlight = m + v.flightEvery / 60; }
+    // waves arrive
+    hq.forEach(h => {
+      if (h.inbound >= 0 && m >= h.inbound) {
+        h.inbound = -1;
+        h.inf += v.squads * 8 + v.snipers + tide * v.tideSoldiers;
+        const crewRoom = v.hqVehMax * 3 - h.crew;
+        h.crew += Math.max(0, Math.min(v.crewWave - 1, crewRoom)) + 1;   // the truck driver always comes
+        h.next = m + (v.interval / 60) * (1 + tide * v.tideInterval);
+      }
+    });
+    // waves called
+    hq.forEach(h => {
+      if (!h.up || h.inbound >= 0 || m < h.next || allIn >= 0) return;
+      const c = counted();
+      if (c.all > v.maxAI - v.waveSize || c.infCap > v.maxInf - v.waveSize) { h.post++; out.postponed++; postNow.push(h.id); h.next = m + v.retry; return; }
+      if (!spend("wave", v.cWave)) { h.next = m + v.interval / 60; return; }
+      h.inbound = m + v.convoy; h.sent++; out.waves++; sentNow.push(h.id);
+    });
+    // your fire, spread over the HQs that are up
+    if (m >= v.fightFrom) {
+      const up = hq.filter(h => h.up);
+      if (up.length) {
+        let ki = v.killInf / 10, kc = v.killCrew / 10;
+        up.forEach(h => { h.inf = Math.max(0, h.inf - ki / up.length); h.crew = Math.max(0, h.crew - kc / up.length); });
+      }
+    }
+    // tide and all-in
+    const pct = carrier / v.budget;
+    tide = Math.min(4, Math.floor((1 - pct) / v.tideStep + 1e-6));
+    if (allIn < 0 && carrier < minCost) { allIn = m; out.allIn = m; }
+    const c = counted();
+    if (c.infCap > v.maxInf - v.waveSize || c.all > v.maxAI - v.waveSize) out.atCap++;
+    out.inf.push(c.infCap); out.ai.push(c.all); out.car.push(pct * 100); out.tide.push(tide);
+    out.sent.push(sentNow); out.post.push(postNow);
+  }
+  out.T = T; out.hq = hq; out.carrierLeft = carrier;
+  // flatness after the last HQ is up: spread of infantry
+  const from = Math.min(T, Math.max(v.t3 + 10, 0));
+  const tail = out.inf.slice(from);
+  out.infMin = tail.length ? Math.min(...tail) : 0; out.infMax = tail.length ? Math.max(...tail) : 0;
+  out.infAvg = tail.length ? tail.reduce((a, b) => a + b, 0) / tail.length : 0;
+  const tailAi = out.ai.slice(from);
+  out.aiAvg = tailAi.length ? tailAi.reduce((a, b) => a + b, 0) / tailAi.length : 0;
+  return out;
+}
+
+// ---------------------------------------------------------------- drawing
+const cv = document.getElementById("chart");
+function draw(o, v) {
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = 360;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const L = 40, R = 40, Tp = 12, B = 46, w = W - L - R, h = H - Tp - B;
+  const yMax = Math.max(v.maxAI * 1.15, ...o.ai) ;
+  const X = m => L + (m / o.T) * w, Y = n => Tp + h - (n / yMax) * h, Yc = p => Tp + h - (p / 100) * h;
+  g.font = "11px system-ui"; g.fillStyle = "#a6a381"; g.strokeStyle = "#33352a"; g.lineWidth = 1;
+  for (let n = 0; n <= yMax; n += 25) { g.beginPath(); g.moveTo(L, Y(n)); g.lineTo(L + w, Y(n)); g.stroke(); g.fillText(n, 6, Y(n) + 4); }
+  for (let m = 0; m <= o.T; m += 30) { g.fillText((m / 60).toFixed(1) + "h", X(m) - 10, Tp + h + 14); }
+  for (let p = 0; p <= 100; p += 25) g.fillText(p + "%", L + w + 6, Yc(p) + 4);
+  // HQ up marks
+  g.strokeStyle = "#555842"; g.setLineDash([2, 4]);
+  [v.t1, v.t2, v.t3].forEach((t, i) => { if (t <= o.T) { g.beginPath(); g.moveTo(X(t), Tp); g.lineTo(X(t), Tp + h); g.stroke(); g.fillText(["Port", "Relais", "Tête"][i], X(t) + 3, Tp + 10); } });
+  if (o.allIn >= 0) { g.strokeStyle = "#e07a5f"; g.beginPath(); g.moveTo(X(o.allIn), Tp); g.lineTo(X(o.allIn), Tp + h); g.stroke(); g.fillStyle = "#e07a5f"; g.fillText("ALL-IN", X(o.allIn) + 3, Tp + 24); g.fillStyle = "#a6a381"; }
+  // caps
+  const capLine = (n, dash) => { g.strokeStyle = "#f2f1df"; g.setLineDash(dash); g.beginPath(); g.moveTo(L, Y(n)); g.lineTo(L + w, Y(n)); g.stroke(); };
+  capLine(v.maxAI, []); capLine(v.maxInf, []); capLine(v.maxAI - v.waveSize, [5, 4]); capLine(v.maxInf - v.waveSize, [5, 4]);
+  g.setLineDash([]);
+  const line = (arr, col, f) => { g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); arr.forEach((n, m) => { const x = X(m), y = f(n); m ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); g.lineWidth = 1; };
+  line(o.car, "#9dbb61", Yc); line(o.ai, "#7fb7be", Y); line(o.inf, "#e07a5f", Y);
+  // wave marks
+  o.sent.forEach((s, m) => s.forEach((id, k) => { g.fillStyle = "#c9b458"; g.fillText("▲", X(m) - 4, Tp + h + 28 + 0 * k); }));
+  o.post.forEach((s, m) => { if (s.length) { g.fillStyle = "#e07a5f"; g.fillRect(X(m) - 1, Tp + h + 32, 2, 6 + 2 * s.length); } });
+  g.fillStyle = "#a6a381"; g.fillText("waves ▲ sent", L, H - 4); g.fillStyle = "#e07a5f"; g.fillText("| postponed", L + 80, H - 4);
+}
+
+// ---------------------------------------------------------------- stats, advice, settings text
+function stat(label, val, cls) { return `<div class="stat ${cls || ""}"><b>${val}</b><span>${label}</span></div>`; }
+function fmtMin(m) { return m < 0 ? "never" : `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, "0")}`; }
+function run() {
+  try { localStorage.setItem("cqCaps", JSON.stringify(V)); } catch (e) {}
+  const o = simulate(V);
+  const postShare = o.waves + o.postponed ? o.postponed / (o.waves + o.postponed) : 0;
+  const swing = o.infMax - o.infMin;
+  document.getElementById("stats").innerHTML =
+    stat("waves sent", o.waves) +
+    stat("wave calls postponed", `${o.postponed} (${Math.round(postShare * 100)}%)`, postShare > 0.5 ? "bad" : postShare > 0.2 ? "warn" : "good") +
+    stat("time at the wave gate", `${Math.round(100 * o.atCap / (o.T + 1))}%`, o.atCap / (o.T + 1) > 0.5 ? "bad" : "warn") +
+    stat("infantry after the Tête (min–max)", `${Math.round(o.infMin)}–${Math.round(o.infMax)}`, swing > 30 ? "warn" : "good") +
+    stat("avg all AI after the Tête", Math.round(o.aiAvg)) +
+    stat("carrier left at the end", `${Math.round(100 * o.carrierLeft / V.budget)}%`) +
+    stat("all-in at", fmtMin(o.allIn), o.allIn < 0 ? "warn" : "good");
+  draw(o, V);
+  // per HQ table
+  document.getElementById("hqtab").innerHTML = "<tr><th>HQ</th><th>up at</th><th>waves sent</th><th>postponed</th><th>infantry</th><th>crew</th></tr>" +
+    o.hq.map(h => `<tr><td>#${h.id} ${h.role}</td><td>${fmtMin(h.t)}</td><td>${h.sent}</td><td>${h.post}</td><td>${Math.round(h.inf)}</td><td>${Math.round(h.crew)}</td></tr>`).join("");
+  // advice
+  const nHq = 3, perWave = V.squads * 8 + V.snipers;
+  const inflow = nHq * perWave / (V.interval / 60) * 10;   // per 10 min when nothing blocks
+  let adv = `With 3 HQs, waves can bring <b>${inflow.toFixed(1)}</b> infantry per 10 min; you kill <b>${V.killInf}</b>. `;
+  adv += inflow > V.killInf * 1.15 ? "Waves outrun your fire: the caps fill up and waves get postponed (the count stays flat, but at the cap)." :
+         inflow < V.killInf * 0.85 ? "Your fire outruns the waves: the enemy thins out over time." : "Balanced: waves roughly replace your kills.";
+  document.getElementById("advice").innerHTML = adv;
+  document.getElementById("sqf").textContent =
+`CQ_maxAI = ${V.maxAI};
+CQ_maxInfantry = ${V.maxInf};
+CQ_waveSize = ${V.waveSize};
+CQ_waveInterval = ${V.interval};
+CQ_waveSquads = ${V.squads};
+CQ_snipersPerWave = ${V.snipers};
+CQ_hqVehMax = ${V.hqVehMax};
+CQ_ammoFlightInterval = ${V.flightEvery};
+CQ_lanceBudget = ${V.budget};
+CQ_lanceCost = createHashMapFromArray [["wave", ${V.cWave}], ["flight", ${V.cFlight}], ["truck", ${V.cTruck}], ["kajman", ${V.cKaj}], ["position", ${V.cPos}], ["rebuild", ${V.cPos * 2}]];
+CQ_lanceTideStep = ${V.tideStep};
+CQ_lanceTideSoldiers = ${V.tideSoldiers};
+CQ_lanceTideInterval = ${V.tideInterval};`;
+}
+
+// Suggest: waves replace your kills (flat count), caps = what 3 built HQs hold + one wave of room
+function suggest() {
+  const nHq = 3, perWave = V.squads * 8 + V.snipers;
+  const killPerMin = Math.max(0.2, V.killInf / 10);
+  V.interval = Math.max(120, Math.min(2400, Math.round(nHq * perWave / killPerMin * 60 / 30) * 30));
+  const fixedInf = nHq * (V.garInf + V.guerilla + V.btSquad) + nHq * V.hqVehMax * 3 * V.crewInf / 100;
+  V.waveSize = Math.max(V.waveSize, perWave + V.crewWave);
+  V.maxInf = Math.min(200, Math.round((fixedInf + perWave * 1.5 + V.waveSize) / 5) * 5);
+  const allFixed = nHq * (V.garInf + V.guerilla + V.btSquad + V.statics + V.hqVehMax * 3) + V.air;
+  V.maxAI = Math.min(300, Math.round((allFixed + perWave * 1.5 + V.waveSize) / 5) * 5);
+  // budget: the carrier runs dry about when the run ends
+  const hours = V.hours, waves = nHq * hours * 60 / (V.interval / 60) * 0.8;
+  const bonds = V.bondEvery > 0 ? Math.max(0, (hours * 60 - V.t3) / V.bondEvery) : 0;
+  const need = waves * V.cWave + (hours * 3600 / V.flightEvery) * V.cFlight + (2 + bonds) * (V.cPos + V.cTruck + V.cKaj);
+  V.budget = Math.max(200, Math.min(4000, Math.round(need / 50) * 50));
+  buildControls(); run();
+}
+document.getElementById("suggest").onclick = suggest;
+document.getElementById("reset").onclick = () => { Object.assign(V, DEF); buildControls(); run(); };
+document.getElementById("copy").onclick = async () => {
+  const t = document.getElementById("sqf").textContent, el = document.getElementById("copied");
+  try { await navigator.clipboard.writeText(t); el.textContent = "copied"; } catch (e) { el.textContent = "select the text below and copy it"; }
+  setTimeout(() => el.textContent = "", 2500);
+};
+window.addEventListener("resize", run);
+buildControls(); run();
+</script>
+</body>
+</html>
