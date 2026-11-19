@@ -105,7 +105,7 @@ switch (_mode) do {
         _args params ["_hq"];
         private _p = _hq get "pos";
         private _donors = (values CQ_hqs) select {
-            _x != _hq && { (_x get "state") in CQ_activeStates } && { _x get "buildDone" } && { !(_x getOrDefault ["isolated", false]) }
+            (_x get "id") != (_hq get "id") && { (_x get "state") in CQ_activeStates } && { _x get "buildDone" } && { !(_x getOrDefault ["isolated", false]) }
             && { private _t = _x getOrDefault ["buildTruck", objNull]; alive _t && { canMove _t } && { alive driver _t } }
             && { (_x get "pos") distance2D _p < CQ_btLendRange }
         };
@@ -190,6 +190,7 @@ switch (_mode) do {
             if (count _e > 0 && { alive (_e get "veh") }) then {
                 (_e get "veh") setVariable ["CQ_btKaj", nil, true];
                 (_e get "veh") setVariable ["CQ_kajLeashed", false];
+                (_e get "veh") limitSpeed 1000;
                 { _x enableAI "AUTOTARGET"; _x enableAI "TARGET" } forEach crew (_e get "veh");
                 _e set ["state", "toPark"]; _e set ["nearT", -1];
                 (_e get "veh") flyInHeight 110;
@@ -253,6 +254,7 @@ switch (_mode) do {
                 private _g = group _v;
                 private _cm = effectiveCommander _v;
                 if (!isNull _cm) then { { _g forgetTarget _x } forEach ((_cm targets [true, 3000]) select { _x isKindOf "UAV" || { unitIsUAV _x } }) };
+                _v limitSpeed CQ_btKajSpeed;   // slower: tighter circles around the truck
                 private _dk = _v distance2D _ctr;
                 if (_dk > CQ_btKajLeash) then {
                     if !(_v getVariable ["CQ_kajLeashed", false]) then {

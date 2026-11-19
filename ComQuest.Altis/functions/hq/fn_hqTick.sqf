@@ -122,6 +122,8 @@ private _players = allPlayers select { alive _x };
                     ["Enemy perimeter secured", format ["HQ #%1: perimeter %2, installing the HQ at grid %3",
                         _id, ["secured", "partly secured (timeout)"] select _timeout, mapGridPosition _c]] call CQ_fnc_announce;
                     [_hq] spawn CQ_fnc_hqBuild;
+                    // its first wave, airdropped around the build truck as the build starts
+                    if (CQ_airWave) then { ["start", [_hq]] spawn CQ_fnc_waveAirdrop };
                 };
             };
         };
@@ -133,7 +135,16 @@ private _players = allPlayers select { alive _x };
             };
         };
         case "Hold": {
-            if (_now - (_hq get "stateT") >= CQ_holdTime) then { [_hq] call CQ_fnc_hqRequestWave };
+            if (_now - (_hq get "stateT") >= CQ_holdTime) then {
+                // its first wave came by air during the build: the next one (road convoy) in CQ_waveInterval s
+                if (_hq getOrDefault ["airWave", false]) then {
+                    _hq set ["state", "Holding"];
+                    _hq set ["stateT", _now];
+                    _hq set ["nextWaveT", _now + CQ_waveInterval];
+                } else {
+                    [_hq] call CQ_fnc_hqRequestWave;
+                };
+            };
         };
         case "Holding": {
             // La Lance: no need to wait for a wave, the HQ checks on its own whether it may split / bond / assault

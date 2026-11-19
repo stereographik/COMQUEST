@@ -1,12 +1,14 @@
 /*
     CQ_fnc_paraDropVehicle  (server, spawned)
-    [_class, _lz, _onLanded, _tag] spawn CQ_fnc_paraDropVehicle;
+    [_class, _lz, _onLanded, _tag, _onDrop] spawn CQ_fnc_paraDropVehicle;
     A Mohawk (CQ_dropPlaneClass) leaves the carrier with the vehicle in its cargo bay
     (Vehicle-in-Vehicle; hidden + own parachute if it does not fit), flies to _lz (pushed
     inland until CQ_dropCoastGap from water), paradrops it over safe ground and goes home.
     _onLanded is called with [vehicle] once it stands on the ground (not if it is lost).
+    _onDrop (optional) is called with [vehicle] the moment it leaves the plane (crew and passengers
+    can be put in then: they ride it down).
 */
-params ["_class", "_lz", ["_onLanded", {}], ["_tag", "Paradrop"]];
+params ["_class", "_lz", ["_onLanded", {}], ["_tag", "Paradrop"], ["_onDrop", {}]];
 
 private _start = if (!isNil "CQ_carrierPos") then { CQ_carrierPos getPos [400, CQ_carrierPos getDir _lz] } else { _lz getPos [6000, 90] };
 private _away = _start getDir _lz;
@@ -88,6 +90,7 @@ waitUntil {
             };
         };
         _dropped = true;
+        [_cargo] call _onDrop;
     };
     _dropped
 };
