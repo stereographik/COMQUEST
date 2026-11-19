@@ -45,8 +45,11 @@
 </head>
 <body>
 <header>
-  <h1>COMQUEST · CAPS TUNER (La Lance)</h1>
-  <p>Simulates the enemy on Altis minute by minute: HQs come up, each one calls a wave every interval when the caps leave room
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <h1 id="ttl">COMQUEST · CAPS TUNER (La Lance)</h1>
+    <div class="btns" style="margin:0"><button class="ghost" id="lfr">FR</button><button class="ghost" id="len">US</button></div>
+  </div>
+  <p id="intro">Simulates the enemy on Altis minute by minute: HQs come up, each one calls a wave every interval when the caps leave room
   (all AI ≤ maxAI − waveSize and infantry ≤ maxInfantry − waveSize), you kill at the rate you set, the carrier pays.
   Aim: infantry and all AI that stay flat, waves rarely postponed, the carrier empty when you want the all-in.</p>
 </header>
@@ -56,24 +59,24 @@
     <div class="stats" id="stats"></div>
     <canvas id="chart" height="360"></canvas>
     <div class="legend">
-      <span><i style="background:var(--inf)"></i>infantry (cap view)</span>
-      <span><i style="background:var(--ai)"></i>all AI (cap view)</span>
-      <span><i style="background:var(--cap)"></i>caps (dashed: wave gate)</span>
-      <span><i style="background:var(--car)"></i>carrier % (right axis)</span>
-      <span><i style="background:#c9b458"></i>▲ wave sent · ✕ postponed (bottom)</span>
+      <span><i style="background:var(--inf)"></i><span data-t="lgInf">infantry (cap view)</span></span>
+      <span><i style="background:var(--ai)"></i><span data-t="lgAi">all AI (cap view)</span></span>
+      <span><i style="background:var(--cap)"></i><span data-t="lgCap">caps (dashed: wave gate)</span></span>
+      <span><i style="background:var(--car)"></i><span data-t="lgCar">carrier % (right axis)</span></span>
+      <span><i style="background:#c9b458"></i><span data-t="lgWave">▲ wave sent · | postponed (bottom)</span></span>
     </div>
     <div class="panel">
       <div class="btns">
-        <button id="suggest">Suggest flat values</button>
-        <button class="ghost" id="reset">Reset to game values</button>
-        <button class="ghost" id="copy">Copy settings.sqf lines</button>
+        <button id="suggest" data-t="bSug">Suggest flat values</button>
+        <button class="ghost" id="reset" data-t="bReset">Reset to game values</button>
+        <button class="ghost" id="copy" data-t="bCopy">Copy settings.sqf lines</button>
         <span class="note" id="copied"></span>
       </div>
       <div id="advice" class="note"></div>
       <pre id="sqf"></pre>
     </div>
     <div class="panel" style="margin-top:10px">
-      <b style="color:var(--acc)">Per HQ, at the end of the run</b>
+      <b style="color:var(--acc)" data-t="perHq">Per HQ, at the end of the run</b>
       <table id="hqtab"></table>
     </div>
   </div>
@@ -137,16 +140,73 @@ const DEF = {}; P.forEach(([, rows]) => rows.forEach(r => DEF[r[0]] = r[3]));
 const V = Object.assign({}, DEF);
 try { const s = JSON.parse(localStorage.getItem("cqCaps") || "null"); if (s) Object.assign(V, s); } catch (e) {}
 
+// ---------------------------------------------------------------- language (FR / US)
+let LANG = "en";
+try { LANG = localStorage.getItem("cqCapsLang") || (navigator.language || "").startsWith("fr") && "fr" || "en"; } catch (e) {}
+const GROUP_FR = { "Caps": "Plafonds", "Waves": "Vagues", "HQs (La Lance)": "HQ (La Lance)", "Other enemy": "Autres ennemis", "Your fire": "Votre feu", "Carrier (economy)": "Carrier (économie)", "Run": "Simulation" };
+const LBL_FR = {
+  maxAI: "toutes les IA ennemies en vie (équipages compris)", maxInf: "fantassins en vie", waveSize: "place gardée libre pour une vague",
+  interval: "s entre deux vagues d'un HQ", squads: "escouades d'infanterie par vague (8 hommes)", snipers: "snipers par vague (à pied)",
+  crewWave: "équipage par vague (camion 1 + blindé 3 + aléatoire 2)", hqVehMax: "véhicules de combat avec équipage par HQ (ensuite camion seul)",
+  convoy: "min entre l'appel et l'arrivée", retry: "min avant qu'une vague reportée redemande",
+  t1: "Port opérationnel (min)", t2: "Relais opérationnel (min)", t3: "Tête opérationnelle (min)", bondEvery: "bond de la Tête toutes les (min, 0 = jamais)",
+  garInf: "infanterie de départ d'un HQ (commandant + escorte + escouade)", statics: "équipages d'armes statiques par HQ", guerilla: "civils armés par HQ (comptent en infanterie)",
+  btSquad: "escouade du camion de construction par nouvelle position", air: "équipages d'hélicoptères (en vol / au sol)",
+  crewInf: "% des équipages comptés en infanterie (descendus / à l'arrière)", outpost: "avant-poste du couloir (hors plafonds)",
+  guards: "gardes postés près des joueurs (hors plafonds)", events: "IA des événements (hors plafonds)",
+  killInf: "fantassins que vous tuez par 10 min", killCrew: "équipages que vous tuez par 10 min", fightFrom: "les combats commencent à (min)",
+  budget: "points au départ", cWave: "vague", cFlight: "vol de ravitaillement", flightEvery: "s entre deux vols de ravitaillement",
+  cTruck: "camion de construction", cKaj: "Kajman du carrier (par position)", cPos: "nouvelle position (Relais / Tête / bond)",
+  tideStep: "un niveau de marée tous les (part dépensée)", tideSoldiers: "soldats en plus par vague et par niveau", tideInterval: "intervalle des vagues × (1 + ceci) par niveau",
+  hours: "durée de la simulation (h)"
+};
+const TXT = {
+  en: { ttl: "COMQUEST · CAPS TUNER (La Lance)", intro: document.getElementById("intro").innerHTML,
+    lgInf: "infantry (cap view)", lgAi: "all AI (cap view)", lgCap: "caps (dashed: wave gate)", lgCar: "carrier % (right axis)", lgWave: "▲ wave sent · | postponed (bottom)",
+    bSug: "Suggest flat values", bReset: "Reset to game values", bCopy: "Copy settings.sqf lines", perHq: "Per HQ, at the end of the run",
+    model: "model", cost: "cost: ", game: "game",
+    sSent: "waves sent", sPost: "wave calls postponed", sGate: "time at the wave gate", sInf: "infantry after the Tête (min–max)", sAi: "avg all AI after the Tête", sCar: "carrier left at the end", sAll: "all-in at", never: "never",
+    thHq: "HQ", thUp: "up at", thSent: "waves sent", thPost: "postponed", thInf: "infantry", thCrew: "crew", roles: ["Port", "Relais", "Tête"],
+    copied: "copied", copyFail: "select the text below and copy it", hWaves: "waves ▲ sent", hPost: "| postponed",
+    adv: (i, k) => `With 3 HQs, waves can bring <b>${i}</b> infantry per 10 min; you kill <b>${k}</b>. `,
+    advHi: "Waves outrun your fire: the caps fill up and waves get postponed (the count stays flat, but at the cap).",
+    advLo: "Your fire outruns the waves: the enemy thins out over time.", advOk: "Balanced: waves roughly replace your kills." },
+  fr: { ttl: "COMQUEST · RÉGLAGE DES PLAFONDS (La Lance)",
+    intro: "Simule l'ennemi sur Altis minute par minute : les HQ apparaissent, chacun appelle une vague à chaque intervalle quand les plafonds laissent de la place (toutes IA ≤ maxAI − waveSize et infanterie ≤ maxInfantry − waveSize), vous tuez au rythme choisi, le carrier paie. Objectif : infanterie et IA stables, vagues rarement reportées, carrier vide quand vous voulez l'all-in.",
+    lgInf: "infanterie (vue plafond)", lgAi: "toutes IA (vue plafond)", lgCap: "plafonds (pointillés : seuil de vague)", lgCar: "carrier % (axe droit)", lgWave: "▲ vague envoyée · | reportée (en bas)",
+    bSug: "Proposer des valeurs stables", bReset: "Revenir aux valeurs du jeu", bCopy: "Copier les lignes settings.sqf", perHq: "Par HQ, en fin de simulation",
+    model: "modèle", cost: "coût : ", game: "jeu",
+    sSent: "vagues envoyées", sPost: "appels de vague reportés", sGate: "temps au seuil de vague", sInf: "infanterie après la Tête (min–max)", sAi: "moyenne toutes IA après la Tête", sCar: "carrier restant à la fin", sAll: "all-in à", never: "jamais",
+    thHq: "HQ", thUp: "prêt à", thSent: "vagues envoyées", thPost: "reportées", thInf: "infanterie", thCrew: "équipages", roles: ["Port", "Relais", "Tête"],
+    copied: "copié", copyFail: "sélectionnez le texte ci-dessous et copiez-le", hWaves: "vagues ▲ envoyées", hPost: "| reportées",
+    adv: (i, k) => `Avec 3 HQ, les vagues peuvent amener <b>${i}</b> fantassins par 10 min ; vous en tuez <b>${k}</b>. `,
+    advHi: "Les vagues vont plus vite que votre feu : les plafonds se remplissent et les vagues sont reportées (effectif stable, mais au plafond).",
+    advLo: "Votre feu va plus vite que les vagues : l'ennemi s'amenuise avec le temps.", advOk: "Équilibré : les vagues remplacent à peu près vos pertes infligées." }
+};
+const t = k => TXT[LANG][k];
+function setLang(l) {
+  LANG = l; try { localStorage.setItem("cqCapsLang", l); } catch (e) {}
+  document.documentElement.lang = l;
+  document.getElementById("ttl").textContent = t("ttl");
+  document.getElementById("intro").innerHTML = t("intro");
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
+  document.getElementById("lfr").style.background = l == "fr" ? "var(--acc)" : ""; document.getElementById("lfr").style.color = l == "fr" ? "#14150f" : "";
+  document.getElementById("len").style.background = l == "en" ? "var(--acc)" : ""; document.getElementById("len").style.color = l == "en" ? "#14150f" : "";
+  buildControls(); run();
+}
+document.getElementById("lfr").onclick = () => setLang("fr");
+document.getElementById("len").onclick = () => setLang("en");
+
 // ---------------------------------------------------------------- UI
 const ctl = document.getElementById("controls");
 function buildControls() {
   ctl.innerHTML = "";
   P.forEach(([title, rows], gi) => {
     const d = document.createElement("details"); d.open = gi < 3;
-    d.innerHTML = `<summary>${title}</summary>`;
+    d.innerHTML = `<summary>${LANG == "fr" ? GROUP_FR[title] : title}</summary>`;
     rows.forEach(([k, sqf, label, def, min, max, step]) => {
       const r = document.createElement("div"); r.className = "row";
-      r.innerHTML = `<label>${label}<small>${sqf && sqf.startsWith("CQ_") ? sqf : (sqf ? "cost: " + sqf : "model")} · game ${def}</small></label>
+      r.innerHTML = `<label>${LANG == "fr" ? LBL_FR[k] : label}<small>${sqf && sqf.startsWith("CQ_") ? sqf : (sqf ? t("cost") + sqf : t("model"))} · ${t("game")} ${def}</small></label>
         <input type="range" min="${min}" max="${max}" step="${step}" value="${V[k]}" data-k="${k}">
         <input type="number" min="${min}" max="${max}" step="${step}" value="${V[k]}" data-k="${k}">`;
       d.appendChild(r);
@@ -251,7 +311,7 @@ function draw(o, v) {
   for (let p = 0; p <= 100; p += 25) g.fillText(p + "%", L + w + 6, Yc(p) + 4);
   // HQ up marks
   g.strokeStyle = "#555842"; g.setLineDash([2, 4]);
-  [v.t1, v.t2, v.t3].forEach((t, i) => { if (t <= o.T) { g.beginPath(); g.moveTo(X(t), Tp); g.lineTo(X(t), Tp + h); g.stroke(); g.fillText(["Port", "Relais", "Tête"][i], X(t) + 3, Tp + 10); } });
+  [v.t1, v.t2, v.t3].forEach((tm, i) => { if (tm <= o.T) { g.beginPath(); g.moveTo(X(tm), Tp); g.lineTo(X(tm), Tp + h); g.stroke(); g.fillText(t("roles")[i], X(tm) + 3, Tp + 10); } });
   if (o.allIn >= 0) { g.strokeStyle = "#e07a5f"; g.beginPath(); g.moveTo(X(o.allIn), Tp); g.lineTo(X(o.allIn), Tp + h); g.stroke(); g.fillStyle = "#e07a5f"; g.fillText("ALL-IN", X(o.allIn) + 3, Tp + 24); g.fillStyle = "#a6a381"; }
   // caps
   const capLine = (n, dash) => { g.strokeStyle = "#f2f1df"; g.setLineDash(dash); g.beginPath(); g.moveTo(L, Y(n)); g.lineTo(L + w, Y(n)); g.stroke(); };
@@ -262,35 +322,34 @@ function draw(o, v) {
   // wave marks
   o.sent.forEach((s, m) => s.forEach((id, k) => { g.fillStyle = "#c9b458"; g.fillText("▲", X(m) - 4, Tp + h + 28 + 0 * k); }));
   o.post.forEach((s, m) => { if (s.length) { g.fillStyle = "#e07a5f"; g.fillRect(X(m) - 1, Tp + h + 32, 2, 6 + 2 * s.length); } });
-  g.fillStyle = "#a6a381"; g.fillText("waves ▲ sent", L, H - 4); g.fillStyle = "#e07a5f"; g.fillText("| postponed", L + 80, H - 4);
+  g.fillStyle = "#a6a381"; g.fillText(t("hWaves"), L, H - 4); g.fillStyle = "#e07a5f"; g.fillText(t("hPost"), L + 110, H - 4);
 }
 
 // ---------------------------------------------------------------- stats, advice, settings text
 function stat(label, val, cls) { return `<div class="stat ${cls || ""}"><b>${val}</b><span>${label}</span></div>`; }
-function fmtMin(m) { return m < 0 ? "never" : `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, "0")}`; }
+function fmtMin(m) { return m < 0 ? t("never") : `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, "0")}`; }
 function run() {
   try { localStorage.setItem("cqCaps", JSON.stringify(V)); } catch (e) {}
   const o = simulate(V);
   const postShare = o.waves + o.postponed ? o.postponed / (o.waves + o.postponed) : 0;
   const swing = o.infMax - o.infMin;
   document.getElementById("stats").innerHTML =
-    stat("waves sent", o.waves) +
-    stat("wave calls postponed", `${o.postponed} (${Math.round(postShare * 100)}%)`, postShare > 0.5 ? "bad" : postShare > 0.2 ? "warn" : "good") +
-    stat("time at the wave gate", `${Math.round(100 * o.atCap / (o.T + 1))}%`, o.atCap / (o.T + 1) > 0.5 ? "bad" : "warn") +
-    stat("infantry after the Tête (min–max)", `${Math.round(o.infMin)}–${Math.round(o.infMax)}`, swing > 30 ? "warn" : "good") +
-    stat("avg all AI after the Tête", Math.round(o.aiAvg)) +
-    stat("carrier left at the end", `${Math.round(100 * o.carrierLeft / V.budget)}%`) +
-    stat("all-in at", fmtMin(o.allIn), o.allIn < 0 ? "warn" : "good");
+    stat(t("sSent"), o.waves) +
+    stat(t("sPost"), `${o.postponed} (${Math.round(postShare * 100)}%)`, postShare > 0.5 ? "bad" : postShare > 0.2 ? "warn" : "good") +
+    stat(t("sGate"), `${Math.round(100 * o.atCap / (o.T + 1))}%`, o.atCap / (o.T + 1) > 0.5 ? "bad" : "warn") +
+    stat(t("sInf"), `${Math.round(o.infMin)}–${Math.round(o.infMax)}`, swing > 30 ? "warn" : "good") +
+    stat(t("sAi"), Math.round(o.aiAvg)) +
+    stat(t("sCar"), `${Math.round(100 * o.carrierLeft / V.budget)}%`) +
+    stat(t("sAll"), fmtMin(o.allIn), o.allIn < 0 ? "warn" : "good");
   draw(o, V);
   // per HQ table
-  document.getElementById("hqtab").innerHTML = "<tr><th>HQ</th><th>up at</th><th>waves sent</th><th>postponed</th><th>infantry</th><th>crew</th></tr>" +
-    o.hq.map(h => `<tr><td>#${h.id} ${h.role}</td><td>${fmtMin(h.t)}</td><td>${h.sent}</td><td>${h.post}</td><td>${Math.round(h.inf)}</td><td>${Math.round(h.crew)}</td></tr>`).join("");
+  document.getElementById("hqtab").innerHTML = `<tr><th>${t("thHq")}</th><th>${t("thUp")}</th><th>${t("thSent")}</th><th>${t("thPost")}</th><th>${t("thInf")}</th><th>${t("thCrew")}</th></tr>` +
+    o.hq.map(h => `<tr><td>#${h.id} ${t("roles")[h.id - 1]}</td><td>${fmtMin(h.t)}</td><td>${h.sent}</td><td>${h.post}</td><td>${Math.round(h.inf)}</td><td>${Math.round(h.crew)}</td></tr>`).join("");
   // advice
   const nHq = 3, perWave = V.squads * 8 + V.snipers;
   const inflow = nHq * perWave / (V.interval / 60) * 10;   // per 10 min when nothing blocks
-  let adv = `With 3 HQs, waves can bring <b>${inflow.toFixed(1)}</b> infantry per 10 min; you kill <b>${V.killInf}</b>. `;
-  adv += inflow > V.killInf * 1.15 ? "Waves outrun your fire: the caps fill up and waves get postponed (the count stays flat, but at the cap)." :
-         inflow < V.killInf * 0.85 ? "Your fire outruns the waves: the enemy thins out over time." : "Balanced: waves roughly replace your kills.";
+  let adv = TXT[LANG].adv(inflow.toFixed(1), V.killInf);
+  adv += inflow > V.killInf * 1.15 ? t("advHi") : inflow < V.killInf * 0.85 ? t("advLo") : t("advOk");
   document.getElementById("advice").innerHTML = adv;
   document.getElementById("sqf").textContent =
 `CQ_maxAI = ${V.maxAI};
@@ -328,12 +387,12 @@ function suggest() {
 document.getElementById("suggest").onclick = suggest;
 document.getElementById("reset").onclick = () => { Object.assign(V, DEF); buildControls(); run(); };
 document.getElementById("copy").onclick = async () => {
-  const t = document.getElementById("sqf").textContent, el = document.getElementById("copied");
-  try { await navigator.clipboard.writeText(t); el.textContent = "copied"; } catch (e) { el.textContent = "select the text below and copy it"; }
+  const txt = document.getElementById("sqf").textContent, el = document.getElementById("copied");
+  try { await navigator.clipboard.writeText(txt); el.textContent = t("copied"); } catch (e) { el.textContent = t("copyFail"); }
   setTimeout(() => el.textContent = "", 2500);
 };
 window.addEventListener("resize", run);
-buildControls(); run();
+setLang(LANG);
 </script>
 </body>
 </html>
