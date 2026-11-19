@@ -10,8 +10,8 @@
                resupply is CQ_opSupplyDelay s later (CQ_corridorLost = that HQ's id)
 */
 if (isNil "CQ_outpostState") exitWith {};
-if (time < (missionNamespace getVariable ["CQ_opNext", 0])) exitWith {};
-CQ_opNext = time + 5;
+if (time < (missionNamespace getVariable ["CQ_outpostNext", 0])) exitWith {};
+CQ_outpostNext = time + 5;
 private _op = CQ_outpostState;
 private _pos = _op get "pos";
 
